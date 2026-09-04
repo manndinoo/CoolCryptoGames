@@ -1,3 +1,5 @@
+import type { StandingEntry, Tournament } from '@/lib/tournaments/types'
+
 /**
  * Demo catalogue content.
  *
@@ -36,32 +38,6 @@ export type DemoDeveloper = {
   name: string
   bio: string
   gameSlugs: string[]
-  demo: boolean
-}
-
-export type DemoTournament = {
-  slug: string
-  name: string
-  gameSlug: string
-  format: string
-  /** Rules are versioned; a tournament binds to one version and one build. */
-  rulesVersion: string
-  scoreModel: string
-  tieBreaker: string
-  opensAt: string
-  closesAt: string
-  status: 'draft' | 'scheduled' | 'open' | 'closed'
-  /** No prize until an operator creates and approves a Prize record. */
-  prize: null
-  demo: boolean
-}
-
-export type DemoStream = {
-  slug: string
-  title: string
-  scheduledFor: string
-  /** Never 'live' without a configured, active provider stream. */
-  state: 'scheduled' | 'offline'
   demo: boolean
 }
 
@@ -147,32 +123,108 @@ export const demoDevelopers: DemoDeveloper[] = [
   },
 ]
 
-export const demoTournaments: DemoTournament[] = [
+export const demoTournaments: Tournament[] = [
   {
     slug: 'reflex-open-preview',
     name: 'Reflex Open',
     gameSlug: 'reflex-lab',
+    // A tournament binds to an exact build. Once it opens, neither this hash
+    // nor the rules version changes; a material defect follows the published
+    // cancellation rule rather than a silent replacement.
+    gameBuildHash: '0'.repeat(64),
     format: 'Solo, best verified run',
-    rulesVersion: '1.0.0',
-    scoreModel: 'Lowest mean reaction time across five rounds',
-    tieBreaker: 'Earliest verified submission wins',
+    rules: {
+      version: '1.0.0',
+      publishedAt: '2026-09-01T00:00:00.000Z',
+      scoreModel: 'Lowest mean reaction time across five rounds',
+      tieBreaker: 'Earliest verified submission wins',
+      eligibility: [
+        'Entrants must be 18 or over.',
+        'One entry per wallet. Multiple wallets operated by one person are a single entrant.',
+        'Only results the server has independently verified enter final standings.',
+        'Entry is free. There is no fee, deposit, stake, or purchasable attempt.',
+      ],
+    },
     opensAt: '2026-09-15T18:00:00.000Z',
     closesAt: '2026-09-22T18:00:00.000Z',
     status: 'draft',
+    direction: 'lower',
     prize: null,
     demo: true,
   },
 ]
+
+/**
+ * Demo standings. Deliberately includes a held result with a better raw score
+ * than the leader, so the "only verified results place" rule is visible in the
+ * running product rather than only in a test.
+ */
+export const demoStandings: Record<string, StandingEntry[]> = {
+  'reflex-open-preview': [
+    {
+      entryId: 'demo-1',
+      wallet: 'DemoWa11et1111111111111111111111111111111111',
+      score: 214,
+      verification: 'VERIFIED',
+      submittedAt: '2026-09-16T10:02:00.000Z',
+      verifiedAt: '2026-09-16T10:02:30.000Z',
+    },
+    {
+      entryId: 'demo-2',
+      wallet: 'DemoWa11et2222222222222222222222222222222222',
+      score: 231,
+      verification: 'VERIFIED',
+      submittedAt: '2026-09-16T11:40:00.000Z',
+      verifiedAt: '2026-09-16T11:40:20.000Z',
+    },
+    {
+      entryId: 'demo-3',
+      wallet: 'DemoWa11et3333333333333333333333333333333333',
+      score: 118,
+      verification: 'HELD_FOR_REVIEW',
+      submittedAt: '2026-09-16T12:15:00.000Z',
+      verifiedAt: null,
+    },
+  ],
+}
+
+export type DemoStream = {
+  slug: string
+  title: string
+  scheduledFor: string
+  /** Never 'live' without a configured, approved, actually-broadcasting source. */
+  state: 'scheduled' | 'offline'
+  /** Validated against the allow-list and the feature flag before it is framed. */
+  embedUrl: string | null
+  demo: boolean
+}
 
 export const demoStreams: DemoStream[] = [
   {
     slug: 'platform-preview',
     title: 'Platform preview stream',
     scheduledFor: '2026-09-15T19:00:00.000Z',
+    state: 'scheduled',
+    embedUrl: null,
+    demo: true,
+  },
+  {
+    slug: 'reflex-open-broadcast',
+    title: 'Reflex Open broadcast',
+    scheduledFor: '2026-09-22T17:00:00.000Z',
     state: 'offline',
+    embedUrl: null,
     demo: true,
   },
 ]
+
+export function getDemoTournament(slug: string): Tournament | undefined {
+  return demoTournaments.find((t) => t.slug === slug)
+}
+
+export function getDemoStandings(slug: string): StandingEntry[] {
+  return demoStandings[slug] ?? []
+}
 
 export function getDemoGame(slug: string): DemoGame | undefined {
   return demoGames.find((g) => g.slug === slug)

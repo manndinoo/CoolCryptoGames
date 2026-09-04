@@ -134,3 +134,38 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Wallet adapter overrides.
+
+   The library ships its own purple button, which is the one piece of UI on the
+   site not drawn from CCG tokens. Restyled to cobalt rather than acid: acid is
+   reserved for the primary action, and on the wallet sheet the primary action
+   is "Sign in", not "Select wallet".
+--------------------------------------------------------------------------- */
+
+.wallet-adapter-button-trigger {
+  background: var(--color-cobalt) !important;
+  border-radius: var(--radius-pill) !important;
+  min-height: var(--tap-target) !important;
+  padding: 0 24px !important;
+  font-family: var(--font-body) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  transition: opacity var(--duration-fast) var(--ease-ccg) !important;
+}
+
+.wallet-adapter-button-trigger:not([disabled]):hover {
+  background: var(--color-cobalt) !important;
+  opacity: 0.9;
+}
+
+.wallet-adapter-modal-wrapper {
+  background: var(--color-graphite) !important;
+  border: 1px solid var(--color-subtle-border);
+  border-radius: var(--radius-large) !important;
+}
+
+.wallet-adapter-modal-title {
+  font-family: var(--font-display) !important;
+}

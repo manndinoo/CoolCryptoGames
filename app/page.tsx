@@ -139,7 +139,7 @@ export default function Home() {
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[var(--color-muted)]">Rules version</dt>
-              <dd className="font-medium">{tournament.rulesVersion}</dd>
+              <dd className="font-medium">{tournament.rules.version}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[var(--color-muted)]">Prize</dt>
