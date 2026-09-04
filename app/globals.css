@@ -1,16 +1,136 @@
 @import 'tailwindcss';
 
+/* ---------------------------------------------------------------------------
+   CCG design tokens.
+   Generated from config/design-tokens.json — that file is the source of truth.
+   Values are mirrored here rather than imported so the stylesheet has no build
+   step of its own; keep the two in sync when tokens change.
+--------------------------------------------------------------------------- */
+
 @theme {
-  --color-ink: #0b0b10;
-  --color-surface: #14141c;
-  --color-accent: #7c5cff;
+  /* Foundation */
+  --color-carbon: #080a0d;
+  --color-graphite: #15191f;
+  --color-graphite-raised: #1d232b;
+  --color-bone: #f5f2e9;
+
+  /* Structure */
+  --color-cobalt: #1857ff;
+
+  /* Reserved. See usage rules below — these are not general-purpose colours. */
+  --color-acid: #dfff00;
+  --color-orange: #ff5a19;
+
+  --color-success: #76e65c;
+  --color-danger: #ff4d5e;
+  --color-muted: #9aa4b2;
+
+  --color-subtle-border: rgba(255, 255, 255, 0.12);
+  --color-strong-border: rgba(223, 255, 0, 0.72);
+
+  --radius-small: 10px;
+  --radius-medium: 16px;
+  --radius-large: 22px;
+  --radius-pill: 999px;
+
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 24px;
+  --spacing-6: 32px;
+  --spacing-7: 48px;
+  --spacing-8: 72px;
+
+  --ease-ccg: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 220ms;
+  --duration-slow: 420ms;
+
+  --tracking-display: -0.035em;
+  --tracking-label: 0.08em;
+
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 }
 
-html {
+:root {
+  --max-content: 1440px;
+  --mobile-gutter: 16px;
+  --desktop-gutter: 32px;
+  --mobile-bottom-nav: 72px;
+  --tap-target: 44px;
+
+  /* Safe areas, so mobile chrome never sits under the home indicator. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
   color-scheme: dark;
 }
 
+/* ---------------------------------------------------------------------------
+   Token usage rules, from design-tokens.json. These are product rules, not
+   preferences: acid yellow reading as "this is the action" only works while
+   nothing else uses it.
+
+     acid   — primary play/register actions, live and verified states only
+     orange — alerts and expiring states only
+     glow   — sparingly, around active or live elements; never on body text
+--------------------------------------------------------------------------- */
+
 body {
-  background: var(--color-ink);
-  color: #e8e8f0;
+  background: var(--color-carbon);
+  color: var(--color-bone);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible keyboard focus everywhere. Acceptance test F requires it, and the
+   ring must clear both dark and raised surfaces. */
+:focus-visible {
+  outline: 2px solid var(--color-acid);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* These live in the components layer so ordinary Tailwind utilities still win.
+   Defined outside a layer they would beat `lg:grid` on specificity ties by
+   source order, and a rail could never become a grid at a breakpoint. */
+@layer components {
+  /* Horizontal card rails: momentum scroll with snap, scrollbar hidden, and the
+     affordance is a visible peek of the next card rather than hidden overflow. */
+  .ccg-rail {
+    display: flex;
+    gap: var(--spacing-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ccg-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .ccg-rail > * {
+    scroll-snap-align: start;
+  }
+
+  /* Restrained depth. One shared recipe so "glass" cannot drift per component. */
+  .ccg-surface {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-graphite-raised) 92%, white) 0%,
+      var(--color-graphite) 100%
+    );
+    border: 1px solid var(--color-subtle-border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

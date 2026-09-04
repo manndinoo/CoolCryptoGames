@@ -1,10 +1,14 @@
 import type { MetadataRoute } from 'next'
-import { games } from '@/lib/games'
+import { demoDevelopers, demoGames, demoTournaments } from '@/lib/content/demo'
 import { site } from '@/site.config'
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const staticRoutes = ['', '/games', '/tournaments', '/live', '/developers', '/leaderboards']
+
   return [
-    { url: site.url, priority: 1 },
-    ...games.map((game) => ({ url: `${site.url}/games/${game.slug}` })),
+    ...staticRoutes.map((path) => ({ url: `${site.url}${path}`, priority: path === '' ? 1 : 0.8 })),
+    ...demoGames.map((g) => ({ url: `${site.url}/games/${g.slug}` })),
+    ...demoDevelopers.map((d) => ({ url: `${site.url}/developers/${d.slug}` })),
+    ...demoTournaments.map((t) => ({ url: `${site.url}/tournaments/${t.slug}` })),
   ]
 }

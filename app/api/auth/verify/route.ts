@@ -3,7 +3,6 @@ import { db } from '@/lib/db'
 import { verifyChallenge } from '@/lib/auth/siws'
 import { issueSession, sessionCookie } from '@/lib/auth/session'
 import { banFor, linkIdentity, resolveIdentity } from '@/lib/security/identity'
-import { passesSybilGate } from '@/lib/security/sybil'
 import { site } from '@/site.config'
 
 export const runtime = 'nodejs'
@@ -68,14 +67,9 @@ export async function POST(request: Request) {
     )
   }
 
-  const sybil = await passesSybilGate(wallet)
-  if (!sybil.ok) {
-    return NextResponse.json({ error: 'sybil_gate', reason: sybil.reason }, { status: 403 })
-  }
-
   await sql`
-    INSERT INTO wallets (address, min_balance_ok)
-    VALUES (${wallet}, ${true})
+    INSERT INTO wallets (address)
+    VALUES (${wallet})
     ON CONFLICT (address) DO UPDATE SET last_seen = now()
   `
   await linkIdentity({ wallet, deviceId: identity.deviceId, ipHash: identity.ipHash })

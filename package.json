@@ -12,7 +12,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
@@ -20,6 +19,7 @@
     "bs58": "^6.0.0",
     "jose": "^6.2.11",
     "next": "^16.3.4",
+    "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tweetnacl": "^1.0.3"
@@ -29,6 +29,7 @@
     "@types/node": "^22.15.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.8.3",
     "vitest": "^5.0.0"

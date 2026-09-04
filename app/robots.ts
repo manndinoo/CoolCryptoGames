@@ -3,7 +3,13 @@ import { site } from '@/site.config'
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: '*', allow: '/' },
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      // Authenticated and operator surfaces have nothing to index and should
+      // not appear in search results.
+      disallow: ['/api/', '/admin', '/studio', '/profile', '/settings', '/play/'],
+    },
     sitemap: `${site.url}/sitemap.xml`,
   }
 }

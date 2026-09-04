@@ -11,10 +11,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS wallets (
   address     TEXT PRIMARY KEY,
   first_seen  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_seen   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  -- Sybil gate: snapshot of the on-chain checks taken at first authentication.
-  min_balance_ok   BOOLEAN NOT NULL DEFAULT FALSE,
-  first_tx_at      TIMESTAMPTZ
+  last_seen   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS devices (

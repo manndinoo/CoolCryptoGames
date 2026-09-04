@@ -1,13 +1,14 @@
 /**
- * Single place to change the site's identity.
- * Change a value here and it propagates to metadata, canonical URLs and the sitemap.
+ * Site identity. Values mirror config/design-tokens.json `brand`.
  */
 export const site = {
-  name: 'CoolCryptoGames',
+  name: 'Cool Crypto Games',
+  shortName: 'CCG',
   domain: 'coolcryptogames.fun',
-  tagline: 'Games worth losing an afternoon to.',
+  tagline: 'Games first. Crypto native.',
+  productLine: 'Browse freely. Watch freely. Connect to play. Never pay to play.',
   description:
-    'A small studio building browser games you can start playing in one click.',
+    'A curated browser gaming network. Browse, watch and discover without a wallet — connect one only when you press play.',
   get url() {
     return `https://${this.domain}`
   },
