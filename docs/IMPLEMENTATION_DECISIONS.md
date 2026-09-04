@@ -848,3 +848,88 @@ exactly the sense the games were, and the Product Bible forbids fabricated
 counts and unapproved prizes. The layout is the reference's; the fact strip
 under the hero carries what is actually true instead — entry always free,
 wallet is identity only, the real catalogue size, no purchases anywhere.
+
+## 24. Purchases, and saves that follow the wallet
+
+Both requested by the owner. Purchases collide with the founding product in one
+place, and that is recorded here rather than quietly resolved.
+
+### What the Product Bible says, and what shipped
+
+The Bible excludes, among other things, *purchased tournament lives or
+attempts*, *purchased competitive power*, *loot boxes*, *custodial player
+balances* and *undisclosed wallet transactions or approvals*. Its product line
+is "Browse freely. Watch freely. Connect to play. Never pay to play."
+
+What shipped keeps every one of those:
+
+- Only cosmetic and content items exist. `ItemKind` has two members and neither
+  is competitive; the `entitlements` table has a CHECK that refuses a third.
+  Nothing purchasable changes what a player can achieve.
+- No balance is held. A purchase is one transfer from the player's own wallet
+  to the treasury. There is no column anywhere holding a player's SOL, and so
+  nothing to withdraw, lose or return.
+- Nothing is hidden. The amount, the recipient and the cluster are on screen
+  before the wallet is opened.
+- Play stays free. An empty wallet still plays every game in full, ranked or
+  not, which is what "never pay to play" actually asserts.
+
+The line that now needs the owner's word rather than mine: "Never pay to play"
+is still true of *play*, but the site does now take money for cosmetics. That
+is a Bible amendment for the owner to make, and it is flagged rather than
+assumed. Anything beyond cosmetics and content — a purchased attempt, a boost,
+a paid tournament entry — would need the exclusions themselves amended, and is
+not built.
+
+### Verifying a payment
+
+The security of this rests entirely on one idea: the client is trusted with
+nothing except a signature string, and every fact the decision needs is read
+back from the chain.
+
+`settlePayment` is pure and takes the transaction as data, so every refusal is
+testable without a network — payer mismatch, missing reference, wrong
+recipient, underpayment, failed transaction, signature mismatch, expired quote,
+malformed metadata. Sixteen end-to-end checks then drive the real routes,
+including a replayed payment against a second intent and one wallet trying to
+claim another's.
+
+Two answers are deliberately not refusals. A signature the cluster has not seen
+returns `202`, because a confirmed payment can take a moment to propagate and
+refusing would lose real money. An unreachable RPC returns `503` for the same
+reason. Both leave the intent open.
+
+### Tested against a stub, not against the chain
+
+This environment's egress policy blocks every Solana RPC host, so no real
+payment has been made from here. The settlement path was exercised against a
+local server answering `getTransaction` the way a validator does — the real
+route, the real parser and the real comparison all run; only the network is a
+stand-in.
+
+That is a genuine gap, and `docs/PURCHASES.md` carries the devnet procedure to
+close it in a few minutes with a funded test wallet. It should be run before
+`SOLANA_CLUSTER` is pointed at mainnet.
+
+### Saves against the wallet
+
+`game_saves` is keyed by (wallet, game). A signed-in player's progress follows
+their account to any device; the device copy is kept in step as a fallback for
+playing signed out.
+
+The merge rule is not "most recent wins". Neither copy carries a trustworthy
+clock — the device's is the player's own, and the server's records when it was
+written rather than when it was played. They are ranked by how much progress
+they hold instead, because choosing the larger one can only ever hand someone
+more of their own game. The failure mode of the alternative is the one that
+actually matters: signing in on a new phone and overwriting fifty levels with
+an empty save.
+
+The frame is not mounted until the save is in hand, so a game's first
+`SAVE_LOAD` is answered with the wallet's progress rather than with an empty
+object it would immediately overwrite.
+
+One gap the test found: a device that only *read* the wallet's save never wrote
+a local fallback, so going offline or signing out on that browser left nothing
+behind. The chosen save is now mirrored to the device on load, not only on
+write.

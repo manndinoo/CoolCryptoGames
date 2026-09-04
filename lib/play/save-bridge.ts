@@ -58,6 +58,42 @@ export type SaveParseRejection =
  * point of a parser here: a protocol that passes through what it does not
  * recognise grows a new surface every time a game invents a message.
  */
+export type ValuesParseResult =
+  | { ok: true; values: SaveValues }
+  | { ok: false; reason: SaveParseRejection }
+
+/**
+ * Validates a save payload, wherever it arrived from.
+ *
+ * Shared by the frame bridge and by the HTTP route that stores a save against a
+ * wallet. A save arriving over HTTP has had exactly as much opportunity to be
+ * edited as one arriving by postMessage, so it meets the same limits.
+ */
+export function parseSaveValues(raw: unknown): ValuesParseResult {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return { ok: false, reason: 'values_invalid' }
+  }
+
+  const entries = Object.entries(raw as Record<string, unknown>)
+  if (entries.length > MAX_SAVE_KEYS) return { ok: false, reason: 'too_many_keys' }
+
+  const values: SaveValues = {}
+  for (const [key, value] of entries) {
+    if (key.length === 0 || key.length > MAX_SAVE_KEY_LENGTH) {
+      return { ok: false, reason: 'key_too_long' }
+    }
+    // Strings only. A save that can carry nested objects is a save that can
+    // carry a payload, and every one of these games stores scalars.
+    if (typeof value !== 'string') return { ok: false, reason: 'values_invalid' }
+    if (value.length > MAX_SAVE_VALUE_LENGTH) return { ok: false, reason: 'value_too_long' }
+    values[key] = value
+  }
+
+  if (JSON.stringify(values).length > MAX_SAVE_BYTES) return { ok: false, reason: 'too_large' }
+
+  return { ok: true, values }
+}
+
 export function parseFrameSaveMessage(raw: unknown): SaveParseResult {
   if (typeof raw !== 'object' || raw === null) return fail('not_an_object')
   const msg = raw as Record<string, unknown>
@@ -67,26 +103,10 @@ export function parseFrameSaveMessage(raw: unknown): SaveParseResult {
   if (msg.type === 'SAVE_LOAD') return { ok: true, message: { type: 'SAVE_LOAD' } }
   if (msg.type !== 'SAVE_WRITE') return fail('unknown_type')
 
-  if (typeof msg.values !== 'object' || msg.values === null || Array.isArray(msg.values)) {
-    return fail('values_invalid')
-  }
+  const parsed = parseSaveValues(msg.values)
+  if (!parsed.ok) return fail(parsed.reason)
 
-  const entries = Object.entries(msg.values as Record<string, unknown>)
-  if (entries.length > MAX_SAVE_KEYS) return fail('too_many_keys')
-
-  const values: SaveValues = {}
-  for (const [key, value] of entries) {
-    if (key.length === 0 || key.length > MAX_SAVE_KEY_LENGTH) return fail('key_too_long')
-    // Strings only. A save that can carry nested objects is a save that can
-    // carry a payload, and every one of these games stores scalars.
-    if (typeof value !== 'string') return fail('values_invalid')
-    if (value.length > MAX_SAVE_VALUE_LENGTH) return fail('value_too_long')
-    values[key] = value
-  }
-
-  if (JSON.stringify(values).length > MAX_SAVE_BYTES) return fail('too_large')
-
-  return { ok: true, message: { type: 'SAVE_WRITE', values } }
+  return { ok: true, message: { type: 'SAVE_WRITE', values: parsed.values } }
 }
 
 /**

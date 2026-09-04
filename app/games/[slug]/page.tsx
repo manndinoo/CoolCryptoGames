@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DemoBadge, StatusPill, VerifiedBadge } from "@/components/ui/badges";
 import { PlayGate } from "@/components/play/play-gate";
+import { StorePanel } from "@/components/store/store-panel";
 import { demoGames, getDemoDeveloper, getDemoGame } from "@/lib/content/demo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -127,6 +128,9 @@ export default async function GamePage({ params }: Props) {
           }}
         />
       </div>
+
+      {/* Renders nothing unless this game sells something and purchases are on. */}
+      <StorePanel gameSlug={game.slug} title={game.title} />
 
       {/* -------------------------------------------------------------- facts
           Short and factual. Nothing here is a marketing claim, because a claim
