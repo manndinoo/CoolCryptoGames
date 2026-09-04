@@ -49,7 +49,7 @@ the identity clustering makes each one you catch expensive to replace.
 | --- | --- | --- |
 | Wallet control | Sign-In With Solana, server-rebuilt challenge | Nothing — this part is sound |
 | Sybil cost | Min SOL balance / wallet age (off by default) | Funding many wallets |
-| Device identity | Peppered hash of 6 browser signals | Fresh profile, VM, anti-detect browser |
+| Device identity | Peppered hash of 6 browser signals | Switching browser, VM, anti-detect browser |
 | Network identity | Peppered IP hash + /24 or /64 prefix | Any VPN or residential proxy |
 | Score integrity | Server-side deterministic replay | Real-time botting only |
 | Session integrity | Server seed, heartbeats, one score per session | Nothing cheap |
@@ -66,10 +66,21 @@ It only becomes a barrier once holding an *eligible* wallet costs something per
 identity — which is what `MIN_WALLET_SOL` / `MIN_WALLET_AGE_DAYS` are for, and
 both ship off.
 
-**Device fingerprints are correlation, not identity.** A new browser profile
-gives a new fingerprint in seconds. Anti-detect browsers exist specifically to
-beat this and are cheap. The value is raising cost and revealing clusters, not
-blocking anyone outright.
+**Device fingerprints are correlation, not identity** — but they are stronger
+than they are usually given credit for. All six signals are properties of the
+machine and the browser engine, not of browser storage, so the hash is stable
+across cleared cookies, private windows, a fresh browser profile and a new
+wallet. Casual multi-accounting, which is most real abuse, does not get past it.
+
+What does get past it: switching to a different browser (Firefox rasterises
+canvas differently to Chrome, so the hash changes), a different machine, a VM,
+or an anti-detect browser built specifically to spoof these signals per profile
+for roughly $30-100/month. Call it one minute of effort for someone who knows
+what they are doing.
+
+So the useful framing is cost, not prevention: a device ban is total against a
+casual cheat and briefly inconvenient to a professional. Its lasting value is
+the cluster it reveals — see `relatedIdentities`, and the note below.
 
 **IP bans are weak and dangerous at the same time.** VPNs and residential proxy
 pools defeat them for a few dollars. Meanwhile carrier-grade NAT puts thousands
@@ -80,6 +91,20 @@ quietly remove a whole region of real players. **Always set `expires_at` on
 **A ban is a delay, not a removal.** Against a motivated attacker the goal is
 to make each new identity cost more than it earns — never to believe they are
 gone for good.
+
+Three things would sharpen this considerably, none of them built yet:
+
+- **Cluster bans.** `relatedIdentities` currently only reports. Acting on it —
+  flagging every device and IP a banned wallet touched, and every wallet those
+  touched — catches the browser switch that beats an exact-match device ban,
+  because the new device still links back through the wallet or the address.
+- **Shadow bans.** A cheater who knows they are banned churns identities; one
+  who does not keeps using the burnt one. Let them play and simply do not rank
+  them. In practice this outperforms hard bans.
+- **A refundable stake.** The lever a crypto site has that others do not.
+  Stake to play ranked, forfeit on a confirmed cheat. This prices abuse
+  directly instead of proxying it through fingerprint effort, and it is the
+  only measure here that meaningfully deters someone doing this for money.
 
 **Replay only works for games the server can simulate.** `getGameRules` returns
 null for anything not in the registry and `/api/play/start` refuses it. A
