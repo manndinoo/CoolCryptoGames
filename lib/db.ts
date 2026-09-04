@@ -1,4 +1,5 @@
 import postgres from 'postgres'
+import { findDatabaseUrl, MISSING_DATABASE_URL } from './db-url.mjs'
 
 /**
  * PostgreSQL access.
@@ -16,8 +17,8 @@ let cached: postgres.Sql | null = null
 
 export function db(): postgres.Sql {
   if (!cached) {
-    const url = process.env.DATABASE_URL
-    if (!url) throw new Error('DATABASE_URL is not set')
+    const url = findDatabaseUrl()
+    if (!url) throw new Error(`DATABASE_URL is not set. ${MISSING_DATABASE_URL}`)
     cached = postgres(url, {
       // Serverless platforms create many short-lived instances; a small pool
       // per instance avoids exhausting Postgres connection slots.

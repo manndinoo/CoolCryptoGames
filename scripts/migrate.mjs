@@ -14,16 +14,17 @@ import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
+import { findDatabaseUrl, MISSING_DATABASE_URL } from '../lib/db-url.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const dbDir = path.join(here, '..', 'db')
 
-const url = process.env.DATABASE_URL
+const url = findDatabaseUrl()
 if (!url) {
   console.error(
-    'DATABASE_URL is not set.\n\n' +
-      'Copy .env.example to .env.local and set it, or export it for one run:\n' +
-      '  DATABASE_URL=postgres://user:pass@host:5432/dbname node scripts/migrate.mjs',
+    `${MISSING_DATABASE_URL}\n\n` +
+      'Or export it for a single run:\n' +
+      '  DATABASE_URL=postgres://user:pass@host/db npm run db:migrate',
   )
   process.exit(1)
 }

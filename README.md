@@ -40,6 +40,17 @@ npm run db:migrate     # apply db/*.sql, once each, in order
 npm run db:status      # show what is applied and what is pending
 ```
 
+Use the **pooled** connection string where the provider offers one. Each
+serverless instance opens its own connections, and a direct endpoint runs out
+of slots under load in a way that looks like random failures.
+
+The connection string is found under any of `DATABASE_URL`, `POSTGRES_URL`,
+`STORAGE_DATABASE_URL`, or any `*_DATABASE_URL` a hosting integration creates
+under a custom prefix — see `lib/db-url.mjs`. A name mismatch produces exactly
+the same symptom as having no database at all, so the lookup accepts what
+providers actually use rather than requiring the deployment to match one
+hard-coded string.
+
 Migrations are idempotent: each is recorded in `schema_migrations` and runs
 inside a transaction, so re-running is a no-op and a failure leaves the previous
 version intact.
