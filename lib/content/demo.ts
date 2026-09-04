@@ -44,6 +44,25 @@ export type DemoDeveloper = {
 
 export const demoGames: DemoGame[] = [
   {
+    slug: 'zero-signal',
+    title: 'ZERO SIGNAL',
+    developerSlug: 'ccg-platform',
+    category: 'Arcade',
+    blurb:
+      'One thumb, no brakes. The ball drifts sideways and a tap reverses it — thread every gate, clear a level, and the world changes under you. Six worlds, power-ups that get rarer the deeper you go, and one free Revive a day.',
+    // Unranked, so there is nothing here to count yet. This stays 0 until the
+    // game has a server-side replay and verified sessions to count.
+    verifiedPlayers: 0,
+    // The run is not reproducible from an input log — it advances on a variable
+    // frame delta and an unseeded RNG — so the server cannot replay it and this
+    // site will not call the score verified. See docs/IMPLEMENTATION_DECISIONS.md.
+    scoreVerification: 'unranked',
+    status: 'playable',
+    updatedAt: '2026-09-04',
+    demo: false,
+    art: ['#19072D', '#FF3F92'],
+  },
+  {
     slug: 'reflex-lab',
     title: 'CCG Reflex Lab',
     developerSlug: 'ccg-platform',
@@ -105,7 +124,7 @@ export const demoDevelopers: DemoDeveloper[] = [
     slug: 'ccg-platform',
     name: 'CCG Platform',
     bio: 'The platform team. Publishes integration and reference builds used to validate the SDK.',
-    gameSlugs: ['reflex-lab'],
+    gameSlugs: ['zero-signal', 'reflex-lab'],
     demo: false,
   },
   {

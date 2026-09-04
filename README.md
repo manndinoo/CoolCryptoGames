@@ -76,7 +76,9 @@ what stops them meaning anything.
 app/                     routes and API handlers
 components/brand/        mark, letterforms, lockups
 components/shell/        header, bottom navigation, footer
-components/play/         wallet gate and play sheet
+components/play/         wallet gate, play sheet, game runtime map
+components/games/        the games themselves
+lib/games/               game rules, testable without a browser
 components/ui/           cards, badges, sections
 lib/anticheat/           deterministic replay and submission validation
 lib/auth/                Sign-In With Solana, platform sessions

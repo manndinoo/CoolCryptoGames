@@ -1,0 +1,877 @@
+/*
+ * ZERO SIGNAL, ported from the standalone handoff build.
+ *
+ * Every selector is scoped under `.zs-root`. The original sheet styled bare
+ * class names — `.play`, `.screen`, `.modal`, `.stats`, `.toast` — from a
+ * page that owned the whole document. Dropped into this site unscoped it would
+ * repaint half the platform shell, so the scope is not cosmetic.
+ *
+ * The frame also no longer sizes itself to the viewport: embedded, it fills the
+ * theater box the game page gives it.
+ */
+.zs-root * {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.zs-root {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 20%, #241034, #06060a 55%, #000);
+  user-select: none;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #fff;
+  line-height: normal;
+}
+
+.zs-root .phone-frame {
+  width: 100%;
+  height: 100%;
+  max-width: 470px;
+  position: relative;
+  overflow: hidden;
+  background: #07070c;
+  box-shadow: 0 0 80px #000;
+}
+
+.zs-root .screen {
+  position: absolute;
+  inset: 0;
+  padding: 22px;
+  overflow-y: auto;
+  background: radial-gradient(circle at 50% 22%,#271034 0,#0b0710 42%,#040407 100%);
+}
+
+.zs-root .screen:after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,#fff0 0 3px,#ffffff08 4px);
+  mix-blend-mode: overlay;
+}
+
+.zs-root .topbar,
+.zs-root .shop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+}
+
+.zs-root .topbar button,
+.zs-root .shop-head button {
+  border: 1px solid #ffffff26;
+  background: #ffffff0b;
+  color: #bcb7c8;
+  border-radius: 7px;
+  padding: 9px 11px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.zs-root .title-lockup {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.zs-root .title-lockup p,
+.zs-root .eyebrow {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #74e8ff;
+  font-weight: 900;
+  margin: 0;
+}
+
+.zs-root .title-lockup h1 {
+  font-size: 56px;
+  line-height: .78;
+  letter-spacing: -4px;
+  margin: 11px 0 15px;
+  font-weight: 1000;
+  font-style: italic;
+  text-shadow: 4px 4px 0 #ff288f,-2px -2px 0 #53e6ff;
+}
+
+.zs-root .title-lockup h1 i {
+  font-style: italic;
+  color: #0a0610;
+  -webkit-text-stroke: 2px white;
+  text-shadow: 3px 3px 0 #45ddff,-3px -2px 0 #ff2c97;
+}
+
+.zs-root .title-lockup span {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: #938b9f;
+}
+
+.zs-root .play {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  margin-top: 24px;
+  padding: 17px 20px;
+  background: linear-gradient(90deg,#ff2a96,#7657ff 58%,#38dfff);
+  color: white;
+  font-size: 15px;
+  letter-spacing: 2px;
+  font-weight: 1000;
+  box-shadow: 0 8px 30px #b32aff45;
+  position: relative;
+  z-index: 2;
+}
+
+.zs-root .play span {
+  float: right;
+}
+
+.zs-root .quick-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.zs-root .quick-row button,
+.zs-root .challenge {
+  background: #ffffff08;
+  border: 1px solid #ffffff18;
+  color: #b9b4c1;
+  border-radius: 9px;
+  padding: 12px 4px;
+  font-size: 9px;
+  letter-spacing: .8px;
+  font-weight: 800;
+}
+
+.zs-root .quick-row b {
+  color: #50def7;
+  margin-right: 5px;
+}
+
+.zs-root .mission {
+  margin-top: 18px;
+  padding: 15px;
+  background: linear-gradient(135deg,#ffffff0c,#ffffff05);
+  border: 1px solid #ffffff18;
+  border-radius: 12px;
+}
+
+.zs-root .mission-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #ff55ad;
+}
+
+.zs-root .mission p {
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.zs-root .mission small {
+  font-size: 8px;
+  color: #8cff42;
+  letter-spacing: 1px;
+}
+
+.zs-root .bar {
+  height: 5px;
+  background: #ffffff10;
+  border-radius: 9px;
+  margin: 8px 0;
+}
+
+.zs-root .bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,#ff399b,#52dfff);
+  border-radius: 9px;
+}
+
+.zs-root .stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  border-top: 1px solid #ffffff12;
+  padding-top: 12px;
+  color: #716c78;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+
+.zs-root .stats b {
+  display: block;
+  color: #ddd;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.zs-root .game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.zs-root .hud {
+  position: absolute;
+  z-index: 3;
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  pointer-events: none;
+}
+
+.zs-root .hud small {
+  display: block;
+  color: #847e8e;
+  font: 700 8px monospace;
+  letter-spacing: 2px;
+}
+
+.zs-root .hud b {
+  font: 900 24px monospace;
+}
+
+.zs-root .tap-hint {
+  position: absolute;
+  bottom: 6%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #ffffff40;
+  font: 800 10px monospace;
+  letter-spacing: 3px;
+  pointer-events: none;
+}
+
+.zs-root .over-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.zs-root .score-ring {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  border: 2px solid #52dcff;
+  box-shadow: 0 0 35px #52dcff38,inset 0 0 35px #ff329822;
+  margin: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.zs-root .score-ring small {
+  letter-spacing: 3px;
+  color: #aaa;
+}
+
+.zs-root .score-ring strong {
+  font: 1000 64px monospace;
+}
+
+.zs-root .score-ring span {
+  font: 800 10px monospace;
+  color: #ff61ad;
+}
+
+.zs-root .earned {
+  color: #8cff42;
+  font: 800 12px monospace;
+  letter-spacing: 2px;
+}
+
+.zs-root .over-screen .play {
+  max-width: 330px;
+}
+
+.zs-root .challenge {
+  width: 100%;
+  max-width: 330px;
+  margin-top: 10px;
+  padding: 15px;
+}
+
+.zs-root .text-btn {
+  border: 0;
+  background: none;
+  color: #78727f;
+  margin-top: 18px;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.zs-root .shop-screen {
+  padding-bottom: 40px;
+}
+
+.zs-root .shop-head small {
+  font-size: 8px;
+  color: #56ddf7;
+  letter-spacing: 2px;
+}
+
+.zs-root .shop-head h2 {
+  font-size: 18px;
+  margin: 2px 0;
+  font-style: italic;
+}
+
+.zs-root .shop-head>b {
+  font: 900 12px monospace;
+  color: #8cff42;
+}
+
+.zs-root .shop-screen h3 {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #817a89;
+  margin: 24px 0 10px;
+}
+
+.zs-root .skins {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.zs-root .skins button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: #ffffff08;
+  color: white;
+  border: 1px solid #ffffff16;
+  border-radius: 10px;
+  padding: 13px;
+}
+
+.zs-root .skins button.selected {
+  border-color: #55eaff;
+  box-shadow: inset 0 0 18px #55eaff12;
+}
+
+.zs-root .skins i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.zs-root .skins span {
+  display: flex;
+  flex-direction: column;
+}
+
+.zs-root .skins b {
+  font-size: 10px;
+}
+
+.zs-root .skins small {
+  font-size: 8px;
+  color: #8c8791;
+  margin-top: 3px;
+}
+
+.zs-root .store-note {
+  font-size: 8px;
+  line-height: 1.5;
+  text-align: center;
+  color: #5f5964;
+  margin-top: 16px;
+}
+
+.zs-root .modal {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  background: #000d;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.zs-root .modal>div {
+  width: 100%;
+  background: linear-gradient(145deg,#21102c,#09070d);
+  border: 1px solid #ffffff28;
+  border-radius: 18px;
+  padding: 25px;
+  position: relative;
+  text-align: center;
+}
+
+.zs-root .close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  background: none;
+  border: 0;
+  color: #aaa;
+  font-size: 25px;
+}
+
+.zs-root .modal p {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #52dcff;
+}
+
+.zs-root .modal h2 {
+  font-size: 24px;
+  font-style: italic;
+}
+
+.zs-root .modal ol {
+  text-align: left;
+  padding-left: 22px;
+  color: #aaa;
+  line-height: 2;
+}
+
+.zs-root .modal li b {
+  color: white;
+}
+
+.zs-root .demo {
+  height: 95px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.zs-root .demo i {
+  width: 18px;
+  height: 18px;
+  background: #57e8ff;
+  border-radius: 50%;
+  box-shadow: 0 0 20px #57e8ff;
+}
+
+.zs-root .demo span {
+  position: absolute;
+  font-size: 40px;
+  color: #ff4ba3;
+}
+
+.zs-root .toast {
+  position: absolute;
+  z-index: 50;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #120b18;
+  border: 1px solid #58e5ff;
+  color: #fff;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font: 800 10px monospace;
+  letter-spacing: 1px;
+}
+
+@media(min-width:500px) {
+  .zs-root .phone-frame {
+    border-left: 1px solid #ffffff12;
+    border-right: 1px solid #ffffff12;
+  }
+}
+
+.zs-root .level-pill {
+  min-width: 82px;
+  padding: 8px 10px;
+  border: 1px solid #ffffff32;
+  background: #08050bbb;
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.zs-root .level-pill small {
+  color: #66e6ff !important;
+}
+
+.zs-root .level-pill b {
+  display: block !important;
+  font: 900 11px monospace !important;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.zs-root .skins i {
+  position: relative;
+}
+
+.zs-root .skins .echo {
+  outline: 2px solid #ffffff66;
+  outline-offset: 3px;
+}
+
+.zs-root .skins .spark {
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.zs-root .skins .pixel {
+  border-radius: 1px;
+}
+
+.zs-root .skins .plasma {
+  border-radius: 50% 2px 50% 2px;
+}
+
+.zs-root .skins span em {
+  font-size: 7px;
+  color: #77717e;
+  font-style: normal;
+  margin-top: 2px;
+}
+
+.zs-root .skins small {
+  margin-top: 4px;
+}
+
+.zs-root .shield-status {
+  position: absolute;
+  z-index: 4;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #68eaff;
+  background: #03121ccc;
+  border: 1px solid #55eaff88;
+  border-radius: 20px;
+  padding: 5px 10px;
+  font: 900 8px monospace;
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+
+.zs-root .power-dock {
+  position: absolute;
+  z-index: 5;
+  right: 13px;
+  bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zs-root .power-dock button {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  color: white;
+  background: #08060dcc;
+  border: 1px solid #ffffff2b;
+  border-radius: 13px;
+  backdrop-filter: blur(8px);
+}
+
+.zs-root .power-dock button.active {
+  border-color: #9cff43;
+  box-shadow: 0 0 20px #8cff4255, inset 0 0 14px #8cff4222;
+}
+
+.zs-root .power-dock button.legendary {
+  border-color: #ffc84c;
+  box-shadow: 0 0 24px #ffc84c66, inset 0 0 16px #ffc84c22;
+}
+
+.zs-root .power-dock .revive-count {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 49px;
+  color: #ff74df;
+  background: #120713dd;
+  border: 1px solid #ff63d866;
+  border-radius: 13px;
+  box-shadow: 0 0 18px #ff63d833;
+  font-family: monospace;
+}
+
+.zs-root .power-dock .revive-count i {
+  color: #ff74df;
+  line-height: 1;
+}
+
+.zs-root .power-dock .revive-count span {
+  color: white;
+  font: 800 7px monospace;
+}
+
+.zs-root .power-dock .revive-count b {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  min-width: 19px;
+  height: 19px;
+  padding: 3px;
+  border-radius: 10px;
+  color: white;
+  background: #ff3b9d;
+  border: 2px solid #08060d;
+  font: 900 9px monospace;
+  text-align: center;
+}
+
+.zs-root .power-dock i {
+  display: block;
+  color: #9cff43;
+  font: 900 18px monospace;
+  font-style: normal;
+}
+
+.zs-root .power-dock button:nth-child(2) i {
+  color: #ffc84c;
+}
+
+.zs-root .power-dock span {
+  display: block;
+  font: 800 7px monospace;
+  margin-top: 2px;
+}
+
+.zs-root .power-dock b {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  min-width: 19px;
+  height: 19px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #f53b92;
+  border: 2px solid #08060d;
+  font: 900 9px monospace;
+}
+
+.zs-root .power-dock em {
+  position: absolute;
+  left: 4px;
+  bottom: 3px;
+  color: #fff;
+  font: 800 7px monospace;
+  font-style: normal;
+}
+
+.zs-root .power-shop {
+  display: grid;
+  gap: 10px;
+}
+
+.zs-root .power-shop article {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  padding: 13px;
+  border: 1px solid #8cff4244;
+  border-radius: 12px;
+  background: linear-gradient(145deg,#152013aa,#09090daa);
+}
+
+.zs-root .power-shop article.legendary {
+  border-color: #ffc84c66;
+  background: linear-gradient(145deg,#2a1b0cbb,#0b0806aa);
+}
+
+.zs-root .power-shop article.revive-card {
+  border-color: #ff63d877;
+  background: linear-gradient(145deg,#2d0c2abb,#0b050caa);
+}
+
+.zs-root .power-shop article.revive-card > div > i {
+  color: #ff74df;
+  box-shadow: 0 0 24px #ff63d866;
+}
+
+.zs-root .power-shop article > div {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.zs-root .power-shop article > div > i {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: #9cff43;
+  border: 1px solid currentColor;
+  box-shadow: 0 0 17px #8cff4244;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.zs-root .power-shop article.legendary > div > i {
+  color: #ffc84c;
+  box-shadow: 0 0 20px #ffc84c55;
+}
+
+.zs-root .power-shop article span {
+  display: flex;
+  flex-direction: column;
+}
+
+.zs-root .power-shop article span b {
+  font-size: 10px;
+  letter-spacing: .5px;
+}
+
+.zs-root .power-shop article span small {
+  color: #918b97;
+  font-size: 8px;
+  margin-top: 3px;
+}
+
+.zs-root .power-shop article span em {
+  color: #fff;
+  font: 800 8px monospace;
+  font-style: normal;
+  margin-top: 5px;
+}
+
+.zs-root .power-shop article button {
+  color: white;
+  border: 1px solid #ffffff1d;
+  background: #ffffff0a;
+  border-radius: 8px;
+  padding: 9px 5px;
+  font: 800 7px monospace;
+}
+
+.zs-root .daily-note {
+  color: #77717e;
+  text-align: center;
+  font: 700 7px monospace;
+  letter-spacing: .5px;
+  margin: 9px 0 0;
+}
+
+.zs-root .beta-lock {
+  margin-top: 18px;
+  padding: 9px;
+  color: #ffce62;
+  background: #ffbd3310;
+  border: 1px solid #ffbd3338;
+  border-radius: 8px;
+  text-align: center;
+  font: 800 8px monospace;
+  letter-spacing: .7px;
+}
+
+.zs-root .power-shop button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.zs-root .revive-modal {
+  z-index: 30;
+}
+
+.zs-root .revive-modal > div {
+  border-color: #ff63d888;
+  box-shadow: 0 0 45px #ff3b9d33;
+}
+
+.zs-root .revive-modal strong {
+  display: block;
+  color: #ff8be5;
+  font: 900 10px monospace;
+  letter-spacing: 1px;
+}
+
+.zs-root .revive-orb {
+  display: grid;
+  place-items: center;
+  width: 90px;
+  height: 90px;
+  margin: 20px auto;
+  color: white;
+  border: 2px solid #ff63d8;
+  border-radius: 50%;
+  box-shadow: 0 0 30px #ff3b9d88, inset 0 0 25px #ff3b9d44;
+  font-size: 40px;
+}
+
+.zs-root .revive-modal .text-btn {
+  display: block;
+  margin: 18px auto 0;
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  .zs-root .screen {
+    padding-top: max(22px, env(safe-area-inset-top));
+    padding-bottom: max(22px, env(safe-area-inset-bottom));
+  }
+
+  .zs-root .hud {
+    top: max(18px, env(safe-area-inset-top));
+  }
+
+  .zs-root .power-dock {
+    bottom: max(48px, calc(env(safe-area-inset-bottom) + 24px));
+  }
+}
+
+.zs-root .signal-mark {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  margin: 16px auto 8px;
+  border: 2px solid #55eaff;
+  border-radius: 50%;
+  position: relative;
+  color: #fff;
+  font: 1000 25px/1 Arial, sans-serif;
+  letter-spacing: -2px;
+  box-shadow: 0 0 28px #46cfff55, inset 0 0 24px #ff3f922e;
+}
+
+.zs-root .signal-mark span {
+  position: relative;
+  z-index: 2;
+  text-shadow: 2px 2px 0 #ff3f92;
+}
+
+.zs-root .signal-mark i {
+  position: absolute;
+  right: -8px;
+  width: 14px;
+  height: 2px;
+  background: #ff3f92;
+  box-shadow: 0 0 8px #ff3f92;
+}
+
+.zs-root .signal-mark i:nth-of-type(1) {
+  top: 22px;
+}
+
+.zs-root .signal-mark i:nth-of-type(2) {
+  top: 35px;
+  width: 20px;
+}
+
+.zs-root .signal-mark i:nth-of-type(3) {
+  top: 48px;
+}

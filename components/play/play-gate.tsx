@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { getGameRuntime } from './runtimes'
 import { useWalletAuth } from './use-wallet-auth'
 import { UsernameSetup } from './username-setup'
 import { WalletSheet } from './wallet-sheet'
@@ -38,18 +39,32 @@ export function PlayGate({ game }: { game: GameSummary }) {
   }
 
   if (state.status === 'signed-in' && requested) {
-    return (
-      <div className="ccg-surface grid aspect-video w-full place-items-center rounded-[var(--radius-large)] text-center">
-        <div className="p-6">
-          <p className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
-            Runtime not yet wired
-          </p>
-          <p className="mt-2 max-w-md text-sm text-[var(--color-muted)]">
-            Authentication succeeded. The sandboxed runtime and the server-issued play
-            capability that mounts it are the next build step — no game frame will load
-            until the server can scope a capability to this exact game and build.
-          </p>
+    const Runtime = getGameRuntime(game.slug)
+
+    if (!Runtime) {
+      return (
+        <div className="ccg-surface grid aspect-video w-full place-items-center rounded-[var(--radius-large)] text-center">
+          <div className="p-6">
+            <p className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+              Runtime not yet wired
+            </p>
+            <p className="mt-2 max-w-md text-sm text-[var(--color-muted)]">
+              Authentication succeeded, but no runtime has shipped for this game yet. A
+              catalogue entry alone never mounts anything.
+            </p>
+          </div>
         </div>
+      )
+    }
+
+    // The theater. Portrait, because the games that run here are one-thumb
+    // games; the runtime fills it absolutely, so this box owns the size.
+    return (
+      <div
+        className="relative mx-auto w-full max-w-[470px] overflow-hidden rounded-[var(--radius-large)] border border-[var(--color-subtle-border)]"
+        style={{ height: 'min(78vh, 860px)' }}
+      >
+        <Runtime />
       </div>
     )
   }

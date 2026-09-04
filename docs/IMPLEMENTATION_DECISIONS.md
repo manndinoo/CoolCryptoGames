@@ -223,3 +223,69 @@ competition tables all key on the wallet address, which is correct — it is the
 stable internal identifier. The audit is that no *read path serving a public
 surface* selects it, which is currently true and worth a test once the database
 exists to test against.
+
+## 11. ZERO SIGNAL: the first game the site actually runs
+
+ZERO SIGNAL arrived as a standalone handoff: its own Next/Vite project, its own
+deployment identity, its own PWA. It is now the first entry in the catalogue
+that mounts real code when someone presses Play. The port kept the gameplay
+intact — one-tap portrait control, reachable gate generation, full-ball
+collision, rarity-weighted run-only pickups and the daily-limited shop — and
+changed four things, each for a reason worth recording.
+
+**The stylesheet is scoped.** The original styled bare class names — `.play`,
+`.screen`, `.modal`, `.stats`, `.toast` — from a page that owned the whole
+document. Imported unscoped into this site it would have repainted the platform
+shell. Every selector now sits under `.zs-root`, and the frame sizes itself to
+the theater box the game page gives it instead of to the viewport.
+
+**The service worker and the install flow are gone.** The handoff registers
+`/sw.js` and offers "add to home screen". Registering a game's worker from a
+page on this origin hands it the cache for the entire site, including the auth
+routes. A game embedded in a platform does not get to own the platform's
+offline behaviour. The standalone build still has both; this one does not.
+
+**The economy moved out of the component.** Daily allowances are the part of a
+free-to-play economy people actually try to get around, and in the handoff they
+were inline `setSave` callbacks that also fired toasts, so they could not be
+tested without a browser. They are now pure functions in
+`lib/games/zero-signal/rules.ts` with tests covering each limit. The component
+owns the simulation and the canvas; it owns none of the rules.
+
+**Real-money purchase stays locked, for a second reason.** The game shipped
+with its store locked for beta. Here it is also gated by `FEATURE_PAYMENTS`,
+which is off. The credit prices remain in the model so the economy is complete
+and testable, and no UI spends them.
+
+### Why it is unranked, and what would change that
+
+`scoreVerification: 'unranked'`. The site's rule is that a game may only claim a
+verified score if the server can replay the run from the input log, and this run
+cannot be replayed: it advances on a variable frame delta and an unseeded
+`Math.random()`, so the same taps produce a different score on a different
+machine — or on the same machine twice. Listing it as verified would be a claim
+the server cannot back, so it is listed as what it is, and
+`lib/anticheat/registry.ts` has no entry for it. `/api/play/start` therefore
+refuses the slug with `game_not_scoreable`, which is the correct answer rather
+than an oversight: the game runs entirely on the player's device and stores
+progress in that device's `localStorage`.
+
+Making it rankable is a real piece of work, not a flag: a seeded PRNG for gate,
+pickup and bonus placement, a fixed-timestep simulation so a frame delta cannot
+change the outcome, the core extracted into a module both the browser and the
+server import, and a decision about banked power-ups — they come from client
+storage today, so a replay cannot confirm the inventory a run started with.
+Until all four exist, the honest listing is the one shipped.
+
+### Runtime mounting
+
+`components/play/runtimes.tsx` maps a slug to the component that runs it, and
+`PlayGate` mounts nothing for a slug that is not in it. A catalogue entry marked
+`playable` is a claim about the listing; that map is the claim about the code,
+and the two are checked separately. Runtimes load on demand and client-only — a
+game owns a canvas, an animation loop and device storage, none of which survive
+a server render, and none of which belong in the bundle of a page nobody pressed
+Play on.
+
+The wallet gate is unchanged: the game page is fully public, and the gate
+appears only where the game would mount, only once someone presses Play.
