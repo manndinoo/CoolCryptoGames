@@ -27,6 +27,14 @@ export type DemoGame = {
   verifiedPlayers: number
   /** Whether the server can replay this game's runs and vouch for a score. */
   scoreVerification: 'deterministic-replay' | 'unranked'
+  /**
+   * Which way the score runs. Reaction time is better when it is lower; almost
+   * everything else is better when it is higher, and a board that assumes one
+   * of those universally puts the worst player on top of the other.
+   */
+  scoreDirection: 'higher' | 'lower'
+  /** Unit shown beside a score on a board. Empty for a plain point total. */
+  scoreUnit: string
   status: 'playable' | 'coming-soon'
   updatedAt: string
   demo: boolean
@@ -66,6 +74,8 @@ export const demoGames: DemoGame[] = [
     // not reproducible from an input log and the server cannot replay it. This
     // site will not call a score verified that it cannot reproduce.
     scoreVerification: 'unranked',
+    scoreDirection: 'higher',
+    scoreUnit: 'pts',
     status: 'playable',
     updatedAt: '2026-09-04',
     demo: false,
@@ -95,6 +105,8 @@ export const demoGames: DemoGame[] = [
     // scoring is reachable — but it needs a server-side port of the engine
     // before a result can be vouched for. Unranked until that exists.
     scoreVerification: 'unranked',
+    scoreDirection: 'higher',
+    scoreUnit: 'pts',
     status: 'playable',
     updatedAt: '2026-09-04',
     demo: false,
@@ -123,6 +135,8 @@ export const demoGames: DemoGame[] = [
       'A reaction-time test built to exercise the platform: play sessions, scoring, touch and keyboard input, restart, and score verification. Not a flagship release.',
     verifiedPlayers: 0,
     scoreVerification: 'deterministic-replay',
+    scoreDirection: 'lower',
+    scoreUnit: 'ms',
     status: 'playable',
     updatedAt: '2026-09-04',
     demo: false, // Real, shipped by the platform — it just is not a flagship game.

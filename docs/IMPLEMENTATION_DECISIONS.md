@@ -307,3 +307,64 @@ would not.
 URL, so replacing a cover at the same path serves the stale image until the
 cache clears — that bit me locally and would bite harder behind a CDN. Version
 the filename when a cover changes, rather than overwriting it.
+
+## 15. Leaderboards read real rows, and are empty until there are some
+
+`/leaderboards` queries the `scores` table. Every row there is the output of a
+server-side replay — `/api/play/submit` never writes a client-reported number —
+so reading that table is what makes a board worth anything.
+
+Today the table is empty, because no game has server-side rules registered yet
+(decision 13). The board therefore renders an explicit empty state rather than
+seeded standings. The tournament demo already carries invented names, and one
+place on the site where numbers are decoration is enough; a leaderboard is the
+last surface that should teach a reader to discount what it says.
+
+Three rules are enforced in the query rather than in the page:
+
+- **One row per player, on their best result.** A board where one person holds
+  the whole top ten is a list of attempts, not of players.
+- **Banned wallets are excluded, not deleted.** The score rows stay for review,
+  they simply stop being published. Only wallet-level bans filter here —
+  applying a device or network ban retroactively would remove the results of
+  everyone who shared a household or a carrier NAT with the banned party.
+- **Direction is per game.** Reflex Lab is scored on mean reaction time, where
+  lower wins. A board that assumed higher-is-better would put the slowest
+  player on top, so `scoreDirection` is catalogue metadata and the two
+  orderings are written out as separate queries rather than assembled from an
+  interpolated string.
+
+Ties share a place and the next place skips, which is standard competition
+ranking. Separating tied players by submission time would invent a distinction
+the scoring model does not make.
+
+No query in `lib/leaderboards/` selects `wallets.address`. The display name
+falls back to "Unnamed player", never to an address — a truncated key is still
+a public link to an on-chain history, which is the thing usernames exist to
+keep off this page.
+
+## 16. Account deletion is a request, not a button
+
+`/settings` records a deletion request for a person to action. It does not
+delete.
+
+The reason is specific. `identity_links`, `play_sessions` and `scores` all
+cascade from `wallets`, so a self-serve delete lets a wallet under
+investigation erase the device and network links that connect it to the rest of
+its ring. The ban rows themselves survive — they key on text, not a foreign key
+— but the evidence that would justify the next one does not.
+
+The page says this in those words rather than offering a delete button that
+quietly does not apply to accounts under review. A control that appears to work
+and does not is worse than an honest queue.
+
+Data export is not gated this way: `/api/account/data` returns the caller's own
+record immediately, because reading your own data endangers nobody. Three
+things are held back from it, each for a stated reason — other people's
+identities (the links table exists to investigate rings, not to reveal who else
+uses your network), the peppered hashes themselves (they identify nothing to
+the reader and would only help someone confirm a guess), and rejection reason
+codes. That last one is the Product Bible's rule against exposing fraud
+thresholds: publishing which check caught a run tells the next attempt exactly
+what to change. A person reviewing an appeal can explain the decision; an
+automatic export cannot do that without also handing it over.

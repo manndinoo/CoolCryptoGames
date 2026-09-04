@@ -9,6 +9,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...staticRoutes.map((path) => ({ url: `${site.url}${path}`, priority: path === '' ? 1 : 0.8 })),
     ...demoGames.map((g) => ({ url: `${site.url}/games/${g.slug}` })),
     ...demoDevelopers.map((d) => ({ url: `${site.url}/developers/${d.slug}` })),
+    // Only games that actually have a board. Listing a leaderboard URL for an
+    // unranked game would advertise a page whose whole content is an
+    // explanation of why it is empty.
+    ...demoGames
+      .filter((g) => g.scoreVerification === 'deterministic-replay')
+      .map((g) => ({ url: `${site.url}/leaderboards/${g.slug}` })),
     ...demoTournaments.map((t) => ({ url: `${site.url}/tournaments/${t.slug}` })),
   ]
 }

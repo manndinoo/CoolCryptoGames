@@ -189,6 +189,14 @@ export default async function GamePage({ params }: Props) {
             ? "Runs of this game are replayed on the server from the inputs you produced, so a result can be independently confirmed before it reaches a leaderboard."
             : "This game has no server-side replay yet, so results are not ranked. It runs for play only."}
         </p>
+        {ranked && (
+          <Link
+            href={`/leaderboards/${game.slug}`}
+            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+          >
+            View the leaderboard
+          </Link>
+        )}
       </section>
     </article>
   );
