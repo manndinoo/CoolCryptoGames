@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PublicKey } from '@solana/web3.js'
 import { findItem, formatSol, LAMPORTS_PER_SOL, storeItems } from '@/lib/store/catalogue'
-import { isValidAddress } from '@/lib/store/treasury'
+import { isValidAddress, treasuryAddress } from '@/lib/store/treasury'
 import { settlePayment, type ChainTransaction, type IntentToSettle } from '@/lib/store/verify'
 
 const WALLET = 'PLAYERwa11etAddress1111111111111111111111111'
@@ -216,5 +216,32 @@ describe('settlePayment', () => {
       now: 1_000,
     })
     expect(r).toEqual({ ok: false, reason: 'malformed' })
+  })
+})
+
+describe('the configured treasury', () => {
+  it('is a valid, on-curve address a key can actually spend from', () => {
+    // The one purchase failure that cannot be undone is paying into an address
+    // nothing can sign for, so the committed default is asserted, not assumed.
+    const treasury = treasuryAddress()
+    expect(treasury).toBe('EwyzBV1hAVYWvtP6dUiFkXVvwaB9WQ2ghMxP1TjgAkQy')
+    expect(isValidAddress(treasury!)).toBe(true)
+    expect(PublicKey.isOnCurve(new PublicKey(treasury!).toBytes())).toBe(true)
+  })
+
+  it('lets an environment variable override it', () => {
+    const previous = process.env.CCG_TREASURY_ADDRESS
+    process.env.CCG_TREASURY_ADDRESS = '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM'
+    expect(treasuryAddress()).toBe('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM')
+    if (previous === undefined) delete process.env.CCG_TREASURY_ADDRESS
+    else process.env.CCG_TREASURY_ADDRESS = previous
+  })
+
+  it('reports a malformed override as absent rather than using it', () => {
+    const previous = process.env.CCG_TREASURY_ADDRESS
+    process.env.CCG_TREASURY_ADDRESS = 'not-an-address'
+    expect(treasuryAddress()).toBeNull()
+    if (previous === undefined) delete process.env.CCG_TREASURY_ADDRESS
+    else process.env.CCG_TREASURY_ADDRESS = previous
   })
 })

@@ -933,3 +933,54 @@ One gap the test found: a device that only *read* the wallet's save never wrote
 a local fallback, so going offline or signing out on that browser left nothing
 behind. The chosen save is now mirrored to the device on load, not only on
 write.
+
+## 25. Bible amendment 0.3, and the treasury
+
+The product owner supplied a treasury address and asked for the Product Bible
+to permit purchases.
+
+### What was amended, and what was not
+
+Amendment 0.3 authorises in-game purchases **limited to appearance and
+additional content**, with eight conditions: play stays free, no competitive
+effect, nothing held, full disclosure before signing, bound to the buyer,
+verified rather than asserted, no randomised purchase, and irreversibility
+stated. It also adds a scope note to the positioning statement — "Never pay to
+play" is a claim about play, and it stays literally true.
+
+Deliberately left in force: *purchased score advantages*, *paid tournament
+entry*, *purchased tournament attempts*, and *randomised paid rewards with
+real-world value*. The request was to allow what was built, and what was built
+is cosmetics and content. Striking the competitive exclusions is a materially
+different decision with regulatory weight, so it was flagged back rather than
+taken.
+
+The interesting thing the amendment revealed: the Bible's own Commerce rules
+already said "Prices and developer shares are visible before purchase" and
+"Competitive power is never sold". It had always contemplated purchases
+existing — it simply never authorised them, and the positioning line read as an
+absolute. The amendment resolves that contradiction rather than reversing a
+position.
+
+### The address is committed, not configured
+
+`EwyzBV1hAVYWvtP6dUiFkXVvwaB9WQ2ghMxP1TjgAkQy` is the default in
+`lib/store/treasury.ts`, with the environment variable still winning so a fork
+or a devnet run can point elsewhere.
+
+This softens the "two independent conditions" property from decision 24 — the
+flag alone now enables charging. That is a deliberate trade. The property
+existed to stop an *accidental* enablement, and a committed, reviewed address
+is not an accident. Set against it: every configuration step is a step that
+gets skipped or mistyped, and the failure mode of a mistyped recipient is real
+money to a stranger, which is worse than the failure mode it was guarding.
+
+It is validated at read time despite being a constant, and a test asserts the
+committed value parses, is on the ed25519 curve, and is therefore spendable —
+because the one purchase failure that cannot be undone is paying into an
+address nothing can sign for.
+
+The RPC now defaults to Solana's public endpoint so a deployment can settle
+without further setup, with a documented warning to replace it: it is rate
+limited hard enough to fail under load. A failed settlement does not lose a
+payment — the intent stays open — but players see it.

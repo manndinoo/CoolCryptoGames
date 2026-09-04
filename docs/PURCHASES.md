@@ -1,22 +1,38 @@
 # Purchases
 
-Off by default. Two independent settings must both be present before anything
-can be charged, so neither a stray flag nor a stray address is enough on its own.
+Off by default. One deliberate switch turns them on.
 
 ## Turning it on
 
 ```
 FEATURE_PAYMENTS=true
-CCG_TREASURY_ADDRESS=<the wallet that receives payments>
-SOLANA_RPC_URL=https://<an RPC endpoint>
-SOLANA_CLUSTER=devnet          # or mainnet-beta
 ```
 
-The treasury address is public — it is the recipient of a public transfer and
-is shown to the player before they sign. It is validated on read: a malformed
-address, or an off-curve one (a program derived address, which no private key
-can ever sign for), is treated as absent and purchases stay off rather than
-sending money somewhere it can never be spent from.
+That is the whole requirement. The treasury and the RPC endpoint have working
+defaults:
+
+| Setting | Default | Override with |
+| --- | --- | --- |
+| Treasury | `EwyzBV1hAVYWvtP6dUiFkXVvwaB9WQ2ghMxP1TjgAkQy` | `CCG_TREASURY_ADDRESS` |
+| RPC | `https://api.mainnet-beta.solana.com` | `SOLANA_RPC_URL` |
+| Cluster | `mainnet-beta` | `SOLANA_CLUSTER` |
+
+The treasury is committed rather than left to a dashboard because every setup
+step is a step that gets skipped or mistyped, and a mistyped recipient sends
+real money to a stranger. It is public by nature — the recipient of a public
+transfer, shown to the player before they sign — so there is nothing about it
+to keep secret.
+
+It is validated even though it is a constant. A committed address is still a
+typed address, and the one purchase failure that cannot be undone is paying
+into something no key can spend from: a malformed address, or an off-curve one
+(a program derived address, which has no private key), is treated as absent and
+purchases stay off.
+
+**Replace the RPC before you take real volume.** Solana's public endpoint is
+rate limited hard enough that settlements will start failing under load. A
+failed settlement does not lose a payment — the intent stays open and the item
+is granted on retry — but players will see it.
 
 `SOLANA_RPC_URL` must be HTTPS, or loopback. A settlement decision rests on
 what that endpoint says, so a plaintext link across a network is a link

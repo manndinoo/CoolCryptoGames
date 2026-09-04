@@ -18,8 +18,15 @@ import type { ChainTransaction } from '@/lib/store/verify'
  * validator or a test double usable without weakening the rule anywhere it
  * matters.
  */
+/**
+ * Solana's own public endpoint. It works, and it is rate limited hard enough
+ * that a real deployment should replace it with a provider — but a default
+ * that works beats a deployment that silently cannot settle anything.
+ */
+const DEFAULT_RPC = 'https://api.mainnet-beta.solana.com'
+
 export function rpcUrl(): string | null {
-  const url = process.env.SOLANA_RPC_URL ?? process.env.NEXT_PUBLIC_SOLANA_RPC_URL
+  const url = process.env.SOLANA_RPC_URL ?? process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_RPC
   if (!url) return null
   if (url.startsWith('https://')) return url
   if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(url)) return url

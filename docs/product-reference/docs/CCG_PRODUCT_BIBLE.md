@@ -11,7 +11,14 @@ alt="Cool Crypto Games desktop brand and homepage direction with dark graphite, 
 | **NORTH STAR Build the game platform WEBCADE was reaching for: excellent games, fair developer economics, trusted competition, live community, and optional crypto infrastructure that never gets in the way of fun.** |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
-Version 0.2 \| September 4, 2026 \| Founding working draft
+Version 0.3 \| September 4, 2026 \| Founding working draft
+
+**Amendment 0.3 — September 4, 2026.** Authorised in-game purchases, limited
+to appearance and additional content. Added "Purchases: what may be sold" under
+Commerce rules, and a scope note to the positioning statement. The exclusions
+on purchased score advantages, paid tournament entry, purchased tournament
+attempts and randomised paid rewards are unchanged and remain in force.
+Requested by the product owner.
 
 **Amendment 0.2 — September 4, 2026.** Clarified that the exclusion on
 market imagery applies to CCG platform surfaces, not to game content. Games
@@ -75,6 +82,14 @@ starts a game, submits a score, enters a tournament, or claims a prize.
 
 | **POSITIONING Browse freely. Watch freely. Connect to play. Never pay to play.** |
 |----------------------------------------------------------------------------------|
+
+"Never pay to play" is a statement about play, and it is literal. Every game is
+complete and playable — ranked or not — by a wallet that has never spent
+anything, and starting a game never requires a balance, a token, an NFT, a
+transaction or a fee. A player may choose to buy appearance or additional
+content within a game under "Purchases: what may be sold"; nothing they buy
+changes what any player can achieve, and nothing they decline to buy takes
+anything away.
 
 CCG is not a crypto casino, a token launchpad, an uncurated upload
 portal, or a collection of shallow promotional games. It is a place
@@ -537,6 +552,65 @@ in competitive modes.
 - Sponsored placements are labeled.
 
 - Randomized paid rewards are excluded from the founding product.
+
+## Purchases: what may be sold
+
+In-game purchases are permitted. They are limited to two kinds, and the
+limitation is structural rather than a policy anyone has to remember:
+
+- **Appearance.** How something looks — a skin, a trail, a colourway.
+- **Additional content.** More of the game — an extra arena, a level pack.
+
+There is deliberately no third kind. Lives, extra attempts, boosts, revives,
+stat increases, ranked entries and anything else that changes what a player can
+achieve remain excluded, and the implementation carries no representation for
+them: the item type has two members and the entitlement store refuses a third.
+
+Every purchase must satisfy all of the following.
+
+1.  **Play stays free.** A wallet that has never spent anything plays every
+    game in full. A purchase never gates, shortens, or degrades the free
+    experience, and a game must not be made worse in order to sell the fix.
+
+2.  **No competitive effect.** Nothing purchasable alters score, odds, ranking,
+    tournament eligibility, or the number of attempts a player gets.
+
+3.  **Nothing held.** A purchase is a single transfer from the player's own
+    wallet to the platform treasury. CCG holds no player balance, operates no
+    credit or points currency convertible from money, and therefore has nothing
+    to withdraw, forfeit, or return.
+
+4.  **Full disclosure before signing.** The exact amount, the exact recipient
+    address, and the network are shown before any wallet is asked to sign.
+    There are no undisclosed transactions, no approvals, and no recurring
+    charges.
+
+5.  **Bound to the buyer.** An entitlement belongs to the wallet that paid and
+    to the one game it was bought for. It does not transfer between wallets and
+    it does not carry to another game.
+
+6.  **Verified, not asserted.** A purchase is granted only after the platform
+    has independently read the paying transaction from the chain and confirmed
+    the payer, the recipient, the amount and the reference. A client's claim to
+    have paid is never sufficient.
+
+7.  **No randomised purchase.** Loot boxes, packs, and any paid outcome
+    determined by chance remain excluded.
+
+8.  **Irreversibility is stated.** On-chain payments cannot be reversed by the
+    platform, and the purchase surface says so before the player commits.
+
+### Treasury
+
+Payments are received at a single published platform address. It is public by
+nature — it is the recipient of a public transfer and is shown to the player
+before they sign. It is validated before use: an address that cannot be parsed,
+or one that lies off the ed25519 curve and therefore has no private key, is
+treated as absent and purchases stay switched off rather than sending funds
+somewhere they can never be spent from.
+
+Purchases remain off until an operator deliberately enables them. Enabling
+them is a release decision, not a configuration accident.
 
 07
 
