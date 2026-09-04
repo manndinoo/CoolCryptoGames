@@ -38,6 +38,10 @@ export type DemoGame = {
    * actually about to open. Null for entries with nothing to screenshot.
    */
   cover: string | null
+  /** Gallery shots, captured from the running game. */
+  screenshots: string[]
+  /** Short factual details for the page. Nothing here is a marketing claim. */
+  facts: { label: string; value: string }[]
 }
 
 export type DemoDeveloper = {
@@ -66,6 +70,19 @@ export const demoGames: DemoGame[] = [
     demo: false,
     art: ['#1857FF', '#DFFF00'],
     cover: '/games/road-to-bonded/cover.jpg',
+    screenshots: [
+      '/games/road-to-bonded/shots/2-board.jpg',
+      '/games/road-to-bonded/shots/1-roadmap.jpg',
+      '/games/road-to-bonded/shots/3-bonded.jpg',
+      '/games/road-to-bonded/shots/4-midlevel.jpg',
+      '/games/road-to-bonded/shots/5-complete.jpg',
+    ],
+    facts: [
+      { label: 'Levels', value: '50 across five regions' },
+      { label: 'Play', value: 'Portrait, touch or mouse' },
+      { label: 'Session', value: 'Single player, saves locally' },
+      { label: 'Engine', value: 'Deterministic — same seed, same board' },
+    ],
   },
   {
     slug: 'reflex-lab',
@@ -81,6 +98,17 @@ export const demoGames: DemoGame[] = [
     demo: false, // Real, shipped by the platform — it just is not a flagship game.
     art: ['#1857FF', '#DFFF00'],
     cover: '/games/reflex-lab/cover.jpg',
+    screenshots: [
+      '/games/reflex-lab/shots/2-go.jpg',
+      '/games/reflex-lab/shots/3-run.jpg',
+      '/games/reflex-lab/shots/1-idle.jpg',
+    ],
+    facts: [
+      { label: 'Rounds', value: 'Five per run' },
+      { label: 'Play', value: 'Tap or press space' },
+      { label: 'Scoring', value: 'Mean reaction time, lower is better' },
+      { label: 'Engine', value: 'Replayed server-side from your inputs' },
+    ],
   },
 ]
 
