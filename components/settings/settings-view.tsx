@@ -138,7 +138,7 @@ export function SettingsView() {
     <div className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)]">
       {/* ------------------------------------------------------- identity */}
       <Panel title="Player name">
-        <p className="mt-1 font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+        <p className="mt-2 font-display text-2xl font-semibold tracking-[var(--tracking-display)]">
           {state.username}
         </p>
         <p className="mt-2 max-w-lg text-sm text-[var(--color-muted)]">
@@ -154,7 +154,7 @@ export function SettingsView() {
 
       {/* --------------------------------------------------------- wallet */}
       <Panel title="Connected wallet">
-        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <p className="font-mono text-sm break-all">
             {addressShown ? state.wallet : '••••••••••••••••••••••••••••••••'}
           </p>
@@ -200,7 +200,7 @@ export function SettingsView() {
 
       {/* ------------------------------------------------------- deletion */}
       <Panel title="Delete this account">
-        <p className="mt-1 max-w-lg text-sm text-[var(--color-muted)]">
+        <p className="mt-2 max-w-lg text-sm text-[var(--color-muted)]">
           Deletion is reviewed by a person rather than run instantly. The device and
           network links a delete would remove are the same records used to investigate
           organised cheating, so an account under review cannot erase them on demand.
@@ -231,15 +231,15 @@ export function SettingsView() {
       {/* ------------------------------------------------------- requests */}
       <Panel title="Requests and appeals">
         {requests === null ? (
-          <p className="mt-1 text-sm text-[var(--color-muted)]">Loading…</p>
+          <p className="mt-2 text-sm text-[var(--color-muted)]">Loading…</p>
         ) : requests.length === 0 ? (
-          <p className="mt-1 max-w-lg text-sm text-[var(--color-muted)]">
+          <p className="mt-2 max-w-lg text-sm text-[var(--color-muted)]">
             Nothing open. Any decision that affects competition — a held result, a
             rejected score, a restriction on this account — can be appealed to a person,
             and what you raise appears here with its outcome.
           </p>
         ) : (
-          <ul className="mt-1 divide-y divide-[var(--color-subtle-border)]">
+          <ul className="mt-2 divide-y divide-[var(--color-subtle-border)]">
             {requests.map((request) => (
               <li key={request.id} className="py-3">
                 <div className="flex flex-wrap items-center gap-3">
@@ -278,7 +278,7 @@ export function SettingsView() {
  */
 function DataPolicy() {
   return (
-    <dl className="mt-1 grid gap-4 text-sm">
+    <dl className="mt-[var(--spacing-4)] grid gap-4 text-sm">
       <Item term="Wallet address">
         Held as your account key. Shown only back to you, on this page, and never on any
         public surface.

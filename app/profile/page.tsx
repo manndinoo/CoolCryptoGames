@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function ProfilePage() {
   return (
     <div className="pt-[var(--spacing-7)]">
-      <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)] uppercase">
+      <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
         Profile
       </h1>
       <ProfileView />

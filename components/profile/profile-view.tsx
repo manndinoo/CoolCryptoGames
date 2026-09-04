@@ -100,7 +100,7 @@ export function ProfileView() {
       </div>
 
       <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-        <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+        <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
           Recent results
         </h2>
         <p className="mt-3 text-sm text-[var(--color-muted)]">
@@ -117,7 +117,7 @@ export function ProfileView() {
 
       <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Appeals
           </h2>
           <StatusPill>None open</StatusPill>

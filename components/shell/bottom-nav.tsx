@@ -32,7 +32,7 @@ export function BottomNav() {
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={`flex h-[var(--mobile-bottom-nav)] flex-col items-center justify-center gap-1 text-[10px] font-semibold tracking-[var(--tracking-label)] uppercase transition-colors duration-[var(--duration-fast)] ${
-                  active ? 'text-acid' : 'text-[var(--color-muted)]'
+                  active ? 'text-accent' : 'text-[var(--color-muted)]'
                 }`}
               >
                 <Icon className="size-6" />

@@ -49,7 +49,7 @@ export default async function TournamentPage({ params }: Props) {
           {/* ------------------------------------------------ official rules */}
           <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
             <div className="mb-4 flex items-baseline justify-between gap-4">
-              <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+              <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
                 Official rules
               </h2>
               <span className="text-xs text-[var(--color-muted)]">
@@ -75,13 +75,13 @@ export default async function TournamentPage({ params }: Props) {
               restart rule applies — a build is never silently replaced.
             </p>
 
-            <h3 className="mt-[var(--spacing-5)] font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+            <h3 className="mt-[var(--spacing-5)] font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               Eligibility
             </h3>
             <ul className="mt-3 grid gap-2 text-sm text-[var(--color-muted)]">
               {tournament.rules.eligibility.map((line) => (
                 <li key={line} className="flex gap-2">
-                  <span aria-hidden className="text-cobalt">
+                  <span aria-hidden className="text-accent">
                     ·
                   </span>
                   {line}
@@ -93,7 +93,7 @@ export default async function TournamentPage({ params }: Props) {
           {/* ---------------------------------------------------- standings */}
           <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
             <div className="mb-4 flex flex-wrap items-center gap-3">
-              <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+              <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
                 Standings
               </h2>
               <VerifiedBadge />
@@ -107,7 +107,7 @@ export default async function TournamentPage({ params }: Props) {
           <EntryPanel tournament={tournament} />
 
           <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-            <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+            <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               Prize
             </h2>
             <p className="mt-3 text-sm text-[var(--color-muted)]">

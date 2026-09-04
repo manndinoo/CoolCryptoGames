@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#080A0D',
+  themeColor: '#0B0C0F',
   // Lets the shell paint under the status bar and home indicator; the safe-area
   // tokens then keep actual content clear of them.
   viewportFit: 'cover',
@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <a
             href="#main"
-            className="sr-only rounded-[var(--radius-small)] bg-acid px-4 py-2 font-semibold text-carbon focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
+            className="sr-only rounded-[var(--radius-small)] bg-accent-solid px-4 py-2 font-semibold text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
           >
             Skip to content
           </a>

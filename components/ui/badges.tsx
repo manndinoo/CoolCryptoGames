@@ -13,10 +13,17 @@ export function DemoBadge({ label = 'Demo' }: { label?: string }) {
   )
 }
 
-/** Acid is reserved for verified and live states — this is one of them. */
+/**
+ * Verified carries its own colour, not the accent.
+ *
+ * The accent means "this is the action you can take". A verified badge is a
+ * statement about a result, and painting it the same colour as every button on
+ * the page makes both weaker — you stop reading the accent as an invitation
+ * and start reading it as decoration.
+ */
 export function VerifiedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] border border-[var(--color-strong-border)] px-2 py-0.5 text-[10px] font-bold tracking-[var(--tracking-label)] text-acid uppercase">
+    <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] border border-[color-mix(in_srgb,var(--color-success)_45%,transparent)] px-2 py-0.5 text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-success)] uppercase">
       <svg viewBox="0 0 12 12" className="size-3" aria-hidden>
         <path
           d="m2.5 6.2 2.2 2.2 4.8-5"

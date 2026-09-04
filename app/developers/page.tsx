@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { DemoBadge, StatusPill } from '@/components/ui/badges'
 import { demoDevelopers, demoGames } from '@/lib/content/demo'
 import { features } from '@/lib/flags'
+import { gridColumns } from '@/lib/ui/columns'
 
 export const metadata: Metadata = {
   title: 'Developers',
@@ -11,10 +12,12 @@ export const metadata: Metadata = {
 }
 
 export default function DevelopersPage() {
+  const columns = gridColumns(demoDevelopers.length, 2)
+
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)] uppercase">
+        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
           Developers
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -24,7 +27,9 @@ export default function DevelopersPage() {
         </p>
       </header>
 
-      <ul className="ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+      <ul
+        className={`ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] ${columns}`}
+      >
         {demoDevelopers.map((dev) => {
           const games = demoGames.filter((g) => g.developerSlug === dev.slug)
           const ranked = games.filter(
@@ -60,7 +65,7 @@ export default function DevelopersPage() {
       {/* ------------------------------------------------------- publishing */}
       <section className="mt-[var(--spacing-7)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
         <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-          <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             How a build reaches players
           </h2>
           <ol className="mt-[var(--spacing-4)] grid gap-3 text-sm text-[var(--color-muted)]">
@@ -87,7 +92,7 @@ export default function DevelopersPage() {
 
         <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+            <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               Submissions
             </h2>
             <StatusPill tone={features.openGameSubmissions ? 'neutral' : 'alert'}>
@@ -108,7 +113,7 @@ export default function DevelopersPage() {
             </p>
           )}
 
-          <h3 className="mt-[var(--spacing-5)] font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <h3 className="mt-[var(--spacing-5)] font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Revenue
           </h3>
           <p className="mt-2 text-sm text-[var(--color-muted)]">

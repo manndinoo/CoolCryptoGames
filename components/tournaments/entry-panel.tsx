@@ -52,7 +52,7 @@ export function EntryPanel({ tournament }: { tournament: Tournament }) {
 
   return (
     <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-      <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+      <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
         Enter
       </h2>
 
@@ -62,7 +62,7 @@ export function EntryPanel({ tournament }: { tournament: Tournament }) {
       </p>
 
       {entry.status === 'entered' ? (
-        <p className="mt-[var(--spacing-5)] rounded-[var(--radius-medium)] border border-[var(--color-strong-border)] p-4 text-sm text-acid">
+        <p className="mt-[var(--spacing-5)] rounded-[var(--radius-medium)] border border-[var(--color-strong-border)] p-4 text-sm text-accent">
           You're entered. Your verified runs will appear in standings.
         </p>
       ) : (
@@ -72,7 +72,7 @@ export function EntryPanel({ tournament }: { tournament: Tournament }) {
               type="checkbox"
               checked={accepted}
               onChange={(e) => setAccepted(e.target.checked)}
-              className="mt-0.5 size-4 shrink-0 accent-[var(--color-acid)]"
+              className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent)]"
             />
             <span className="text-[var(--color-muted)]">
               I accept the official rules, version{' '}
@@ -83,7 +83,7 @@ export function EntryPanel({ tournament }: { tournament: Tournament }) {
           <button
             onClick={() => (signedIn ? submit() : setShowWallet(true))}
             disabled={!accepted || entry.status === 'submitting'}
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] w-full items-center justify-center rounded-[var(--radius-pill)] bg-acid px-6 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
+            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] w-full items-center justify-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
           >
             {entry.status === 'submitting'
               ? 'Entering…'

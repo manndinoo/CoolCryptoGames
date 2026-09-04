@@ -496,3 +496,71 @@ the product in breach of itself before it put it in breach of anything else.
 If a real thing to sell appears — a sponsored tournament, a studio's paid title,
 merchandise — the honest version of a promotional surface can be built against
 it then, with a real price, a real cancellation path, and no clock.
+
+## 19. Theme rebuilt: cool minimal, games first
+
+The founding palette was replaced on the owner's direction after the shell
+redesign still read wrong to them. Recorded here because it is the largest
+single divergence from the kit so far — `config/design-tokens.json` has been
+updated to match, and the Product Bible's colour section no longer describes
+what ships.
+
+### What was actually wrong
+
+Four things, diagnosed before anything was changed rather than after:
+
+**The palette fought itself.** Acid `#DFFF00` beside cobalt `#1857FF` on near
+black is a high-energy pairing — the yellow is at the top of its saturation and
+value range and vibrates against the dark, and the blue headline sat on a
+blue-black gradient, so it read muddy rather than bright.
+
+**Everything was uppercase.** Headings, section titles, badges, buttons and nav
+all set in caps with label tracking. Nothing was emphasised because everything
+was.
+
+**The elevation ramp was too shallow.** `#15191F` cards on `#080A0D` is roughly
+a 5% lightness step, below what the eye reads as a layer, so cards looked drawn
+on the page rather than raised above it. The `.ccg-surface` gradient made it
+worse: the bottom of a card ended up darker than its surroundings, so a card
+read as a hole.
+
+**The home page spent its first screen on a slogan** — a clamped 4.5rem
+headline and a 520px watermark, with two small cards below the fold. On a
+catalogue, the catalogue is the design.
+
+### What replaced it
+
+A neutral ground with four visibly separated steps (`#0B0C0F` → `#14161B` →
+`#1C1F26`), flat surfaces with a 1px border, and one accent carried in two
+values: `#4C7DFF` for text, icons and the active marker (4.8:1 on the ground),
+and `#3563E9` for filled buttons so white label text clears 4.5:1. One value
+cannot do both jobs accessibly, which is why there are two.
+
+Status colours were separated from the accent. Verified results are green,
+live is red, alerts are amber. Previously acid meant "primary action" *and*
+"verified" *and* "live", which is three meanings on one colour — and the badge
+being the same colour as every button taught readers to stop treating the
+accent as an invitation.
+
+The chrome is deliberately the least saturated thing on any screen so that a
+game's cover art is the most saturated. On a catalogue the art should supply
+the colour.
+
+Sentence case throughout, with uppercase reserved for 10–11px labels. Display
+tracking eased from -0.035em to -0.02em: that much negative tracking was drawn
+for caps and closes up the counters on sentence case.
+
+### Grids follow their content
+
+`lib/ui/columns.ts` picks a column count from the number of items. A
+four-column grid holding a two-game catalogue renders two cards and two holes,
+which reads as a page that failed to load. Matching columns to content keeps
+the row full at any catalogue size and widens on its own as more arrives. Class
+names are returned whole rather than interpolated, because Tailwind scans source
+text and never sees a template-assembled class.
+
+### The mark
+
+The tile is now accent blue rather than acid. A yellow mark beside a blue
+wordmark in an otherwise neutral interface was the last thing on screen still
+arguing with itself.

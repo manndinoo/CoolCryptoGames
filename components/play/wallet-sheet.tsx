@@ -40,7 +40,7 @@ export function WalletSheet({
         </p>
         <button
           onClick={onSignIn}
-          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-acid px-6 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-opacity hover:opacity-90"
+          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           Try again
         </button>
@@ -94,7 +94,7 @@ export function WalletSheet({
           <button
             onClick={onSignIn}
             disabled={state.status === "signing-in"}
-            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-acid px-6 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {state.status === "signing-in"
               ? "Check your wallet…"

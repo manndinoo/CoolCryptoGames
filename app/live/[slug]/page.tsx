@@ -64,7 +64,7 @@ export default async function ChannelPage({ params }: Props) {
               {game && (
                 <>
                   {' · playing '}
-                  <Link href={`/games/${game.slug}`} className="text-bone hover:text-acid">
+                  <Link href={`/games/${game.slug}`} className="text-bone hover:text-accent">
                     {game.title}
                   </Link>
                 </>

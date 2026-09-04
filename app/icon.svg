@@ -18,7 +18,7 @@
   </mask>
   <path
     d="M22 4h56a18 18 0 0 1 18 18v42L64 96H22A18 18 0 0 1 4 78V22A18 18 0 0 1 22 4Z"
-    fill="#DFFF00"
+    fill="#4C7DFF"
     mask="url(#m)"
   />
 </svg>

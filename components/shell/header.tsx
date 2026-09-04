@@ -53,7 +53,7 @@ export function Header() {
         {section && (
           <span
             key={section}
-            className="ccg-reveal hidden font-display text-sm font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase lg:block"
+            className="ccg-reveal hidden font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase lg:block"
           >
             {section}
           </span>
@@ -65,7 +65,7 @@ export function Header() {
               page; showing it twice would spend the reserved colour twice. */}
           <Link
             href="/games"
-            className="hidden rounded-[var(--radius-pill)] bg-acid px-5 py-2.5 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-transform duration-[var(--duration-fast)] hover:scale-[1.03] active:scale-[0.98] sm:inline-flex lg:hidden"
+            className="hidden rounded-[var(--radius-pill)] bg-accent-solid px-5 py-2.5 text-sm font-semibold text-white transition-transform duration-[var(--duration-fast)] hover:scale-[1.03] active:scale-[0.98] sm:inline-flex lg:hidden"
           >
             Play now
           </Link>

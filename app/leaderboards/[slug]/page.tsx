@@ -79,7 +79,7 @@ export default async function GameLeaderboardPage({ params }: Props) {
               </StatusPill>
             )}
           </div>
-          <h1 className="font-display text-[clamp(1.9rem,6vw,2.8rem)] leading-[1.05] font-bold tracking-[var(--tracking-display)] uppercase">
+          <h1 className="font-display text-[clamp(1.9rem,6vw,2.8rem)] leading-[1.05] font-bold tracking-[var(--tracking-display)]">
             {game.title}
           </h1>
           <Link
@@ -93,7 +93,7 @@ export default async function GameLeaderboardPage({ params }: Props) {
 
       {!ranked ? (
         <section className="ccg-surface mt-[var(--spacing-6)] max-w-xl rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-          <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             No board for this game
           </h2>
           <p className="mt-3 text-sm text-[var(--color-muted)]">
@@ -104,7 +104,7 @@ export default async function GameLeaderboardPage({ params }: Props) {
           </p>
           <Link
             href={`/games/${game.slug}`}
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-acid px-6 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-opacity hover:opacity-90"
+            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             Play {game.title}
           </Link>
@@ -138,7 +138,7 @@ export default async function GameLeaderboardPage({ params }: Props) {
           </section>
 
           <section className="mt-[var(--spacing-6)] max-w-xl">
-            <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+            <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               How a place is earned
             </h2>
             <ul className="mt-3 grid gap-2 text-sm text-[var(--color-muted)]">

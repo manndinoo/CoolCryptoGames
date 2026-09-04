@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function SettingsPage() {
   return (
     <div className="pt-[var(--spacing-7)] pb-[var(--spacing-6)]">
-      <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)] uppercase">
+      <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
         Settings
       </h1>
       <p className="mt-3 max-w-xl text-[var(--color-muted)]">

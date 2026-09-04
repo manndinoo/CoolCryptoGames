@@ -72,7 +72,7 @@ export function CcgCascade({ size = 48, monochrome = false, className, title = '
   const uid = safeId(useId())
   const colors = monochrome
     ? ['currentColor', 'currentColor', 'currentColor']
-    : ['#F5F2E9', '#1857FF', '#DFFF00']
+    : ['#E8EAED', '#4C7DFF', '#3563E9']
 
   return (
     <svg width={size} height={size} viewBox="0 0 78 78" fill="none" role="img" aria-label={title} className={className}>
@@ -111,7 +111,7 @@ export function CcgTriTile({ size = 48, monochrome = false, className, title = '
   const uid = safeId(useId())
   const tiles = monochrome
     ? ['currentColor', 'currentColor', 'currentColor']
-    : ['#DFFF00', '#F5F2E9', '#DFFF00']
+    : ['#4C7DFF', '#E8EAED', '#4C7DFF']
   const showLetters = size >= 28
 
   // The inscribed square of a 42-unit diamond is only ~30 across, so letters
@@ -163,7 +163,7 @@ export function CcgTriTile({ size = 48, monochrome = false, className, title = '
 export function CcgTile({ size = 48, monochrome = false, className, title = 'Cool Crypto Games' }: MarkProps) {
   const uid = safeId(useId())
   const maskId = `ccg-tile-${uid}`
-  const fill = monochrome ? 'currentColor' : '#DFFF00'
+  const fill = monochrome ? 'currentColor' : '#4C7DFF'
 
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" role="img" aria-label={title} className={className}>
@@ -201,12 +201,12 @@ export function CcgWordmark({
       {stacked ? (
         <span className="font-display text-[13px] leading-[1.05] font-bold tracking-[-0.02em] uppercase">
           <span className="block">Cool</span>
-          <span className="block text-acid">Crypto</span>
+          <span className="block text-accent">Crypto</span>
           <span className="block">Games</span>
         </span>
       ) : (
         <span className="font-display text-[15px] leading-none font-bold tracking-[-0.02em] whitespace-nowrap uppercase">
-          Cool <span className="text-acid">Crypto</span> Games
+          Cool <span className="text-accent">Crypto</span> Games
         </span>
       )}
     </span>

@@ -33,7 +33,7 @@ export function PlayGate({ game }: { game: GameSummary }) {
     return (
       <div className="ccg-surface grid aspect-video w-full place-items-center rounded-[var(--radius-large)] text-center">
         <div className="p-6">
-          <p className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <p className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Not released
           </p>
           <p className="mt-2 max-w-sm text-sm text-[var(--color-muted)]">
@@ -97,7 +97,7 @@ export function PlayGate({ game }: { game: GameSummary }) {
     return (
       <div className="ccg-surface grid aspect-video w-full place-items-center rounded-[var(--radius-large)] text-center">
         <div className="p-6">
-          <p className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <p className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Ranked runtime not yet wired
           </p>
           <p className="mt-2 max-w-md text-sm text-[var(--color-muted)]">
@@ -134,12 +134,12 @@ export function PlayGate({ game }: { game: GameSummary }) {
         )}
 
         <span className="relative flex flex-col items-center gap-3">
-          <span className="ccg-pulse grid size-16 place-items-center rounded-full bg-acid text-carbon shadow-xl transition-transform duration-[var(--duration-normal)] group-hover:scale-105">
+          <span className="ccg-pulse grid size-16 place-items-center rounded-full bg-accent-solid text-white shadow-xl transition-transform duration-[var(--duration-normal)] group-hover:scale-105">
             <svg viewBox="0 0 24 24" className="ml-1 size-7" aria-hidden>
               <path d="M8 5v14l11-7L8 5Z" fill="currentColor" />
             </svg>
           </span>
-          <span className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <span className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Play {game.title}
           </span>
         </span>

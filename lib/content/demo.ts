@@ -110,7 +110,7 @@ export const demoGames: DemoGame[] = [
     status: 'playable',
     updatedAt: '2026-09-04',
     demo: false,
-    art: ['#1857FF', '#DFFF00'],
+    art: ['#3563E9', '#4C7DFF'],
     cover: '/games/road-to-bonded/cover.jpg',
     screenshots: [
       '/games/road-to-bonded/shots/2-board.jpg',

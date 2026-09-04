@@ -25,7 +25,7 @@ export function BoardTable({
         return (
           <li
             key={`${entry.rank}-${entry.name}-${entry.achievedAt}`}
-            className={`flex items-center gap-4 py-3 ${mine ? 'text-acid' : ''}`}
+            className={`flex items-center gap-4 py-3 ${mine ? 'text-accent' : ''}`}
           >
             <span
               className={`w-8 shrink-0 text-right font-display text-sm font-bold tabular-nums ${

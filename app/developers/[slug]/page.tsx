@@ -43,7 +43,7 @@ export default async function DeveloperPage({ params }: Props) {
           <StatusPill>Publisher</StatusPill>
           {dev.demo && <DemoBadge label="Demo studio" />}
         </div>
-        <h1 className="font-display text-[clamp(2rem,7vw,3rem)] leading-[1] font-bold tracking-[var(--tracking-display)] uppercase">
+        <h1 className="font-display text-[clamp(2rem,7vw,3rem)] leading-[1] font-bold tracking-[var(--tracking-display)]">
           {dev.name}
         </h1>
         <p className="mt-[var(--spacing-4)] max-w-xl text-[var(--color-muted)]">{dev.bio}</p>
@@ -61,7 +61,7 @@ export default async function DeveloperPage({ params }: Props) {
       </div>
 
       <section className="mt-[var(--spacing-7)]">
-        <h2 className="mb-[var(--spacing-4)] font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+        <h2 className="mb-[var(--spacing-4)] font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
           Games
         </h2>
         {games.length === 0 ? (
@@ -69,7 +69,7 @@ export default async function DeveloperPage({ params }: Props) {
             Nothing published yet.
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-[var(--spacing-4)] lg:grid-cols-4">
+          <div className="ccg-stagger grid grid-cols-2 gap-[var(--spacing-4)] lg:grid-cols-3 2xl:grid-cols-4">
             {games.map((game) => (
               <GameCard key={game.slug} game={game} />
             ))}
@@ -79,7 +79,7 @@ export default async function DeveloperPage({ params }: Props) {
 
       {ranked.length > 0 && (
         <section className="mt-[var(--spacing-7)]">
-          <h2 className="mb-[var(--spacing-4)] font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <h2 className="mb-[var(--spacing-4)] font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Leaderboards
           </h2>
           <ul className="grid gap-2">
@@ -101,7 +101,7 @@ export default async function DeveloperPage({ params }: Props) {
       )}
 
       <section className="ccg-surface mt-[var(--spacing-7)] max-w-xl rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-        <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+        <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
           What this page does not show
         </h2>
         <p className="mt-3 text-sm text-[var(--color-muted)]">

@@ -13,7 +13,7 @@ const VARIANTS = [
 export default function BrandPage() {
   return (
     <div className="py-[var(--spacing-7)]">
-      <h1 className="font-display text-3xl font-bold uppercase">Mark options</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-[var(--tracking-display)]">Mark options</h1>
       <p className="mt-2 text-sm text-[var(--color-muted)]">
         Each row: large, small, favicon size, and one-colour. A mark only works if the
         16px and one-colour cells still read.
@@ -34,8 +34,8 @@ export default function BrandPage() {
               <Cell label="one colour">
                 <span className="text-bone"><Mark size={56} monochrome /></span>
               </Cell>
-              <Cell label="on acid">
-                <span className="grid size-[72px] place-items-center rounded-[var(--radius-medium)] bg-acid text-carbon">
+              <Cell label="on accent">
+                <span className="grid size-[72px] place-items-center rounded-[var(--radius-medium)] bg-accent-solid text-white">
                   <Mark size={44} monochrome />
                 </span>
               </Cell>

@@ -118,7 +118,7 @@ export function Chat({ channelSlug, enabled }: { channelSlug: string; enabled: b
           <ul className="grid gap-2 text-sm">
             {messages.map((m) => (
               <li key={m.id} className="break-words">
-                <span className="font-mono text-xs text-cobalt">{m.handle}</span>{' '}
+                <span className="font-mono text-xs text-accent">{m.handle}</span>{' '}
                 {/* Rendered as text, never as markup. */}
                 <span className="text-bone/90">{m.body}</span>
               </li>
@@ -146,7 +146,7 @@ export function Chat({ channelSlug, enabled }: { channelSlug: string; enabled: b
                 <button
                   type="submit"
                   disabled={sending || draft.trim().length === 0}
-                  className="min-h-[var(--tap-target)] shrink-0 rounded-[var(--radius-pill)] bg-cobalt px-5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
+                  className="min-h-[var(--tap-target)] shrink-0 rounded-[var(--radius-pill)] bg-accent-solid px-5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   Send
                 </button>

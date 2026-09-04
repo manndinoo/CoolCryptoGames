@@ -88,7 +88,7 @@ export function FirstVisitNotice() {
           <Link
             href="/games"
             onClick={dismiss}
-            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-acid px-5 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-transform duration-[var(--duration-fast)] hover:scale-[1.03] active:scale-[0.98]"
+            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-5 text-sm font-semibold text-white transition-transform duration-[var(--duration-fast)] hover:scale-[1.03] active:scale-[0.98]"
           >
             See the games
           </Link>

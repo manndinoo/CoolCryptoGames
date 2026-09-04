@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { DemoBadge, StatusPill } from '@/components/ui/badges'
 import { demoTournaments } from '@/lib/content/demo'
 import { features } from '@/lib/flags'
+import { gridColumns } from '@/lib/ui/columns'
 
 export const metadata: Metadata = {
   title: 'Tournaments',
@@ -13,7 +14,7 @@ export default function TournamentsPage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)] uppercase">
+        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
           Tournaments
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -53,7 +54,9 @@ export default function TournamentsPage() {
           </Link>
         </section>
       ) : (
-        <ul className="ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+        <ul
+          className={`ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] ${gridColumns(demoTournaments.length, 2)}`}
+        >
           {demoTournaments.map((t) => (
             <li key={t.slug}>
               <Link

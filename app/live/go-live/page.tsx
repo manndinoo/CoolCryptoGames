@@ -17,7 +17,7 @@ export default function GoLivePage() {
         ← Live
       </Link>
 
-      <h1 className="mt-[var(--spacing-5)] font-display text-4xl font-bold tracking-[var(--tracking-display)] uppercase">
+      <h1 className="mt-[var(--spacing-5)] font-display text-4xl font-bold tracking-[var(--tracking-display)]">
         Broadcaster setup
       </h1>
       <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -28,7 +28,7 @@ export default function GoLivePage() {
         {/* -------------------------------------------- the path that works */}
         <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+            <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               Stream through your own provider
             </h2>
             <StatusPill>Available now</StatusPill>
@@ -48,7 +48,7 @@ export default function GoLivePage() {
               'Give CCG your channel URL. It is checked against the approved-host allow-list before it can be framed.',
             ].map((step, i) => (
               <li key={step} className="flex gap-3">
-                <span className="font-display font-bold text-cobalt">{i + 1}</span>
+                <span className="font-display font-bold text-accent">{i + 1}</span>
                 {step}
               </li>
             ))}
@@ -64,7 +64,7 @@ export default function GoLivePage() {
         {/* ------------------------------------------------ the path that does not */}
         <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+            <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               Broadcast through CCG
             </h2>
             <StatusPill tone={features.nativeStreaming ? 'neutral' : 'alert'}>
@@ -98,14 +98,14 @@ export default function GoLivePage() {
       {/* Full width: the composition tool is far taller than either card above,
           and pairing it with one would leave half the page empty. */}
       <section className="ccg-surface mt-[var(--spacing-4)] rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-        <h2 className="mb-[var(--spacing-5)] font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+        <h2 className="mb-[var(--spacing-5)] font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
           Composition
         </h2>
         <BroadcasterSetup />
       </section>
 
       <section className="mt-[var(--spacing-7)] max-w-2xl">
-        <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+        <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
           Camera and safety
         </h2>
         <ul className="mt-3 grid gap-2 text-sm text-[var(--color-muted)]">

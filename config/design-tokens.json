@@ -7,32 +7,32 @@
     "productLine": "Browse freely. Watch freely. Connect to play. Never pay to play."
   },
   "color": {
-    "carbon": "#080A0D",
-    "graphite": "#15191F",
-    "graphiteRaised": "#1D232B",
-    "bone": "#F5F2E9",
+    "carbon": "#0B0C0F",
+    "graphite": "#14161B",
+    "graphiteRaised": "#1C1F26",
+    "bone": "#E8EAED",
     "white": "#FFFFFF",
-    "cobalt": "#1857FF",
-    "acid": "#DFFF00",
-    "orange": "#FF5A19",
-    "success": "#76E65C",
+    "accent": "#4C7DFF",
+    "accentSolid": "#3563E9",
+    "orange": "#E8A33D",
+    "success": "#3ECF8E",
     "danger": "#FF4D5E",
-    "mutedText": "#9AA4B2",
-    "subtleBorder": "rgba(255,255,255,0.12)",
-    "strongBorder": "rgba(223,255,0,0.72)"
+    "mutedText": "#8A9099",
+    "subtleBorder": "rgba(255,255,255,0.08)",
+    "strongBorder": "rgba(76,125,255,0.55)"
   },
   "typography": {
     "display": "Use a licensed or open geometric grotesk selected during implementation",
     "body": "Use a highly legible open sans-serif",
     "displayWeight": 800,
     "bodyWeight": 450,
-    "letterSpacingDisplay": "-0.035em",
+    "letterSpacingDisplay": "-0.02em",
     "letterSpacingLabel": "0.08em"
   },
   "radius": {
     "small": "10px",
-    "medium": "16px",
-    "large": "22px",
+    "medium": "14px",
+    "large": "18px",
     "pill": "999px"
   },
   "space": {
@@ -65,5 +65,6 @@
     "glow": "Use sparingly around active or live elements; never on body text",
     "crypto": "Platform surfaces: no charts, coins, rockets, moons, or market imagery, and never live market data. Game content is exempt \u2014 a game may depict charts, candlesticks or bonding curves as subject matter.",
     "contentTruth": "Never display generated-image statistics as real product data"
-  }
+  },
+  "colorNotes": "Revised from the founding kit's acid/cobalt pair on the owner's direction. accent is the readable-on-dark value for text, icons and the active marker; accentSolid is darker so white button text clears 4.5:1. success is verified results only, danger is live and destructive only, orange is alerts only. Chrome is neutral so that game art is the most saturated thing on any screen."
 }

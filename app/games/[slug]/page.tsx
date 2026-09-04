@@ -100,7 +100,7 @@ export default async function GamePage({ params }: Props) {
                   by{" "}
                   <Link
                     href={`/developers/${developer.slug}`}
-                    className="text-bone transition-colors hover:text-acid"
+                    className="text-bone transition-colors hover:text-accent"
                   >
                     {developer.name}
                   </Link>
@@ -150,7 +150,7 @@ export default async function GamePage({ params }: Props) {
       {/* ------------------------------------------------------------ gallery */}
       {game.screenshots.length > 0 && (
         <section className="mt-[var(--spacing-7)]">
-          <h2 className="mb-[var(--spacing-4)] font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <h2 className="mb-[var(--spacing-4)] font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Screenshots
           </h2>
           <div className="ccg-rail -mx-[var(--mobile-gutter)] px-[var(--mobile-gutter)] lg:mx-0 lg:px-0">
@@ -181,7 +181,7 @@ export default async function GamePage({ params }: Props) {
 
       {/* ------------------------------------------------------- verification */}
       <section className="mt-[var(--spacing-7)] max-w-xl">
-        <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+        <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
           Score verification
         </h2>
         <p className="mt-2 text-sm text-[var(--color-muted)]">

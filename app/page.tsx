@@ -1,262 +1,190 @@
+import Image from "next/image";
 import Link from "next/link";
-import { CcgMonogram, CcgTriTile } from "@/components/brand/logo";
-import { DemoBadge, StatusPill } from "@/components/ui/badges";
-import { GameCard } from "@/components/ui/game-card";
+import { DemoBadge, StatusPill, VerifiedBadge } from "@/components/ui/badges";
+import { SectionHeader } from "@/components/ui/section";
 import {
-  Section,
-  SectionHeader,
-} from "@/components/ui/section";
-import {
+  demoChannels,
   demoDevelopers,
   demoGames,
-  demoChannels,
   demoTournaments,
+  type DemoGame,
 } from "@/lib/content/demo";
 import { site } from "@/site.config";
 
+/**
+ * Home.
+ *
+ * Games are the first thing on the screen. The page used to open with a
+ * full-height slogan and an oversized watermark, and you had to scroll past all
+ * of it to reach two small cards — on a catalogue, the catalogue is the design,
+ * and the argument for the product is the art, not a headline about the art.
+ *
+ * The intro is three lines and a link. Everything it used to say at 72px is
+ * still said, in a size that leaves room for the thing it is introducing.
+ */
 export default function Home() {
-  const featured = demoGames;
-  const playable = demoGames.filter((g) => g.status === "playable");
-  const recentlyUpdated = [...demoGames].sort((a, b) =>
-    b.updatedAt.localeCompare(a.updatedAt),
-  );
-  // With a small catalogue this section lists exactly what Featured already
-  // shows. Two identical rows read as padding, so it waits until there is
-  // enough of a catalogue for "recent" to mean something.
-  const showRecentlyUpdated = demoGames.length > 4;
-  // May be absent: the catalogue ships with no scheduled event.
+  const games = demoGames;
   const tournament = demoTournaments[0] ?? null;
   const channel = demoChannels[0];
   const spotlight = demoDevelopers[0];
 
   return (
     <>
-      {/* ---------------------------------------------------------------- hero */}
-      <section className="relative overflow-hidden rounded-[var(--radius-large)] pt-[var(--spacing-6)] pb-[var(--spacing-6)] lg:mt-[var(--spacing-5)] lg:px-[var(--spacing-7)] lg:pt-[var(--spacing-8)] lg:pb-[var(--spacing-7)]">
-        {/* Restrained depth: one soft cobalt wash, no neon field. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 opacity-70"
-          style={{
-            background:
-              "radial-gradient(120% 80% at 78% 8%, color-mix(in srgb, var(--color-cobalt) 30%, transparent) 0%, transparent 62%)",
-          }}
-        />
-
-        {/* Our own mark, oversized and faint. The reference composition has key
-            art here; inventing some would mean depicting a game that does not
-            exist, so the brand geometry holds the space instead. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-6 -right-10 hidden opacity-[0.07] lg:block"
-        >
-          <CcgTriTile size={520} monochrome />
-        </div>
-
-        <div className="max-w-2xl">
-          <h1 className="font-display text-[clamp(2.4rem,9vw,4.5rem)] leading-[0.95] font-bold tracking-[var(--tracking-display)] uppercase">
-            <span className="block text-cobalt">Games first.</span>
-            <span className="block">Crypto native.</span>
-          </h1>
-
-          <p className="mt-[var(--spacing-5)] max-w-md text-base text-[var(--color-muted)] lg:text-lg">
-            {site.description}
-          </p>
-
-          <div className="mt-[var(--spacing-6)] flex flex-wrap items-center gap-3">
-            <Link
-              href={`/games/${playable[0]?.slug ?? ""}`}
-              className="inline-flex min-h-[var(--tap-target)] items-center gap-3 rounded-[var(--radius-pill)] bg-acid px-7 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-opacity duration-[var(--duration-fast)] hover:opacity-90"
-            >
-              Play now
-              <svg viewBox="0 0 20 20" className="size-4" aria-hidden>
-                <path
-                  d="M3 10h13m0 0-5-5m5 5-5 5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Link>
-
-            <Link
-              href="/games"
-              className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
-            >
-              Browse the catalogue
-            </Link>
-          </div>
-
-          <p className="mt-[var(--spacing-5)] text-xs text-[var(--color-muted)]">
-            {site.productLine}
-          </p>
-        </div>
+      {/* --------------------------------------------------------------- intro */}
+      <section className="pt-[var(--spacing-6)] pb-[var(--spacing-6)]">
+        <h1 className="font-display text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.1] font-semibold tracking-[var(--tracking-display)]">
+          {site.tagline}
+        </h1>
+        <p className="mt-3 max-w-xl text-[var(--color-muted)]">
+          {site.description}
+        </p>
+        <p className="mt-4 text-sm text-[var(--color-muted)]">
+          {site.productLine}
+        </p>
       </section>
 
-      {/* ------------------------------------------------------------ trending */}
-      <Section className="mt-[var(--spacing-6)]">
-        <div className="ccg-surface flex items-center gap-4 overflow-hidden rounded-[var(--radius-medium)] px-4 py-3">
-          <span className="flex shrink-0 items-center gap-2 text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
-            <CcgMonogram size={16} monochrome className="text-acid" />
-            Catalogue
-          </span>
-          <div className="ccg-rail gap-6">
-            {demoGames.map((g) => (
-              <Link
-                key={g.slug}
-                href={`/games/${g.slug}`}
-                className="text-xs font-semibold whitespace-nowrap text-[var(--color-muted)] transition-colors hover:text-bone"
-              >
-                {g.title}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </Section>
+      {/* --------------------------------------------------------------- games
+          Two-up at desktop with the cover at 16:9. A four-column grid holding a
+          two-game catalogue reads as a page that failed to load; a two-column
+          one reads as a page with two games on it, and grows into rows rather
+          than into gaps. */}
+      <section className="ccg-stagger grid gap-[var(--spacing-4)] lg:grid-cols-2">
+        {games.map((game) => (
+          <FeatureCard key={game.slug} game={game} />
+        ))}
+      </section>
 
-      {/* ------------------------------------------------------- featured games */}
-      <Section>
-        <SectionHeader title="Featured games" href="/games" />
-        {/* Rail on mobile so cards swipe with a visible peek; grid on desktop. */}
-        <div className="ccg-rail ccg-stagger lg:grid lg:grid-cols-4 lg:gap-[var(--spacing-4)] lg:overflow-visible">
-          {featured.map((game) => (
-            <GameCard
-              key={game.slug}
-              game={game}
-              className="w-[78vw] max-w-xs shrink-0 lg:w-auto lg:max-w-none lg:shrink"
-            />
-          ))}
-        </div>
-      </Section>
-
-      {/* --------------------------------------------- tournament + live modules */}
-      <Section className="ccg-stagger grid gap-[var(--spacing-4)] lg:grid-cols-2">
-        <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="font-display text-xs font-bold tracking-[var(--tracking-label)] text-cobalt uppercase">
-              Tournament
-            </span>
-            {tournament?.demo && <DemoBadge label="Demo event" />}
-          </div>
-
-          {tournament ? (
-            <>
-              <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
-                {tournament.name}
-              </h3>
-              <p className="mt-1 text-sm text-[var(--color-muted)]">
-                {tournament.format}
-              </p>
-
-              <dl className="mt-[var(--spacing-5)] grid gap-3 text-sm">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-[var(--color-muted)]">Status</dt>
-                  <dd>
-                    <StatusPill>{tournament.status}</StatusPill>
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-[var(--color-muted)]">Rules version</dt>
-                  <dd className="font-medium">{tournament.rules.version}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-[var(--color-muted)]">Prize</dt>
-                  {/* Never a value without an approved Prize record. */}
-                  <dd className="font-medium">Not yet announced</dd>
-                </div>
-              </dl>
-            </>
-          ) : (
-            <>
-              <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
-                No event scheduled
-              </h3>
-              <p className="mt-2 text-sm text-[var(--color-muted)]">
-                Nothing is running and nothing is announced. When an event is
-                scheduled its rules are published before entry opens, and they do
-                not change once it does.
-              </p>
-            </>
-          )}
-
-          <Link
+      {/* ------------------------------------------------------------- modules
+          Three quiet rows rather than three panels. Each states what is
+          genuinely there — which right now is mostly "nothing yet", and a large
+          card is a lot of surface to spend saying that. */}
+      <section className="mt-[var(--spacing-7)]">
+        <SectionHeader title="Elsewhere on CCG" />
+        <ul className="ccg-stagger grid gap-px overflow-hidden rounded-[var(--radius-large)] border border-[var(--color-subtle-border)] bg-[var(--color-subtle-border)] lg:grid-cols-3">
+          <ModuleRow
             href={tournament ? `/tournaments/${tournament.slug}` : "/tournaments"}
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
-          >
-            {tournament ? "Read the rules" : "How tournaments work"}
-          </Link>
+            label="Tournaments"
+            title={tournament ? tournament.name : "No event scheduled"}
+            note={
+              tournament
+                ? tournament.format
+                : "Free entry, published rules, verified results."
+            }
+            badge={tournament?.demo ? <DemoBadge label="Demo event" /> : null}
+          />
+          <ModuleRow
+            href="/live"
+            label="Live"
+            title={channel.title}
+            note="Nothing is broadcasting. Scheduled programming appears here once a provider is approved."
+            badge={<StatusPill>{channel.state}</StatusPill>}
+          />
+          <ModuleRow
+            href={`/developers/${spotlight.slug}`}
+            label="Developers"
+            title={spotlight.name}
+            note={spotlight.bio}
+            badge={spotlight.demo ? <DemoBadge /> : null}
+          />
+        </ul>
+      </section>
+    </>
+  );
+}
+
+/** A game at the size its art deserves. */
+function FeatureCard({ game }: { game: DemoGame }) {
+  const ranked = game.scoreVerification === "deterministic-replay";
+
+  return (
+    <article className="ccg-surface ccg-lift group/card overflow-hidden rounded-[var(--radius-large)]">
+      <Link href={`/games/${game.slug}`} className="block">
+        <div className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--color-carbon)]">
+          {game.cover ? (
+            <Image
+              src={game.cover}
+              alt={`${game.title} gameplay`}
+              fill
+              sizes="(max-width: 1024px) 100vw, 640px"
+              className="object-cover transition-transform duration-[var(--duration-slow)] ease-[var(--ease-ccg)] group-hover/card:scale-[1.03]"
+              priority
+            />
+          ) : (
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(140deg, ${game.art[0]} 0%, ${game.art[1]} 140%)`,
+              }}
+            />
+          )}
         </div>
 
-        <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="font-display text-xs font-bold tracking-[var(--tracking-label)] text-cobalt uppercase">
-              Live programming
+        <div className="p-[var(--spacing-5)]">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
+              {game.category}
             </span>
-            {/* Offline is the honest state until a provider stream is configured. */}
-            <StatusPill>{channel.state}</StatusPill>
+            {game.demo && <DemoBadge />}
+            {ranked ? <VerifiedBadge /> : <StatusPill>Unranked</StatusPill>}
           </div>
 
-          <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
-            {channel.title}
-          </h3>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            No stream is currently broadcasting. Scheduled programming appears
-            here once a provider is configured and approved.
+          <h2 className="font-display text-xl font-semibold tracking-[var(--tracking-display)]">
+            {game.title}
+          </h2>
+          <p className="mt-2 line-clamp-2 text-sm text-[var(--color-muted)]">
+            {game.blurb}
           </p>
 
-          <Link
-            href="/live"
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
-          >
-            See the schedule
-          </Link>
-        </div>
-      </Section>
-
-      {/* --------------------------------------------------- developer spotlight */}
-      <Section>
-        <SectionHeader title="Developer spotlight" href="/developers" />
-        <div className="ccg-surface flex flex-wrap items-center gap-[var(--spacing-5)] rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-          <div className="grid size-16 shrink-0 place-items-center rounded-[var(--radius-medium)] bg-[var(--color-graphite)]">
-            <CcgMonogram size={32} />
-          </div>
-          <div className="min-w-56 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-lg font-bold">
-                {spotlight.name}
-              </h3>
-              {spotlight.demo && <DemoBadge />}
-            </div>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">
-              {spotlight.bio}
-            </p>
-          </div>
-          <Link
-            href={`/developers/${spotlight.slug}`}
-            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
-          >
-            View developer
-          </Link>
-        </div>
-      </Section>
-
-      {/* ------------------------------------------------------ recently updated */}
-      {showRecentlyUpdated && (
-        <Section>
-          <SectionHeader title="Recently updated" href="/games" />
-          <div className="ccg-rail lg:grid lg:grid-cols-4 lg:gap-[var(--spacing-4)] lg:overflow-visible">
-            {recentlyUpdated.map((game) => (
-              <GameCard
-                key={game.slug}
-                game={game}
-                className="w-[62vw] max-w-[240px] shrink-0 lg:w-auto lg:max-w-none lg:shrink"
+          <span className="mt-[var(--spacing-4)] inline-flex items-center gap-2 text-sm font-semibold text-accent">
+            Play
+            <svg viewBox="0 0 20 20" className="size-4" aria-hidden>
+              <path
+                d="M3 10h13m0 0-5-5m5 5-5 5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
-            ))}
-          </div>
-        </Section>
-      )}
-    </>
+            </svg>
+          </span>
+        </div>
+      </Link>
+    </article>
+  );
+}
+
+function ModuleRow({
+  href,
+  label,
+  title,
+  note,
+  badge,
+}: {
+  href: string;
+  label: string;
+  title: string;
+  note: string;
+  badge?: React.ReactNode;
+}) {
+  return (
+    <li className="bg-[var(--color-graphite)]">
+      <Link
+        href={href}
+        className="flex h-full flex-col p-[var(--spacing-5)] transition-colors duration-[var(--duration-fast)] hover:bg-[var(--color-graphite-raised)]"
+      >
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
+            {label}
+          </span>
+          {badge}
+        </div>
+        <p className="font-display text-base font-semibold tracking-[var(--tracking-display)]">
+          {title}
+        </p>
+        <p className="mt-1.5 line-clamp-2 text-sm text-[var(--color-muted)]">{note}</p>
+      </Link>
+    </li>
   );
 }

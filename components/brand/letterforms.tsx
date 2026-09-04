@@ -24,7 +24,7 @@ type LetterProps = {
   knockoutColor?: string
 }
 
-export function Letter({ letter, color, knockout = 0, knockoutColor = '#080A0D' }: LetterProps) {
+export function Letter({ letter, color, knockout = 0, knockoutColor = '#0B0C0F' }: LetterProps) {
   const d = letter === 'G' ? PATH_G : PATH_C
   return (
     <>

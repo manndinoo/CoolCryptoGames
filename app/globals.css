@@ -8,29 +8,37 @@
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* Foundation */
-  --color-carbon: #080a0d;
-  --color-graphite: #15191f;
-  --color-graphite-raised: #1d232b;
-  --color-bone: #f5f2e9;
+  /* Ground and elevation.
+     Four steps, each visibly lighter than the last. The previous ramp moved
+     about 5% in lightness between the page and a card, which is below what the
+     eye reads as a layer — cards looked like flat rectangles drawn on the
+     background rather than sitting above it. */
+  --color-carbon: #0b0c0f;
+  --color-graphite: #14161b;
+  --color-graphite-raised: #1c1f26;
+  --color-bone: #e8eaed;
 
-  /* Structure */
-  --color-cobalt: #1857ff;
+  /* One accent, two values.
+     `accent` is the readable-on-dark version, used for text, icons, borders and
+     the active marker: 4.8:1 on the page ground. `accent-solid` is darker so
+     that white text on a filled button clears 4.5:1, which the lighter value
+     does not. Two values because one cannot serve both jobs accessibly. */
+  --color-accent: #4c7dff;
+  --color-accent-solid: #3563e9;
 
-  /* Reserved. See usage rules below — these are not general-purpose colours. */
-  --color-acid: #dfff00;
-  --color-orange: #ff5a19;
-
-  --color-success: #76e65c;
+  /* Status colours, each reserved for exactly one meaning. */
+  --color-success: #3ecf8e;
   --color-danger: #ff4d5e;
-  --color-muted: #9aa4b2;
+  --color-orange: #e8a33d;
 
-  --color-subtle-border: rgba(255, 255, 255, 0.12);
-  --color-strong-border: rgba(223, 255, 0, 0.72);
+  --color-muted: #8a9099;
+
+  --color-subtle-border: rgba(255, 255, 255, 0.08);
+  --color-strong-border: rgba(76, 125, 255, 0.55);
 
   --radius-small: 10px;
-  --radius-medium: 16px;
-  --radius-large: 22px;
+  --radius-medium: 14px;
+  --radius-large: 18px;
   --radius-pill: 999px;
 
   --spacing-1: 4px;
@@ -47,7 +55,9 @@
   --duration-normal: 220ms;
   --duration-slow: 420ms;
 
-  --tracking-display: -0.035em;
+  /* Display tracking eased off from -0.035em. That much negative tracking was
+     drawn for all-caps settings; on sentence case it closes up the counters. */
+  --tracking-display: -0.02em;
   --tracking-label: 0.08em;
 
   --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
@@ -92,13 +102,18 @@ body[data-sidebar='collapsed'] {
 }
 
 /* ---------------------------------------------------------------------------
-   Token usage rules, from design-tokens.json. These are product rules, not
-   preferences: acid yellow reading as "this is the action" only works while
-   nothing else uses it.
+   Token usage rules. These are product rules, not preferences.
 
-     acid   — primary play/register actions, live and verified states only
-     orange — alerts and expiring states only
-     glow   — sparingly, around active or live elements; never on body text
+     accent  — the primary action, the active navigation item, focus. One use
+               per screen for the filled version; a second filled accent button
+               on the same screen halves what the first one means.
+     success — verified results only. Never decoration.
+     danger  — live broadcasts and destructive actions only.
+     orange  — alerts and expiring states only.
+
+   Colour is carried by game art, not by chrome. Every surface here is neutral
+   so that a cover image is the most saturated thing on the screen, which is
+   the point of a catalogue.
 --------------------------------------------------------------------------- */
 
 body {
@@ -107,34 +122,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* A single fixed wash behind everything, rather than a gradient per section.
-   Two very low-opacity radials give the flat carbon ground somewhere to fall
-   away to, which is most of what separates a dark interface that reads as
-   deliberate from one that reads as an unstyled page. Fixed and
-   pointer-events-none, so it costs one paint and never intercepts a tap. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      1100px 620px at 12% -8%,
-      color-mix(in srgb, var(--color-cobalt) 16%, transparent),
-      transparent 62%
-    ),
-    radial-gradient(
-      900px 520px at 92% 4%,
-      color-mix(in srgb, var(--color-acid) 6%, transparent),
-      transparent 58%
-    );
-}
-
 /* Visible keyboard focus everywhere. Acceptance test F requires it, and the
    ring must clear both dark and raised surfaces. */
 :focus-visible {
-  outline: 2px solid var(--color-acid);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -294,7 +285,7 @@ body::before {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    border: 2px solid var(--color-acid);
+    border: 2px solid var(--color-accent);
     animation: ccg-ring 3s var(--ease-ccg) infinite;
     pointer-events: none;
   }
@@ -319,17 +310,16 @@ body::before {
   /* Reserved for genuinely live or verified states, per the token rules. */
   .ccg-glow {
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--color-acid) 30%, transparent),
-      0 0 28px -8px color-mix(in srgb, var(--color-acid) 50%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, transparent),
+      0 0 28px -10px color-mix(in srgb, var(--color-accent) 60%, transparent);
   }
 
   /* Restrained depth. One shared recipe so "glass" cannot drift per component. */
+  /* Flat, not gradient. A vertical gradient inside a card fights the elevation
+     ramp: the bottom of a card ends up darker than the page it sits on, so the
+     card reads as a hole rather than a layer. One flat value per step. */
   .ccg-surface {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-graphite-raised) 92%, white) 0%,
-      var(--color-graphite) 100%
-    );
+    background: var(--color-graphite);
     border: 1px solid var(--color-subtle-border);
   }
 }
@@ -349,13 +339,16 @@ body::before {
    Wallet adapter overrides.
 
    The library ships its own purple button, which is the one piece of UI on the
-   site not drawn from CCG tokens. Restyled to cobalt rather than acid: acid is
-   reserved for the primary action, and on the wallet sheet the primary action
-   is "Sign in", not "Select wallet".
+   site not drawn from CCG tokens. Restyled to a plain surface rather than the
+   accent: on the wallet sheet the primary action is "Sign in", not "Select
+   wallet", and the filled accent belongs to whichever button is the primary
+   one on that screen.
 --------------------------------------------------------------------------- */
 
 .wallet-adapter-button-trigger {
-  background: var(--color-cobalt) !important;
+  background: var(--color-graphite-raised) !important;
+  border: 1px solid var(--color-subtle-border) !important;
+  color: var(--color-bone) !important;
   border-radius: var(--radius-pill) !important;
   min-height: var(--tap-target) !important;
   padding: 0 24px !important;
@@ -366,8 +359,8 @@ body::before {
 }
 
 .wallet-adapter-button-trigger:not([disabled]):hover {
-  background: var(--color-cobalt) !important;
-  opacity: 0.9;
+  background: var(--color-graphite-raised) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .wallet-adapter-modal-wrapper {

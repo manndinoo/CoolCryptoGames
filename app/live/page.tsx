@@ -17,7 +17,7 @@ export default function LivePage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)] uppercase">
+        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
           Live
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -42,7 +42,7 @@ export default function LivePage() {
 
       <section className="mt-[var(--spacing-6)]">
         <div className="mb-[var(--spacing-4)] flex items-center gap-3">
-          <h2 className="font-display text-lg font-bold tracking-[var(--tracking-label)] uppercase">
+          <h2 className="font-display text-lg font-semibold tracking-[var(--tracking-display)]">
             Channels
           </h2>
           <StatusPill>{demoChannels.length}</StatusPill>
@@ -75,7 +75,7 @@ export default function LivePage() {
       </section>
 
       <section className="mt-[var(--spacing-7)] max-w-xl">
-        <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+        <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
           Streaming on CCG
         </h2>
         <p className="mt-3 text-sm text-[var(--color-muted)]">

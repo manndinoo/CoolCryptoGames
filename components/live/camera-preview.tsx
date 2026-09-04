@@ -133,7 +133,7 @@ export function CameraPreview({
           <button
             onClick={start}
             disabled={state.status === 'requesting'}
-            className="min-h-[var(--tap-target)] rounded-[var(--radius-pill)] bg-cobalt px-6 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="min-h-[var(--tap-target)] rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {state.status === 'requesting' ? 'Requesting…' : 'Turn camera on'}
           </button>

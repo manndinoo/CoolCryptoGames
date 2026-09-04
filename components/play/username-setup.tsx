@@ -116,7 +116,7 @@ export function UsernameSetup({ onDone }: { onDone: (username: string) => void }
           {availability.state === 'checking' && (
             <span className="text-[var(--color-muted)]">Checking…</span>
           )}
-          {availability.state === 'free' && <span className="text-acid">Available</span>}
+          {availability.state === 'free' && <span className="text-accent">Available</span>}
           {availability.state === 'taken' && (
             <span className="text-[var(--color-orange)]">Already taken</span>
           )}
@@ -136,7 +136,7 @@ export function UsernameSetup({ onDone }: { onDone: (username: string) => void }
         <button
           type="submit"
           disabled={submitting || availability.state !== 'free'}
-          className="mt-[var(--spacing-4)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-acid px-7 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
+          className="mt-[var(--spacing-4)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-7 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
         >
           {submitting ? 'Saving…' : 'Claim name'}
         </button>

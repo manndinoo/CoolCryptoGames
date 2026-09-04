@@ -42,7 +42,7 @@ export function BroadcasterSetup() {
               aria-pressed={layout === option.value}
               className={`min-h-[var(--tap-target)] rounded-[var(--radius-pill)] border px-4 text-xs font-semibold transition-colors ${
                 layout === option.value
-                  ? 'border-[var(--color-strong-border)] text-acid'
+                  ? 'border-[var(--color-strong-border)] text-accent'
                   : 'border-[var(--color-subtle-border)] text-[var(--color-muted)] hover:text-bone'
               }`}
             >

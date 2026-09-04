@@ -5,6 +5,7 @@ import { BoardTable, EmptyBoard } from '@/components/leaderboards/board-table'
 import { StatusPill, VerifiedBadge } from '@/components/ui/badges'
 import { demoGames } from '@/lib/content/demo'
 import { readBoardsSafely } from '@/lib/leaderboards/board'
+import { gridColumns } from '@/lib/ui/columns'
 
 export const metadata: Metadata = {
   title: 'Leaderboards',
@@ -33,7 +34,7 @@ export default async function LeaderboardsPage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)] uppercase">
+        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
           Leaderboards
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -56,7 +57,9 @@ export default async function LeaderboardsPage() {
           to rank. The section below lists what is playable in the meantime.
         </p>
       ) : (
-        <div className="ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+        <div
+          className={`ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] ${gridColumns(ranked.length, 2)}`}
+        >
           {ranked.map((game) => {
             const board = boards?.get(game.slug)
             return (
@@ -112,7 +115,7 @@ export default async function LeaderboardsPage() {
 
       {unranked.length > 0 && (
         <section className="mt-[var(--spacing-7)]">
-          <h2 className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
+          <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             Playable, not ranked
           </h2>
           <p className="mt-2 max-w-xl text-sm text-[var(--color-muted)]">

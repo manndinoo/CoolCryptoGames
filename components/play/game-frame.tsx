@@ -153,7 +153,7 @@ export function GameFrame({
         )}
 
         {outcome.state === 'verified' && (
-          <p className="text-sm text-acid">
+          <p className="text-sm text-accent">
             Verified. Score {outcome.score} — the server replayed your inputs and got the
             same result.
           </p>
