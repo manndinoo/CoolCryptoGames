@@ -6,7 +6,6 @@ import {
   type PlayCapability,
 } from '@/lib/play/capability'
 import { isFromFrame, parseGameMessage, PROTOCOL_VERSION } from '@/lib/play/protocol'
-import { HUMAN_FLOOR_MS, ROUNDS, roundDelays, simulate } from '@/lib/games/reflex-lab/engine'
 
 const SESSION = 'sess-1'
 
@@ -15,7 +14,7 @@ function capability(over: Partial<PlayCapability> = {}): PlayCapability {
     capabilityId: 'cap-1',
     matchId: 'match-1',
     playSessionId: SESSION,
-    gameSlug: 'reflex-lab',
+    gameSlug: 'zero-signal',
     buildHash: 'a'.repeat(64),
     actions: ['score', 'telemetry'],
     ...over,
@@ -26,7 +25,7 @@ describe('play capability', () => {
   it('round-trips through issue and read', async () => {
     const token = await issueCapability(capability())
     expect(await readCapability(token)).toMatchObject({
-      gameSlug: 'reflex-lab',
+      gameSlug: 'zero-signal',
       playSessionId: SESSION,
     })
   })
@@ -58,7 +57,7 @@ describe('capabilityPermits', () => {
   it('permits the action it was scoped to', () => {
     expect(
       capabilityPermits(capability(), {
-        gameSlug: 'reflex-lab',
+        gameSlug: 'zero-signal',
         buildHash: 'a'.repeat(64),
         action: 'score',
       }),
@@ -68,7 +67,7 @@ describe('capabilityPermits', () => {
   it('refuses an action outside its scope', () => {
     expect(
       capabilityPermits(capability(), {
-        gameSlug: 'reflex-lab',
+        gameSlug: 'zero-signal',
         buildHash: 'a'.repeat(64),
         action: 'save',
       }),
@@ -90,7 +89,7 @@ describe('capabilityPermits', () => {
     // event ran on" are not the same claim.
     expect(
       capabilityPermits(capability(), {
-        gameSlug: 'reflex-lab',
+        gameSlug: 'zero-signal',
         buildHash: 'b'.repeat(64),
         action: 'score',
       }),
@@ -193,75 +192,5 @@ describe('isFromFrame', () => {
     expect(isFromFrame(other, frame)).toBe(false)
     expect(isFromFrame(null, frame)).toBe(false)
     expect(isFromFrame(frame, null)).toBe(false)
-  })
-})
-
-describe('reflex-lab engine', () => {
-  const SEED = 'seed-abc'
-
-  /** A believable run: each press lands `reaction` ms after its target. */
-  function run(seed: string, reactions: number[]) {
-    const delays = roundDelays(seed)
-    const inputs: { t: number; k: string }[] = []
-    let roundStart = 0
-    for (let i = 0; i < reactions.length; i++) {
-      const t = roundStart + delays[i] + reactions[i]
-      inputs.push({ t, k: 'press' })
-      roundStart = t
-    }
-    return inputs
-  }
-
-  it('produces the same delays for the same seed', () => {
-    expect(roundDelays(SEED)).toEqual(roundDelays(SEED))
-  })
-
-  it('produces different delays for different seeds', () => {
-    expect(roundDelays('one')).not.toEqual(roundDelays('two'))
-  })
-
-  it('scores a plausible run as the mean reaction time', () => {
-    const result = simulate(SEED, run(SEED, [240, 260, 220, 300, 230]))
-    expect(result.score).toBe(250)
-    expect(result.reactions).toEqual([240, 260, 220, 300, 230])
-  })
-
-  it('replays identically every time', () => {
-    const inputs = run(SEED, [240, 260, 220, 300, 230])
-    expect(simulate(SEED, inputs)).toEqual(simulate(SEED, inputs))
-  })
-
-  it('scores differently against a different seed', () => {
-    // The same presses against different delays are a different run, which is
-    // what stops a recorded input log being replayed into a new session.
-    const inputs = run(SEED, [240, 260, 220, 300, 230])
-    expect(() => simulate('another-seed', inputs)).toThrow()
-  })
-
-  it('rejects a press before the target appeared', () => {
-    const inputs = run(SEED, [240, 260, 220, 300, 230])
-    inputs[2].t -= 500
-    expect(() => simulate(SEED, inputs)).toThrow(/before the target/)
-  })
-
-  it('rejects a superhuman reaction', () => {
-    expect(() => simulate(SEED, run(SEED, [240, 260, HUMAN_FLOOR_MS - 1, 300, 230]))).toThrow(
-      /human floor/,
-    )
-  })
-
-  it('rejects the wrong number of presses', () => {
-    expect(() => simulate(SEED, run(SEED, [240, 260]))).toThrow(/expected 5 presses/)
-  })
-
-  it('ignores input keys that are not presses', () => {
-    const inputs = run(SEED, [240, 260, 220, 300, 230])
-    inputs.push({ t: 99_999, k: 'move' })
-    expect(simulate(SEED, inputs).score).toBe(250)
-  })
-
-  it('reports duration as the last press', () => {
-    const inputs = run(SEED, [240, 260, 220, 300, 230])
-    expect(simulate(SEED, inputs).durationMs).toBe(inputs[ROUNDS - 1].t)
   })
 })

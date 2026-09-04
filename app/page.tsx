@@ -24,7 +24,8 @@ export default function Home() {
   // shows. Two identical rows read as padding, so it waits until there is
   // enough of a catalogue for "recent" to mean something.
   const showRecentlyUpdated = demoGames.length > 4;
-  const tournament = demoTournaments[0];
+  // May be absent: the catalogue ships with no scheduled event.
+  const tournament = demoTournaments[0] ?? null;
   const channel = demoChannels[0];
   const spotlight = demoDevelopers[0];
 
@@ -137,39 +138,54 @@ export default function Home() {
             <span className="font-display text-xs font-bold tracking-[var(--tracking-label)] text-cobalt uppercase">
               Tournament
             </span>
-            {tournament.demo && <DemoBadge label="Demo event" />}
+            {tournament?.demo && <DemoBadge label="Demo event" />}
           </div>
 
-          <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
-            {tournament.name}
-          </h3>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            {tournament.format}
-          </p>
+          {tournament ? (
+            <>
+              <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+                {tournament.name}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--color-muted)]">
+                {tournament.format}
+              </p>
 
-          <dl className="mt-[var(--spacing-5)] grid gap-3 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-[var(--color-muted)]">Status</dt>
-              <dd>
-                <StatusPill>{tournament.status}</StatusPill>
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-[var(--color-muted)]">Rules version</dt>
-              <dd className="font-medium">{tournament.rules.version}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-[var(--color-muted)]">Prize</dt>
-              {/* Never a value without an approved Prize record. */}
-              <dd className="font-medium">Not yet announced</dd>
-            </div>
-          </dl>
+              <dl className="mt-[var(--spacing-5)] grid gap-3 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-[var(--color-muted)]">Status</dt>
+                  <dd>
+                    <StatusPill>{tournament.status}</StatusPill>
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-[var(--color-muted)]">Rules version</dt>
+                  <dd className="font-medium">{tournament.rules.version}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-[var(--color-muted)]">Prize</dt>
+                  {/* Never a value without an approved Prize record. */}
+                  <dd className="font-medium">Not yet announced</dd>
+                </div>
+              </dl>
+            </>
+          ) : (
+            <>
+              <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+                No event scheduled
+              </h3>
+              <p className="mt-2 text-sm text-[var(--color-muted)]">
+                Nothing is running and nothing is announced. When an event is
+                scheduled its rules are published before entry opens, and they do
+                not change once it does.
+              </p>
+            </>
+          )}
 
           <Link
-            href={`/tournaments/${tournament.slug}`}
+            href={tournament ? `/tournaments/${tournament.slug}` : "/tournaments"}
             className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
           >
-            Read the rules
+            {tournament ? "Read the rules" : "How tournaments work"}
           </Link>
         </div>
 

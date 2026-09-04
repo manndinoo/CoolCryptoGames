@@ -368,3 +368,40 @@ codes. That last one is the Product Bible's rule against exposing fraud
 thresholds: publishing which check caught a run tells the next attempt exactly
 what to change. A person reviewing an appeal can explain the decision; an
 automatic export cannot do that without also handing it over.
+
+## 17. CCG Reflex Lab removed
+
+Removed at the user's request: the catalogue entry, the static build under
+`public/games/reflex-lab/`, its deterministic engine at
+`lib/games/reflex-lab/engine.ts`, and its nine engine tests.
+
+This diverges from the Technical Blueprint, which lists `games/reflex-lab` as
+the "original integration-test game". The blueprint is kept verbatim in
+`docs/product-reference/`; this file is where divergences are recorded. The
+integration surfaces it existed to exercise — play sessions, capabilities, the
+shell-to-game protocol, submission validation — are all still covered by
+`tests/play.test.ts` and `tests/anticheat.test.ts`, which never depended on the
+engine except in the block that tested the engine itself.
+
+Three things fell out of the removal rather than being separate decisions:
+
+**The Reflex Open demo tournament is gone.** It bound to `reflex-lab` and its
+score model was "lowest mean reaction time across five rounds" — it could not
+be repointed at another game without inventing an event. `/tournaments` and the
+home page module now carry an honest "no event scheduled" state. Repointing it
+at Zero Signal was the alternative and was rejected: the rules would have been
+written to fit whatever game was left, which is the opposite of publishing
+rules before entry opens.
+
+**The seeded standings are gone with it** — `ReflexKing`, `QuickDraw` and
+`FastHands` were invented players on an invented event.
+
+**The catalogue has no ranked game.** Reflex Lab was the only one with
+server-side replay, so `/leaderboards` now renders its "nothing here to rank"
+branch. That branch was written for exactly this case and needed no change,
+which is the argument for writing the empty state at the same time as the
+populated one.
+
+The native stream layout preview referenced `reflex-lab` as the game being
+composited; it now references Zero Signal. It is a layout demonstration marked
+as demo, and pointing it at a real game keeps it that.

@@ -62,7 +62,7 @@ describe('resolveViewerRender', () => {
   it('refuses native broadcasting when the feature is off', () => {
     expect(
       render(
-        { source: { kind: 'native', layout: 'game-primary', gameSlug: 'reflex-lab', hasCamera: true } },
+        { source: { kind: 'native', layout: 'game-primary', gameSlug: 'zero-signal', hasCamera: true } },
         { ext: true, native: false },
       ),
     ).toEqual({ mode: 'offline', reason: 'native_streaming_disabled' })
@@ -71,11 +71,11 @@ describe('resolveViewerRender', () => {
   it('renders a native game-plus-camera composition', () => {
     expect(
       render({
-        source: { kind: 'native', layout: 'game-primary', gameSlug: 'reflex-lab', hasCamera: true },
+        source: { kind: 'native', layout: 'game-primary', gameSlug: 'zero-signal', hasCamera: true },
       }),
     ).toEqual({
       mode: 'native',
-      gameSlug: 'reflex-lab',
+      gameSlug: 'zero-signal',
       layout: { showGame: true, showCamera: true, primary: 'game' },
     })
   })

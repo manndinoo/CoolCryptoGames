@@ -126,34 +126,6 @@ export const demoGames: DemoGame[] = [
       { label: 'Engine', value: 'Deterministic — same seed, same board' },
     ],
   },
-  {
-    slug: 'reflex-lab',
-    title: 'CCG Reflex Lab',
-    developerSlug: 'ccg-platform',
-    category: 'Integration demo',
-    blurb:
-      'A reaction-time test built to exercise the platform: play sessions, scoring, touch and keyboard input, restart, and score verification. Not a flagship release.',
-    verifiedPlayers: 0,
-    scoreVerification: 'deterministic-replay',
-    scoreDirection: 'lower',
-    scoreUnit: 'ms',
-    status: 'playable',
-    updatedAt: '2026-09-04',
-    demo: false, // Real, shipped by the platform — it just is not a flagship game.
-    art: ['#1857FF', '#DFFF00'],
-    cover: '/games/reflex-lab/cover.jpg',
-    screenshots: [
-      '/games/reflex-lab/shots/2-go.jpg',
-      '/games/reflex-lab/shots/3-run.jpg',
-      '/games/reflex-lab/shots/1-idle.jpg',
-    ],
-    facts: [
-      { label: 'Rounds', value: 'Five per run' },
-      { label: 'Play', value: 'Tap or press space' },
-      { label: 'Scoring', value: 'Mean reaction time, lower is better' },
-      { label: 'Engine', value: 'Replayed server-side from your inputs' },
-    ],
-  },
 ]
 
 export const demoDevelopers: DemoDeveloper[] = [
@@ -161,75 +133,33 @@ export const demoDevelopers: DemoDeveloper[] = [
     slug: 'ccg-platform',
     name: 'CCG Platform',
     bio: 'The platform team. Publishes integration and reference builds used to validate the SDK.',
-    gameSlugs: ['zero-signal', 'road-to-bonded', 'reflex-lab'],
+    gameSlugs: ['zero-signal', 'road-to-bonded'],
     demo: false,
   },
 ]
 
-export const demoTournaments: Tournament[] = [
-  {
-    slug: 'reflex-open-preview',
-    name: 'Reflex Open',
-    gameSlug: 'reflex-lab',
-    // A tournament binds to an exact build. Once it opens, neither this hash
-    // nor the rules version changes; a material defect follows the published
-    // cancellation rule rather than a silent replacement.
-    gameBuildHash: '0'.repeat(64),
-    format: 'Solo, best verified run',
-    rules: {
-      version: '1.0.0',
-      publishedAt: '2026-09-01T00:00:00.000Z',
-      scoreModel: 'Lowest mean reaction time across five rounds',
-      tieBreaker: 'Earliest verified submission wins',
-      eligibility: [
-        'Entrants must be 18 or over.',
-        'One entry per wallet. Multiple wallets operated by one person are a single entrant.',
-        'Only results the server has independently verified enter final standings.',
-        'Entry is free. There is no fee, deposit, stake, or purchasable attempt.',
-      ],
-    },
-    opensAt: '2026-09-15T18:00:00.000Z',
-    closesAt: '2026-09-22T18:00:00.000Z',
-    status: 'draft',
-    direction: 'lower',
-    prize: null,
-    demo: true,
-  },
-]
+/**
+ * Events.
+ *
+ * Empty. The one event here was a demonstration bound to CCG Reflex Lab, and
+ * that game has been removed from the catalogue — a tournament pointing at a
+ * game nobody can open is a broken record, not a preview. The competition
+ * system itself is unchanged and tested; it is waiting on a real event.
+ *
+ * A tournament binds to an exact build hash at open time and neither that hash
+ * nor its rules version changes afterwards, so the next entry here has to be a
+ * genuine event rather than a placeholder edited into one later.
+ */
+export const demoTournaments: Tournament[] = []
 
 /**
- * Demo standings. Deliberately includes a held result with a better raw score
- * than the leader, so the "only verified results place" rule is visible in the
- * running product rather than only in a test.
+ * Standings, by event slug.
+ *
+ * Empty, because there are no events. The seeded rows that used to live here
+ * were invented players on an invented event; with the event gone they would
+ * be fabricated results attached to nothing.
  */
-export const demoStandings: Record<string, StandingEntry[]> = {
-  'reflex-open-preview': [
-    {
-      entryId: 'demo-1',
-      displayName: 'ReflexKing',
-      score: 214,
-      verification: 'VERIFIED',
-      submittedAt: '2026-09-16T10:02:00.000Z',
-      verifiedAt: '2026-09-16T10:02:30.000Z',
-    },
-    {
-      entryId: 'demo-2',
-      displayName: 'QuickDraw',
-      score: 231,
-      verification: 'VERIFIED',
-      submittedAt: '2026-09-16T11:40:00.000Z',
-      verifiedAt: '2026-09-16T11:40:20.000Z',
-    },
-    {
-      entryId: 'demo-3',
-      displayName: 'FastHands',
-      score: 118,
-      verification: 'HELD_FOR_REVIEW',
-      submittedAt: '2026-09-16T12:15:00.000Z',
-      verifiedAt: null,
-    },
-  ],
-}
+export const demoStandings: Record<string, StandingEntry[]> = {}
 
 /**
  * Channels.
@@ -274,7 +204,7 @@ export const demoChannels: StreamChannel[] = [
     source: {
       kind: 'native',
       layout: 'game-primary',
-      gameSlug: 'reflex-lab',
+      gameSlug: 'zero-signal',
       hasCamera: true,
     },
     demo: true,

@@ -22,7 +22,7 @@ export default function TournamentsPage() {
         </p>
       </header>
 
-      {!features.realPrizes && (
+      {!features.realPrizes && demoTournaments.length > 0 && (
         <p className="mt-[var(--spacing-5)] rounded-[var(--radius-medium)] border border-[var(--color-subtle-border)] bg-[var(--color-graphite)] p-4 text-sm text-[var(--color-muted)]">
           Prize awarding is switched off in this environment. Events below are
           demonstrations of the competition system — no prize has been created or
@@ -30,32 +30,56 @@ export default function TournamentsPage() {
         </p>
       )}
 
-      <ul className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
-        {demoTournaments.map((t) => (
-          <li key={t.slug}>
-            <Link
-              href={`/tournaments/${t.slug}`}
-              className="ccg-surface block rounded-[var(--radius-large)] p-[var(--spacing-5)] transition-colors hover:border-bone/25"
-            >
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <StatusPill>{t.status}</StatusPill>
-                {t.demo && <DemoBadge label="Demo event" />}
-              </div>
+      {demoTournaments.length === 0 ? (
+        <section className="ccg-surface mt-[var(--spacing-6)] max-w-xl rounded-[var(--radius-large)] p-[var(--spacing-5)]">
+          <h2 className="font-display text-xl font-bold tracking-[var(--tracking-display)]">
+            No event scheduled
+          </h2>
+          <p className="mt-3 text-sm text-[var(--color-muted)]">
+            Nothing is running and nothing is announced. This page lists real
+            events only — a placeholder here would be an event people could plan
+            around and then find does not exist.
+          </p>
+          <p className="mt-3 text-sm text-[var(--color-muted)]">
+            When one is scheduled, its full rules are published before entry
+            opens: the score model, the tie-breaker, who is eligible, and the
+            exact build it is played on. None of those change once entry opens.
+          </p>
+          <Link
+            href="/games"
+            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+          >
+            Play something in the meantime
+          </Link>
+        </section>
+      ) : (
+        <ul className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+          {demoTournaments.map((t) => (
+            <li key={t.slug}>
+              <Link
+                href={`/tournaments/${t.slug}`}
+                className="ccg-surface block rounded-[var(--radius-large)] p-[var(--spacing-5)] transition-colors hover:border-bone/25"
+              >
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <StatusPill>{t.status}</StatusPill>
+                  {t.demo && <DemoBadge label="Demo event" />}
+                </div>
 
-              <h2 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
-                {t.name}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--color-muted)]">{t.format}</p>
+                <h2 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+                  {t.name}
+                </h2>
+                <p className="mt-1 text-sm text-[var(--color-muted)]">{t.format}</p>
 
-              <dl className="mt-[var(--spacing-4)] grid gap-2 text-sm">
-                <Row label="Score model" value={t.rules.scoreModel} />
-                <Row label="Rules version" value={t.rules.version} />
-                <Row label="Prize" value={t.prize ? t.prize.label : 'Not yet announced'} />
-              </dl>
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <dl className="mt-[var(--spacing-4)] grid gap-2 text-sm">
+                  <Row label="Score model" value={t.rules.scoreModel} />
+                  <Row label="Rules version" value={t.rules.version} />
+                  <Row label="Prize" value={t.prize ? t.prize.label : 'Not yet announced'} />
+                </dl>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   )
 }

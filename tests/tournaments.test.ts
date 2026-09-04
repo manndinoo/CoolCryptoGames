@@ -3,9 +3,9 @@ import { checkEligibility, rankStandings, heldResults } from '@/lib/tournaments/
 import type { StandingEntry, Tournament } from '@/lib/tournaments/types'
 
 const tournament: Tournament = {
-  slug: 'reflex-open',
+  slug: 'test-open',
   name: 'Reflex Open',
-  gameSlug: 'reflex-lab',
+  gameSlug: 'zero-signal',
   gameBuildHash: 'a'.repeat(64),
   format: 'Solo, best verified run',
   rules: {
