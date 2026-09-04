@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#050811">
+  <meta name="description" content="Signal Brawl — a fast WEBCADE stick-figure arena fighter.">
+  <title>WEBCADE // SIGNAL BRAWL</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="game-shell" aria-label="Signal Brawl game">
+    <canvas id="game" aria-label="Signal Brawl arena"></canvas>
+
+    <section id="menu" class="overlay active" aria-labelledby="game-title">
+      <div class="menu-grid" aria-hidden="true"></div>
+      <div class="brand-kicker"><span class="w-mark">W</span> WEBCADE ORIGINAL</div>
+      <h1 id="game-title"><span>SIGNAL</span><strong>BRAWL</strong></h1>
+      <p class="menu-copy">OUTLAST THREE RIVALS. THREE LIVES. SIX HOSTILE LEVELS.</p>
+
+      <div class="level-select" aria-label="Level select">
+        <div class="level-heading"><span>LEVEL SELECT</span><strong id="level-label">01 // SIGNAL FOUNDRY</strong></div>
+        <div id="level-buttons" class="level-buttons">
+          <button type="button" data-level="0">01</button>
+          <button type="button" data-level="1">02</button>
+          <button type="button" data-level="2">03</button>
+          <button type="button" data-level="3">04</button>
+          <button type="button" data-level="4">05</button>
+          <button type="button" data-level="5">06</button>
+        </div>
+      </div>
+
+      <div class="difficulty" aria-label="CPU difficulty">
+        <button type="button" data-difficulty="0">CHILL</button>
+        <button type="button" class="selected" data-difficulty="1">ARCADE</button>
+        <button type="button" data-difficulty="2">CHAOS</button>
+      </div>
+
+      <button id="play" class="primary" type="button"><span>START BRAWL</span><i aria-hidden="true">▶</i></button>
+
+      <div class="control-hints">
+        <div><kbd>A</kbd><kbd>D</kbd><span>MOVE</span></div>
+        <div><kbd>W</kbd><span>JUMP ×2</span></div>
+        <div><kbd>J</kbd><span>HIT</span></div>
+        <div><kbd>K</kbd><span>HEAVY</span></div>
+        <div><kbd>L</kbd><span>DASH / SURGE</span></div>
+      </div>
+
+      <p id="best-streak" class="best-streak">BEST STREAK 0</p>
+    </section>
+
+    <section id="result" class="overlay result" aria-live="polite">
+      <p id="result-eyebrow">MATCH COMPLETE</p>
+      <h2 id="result-title">YOU WIN</h2>
+      <div class="result-stats">
+        <div><span id="stat-kos">0</span><small>KOs</small></div>
+        <div><span id="stat-damage">0</span><small>DAMAGE</small></div>
+        <div><span id="stat-combo">0</span><small>BEST COMBO</small></div>
+      </div>
+      <p id="unlock-text" class="unlock-text"></p>
+      <button id="rematch" class="primary" type="button"><span>RUN IT BACK</span><i aria-hidden="true">↻</i></button>
+      <button id="back-menu" class="text-button" type="button">CHANGE DIFFICULTY</button>
+    </section>
+
+    <section id="pause-panel" class="overlay compact" aria-live="polite">
+      <p>TRANSMISSION PAUSED</p>
+      <h2>PAUSED</h2>
+      <button id="resume" class="primary" type="button"><span>RESUME</span><i aria-hidden="true">▶</i></button>
+      <button id="restart" class="text-button" type="button">RESTART MATCH</button>
+    </section>
+
+    <button id="pause" class="corner-button" type="button" aria-label="Pause game">Ⅱ</button>
+    <button id="sound" class="corner-button sound" type="button" aria-label="Mute sound">♪</button>
+
+    <div id="touch-controls" aria-label="Touch controls">
+      <div id="joystick" class="joystick" aria-label="Movement joystick">
+        <div class="joystick-ring"></div>
+        <div id="joystick-knob" class="joystick-knob"></div>
+      </div>
+      <div class="action-cluster">
+        <button id="dash-button" class="action dash" type="button" aria-label="Dash or Signal Surge; hold to guard"><span>DASH</span><small>HOLD GUARD</small></button>
+        <button id="jump-button" class="action jump" type="button" aria-label="Jump"><span>JUMP</span></button>
+        <button id="attack-button" class="action attack" type="button" aria-label="Attack; hold for heavy attack"><span>HIT</span><small>HOLD</small></button>
+      </div>
+    </div>
+
+    <div id="rotate" role="status">
+      <div class="phone-icon" aria-hidden="true"><span></span></div>
+      <strong>TURN SIDEWAYS TO BRAWL</strong>
+      <small>SIGNAL BRAWL PLAYS IN LANDSCAPE</small>
+    </div>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

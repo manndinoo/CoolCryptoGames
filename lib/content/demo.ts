@@ -48,6 +48,12 @@ export type DemoGame = {
   cover: string | null
   /** Gallery shots, captured from the running game. */
   screenshots: string[]
+  /**
+   * How the game is played, and so the shape of its captures. The gallery
+   * frames every tile to this: a landscape brawler squeezed into the portrait
+   * frame the phone games use shows a sliver of the middle of the arena.
+   */
+  orientation: 'portrait' | 'landscape'
   /** Short factual details for the page. Nothing here is a marketing claim. */
   facts: { label: string; value: string }[]
 }
@@ -86,6 +92,7 @@ export const demoGames: DemoGame[] = [
       '/games/zero-signal/shots/1-title.jpg',
       '/games/zero-signal/shots/2-run.jpg',
     ],
+    orientation: 'portrait',
     facts: [
       { label: 'Worlds', value: 'Six, cycling themes' },
       { label: 'Play', value: 'One tap or one key' },
@@ -119,6 +126,7 @@ export const demoGames: DemoGame[] = [
       '/games/road-to-bonded/shots/4-midlevel.jpg',
       '/games/road-to-bonded/shots/5-complete.jpg',
     ],
+    orientation: 'portrait',
     facts: [
       { label: 'Levels', value: '50 across five regions' },
       { label: 'Play', value: 'Portrait, touch or mouse' },
@@ -147,11 +155,48 @@ export const demoGames: DemoGame[] = [
       '/games/reflex-lab/shots/3-run.jpg',
       '/games/reflex-lab/shots/1-idle.jpg',
     ],
+    orientation: 'portrait',
     facts: [
       { label: 'Rounds', value: 'Five per run' },
       { label: 'Play', value: 'Tap or press space' },
       { label: 'Scoring', value: 'Mean reaction time, lower is better' },
       { label: 'Engine', value: 'Replayed server-side from your inputs' },
+    ],
+  },
+  {
+    slug: 'signal-brawl',
+    title: 'Signal Brawl',
+    developerSlug: 'ccg-platform',
+    category: 'Fighting',
+    blurb:
+      'A stick-figure platform brawler. You against three CPU rivals, three lives each, ninety seconds. Light combos, charged heavies, dashes, guards and a Signal Surge you earn by landing hits — plus blasters, staves, gravity hammers and plasma bombs that drop mid-fight. Six arenas, each with its own hazard.',
+    // Stays 0 until the game has verified sessions to count.
+    verifiedPlayers: 0,
+    // The match runs on a variable frame delta with unseeded RNG driving pickup
+    // spawns, hazards and three CPU opponents, so it cannot be reproduced from
+    // an input log. This site will not call a score verified that it cannot
+    // replay.
+    scoreVerification: 'unranked',
+    scoreDirection: 'higher',
+    scoreUnit: 'pts',
+    status: 'playable',
+    updatedAt: '2026-09-04',
+    demo: false,
+    art: ['#050811', '#FF326F'],
+    cover: '/games/signal-brawl/cover.jpg',
+    screenshots: [
+      '/games/signal-brawl/shots/2-brawl.jpg',
+      '/games/signal-brawl/shots/1-title.jpg',
+      '/games/signal-brawl/shots/3-reactor.jpg',
+      '/games/signal-brawl/shots/4-rooftop.jpg',
+      '/games/signal-brawl/shots/5-result.jpg',
+    ],
+    orientation: 'landscape',
+    facts: [
+      { label: 'Arenas', value: 'Six, unlocked by winning' },
+      { label: 'Play', value: 'Landscape, keyboard or touch' },
+      { label: 'Match', value: 'Four fighters, three lives, 90 seconds' },
+      { label: 'Session', value: 'Single player, progress saves locally' },
     ],
   },
 ]
@@ -161,7 +206,7 @@ export const demoDevelopers: DemoDeveloper[] = [
     slug: 'ccg-platform',
     name: 'CCG Platform',
     bio: 'The platform team. Publishes integration and reference builds used to validate the SDK.',
-    gameSlugs: ['zero-signal', 'road-to-bonded', 'reflex-lab'],
+    gameSlugs: ['zero-signal', 'road-to-bonded', 'signal-brawl', 'reflex-lab'],
     demo: false,
   },
 ]
