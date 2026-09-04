@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
-import { GameCard } from '@/components/ui/game-card'
-import { demoGames } from '@/lib/content/demo'
+import type { Metadata } from "next";
+import { GameCard } from "@/components/ui/game-card";
+import { demoGames } from "@/lib/content/demo";
 
 export const metadata: Metadata = {
-  title: 'Games',
-  description: 'The curated CCG catalogue. Browse without connecting a wallet.',
-}
+  title: "Games",
+  description: "The curated CCG catalogue. Browse without connecting a wallet.",
+};
 
 export default function GamesPage() {
   return (
@@ -15,7 +15,8 @@ export default function GamesPage() {
           Games
         </h1>
         <p className="mt-3 max-w-lg text-[var(--color-muted)]">
-          Browsing is open to everyone. A wallet is only needed at the moment you press play.
+          Browsing is open to everyone. A wallet is only needed at the moment
+          you press play.
         </p>
       </header>
 
@@ -25,5 +26,5 @@ export default function GamesPage() {
         ))}
       </div>
     </>
-  )
+  );
 }

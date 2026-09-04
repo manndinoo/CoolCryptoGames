@@ -1,23 +1,32 @@
-import Link from 'next/link'
-import { CcgMonogram, CcgTriTile } from '@/components/brand/logo'
-import { DemoBadge, StatusPill } from '@/components/ui/badges'
-import { GameCard } from '@/components/ui/game-card'
-import { Section, SectionHeader } from '@/components/ui/section'
+import Link from "next/link";
+import { CcgMonogram, CcgTriTile } from "@/components/brand/logo";
+import { DemoBadge, StatusPill } from "@/components/ui/badges";
+import { GameCard } from "@/components/ui/game-card";
+import {
+  Section,
+  SectionHeader,
+} from "@/components/ui/section";
 import {
   demoDevelopers,
   demoGames,
   demoChannels,
   demoTournaments,
-} from '@/lib/content/demo'
-import { site } from '@/site.config'
+} from "@/lib/content/demo";
+import { site } from "@/site.config";
 
 export default function Home() {
-  const featured = demoGames
-  const playable = demoGames.filter((g) => g.status === 'playable')
-  const recentlyUpdated = [...demoGames].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-  const tournament = demoTournaments[0]
-  const channel = demoChannels[0]
-  const spotlight = demoDevelopers[0]
+  const featured = demoGames;
+  const playable = demoGames.filter((g) => g.status === "playable");
+  const recentlyUpdated = [...demoGames].sort((a, b) =>
+    b.updatedAt.localeCompare(a.updatedAt),
+  );
+  // With a small catalogue this section lists exactly what Featured already
+  // shows. Two identical rows read as padding, so it waits until there is
+  // enough of a catalogue for "recent" to mean something.
+  const showRecentlyUpdated = demoGames.length > 4;
+  const tournament = demoTournaments[0];
+  const channel = demoChannels[0];
+  const spotlight = demoDevelopers[0];
 
   return (
     <>
@@ -29,7 +38,7 @@ export default function Home() {
           className="pointer-events-none absolute inset-0 -z-10 opacity-70"
           style={{
             background:
-              'radial-gradient(120% 80% at 78% 8%, color-mix(in srgb, var(--color-cobalt) 30%, transparent) 0%, transparent 62%)',
+              "radial-gradient(120% 80% at 78% 8%, color-mix(in srgb, var(--color-cobalt) 30%, transparent) 0%, transparent 62%)",
           }}
         />
 
@@ -55,7 +64,7 @@ export default function Home() {
 
           <div className="mt-[var(--spacing-6)] flex flex-wrap items-center gap-3">
             <Link
-              href={`/games/${playable[0]?.slug ?? ''}`}
+              href={`/games/${playable[0]?.slug ?? ""}`}
               className="inline-flex min-h-[var(--tap-target)] items-center gap-3 rounded-[var(--radius-pill)] bg-acid px-7 text-sm font-bold tracking-[var(--tracking-label)] text-carbon uppercase transition-opacity duration-[var(--duration-fast)] hover:opacity-90"
             >
               Play now
@@ -112,7 +121,11 @@ export default function Home() {
         {/* Rail on mobile so cards swipe with a visible peek; grid on desktop. */}
         <div className="ccg-rail lg:grid lg:grid-cols-4 lg:gap-[var(--spacing-4)] lg:overflow-visible">
           {featured.map((game) => (
-            <GameCard key={game.slug} game={game} className="w-[78vw] max-w-xs shrink-0 lg:w-auto lg:max-w-none lg:shrink" />
+            <GameCard
+              key={game.slug}
+              game={game}
+              className="w-[78vw] max-w-xs shrink-0 lg:w-auto lg:max-w-none lg:shrink"
+            />
           ))}
         </div>
       </Section>
@@ -130,12 +143,16 @@ export default function Home() {
           <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
             {tournament.name}
           </h3>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">{tournament.format}</p>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            {tournament.format}
+          </p>
 
           <dl className="mt-[var(--spacing-5)] grid gap-3 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-[var(--color-muted)]">Status</dt>
-              <dd><StatusPill>{tournament.status}</StatusPill></dd>
+              <dd>
+                <StatusPill>{tournament.status}</StatusPill>
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[var(--color-muted)]">Rules version</dt>
@@ -169,8 +186,8 @@ export default function Home() {
             {channel.title}
           </h3>
           <p className="mt-2 text-sm text-[var(--color-muted)]">
-            No stream is currently broadcasting. Scheduled programming appears here once a
-            provider is configured and approved.
+            No stream is currently broadcasting. Scheduled programming appears
+            here once a provider is configured and approved.
           </p>
 
           <Link
@@ -191,10 +208,14 @@ export default function Home() {
           </div>
           <div className="min-w-56 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-display text-lg font-bold">{spotlight.name}</h3>
+              <h3 className="font-display text-lg font-bold">
+                {spotlight.name}
+              </h3>
               {spotlight.demo && <DemoBadge />}
             </div>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">{spotlight.bio}</p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">
+              {spotlight.bio}
+            </p>
           </div>
           <Link
             href={`/developers/${spotlight.slug}`}
@@ -206,14 +227,20 @@ export default function Home() {
       </Section>
 
       {/* ------------------------------------------------------ recently updated */}
-      <Section>
-        <SectionHeader title="Recently updated" href="/games" />
-        <div className="ccg-rail lg:grid lg:grid-cols-4 lg:gap-[var(--spacing-4)] lg:overflow-visible">
-          {recentlyUpdated.map((game) => (
-            <GameCard key={game.slug} game={game} className="w-[62vw] max-w-[240px] shrink-0 lg:w-auto lg:max-w-none lg:shrink" />
-          ))}
-        </div>
-      </Section>
+      {showRecentlyUpdated && (
+        <Section>
+          <SectionHeader title="Recently updated" href="/games" />
+          <div className="ccg-rail lg:grid lg:grid-cols-4 lg:gap-[var(--spacing-4)] lg:overflow-visible">
+            {recentlyUpdated.map((game) => (
+              <GameCard
+                key={game.slug}
+                game={game}
+                className="w-[62vw] max-w-[240px] shrink-0 lg:w-auto lg:max-w-none lg:shrink"
+              />
+            ))}
+          </div>
+        </Section>
+      )}
     </>
-  )
+  );
 }

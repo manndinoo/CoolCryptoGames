@@ -82,50 +82,6 @@ export const demoGames: DemoGame[] = [
     art: ['#1857FF', '#DFFF00'],
     cover: '/games/reflex-lab/cover.jpg',
   },
-  {
-    slug: 'sample-runner',
-    title: 'Sample Runner',
-    developerSlug: 'placeholder-studio',
-    category: 'Arcade',
-    blurb:
-      'Placeholder catalogue entry showing how a third-party game is listed and reviewed before release.',
-    verifiedPlayers: 0,
-    scoreVerification: 'unranked',
-    status: 'coming-soon',
-    updatedAt: '2026-09-01',
-    demo: true,
-    art: ['#15191F', '#1857FF'],
-    cover: null,
-  },
-  {
-    slug: 'sample-puzzle',
-    title: 'Sample Puzzle',
-    developerSlug: 'placeholder-studio',
-    category: 'Puzzle',
-    blurb:
-      'Placeholder catalogue entry. Demonstrates the review-pending state — new builds never publish automatically.',
-    verifiedPlayers: 0,
-    scoreVerification: 'unranked',
-    status: 'coming-soon',
-    updatedAt: '2026-08-28',
-    demo: true,
-    art: ['#1D232B', '#76E65C'],
-    cover: null,
-  },
-  {
-    slug: 'sample-tactics',
-    title: 'Sample Tactics',
-    developerSlug: 'second-placeholder-studio',
-    category: 'Strategy',
-    blurb: 'Placeholder catalogue entry for a second demo developer.',
-    verifiedPlayers: 0,
-    scoreVerification: 'unranked',
-    status: 'coming-soon',
-    updatedAt: '2026-08-22',
-    demo: true,
-    art: ['#15191F', '#FF5A19'],
-    cover: null,
-  },
 ]
 
 export const demoDevelopers: DemoDeveloper[] = [
@@ -135,20 +91,6 @@ export const demoDevelopers: DemoDeveloper[] = [
     bio: 'The platform team. Publishes integration and reference builds used to validate the SDK.',
     gameSlugs: ['reflex-lab'],
     demo: false,
-  },
-  {
-    slug: 'placeholder-studio',
-    name: 'Placeholder Studio',
-    bio: 'Demo developer record. Exists to exercise developer pages, build review and the studio dashboard.',
-    gameSlugs: ['sample-runner', 'sample-puzzle'],
-    demo: true,
-  },
-  {
-    slug: 'second-placeholder-studio',
-    name: 'Second Placeholder Studio',
-    bio: 'Second demo developer record, used to check directory listing and following.',
-    gameSlugs: ['sample-tactics'],
-    demo: true,
   },
 ]
 

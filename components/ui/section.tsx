@@ -1,13 +1,13 @@
-import Link from 'next/link'
+import Link from "next/link";
 
 export function SectionHeader({
   title,
   href,
-  linkLabel = 'View all',
+  linkLabel = "View all",
 }: {
-  title: string
-  href?: string
-  linkLabel?: string
+  title: string;
+  href?: string;
+  linkLabel?: string;
 }) {
   return (
     <div className="mb-[var(--spacing-4)] flex items-end justify-between gap-4">
@@ -23,15 +23,19 @@ export function SectionHeader({
         </Link>
       )}
     </div>
-  )
+  );
 }
 
 export function Section({
   children,
-  className = '',
+  className = "",
 }: {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
 }) {
-  return <section className={`mt-[var(--spacing-7)] ${className}`}>{children}</section>
+  return (
+    <section className={`mt-[var(--spacing-7)] ${className}`}>
+      {children}
+    </section>
+  );
 }
