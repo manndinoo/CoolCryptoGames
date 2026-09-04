@@ -648,3 +648,69 @@ Social proof. It is among the best-evidenced conversion levers there is, and it
 needs real numbers. `verifiedPlayers` is 0 and the leaderboards are empty, so
 there is nothing true to show. When there are real counts, they can go on the
 cards; until then the honest figure is the one already displayed.
+
+## 21. Signal Brawl, the save bridge, and who owns fullscreen
+
+Signal Brawl arrived on `claude/new-session-58uno3`, cut from `5f8b07f` —
+before Reflex Lab was removed, before the theme rebuild, before the sidebar and
+before the wallet stack was deferred. Merging it would have reverted four
+commits of work and resurrected a deleted game, so as with Zero Signal (decision
+in the commit log) the added files were taken and the modified ones ported by
+hand onto current `main`.
+
+### The save bridge
+
+The branch brought `lib/play/save-bridge.ts` and `components/play/sandboxed-game.tsx`,
+and they solve a problem the sandbox created. A framed game runs with
+`allow-scripts` and deliberately without `allow-same-origin`, so it is on an
+opaque origin where every `localStorage` call throws — verified directly rather
+than assumed. That isolation is the point, but it also means a game cannot
+remember anything, and Signal Brawl unlocks six arenas one win at a time.
+
+So the shell holds the save on the game's behalf, under a per-slug key in its
+own storage, and everything crossing the frame boundary is parsed against an
+allow-list first: known message types only, string values only, with caps on
+key count, key length, value length and total size. Unknown types are dropped
+rather than forwarded — a protocol that passes through what it does not
+recognise grows a new attack surface every time a game invents a message.
+
+None of this touches scoring. These are the player's own counters on their own
+device, they never reach the server, and a ranked result is still whatever the
+server independently replays. A player who edits them has edited their own save
+file, which is theirs to edit.
+
+Verified end to end: a preference set inside the frame was written to the
+shell's storage, survived a full page reload, and came back through the bridge;
+and a message with an unknown type, one with a nested object, and one with an
+oversized value were each rejected with the save left unchanged.
+
+### Fullscreen belongs to the shell
+
+Playing the game surfaced a real trap. The frame's `allow` list carried
+`fullscreen`, Signal Brawl calls `requestFullscreen` on match start, and the
+iframe then *replaced* the stage as the fullscreen element — which hid the exit
+bar and left a player mid-match with no visible way out. Confirmed by driving
+it: `document.fullscreenElement` was `IFRAME` and the exit button, present in
+the DOM, could not be clicked.
+
+`fullscreen` is now off the `allow` list. The shell already gives every game the
+whole screen; a frame re-requesting it on itself can only escape the shell's own
+chrome, which is the one thing that must not happen. After the change the
+fullscreen element is the stage again and exit works mid-match.
+
+This was latent in the original iframe rather than introduced by the branch —
+Signal Brawl is simply the first game that asks.
+
+### A landscape game in a portrait frame
+
+The gallery framed every screenshot at 3:4, which is right for the phone games
+and cuts both ends off an arena. `DemoGame` now carries `orientation`, and the
+frame follows it.
+
+### The first-visit notice on a landscape phone
+
+Signal Brawl is played sideways, and on a 430px-tall viewport the full-width
+notice pinned to the bottom landed on top of the Play button it exists to
+encourage. It now takes the desktop treatment on short viewports — a narrow
+card in the corner — and its positioner no longer swallows clicks on whatever
+sits beside it.

@@ -66,12 +66,20 @@ export function FirstVisitNotice() {
       role="region"
       aria-label="Welcome"
       data-leaving={state === 'leaving' || undefined}
-      className="ccg-notice fixed right-0 left-0 z-30 px-[var(--mobile-gutter)] lg:right-[var(--desktop-gutter)] lg:left-auto lg:w-[380px] lg:px-0"
+      // `pointer-events-none` on the positioner, restored on the card itself:
+      // the wrapper spans the full width, and without this its empty padding
+      // swallowed clicks on whatever sat beside the card.
+      //
+      // `short:` is a landscape phone — Signal Brawl is played that way, and a
+      // full-width card pinned to the bottom of a 430px-tall viewport lands on
+      // top of the Play button it is meant to be encouraging. On those screens
+      // it takes the desktop treatment: a narrow card in the corner.
+      className="ccg-notice pointer-events-none fixed right-0 left-0 z-30 px-[var(--mobile-gutter)] short:right-[var(--mobile-gutter)] short:left-auto short:w-[340px] short:px-0 lg:right-[var(--desktop-gutter)] lg:left-auto lg:w-[380px] lg:px-0"
       style={{
         bottom: 'calc(var(--mobile-bottom-nav) + var(--safe-bottom) + var(--spacing-3))',
       }}
     >
-      <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)] shadow-2xl">
+      <div className="ccg-surface pointer-events-auto rounded-[var(--radius-large)] p-[var(--spacing-5)] shadow-2xl">
         <p className="font-display text-lg font-bold tracking-[var(--tracking-display)]">
           Nothing here costs anything
         </p>

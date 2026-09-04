@@ -7,6 +7,10 @@
    step of its own; keep the two in sync when tokens change.
 --------------------------------------------------------------------------- */
 
+/* A short viewport — a phone held sideways. Declared as a Tailwind variant so
+   components can say `short:` rather than hand-writing the media query. */
+@custom-variant short (@media (max-height: 520px));
+
 @theme {
   /* Ground and elevation.
      Four steps, each visibly lighter than the last. The previous ramp moved

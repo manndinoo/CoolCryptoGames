@@ -160,7 +160,13 @@ export default async function GamePage({ params }: Props) {
                 // A fixed frame, with the image cropped to fill it. Letting each
                 // shot set its own height made 500px-tall tiles out of portrait
                 // captures, and the rail overflowed whatever was below it.
-                className="relative aspect-[3/4] w-[52vw] max-w-[230px] shrink-0 overflow-hidden rounded-[var(--radius-medium)] border border-[var(--color-subtle-border)] bg-carbon"
+                //
+                // The frame follows the game, though. Every capture from one
+                // game shares its shape, and forcing a landscape arena into the
+                // portrait frame the phone games use crops away both ends of it.
+                className={`relative w-[52vw] max-w-[230px] shrink-0 overflow-hidden rounded-[var(--radius-medium)] border border-[var(--color-subtle-border)] bg-carbon ${
+                  game.orientation === "landscape" ? "aspect-video" : "aspect-[3/4]"
+                }`}
               >
                 <Image
                   src={shot}

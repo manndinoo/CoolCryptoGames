@@ -5,6 +5,7 @@ import { GameStage } from "./game-stage";
 import { PlaySteps } from "./play-steps";
 import { recordPlay } from "./recent";
 import { getGameRuntime } from "./runtimes";
+import { SandboxedGame } from "./sandboxed-game";
 import { useWalletAuth } from "./use-wallet-auth";
 import { UsernameSetup } from "./username-setup";
 import { WalletSheet } from "./wallet-sheet";
@@ -57,17 +58,7 @@ export function PlayGateInner({
           {Runtime ? (
             <Runtime />
           ) : (
-            <iframe
-              src={`/games/${game.slug}/index.html`}
-              title={game.title}
-              className="h-full w-full border-0"
-              // No allow-same-origin: the frame runs on an opaque origin with
-              // no reach into cookies, storage or a wallet provider, and
-              // `allow` grants no camera or microphone.
-              sandbox="allow-scripts"
-              allow="autoplay; fullscreen; gamepad; accelerometer; gyroscope"
-              referrerPolicy="no-referrer"
-            />
+            <SandboxedGame slug={game.slug} title={game.title} />
           )}
         </GameStage>
       );
