@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { useWalletAuth } from '@/components/play/use-wallet-auth'
+import { ConnectPanel } from '@/components/play/connect-panel'
+import { useSession } from '@/components/play/use-session'
+import type { SessionState } from '@/lib/auth/session-state'
 import { UsernameSetup } from '@/components/play/username-setup'
-import { WalletSheet } from '@/components/play/wallet-sheet'
 import { StatusPill } from '@/components/ui/badges'
 
 type AccountRequest = {
@@ -26,8 +27,25 @@ type AccountRequest = {
  * nothing is worse than an absent one, because it produces false confidence
  * about how your data is handled.
  */
-export function SettingsView() {
-  const { state, signIn, signOut, setUsername, connected } = useWalletAuth()
+export function SettingsView({ session }: { session: SessionState }) {
+  // Session only — see ProfileView. The wallet stack loads from ConnectPanel,
+  // when someone actually asks to connect one.
+  const { state, setState, refresh } = useSession(session)
+
+  const signOut = useCallback(async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    setState({ status: 'signed-out' })
+  }, [setState])
+
+  const setUsername = useCallback(
+    (username: string) =>
+      setState((prev) =>
+        prev.status === 'needs-username' || prev.status === 'signed-in'
+          ? { status: 'signed-in', wallet: prev.wallet, username }
+          : prev,
+      ),
+    [setState],
+  )
   const [addressShown, setAddressShown] = useState(false)
   const [requests, setRequests] = useState<AccountRequest[] | null>(null)
   const [busy, setBusy] = useState<null | 'export' | 'deletion'>(null)
@@ -121,7 +139,7 @@ export function SettingsView() {
           Settings belong to an account, and an account is a wallet that has signed in.
           Connect one to see what is stored about you and to change it.
         </p>
-        <WalletSheet state={state} onSignIn={signIn} connected={connected} />
+        <ConnectPanel onSignedIn={refresh} />
         <div className="ccg-surface mt-[var(--spacing-5)] rounded-[var(--radius-large)] p-[var(--spacing-5)]">
           <h2 className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
             What is stored, whether or not you sign in

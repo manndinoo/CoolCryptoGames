@@ -714,3 +714,69 @@ notice pinned to the bottom landed on top of the Play button it exists to
 encourage. It now takes the desktop treatment on short viewports — a narrow
 card in the corner — and its positioner no longer swallows clicks on whatever
 sits beside it.
+
+## 22. A full test pass, and the four defects it found
+
+A clean build, the unit suite, a fresh database, the auth smoke test, and a
+browser suite covering every route, all three games, the sign-in flow, the API
+guards and Core Web Vitals. Four real defects surfaced, all fixed.
+
+### `priority` on every card stopped the home page loading
+
+`FeatureCard` passed `priority` to every cover. `priority` marks the LCP image
+and a page has one; several preload links competed, and the first two images
+never loaded at all — held at `complete: false` with an empty `currentSrc`
+while the third, unprioritised, loaded normally. `document.readyState` stayed
+`interactive` forever, so the page never fired `load`. Now only the first card
+gets it.
+
+Worth noting how this hid: every screenshot looked right, because the covers
+did eventually paint. Only asking the browser for `readyState` and pending
+requests showed it.
+
+### Chat refused eight different ways with one status
+
+Every refusal except an unauthenticated one answered 429. That is wrong in a
+way clients act on: 429 means "you asked too often, try again", so a retry
+layer sends the identical request back. Retrying an empty message, an over-long
+one, a duplicate, or a post to a channel you are sanctioned on can never
+succeed. `chatDenyStatus` now maps each reason — 400 for empty and too-long,
+403 for sanctioned and disabled, 409 for a duplicate, 429 only for the two real
+rate conditions, which now also carry `Retry-After`.
+
+### The account pages cost 0.647 CLS
+
+`/settings` measured LCP 3472ms and CLS 0.647 against thresholds of 2500ms and
+0.1 — by far the worst page on the site. Two causes stacked: `WalletBoundary`
+wrapped the whole view, so ~150KB of wallet adapter loaded before anything
+rendered; and the view then showed a one-line "Loading…" before swapping in a
+full-height page.
+
+Both are gone. The pages read the session on the server and hand it to the
+view, so there is no loading state to shift; and the wallet stack is now behind
+`ConnectPanel`, loaded when someone presses "Connect a wallet". `/settings` is
+LCP 864ms, CLS 0.048, 154KB.
+
+The move exposed a smaller trap: `readSessionResponse` lived in a `'use client'`
+module, and a function exported from one is a client reference — importing it
+into a server component and calling it fails at request time. The shape now
+lives in `lib/auth/session-state.ts`, which neither side owns.
+
+### `/favicon.ico` was a 404
+
+`app/icon.svg` covers HTML pages, which declare it in the head. Anything that
+requests the conventional path — a client reading `robots.txt` or `sitemap.xml`
+directly, an older browser, a feed reader — got a 404. `public/favicon.ico` is
+now a PNG-payload ICO generated from the same geometry.
+
+### Coverage the pass added
+
+`tests/leaderboards.db.test.ts` runs the board query against a real database.
+`rankResults` was already covered, but the rules that actually decide a board —
+one row per player on their best result, banned wallets excluded, no address in
+the projection — live in SQL and had none. They cannot be reached through the
+UI either, because no game in the catalogue is ranked, so this is the only
+place they are exercised. It skips when `DATABASE_URL` is unset.
+
+`scripts/smoke-auth.mjs` had its base URL hardcoded to port 3000, so it could
+only ever run against a default dev server. It reads `CCG_BASE_URL` now.

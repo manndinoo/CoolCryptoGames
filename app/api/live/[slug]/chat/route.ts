@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { readSession, sessionCookie } from '@/lib/auth/session'
-import { checkChatPermission, RATE_WINDOW_MS } from '@/lib/chat/rules'
+import { chatDenyStatus, checkChatPermission, RATE_WINDOW_MS } from '@/lib/chat/rules'
 import { displayName } from '@/lib/identity/username'
 import { getDemoChannel } from '@/lib/content/demo'
 import { withRouteGuard } from '@/lib/api/guard'
@@ -111,9 +111,18 @@ async function handlePOST(request: Request, ctx: { params: Promise<{ slug: strin
   })
 
   if (!decision.allowed) {
+    const status = chatDenyStatus(decision.reason)
     return NextResponse.json(
       { error: 'refused', reason: decision.reason, retryAfterMs: decision.retryAfterMs },
-      { status: decision.reason === 'not_authenticated' ? 401 : 429 },
+      {
+        status,
+        // Retry-After is what makes a 429 actionable, and it is only ever sent
+        // with one. Seconds, rounded up, because the header has no finer unit.
+        headers:
+          status === 429 && decision.retryAfterMs
+            ? { 'retry-after': String(Math.ceil(decision.retryAfterMs / 1000)) }
+            : undefined,
+      },
     )
   }
 

@@ -130,6 +130,36 @@ const DENY_COPY: Record<ChatDenyReason, string> = {
   too_long: `Messages are limited to ${MAX_MESSAGE_LENGTH} characters.`,
 }
 
+/**
+ * The HTTP status a refusal deserves.
+ *
+ * Every refusal used to answer 429 except an unauthenticated one, and that is
+ * wrong in a way clients act on: 429 means "you asked too often, try again",
+ * so a retry layer — or a well-behaved bot — will send the identical request
+ * back. Retrying an empty message, an over-long one, or a post to a channel
+ * you are sanctioned on can never succeed, and telling the caller to try again
+ * is both a lie and a source of load.
+ *
+ * Only the two genuine rate conditions keep 429.
+ */
+export function chatDenyStatus(reason: ChatDenyReason): number {
+  switch (reason) {
+    case 'not_authenticated':
+      return 401
+    case 'sanctioned':
+    case 'chat_disabled':
+      return 403
+    case 'empty':
+    case 'too_long':
+      return 400
+    case 'duplicate':
+      return 409
+    case 'slow_mode':
+    case 'rate_limited':
+      return 429
+  }
+}
+
 export function chatDenyMessage(reason: ChatDenyReason): string {
   return DENY_COPY[reason]
 }

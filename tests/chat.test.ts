@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  checkChatPermission,
   MAX_MESSAGE_LENGTH,
+  chatDenyStatus,
+  checkChatPermission,
   normalizeMessage,
   type ChatContext,
 } from '@/lib/chat/rules'
@@ -149,3 +150,30 @@ describe('checkChatPermission', () => {
   })
 })
 
+
+describe('chatDenyStatus', () => {
+  it('keeps 429 for the two genuine rate conditions', () => {
+    expect(chatDenyStatus('slow_mode')).toBe(429)
+    expect(chatDenyStatus('rate_limited')).toBe(429)
+  })
+
+  it('does not tell a caller to retry something that can never succeed', () => {
+    // 429 means "ask again later". Re-sending an empty or over-long message
+    // will fail identically every time, so it must not carry that status.
+    expect(chatDenyStatus('empty')).toBe(400)
+    expect(chatDenyStatus('too_long')).toBe(400)
+  })
+
+  it('answers a sanction and a closed channel as a refusal, not a rate limit', () => {
+    expect(chatDenyStatus('sanctioned')).toBe(403)
+    expect(chatDenyStatus('chat_disabled')).toBe(403)
+  })
+
+  it('answers a duplicate as a conflict', () => {
+    expect(chatDenyStatus('duplicate')).toBe(409)
+  })
+
+  it('answers an anonymous poster as unauthenticated', () => {
+    expect(chatDenyStatus('not_authenticated')).toBe(401)
+  })
+})

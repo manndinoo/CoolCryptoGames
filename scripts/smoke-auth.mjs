@@ -19,7 +19,9 @@
 import nacl from 'tweetnacl'
 import bs58 from 'bs58'
 
-const BASE = 'http://localhost:3000'
+// Overridable, because a smoke test pinned to one port cannot be pointed at a
+// preview deployment or at a second server running beside a dev one.
+const BASE = (process.env.CCG_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 const kp = nacl.sign.keyPair()
 const address = bs58.encode(kp.publicKey)
 let cookie = ''
@@ -120,7 +122,12 @@ const posted = await res.json()
 check('chat post accepted', res.ok && posted.message?.handle === NAME, `status ${res.status} ${JSON.stringify(posted)}`)
 
 res = await post('/api/live/ccg-official/chat', { text: MSG })
-check('duplicate chat message refused', res.status === 429, `status ${res.status}`)
+// 409, not 429. Resending the same text can never succeed, so telling the
+// caller to try again later would be a lie a retry layer acts on.
+check('duplicate chat message refused as a conflict', res.status === 409, `status ${res.status}`)
+
+res = await post('/api/live/ccg-official/chat', { text: '   ' })
+check('empty chat message refused as a bad request', res.status === 400, `status ${res.status}`)
 
 const feed2 = await (await get('/api/live/ccg-official/chat')).json()
 check('message appears under the username', feed2.messages.at(-1)?.handle === NAME)

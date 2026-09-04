@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { useWalletAuth } from '@/components/play/use-wallet-auth'
+import { useCallback, useState } from 'react'
+import { ConnectPanel } from '@/components/play/connect-panel'
+import { useSession } from '@/components/play/use-session'
+import type { SessionState } from '@/lib/auth/session-state'
 import { UsernameSetup } from '@/components/play/username-setup'
-import { WalletSheet } from '@/components/play/wallet-sheet'
 import { StatusPill } from '@/components/ui/badges'
 
 /**
@@ -15,9 +16,27 @@ import { StatusPill } from '@/components/ui/badges'
  * rather than seeded activity — a demo badge on an invented match history
  * would still teach a player to read these numbers as theirs.
  */
-export function ProfileView() {
-  const { state, signIn, signOut, setUsername, connected } = useWalletAuth()
+export function ProfileView({ session }: { session: SessionState }) {
+  // The session, not the wallet. Rendering this page needs to know who you
+  // are, which is one fetch against a cookie; it does not need 150KB of wallet
+  // adapter, and loading that here cost 0.647 CLS.
+  const { state, setState, refresh } = useSession(session)
   const [addressShown, setAddressShown] = useState(false)
+
+  const signOut = useCallback(async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    setState({ status: 'signed-out' })
+  }, [setState])
+
+  const setUsername = useCallback(
+    (username: string) =>
+      setState((prev) =>
+        prev.status === 'needs-username' || prev.status === 'signed-in'
+          ? { status: 'signed-in', wallet: prev.wallet, username }
+          : prev,
+      ),
+    [setState],
+  )
 
   if (state.status === 'loading') {
     return <p className="mt-6 text-sm text-[var(--color-muted)]">Loading…</p>
@@ -38,7 +57,7 @@ export function ProfileView() {
           Your profile is tied to the wallet you play with. Connect one to see your
           verified results, tournament entries, and account status.
         </p>
-        <WalletSheet state={state} onSignIn={signIn} connected={connected} />
+        <ConnectPanel onSignedIn={refresh} />
       </div>
     )
   }

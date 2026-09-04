@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { readSessionResponse, type SessionState } from "@/lib/auth/session-state";
+
+export { readSessionResponse };
+export type { SessionState };
 
 /**
  * Who the server thinks you are, with no wallet library involved.
@@ -15,24 +19,14 @@ import { useCallback, useEffect, useState } from "react";
  * asks to connect, which is the only moment it is any use.
  */
 
-export type SessionState =
-  | { status: "loading" }
-  | { status: "signed-out" }
-  | { status: "needs-username"; wallet: string }
-  | { status: "signed-in"; wallet: string; username: string };
-
-export function readSessionResponse(data: {
-  wallet: string | null;
-  username?: string | null;
-}): SessionState {
-  if (!data.wallet) return { status: "signed-out" };
-  return data.username
-    ? { status: "signed-in", wallet: data.wallet, username: data.username }
-    : { status: "needs-username", wallet: data.wallet };
-}
-
-export function useSession() {
-  const [state, setState] = useState<SessionState>({ status: "loading" });
+/**
+ * @param initial Session read on the server, when the page can do that. Passing
+ * it removes both the loading flash and the layout shift that came with it: the
+ * account pages used to render a one-line "Loading…" and then swap in a full
+ * page, which measured CLS 0.463 against a 0.1 threshold.
+ */
+export function useSession(initial?: SessionState) {
+  const [state, setState] = useState<SessionState>(initial ?? { status: "loading" });
 
   const refresh = useCallback(async () => {
     try {
@@ -49,16 +43,13 @@ export function useSession() {
     }
   }, []);
 
+  // Only fetch when the server did not already answer. A page that was handed
+  // its session has nothing to wait for.
+  const needsFetch = initial === undefined;
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      await refresh();
-      if (cancelled) return;
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [refresh]);
+    if (!needsFetch) return;
+    void refresh();
+  }, [needsFetch, refresh]);
 
   return { state, setState, refresh };
 }

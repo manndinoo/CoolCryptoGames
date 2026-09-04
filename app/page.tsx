@@ -55,8 +55,13 @@ export default function Home() {
           one reads as a page with two games on it, and grows into rows rather
           than into gaps. */}
       <section className="ccg-stagger grid gap-[var(--spacing-4)] lg:grid-cols-2">
-        {games.map((game) => (
-          <FeatureCard key={game.slug} game={game} />
+        {games.map((game, i) => (
+          // `priority` marks the LCP image, and a page has one. It was on every
+          // card, which put a preload link on each of them; the first two then
+          // never finished loading at all — the browser held them at
+          // `complete: false` with an empty currentSrc while the unprioritised
+          // third card loaded normally, and the page never fired `load`.
+          <FeatureCard key={game.slug} game={game} priority={i === 0} />
         ))}
       </section>
 
@@ -99,7 +104,7 @@ export default function Home() {
 }
 
 /** A game at the size its art deserves. */
-function FeatureCard({ game }: { game: DemoGame }) {
+function FeatureCard({ game, priority }: { game: DemoGame; priority: boolean }) {
   const ranked = game.scoreVerification === "deterministic-replay";
 
   return (
@@ -113,7 +118,7 @@ function FeatureCard({ game }: { game: DemoGame }) {
               fill
               sizes="(max-width: 1024px) 100vw, 640px"
               className="object-cover transition-transform duration-[var(--duration-slow)] ease-[var(--ease-ccg)] group-hover/card:scale-[1.03]"
-              priority
+              priority={priority}
             />
           ) : (
             <div
