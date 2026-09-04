@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import bs58 from "bs58";
 import { collectFingerprint } from "@/lib/client/fingerprint";
+import { useSession } from "./use-session";
 
 export type AuthState =
   | { status: "loading" }
@@ -22,21 +23,35 @@ export type AuthState =
  */
 export function useWalletAuth() {
   const { publicKey, signMessage, disconnect } = useWallet();
-  const [state, setState] = useState<AuthState>({ status: "loading" });
+  // The session half is shared with surfaces that never touch a wallet, so it
+  // lives in its own hook. This one adds the states only a wallet can produce.
+  const { state: session, setState: setSession } = useSession();
+  const [overlay, setOverlay] = useState<AuthState | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((data: { wallet: string | null; username: string | null }) => {
-        if (cancelled) return;
-        setState(resolveSignedIn(data));
-      })
-      .catch(() => !cancelled && setState({ status: "signed-out" }));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const state: AuthState = overlay ?? session;
+
+  const setState = useCallback(
+    (next: AuthState | ((prev: AuthState) => AuthState)) => {
+      const resolved =
+        typeof next === "function"
+          ? (next as (prev: AuthState) => AuthState)(overlay ?? session)
+          : next;
+
+      // Wallet-only states have nowhere to live in the session hook, so they
+      // sit on top of it until the flow resolves back into a real session.
+      if (
+        resolved.status === "signing-in" ||
+        resolved.status === "blocked" ||
+        resolved.status === "failed"
+      ) {
+        setOverlay(resolved);
+        return;
+      }
+      setOverlay(null);
+      setSession(resolved);
+    },
+    [overlay, session, setSession],
+  );
 
   const signIn = useCallback(async () => {
     if (!publicKey || !signMessage) return;

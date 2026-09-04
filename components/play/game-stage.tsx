@@ -138,7 +138,16 @@ export function GameStage({
         </button>
       </div>
 
-      <div className="min-h-0 flex-1">{children}</div>
+      {/* `transform` is load-bearing, not decoration. A game is free to place
+          its own HUD with `position: fixed` — Zero Signal puts a currency
+          counter top-right that way — and a fixed element normally positions
+          against the viewport, which put it on top of the exit bar and made
+          the exit unclickable. A transformed ancestor becomes the containing
+          block for fixed descendants, so the game's own chrome is confined to
+          the game's own area. */}
+      <div className="min-h-0 flex-1" style={{ transform: "translateZ(0)" }}>
+        {children}
+      </div>
     </div>
   );
 }

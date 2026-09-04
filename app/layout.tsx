@@ -7,7 +7,6 @@ import { BottomNav } from '@/components/shell/bottom-nav'
 import { FirstVisitNotice } from '@/components/shell/first-visit-notice'
 import { Footer } from '@/components/shell/footer'
 import { site } from '@/site.config'
-import { Providers } from './providers'
 import './globals.css'
 
 // Both are SIL Open Font License, so they can ship without a licence purchase.
@@ -57,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        <Providers>
+        <>
           <a
             href="#main"
             className="sr-only rounded-[var(--radius-small)] bg-accent-solid px-4 py-2 font-semibold text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
@@ -89,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <BottomNav />
           <FirstVisitNotice />
-        </Providers>
+        </>
       </body>
     </html>
   )

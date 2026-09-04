@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ContinuePlaying } from "@/components/home/continue-playing";
 import Link from "next/link";
 import { DemoBadge, StatusPill, VerifiedBadge } from "@/components/ui/badges";
 import { SectionHeader } from "@/components/ui/section";
@@ -42,6 +43,11 @@ export default function Home() {
           {site.productLine}
         </p>
       </section>
+
+      {/* Returning players only. Absent, and rendering nothing, for everyone else. */}
+      <ContinuePlaying
+        games={games.map((g) => ({ slug: g.slug, title: g.title, cover: g.cover }))}
+      />
 
       {/* --------------------------------------------------------------- games
           Two-up at desktop with the cover at 16:9. A four-column grid holding a

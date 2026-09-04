@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DemoBadge, StatusPill, VerifiedBadge } from '@/components/ui/badges'
 import { EntryPanel } from '@/components/tournaments/entry-panel'
+import { WalletBoundary } from '@/components/play/wallet-boundary'
 import { Standings } from '@/components/tournaments/standings'
 import { demoTournaments, getDemoGame, getDemoStandings, getDemoTournament } from '@/lib/content/demo'
 import { features } from '@/lib/flags'
@@ -104,7 +105,9 @@ export default async function TournamentPage({ params }: Props) {
 
         {/* --------------------------------------------------------- entry */}
         <div className="grid gap-[var(--spacing-4)]">
-          <EntryPanel tournament={tournament} />
+          <WalletBoundary>
+            <EntryPanel tournament={tournament} />
+          </WalletBoundary>
 
           <section className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
             <h2 className="font-display text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">

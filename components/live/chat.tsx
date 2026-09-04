@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useWalletAuth } from '@/components/play/use-wallet-auth'
+import { useSession } from '@/components/play/use-session'
 import { StatusPill } from '@/components/ui/badges'
 import { chatDenyMessage, MAX_MESSAGE_LENGTH, type ChatDenyReason } from '@/lib/chat/rules'
 
@@ -23,7 +23,9 @@ const POLL_MS = 4_000
  * does not exist. It swaps out for a subscription without the surface changing.
  */
 export function Chat({ channelSlug, enabled }: { channelSlug: string; enabled: boolean }) {
-  const { state } = useWalletAuth()
+  // Chat only reads who you are; it never asks anyone to connect or sign, so
+  // it takes the session on its own and downloads no wallet code to do it.
+  const { state } = useSession()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { SettingsView } from '@/components/settings/settings-view'
+import { WalletBoundary } from '@/components/play/wallet-boundary'
 
 export const metadata: Metadata = {
   title: 'Settings',
@@ -18,7 +19,9 @@ export default function SettingsPage() {
       <p className="mt-3 max-w-xl text-[var(--color-muted)]">
         Your account, your data, and the decisions you can appeal.
       </p>
-      <SettingsView />
+      <WalletBoundary>
+        <SettingsView />
+      </WalletBoundary>
     </div>
   )
 }

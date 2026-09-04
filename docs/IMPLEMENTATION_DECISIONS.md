@@ -564,3 +564,87 @@ text and never sees a template-assembled class.
 The tile is now accent blue rather than acid. A yellow mark beside a blue
 wordmark in an otherwise neutral interface was the last thing on screen still
 arguing with itself.
+
+## 20. Evidence-backed engagement work, and the measurements
+
+Asked whether the site used the statistics and studies large sites use to drive
+usage. Partly — motion timing was set against the Doherty threshold and INP,
+and the dark-pattern research was used as a constraint (decision 18). What had
+not been done was implementing the levers those sites actually pull. This is
+that, with before-and-after numbers taken under throttling rather than claimed.
+
+### Speed, because it is the best-evidenced lever there is
+
+The relevant findings are unusually direct. Google's Deloitte study of over 30
+million mobile sessions found a 0.1s improvement in speed associated with an
+8.4% lift in retail conversion and 9.2% higher average order value. Vodafone
+Italy A/B tested an LCP improvement of 31% and saw 8% more sales. Rakuten
+reported 33% more conversions after Core Web Vitals work. These are correlational
+in places and vendor-published in places, but they point one way and the
+mechanism is not mysterious.
+
+The site's largest single cost was the Solana wallet stack — adapter, modal and
+web3.js — mounted in the root layout, so every visitor downloaded and parsed all
+of it to read a leaderboard. It is now fetched at the moment someone asks to
+play or opens their account, and warmed on hover, focus and touchstart so the
+fetch usually lands before the click.
+
+Measured on a 430px viewport at 1.6Mbps / 150ms RTT with 4x CPU throttling:
+
+| Page              | JS before | JS after | LCP before | LCP after |
+|-------------------|-----------|----------|-----------|-----------|
+| `/`               | 303 KB    | 163 KB   | 912 ms    | 904 ms    |
+| `/games`          | 310 KB    | 172 KB   | 1596 ms   | 1192 ms   |
+| `/games/[slug]`   | 303 KB    | 163 KB   | 880 ms    | 868 ms    |
+
+A 46% cut in JavaScript, and a 25% cut in LCP on the page that was worst. LCP
+moved less than bytes did on the pages whose LCP was already an image rather
+than a script — the win there is in interaction readiness, not first paint.
+
+Chat was moved off `useWalletAuth` onto a new `useSession`, which answers "am I
+signed in" with one fetch and no wallet library at all. Read-only identity and
+wallet actions are genuinely different costs and should not have shared a hook.
+
+### Resumption
+
+`ContinuePlaying` puts what you last played at the top of the home page, from
+`localStorage`. Every large catalogue does this — Steam, Netflix, YouTube — and
+the reason is that resuming is the cheapest return visit there is: a catalogue
+that opens on "here is everything, choose again" asks a returning player to redo
+a decision they already made.
+
+Built entirely from the player's own history. Nothing inferred, nothing
+recommended, nothing stored server-side, and the section renders nothing at all
+for a first-time visitor rather than showing an empty shelf.
+
+### Progress in the play flow
+
+`PlaySteps` shows three steps with the first already complete, because choosing
+a game is a real step that really happened.
+
+Kivetz, Urminsky and Zheng (2006) found café customers bought roughly 2.4 times
+more frequently as they approached a reward, and — the part that applies here —
+a ten-stamp card handed over with two stamps already applied was completed about
+34% of the time against about 19% for a blank eight-stamp card requiring
+identical effort. Visible progress is finished more often than progress starting
+from nothing.
+
+The line this does not cross: the steps are real and the count is real. A fake
+fourth step, or a bar that advances without anything happening, is the version
+of this with a regulatory name attached.
+
+### A bug the work surfaced
+
+Splitting the play gate exposed that a game placing its own HUD with
+`position: fixed` — Zero Signal puts a currency counter top-right that way —
+positioned it against the viewport and covered the stage's exit control, making
+exit unclickable. `GameStage` now gives the game's container a transform, which
+makes it the containing block for fixed descendants, so a game's chrome is
+confined to the game's own area. Verified by driving the flow end to end.
+
+### Not implemented, deliberately
+
+Social proof. It is among the best-evidenced conversion levers there is, and it
+needs real numbers. `verifiedPlayers` is 0 and the leaderboards are empty, so
+there is nothing true to show. When there are real counts, they can go on the
+cards; until then the honest figure is the one already displayed.
