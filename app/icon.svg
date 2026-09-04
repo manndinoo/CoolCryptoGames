@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!--
+    Browser-tab mark. The same geometry as CcgTile in components/brand/logo.tsx,
+    written out as a static file because Next resolves app/icon.svg without a
+    render pass — a favicon that needed React to exist would still be a 404 on
+    the first paint, which is exactly when the tab draws it.
+
+    Kept in sync by hand. If the tile silhouette or the letterforms change,
+    change them here too.
+  -->
+  <mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+    <rect width="100" height="100" fill="#fff"/>
+    <g fill="none" stroke="#000" stroke-width="9" stroke-linecap="butt">
+      <path d="M34 13 H21 a8 8 0 0 0 -8 8 v6 a8 8 0 0 0 8 8 h13" transform="translate(8 8)"/>
+      <path d="M34 13 H21 a8 8 0 0 0 -8 8 v6 a8 8 0 0 0 8 8 h13" transform="translate(42 8)"/>
+      <path d="M34 13 H21 a8 8 0 0 0 -8 8 v6 a8 8 0 0 0 8 8 h13 v-7 h-6" transform="translate(8 42)"/>
+    </g>
+  </mask>
+  <path
+    d="M22 4h56a18 18 0 0 1 18 18v42L64 96H22A18 18 0 0 1 4 78V22A18 18 0 0 1 22 4Z"
+    fill="#DFFF00"
+    mask="url(#m)"
+  />
+</svg>

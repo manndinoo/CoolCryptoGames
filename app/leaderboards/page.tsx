@@ -56,7 +56,7 @@ export default async function LeaderboardsPage() {
           to rank. The section below lists what is playable in the meantime.
         </p>
       ) : (
-        <div className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+        <div className="ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
           {ranked.map((game) => {
             const board = boards?.get(game.slug)
             return (

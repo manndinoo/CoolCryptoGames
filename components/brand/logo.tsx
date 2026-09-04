@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * The CCG mark, in three directions drawn from the reference boards.
  *
@@ -9,13 +11,28 @@
  * the backdrop is; a knockout is correct on carbon, on acid, on a screenshot,
  * and in one colour, which is what "must work in one colour" actually demands.
  *
- * Mask ids are fixed strings, so several instances on one page share a
- * definition. That is safe because identical geometry resolves identically —
- * but any mask whose content varies by size must carry that in its id, or a
- * small instance rendering first will silently reshape a large one.
+ * Mask ids are unique per instance, via useId.
+ *
+ * They used to be fixed strings, on the reasoning that identical geometry
+ * resolves identically. That held until the shell gained a sidebar hidden
+ * below the lg breakpoint: `url(#ccg-tile)` resolves to the FIRST element with
+ * that id in document order, and on a phone that became a mask inside a
+ * `display: none` subtree, which the browser never builds. Every mark on the
+ * page then rendered as a solid blob with no letters knocked out of it.
+ *
+ * Unique ids are the only version of this that cannot be broken by where a
+ * component happens to be mounted. useId is why this file is a client
+ * component; the ids it produces contain characters that are illegal in a CSS
+ * url() reference, so they are stripped down to a safe alphabet first.
  */
 
+import { useId } from 'react'
 import { Letter, PATH_C, PATH_G } from './letterforms'
+
+/** React's generated ids carry delimiters that url(#...) cannot address. */
+function safeId(raw: string): string {
+  return raw.replace(/[^a-zA-Z0-9_-]/g, '')
+}
 
 type MarkProps = {
   size?: number
@@ -52,6 +69,7 @@ function LetterCutter({ letter, x = 0, y = 0, scale = 1 }: {
  * relying on colour.
  */
 export function CcgCascade({ size = 48, monochrome = false, className, title = 'Cool Crypto Games' }: MarkProps) {
+  const uid = safeId(useId())
   const colors = monochrome
     ? ['currentColor', 'currentColor', 'currentColor']
     : ['#F5F2E9', '#1857FF', '#DFFF00']
@@ -60,20 +78,20 @@ export function CcgCascade({ size = 48, monochrome = false, className, title = '
     <svg width={size} height={size} viewBox="0 0 78 78" fill="none" role="img" aria-label={title} className={className}>
       <defs>
         {/* Each mask removes the letters that sit in front of this one. */}
-        <mask id="ccg-cascade-1" maskUnits="userSpaceOnUse" x="0" y="0" width="78" height="78">
+        <mask id={`ccg-cascade-1-${uid}`} maskUnits="userSpaceOnUse" x="0" y="0" width="78" height="78">
           <rect width="78" height="78" fill="white" />
           <g transform="translate(15,15)"><LetterCutter letter="C" /></g>
         </mask>
-        <mask id="ccg-cascade-2" maskUnits="userSpaceOnUse" x="0" y="0" width="78" height="78">
+        <mask id={`ccg-cascade-2-${uid}`} maskUnits="userSpaceOnUse" x="0" y="0" width="78" height="78">
           <rect width="78" height="78" fill="white" />
           <g transform="translate(30,30)"><LetterCutter letter="G" /></g>
         </mask>
       </defs>
 
-      <g mask="url(#ccg-cascade-1)" transform="translate(0,0)">
+      <g mask={`url(#ccg-cascade-1-${uid})`} transform="translate(0,0)">
         <Letter letter="C" color={colors[0]} />
       </g>
-      <g mask="url(#ccg-cascade-2)" transform="translate(15,15)">
+      <g mask={`url(#ccg-cascade-2-${uid})`} transform="translate(15,15)">
         <Letter letter="C" color={colors[1]} />
       </g>
       <g transform="translate(30,30)">
@@ -90,6 +108,7 @@ export function CcgCascade({ size = 48, monochrome = false, className, title = '
  * tiles that still read as the mark.
  */
 export function CcgTriTile({ size = 48, monochrome = false, className, title = 'Cool Crypto Games' }: MarkProps) {
+  const uid = safeId(useId())
   const tiles = monochrome
     ? ['currentColor', 'currentColor', 'currentColor']
     : ['#DFFF00', '#F5F2E9', '#DFFF00']
@@ -104,8 +123,7 @@ export function CcgTriTile({ size = 48, monochrome = false, className, title = '
     { x: 78, y: 56, letter: 'G' as const },
   ]
 
-  // The mask content depends on showLetters, so the id must too.
-  const maskId = `ccg-tri-${showLetters ? 'lettered' : 'solid'}`
+  const maskId = `ccg-tri-${uid}`
 
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" role="img" aria-label={title} className={className}>
@@ -143,12 +161,14 @@ export function CcgTriTile({ size = 48, monochrome = false, className, title = '
  * silhouette carries recognition on its own, so it survives 16px in one colour.
  */
 export function CcgTile({ size = 48, monochrome = false, className, title = 'Cool Crypto Games' }: MarkProps) {
+  const uid = safeId(useId())
+  const maskId = `ccg-tile-${uid}`
   const fill = monochrome ? 'currentColor' : '#DFFF00'
 
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" role="img" aria-label={title} className={className}>
       <defs>
-        <mask id="ccg-tile" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
           <rect width="100" height="100" fill="white" />
           {/* The empty lower-right quadrant is where the notch cuts, so the
               letters and the silhouette reinforce each other. */}
@@ -161,7 +181,7 @@ export function CcgTile({ size = 48, monochrome = false, className, title = 'Coo
       <path
         d="M22 4h56a18 18 0 0 1 18 18v42L64 96H22A18 18 0 0 1 4 78V22A18 18 0 0 1 22 4Z"
         fill={fill}
-        mask="url(#ccg-tile)"
+        mask={`url(#${maskId})`}
       />
     </svg>
   )

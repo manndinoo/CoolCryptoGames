@@ -22,7 +22,9 @@ function ArtTile({ game }: { game: DemoGame }) {
           fill
           // Two per row on mobile, four on desktop, capped at the grid width.
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 320px"
-          className="object-cover"
+          // A slow 4% push on hover. The card lifts, the art moves with it —
+          // one gesture rather than two things animating separately.
+          className="object-cover transition-transform duration-[var(--duration-slow)] ease-[var(--ease-ccg)] group-hover/card:scale-[1.04]"
         />
       </div>
     )
@@ -44,7 +46,9 @@ function ArtTile({ game }: { game: DemoGame }) {
 
 export function GameCard({ game, className = '' }: { game: DemoGame; className?: string }) {
   return (
-    <article className={`ccg-surface rounded-[var(--radius-large)] p-3 ${className}`}>
+    <article
+      className={`ccg-surface ccg-lift group/card rounded-[var(--radius-large)] p-3 ${className}`}
+    >
       <Link href={`/games/${game.slug}`} className="block">
         <ArtTile game={game} />
 

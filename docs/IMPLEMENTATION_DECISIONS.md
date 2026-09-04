@@ -405,3 +405,94 @@ populated one.
 The native stream layout preview referenced `reflex-lab` as the game being
 composited; it now references Zero Signal. It is a layout demonstration marked
 as demo, and pointing it at a real game keeps it that.
+
+## 18. Sidebar shell, motion, and what "convince people to spend" was built as
+
+Three separate asks arrived together: a sleeker dark interface with side tabs
+and animation; research into the colours and moods that make people play and
+spend; and pop-ups or side ads built on that research to convince people to
+spend money. They are recorded together because the third one is the reason the
+first two were built the way they were.
+
+### The shell
+
+Desktop navigation moved from a horizontal strip in the header into a fixed
+left rail, grouped Play / Compete / You. The header keeps the account control
+and gains the current section's name; repeating the rail's links along the top
+would be two maps of the same site disagreeing about which to read. Mobile is
+untouched — the bottom bar's four destinations still hold, and the rail is
+`display: none` below `lg`.
+
+The rail collapses to icons and the preference persists. An inline script in
+`<body>` applies the stored width before first paint; without it the rail
+renders wide and snaps closed on hydration, which is a visible jump on every
+page load for anyone who collapsed it. The layout offset is a CSS custom
+property (`--sidebar-w`) rather than React context, so the server-rendered
+shell reserves the right space without knowing the preference.
+
+### Motion
+
+Everything animates on `transform` and `opacity` only, so nothing here triggers
+layout. Durations come from the existing tokens: 120ms for direct feedback,
+220ms for state changes, 420ms for entrances. That ceiling is not arbitrary —
+the Doherty threshold puts the limit of "responsive" at 400ms, and Google's INP
+metric now calls 200ms the bar for interaction feedback, so an entrance that
+outlasts the content's arrival is an interface inventing a delay. The stagger is
+capped at eight steps of 40ms for the same reason.
+
+Page transitions animate the arrival only, never the exit. An exit animation
+means holding the old page on screen after the user has already asked for a new
+one.
+
+`prefers-reduced-motion` disables all of it through the existing global rule,
+verified in a reduced-motion browser context rather than assumed.
+
+### Colour
+
+No palette change. The brief asked for the colours that make people spend, and
+the honest answer is that the statistic everyone cites for this — "62–90% of a
+snap product judgement is based on colour alone" — traces to a 2006 literature
+review about first impressions, not a controlled buying experiment, and the
+review itself flagged the inconsistencies in the field. Picking a hue on that
+basis would be decorating with folklore.
+
+What does hold up is contrast and scarcity of the accent. Acid yellow reads as
+"this is the action" precisely because nothing else on the site is allowed to
+use it, which is why the sidebar's Play button and the header's are the same
+button rather than two — spending the reserved colour twice halves what it is
+worth. That was already the token rule; this change enforces it harder.
+
+### The pop-up
+
+One was built: `FirstVisitNotice`. It is not a modal, never blocks the page,
+carries no countdown or scarcity, uses a plain "Got it" rather than a
+confirm-shaming decline, and never returns once dismissed.
+
+It exists because the objection that actually stops people here is that a
+wallet-connected games site looks like a site that wants to drain your wallet.
+Answering that before anyone is asked for anything removes a real barrier. That
+is the honest form of a conversion surface: it converts by answering a question
+rather than by manufacturing pressure.
+
+### What was not built
+
+No side ads, no urgency timers, no scarcity counters, no fake live player
+counts, no purchase prompts.
+
+There is no purchase path on this site to point them at. `FEATURE_PAYMENTS` is
+off, and the founding product excludes a platform token, pay-to-play events,
+purchasable attempts, purchasable competitive power and loot boxes. "Never pay
+to play" is the product line. A prompt to spend would be pointing at a door
+that does not exist.
+
+Separately, the specific patterns that make people spend against their judgement
+are the ones regulators now enforce against by name: the FTC's dark-pattern
+categories include fake urgency, deceptive button contrast, and confirm-shaming,
+and the Epic settlement over Fortnite's purchase flows ran to $245m with $126m
+distributed to players in 2025. Building them into a site whose own Product
+Bible forbids fabricated counts and undisclosed wallet interactions would put
+the product in breach of itself before it put it in breach of anything else.
+
+If a real thing to sell appears — a sponsored tournament, a studio's paid title,
+merchandise — the honest version of a promotional surface can be built against
+it then, with a real price, a real cancellation path, and no clock.

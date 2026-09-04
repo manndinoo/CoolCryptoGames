@@ -120,7 +120,7 @@ export default function Home() {
       <Section>
         <SectionHeader title="Featured games" href="/games" />
         {/* Rail on mobile so cards swipe with a visible peek; grid on desktop. */}
-        <div className="ccg-rail lg:grid lg:grid-cols-4 lg:gap-[var(--spacing-4)] lg:overflow-visible">
+        <div className="ccg-rail ccg-stagger lg:grid lg:grid-cols-4 lg:gap-[var(--spacing-4)] lg:overflow-visible">
           {featured.map((game) => (
             <GameCard
               key={game.slug}
@@ -132,7 +132,7 @@ export default function Home() {
       </Section>
 
       {/* --------------------------------------------- tournament + live modules */}
-      <Section className="grid gap-[var(--spacing-4)] lg:grid-cols-2">
+      <Section className="ccg-stagger grid gap-[var(--spacing-4)] lg:grid-cols-2">
         <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
           <div className="mb-3 flex items-center gap-2">
             <span className="font-display text-xs font-bold tracking-[var(--tracking-label)] text-cobalt uppercase">

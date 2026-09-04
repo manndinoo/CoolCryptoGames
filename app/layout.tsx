@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { Header } from '@/components/shell/header'
+import { Sidebar } from '@/components/shell/sidebar'
+import { PageTransition } from '@/components/shell/page-transition'
 import { BottomNav } from '@/components/shell/bottom-nav'
+import { FirstVisitNotice } from '@/components/shell/first-visit-notice'
 import { Footer } from '@/components/shell/footer'
 import { site } from '@/site.config'
 import { Providers } from './providers'
@@ -43,6 +46,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen font-body">
+        {/* Applies the stored sidebar width before the first paint. Without it
+            the rail renders expanded and snaps closed once React hydrates,
+            which is a visible jump on every page load for anyone who collapsed
+            it. Inline and synchronous is the only way to beat the paint. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var v=localStorage.getItem('ccg:sidebar');if(v==='collapsed'||v==='expanded'){document.body.dataset.sidebar=v}}catch(e){}",
+          }}
+        />
+
         <Providers>
           <a
             href="#main"
@@ -51,20 +65,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Skip to content
           </a>
 
-          <Header />
+          <Sidebar />
 
-          <main
-            id="main"
-            className="mx-auto max-w-[var(--max-content)] px-[var(--mobile-gutter)] lg:px-[var(--desktop-gutter)]"
-            // Reserve exactly the bottom-nav height on mobile so fixed chrome
-            // never covers the end of the page.
-            style={{ paddingBottom: 'calc(var(--mobile-bottom-nav) + var(--spacing-6))' }}
-          >
-            {children}
-          </main>
+          {/* Everything that is not the fixed rail sits inside this, offset by
+              exactly the rail's width. The offset is a custom property so the
+              server can render the correct layout without knowing the stored
+              preference — the script above sets it, not React. */}
+          <div className="ccg-shell">
+            <Header />
 
-          <Footer />
+            <main
+              id="main"
+              className="mx-auto max-w-[var(--max-content)] px-[var(--mobile-gutter)] lg:px-[var(--desktop-gutter)]"
+              // Reserve exactly the bottom-nav height on mobile so fixed chrome
+              // never covers the end of the page.
+              style={{ paddingBottom: 'calc(var(--mobile-bottom-nav) + var(--spacing-6))' }}
+            >
+              <PageTransition>{children}</PageTransition>
+            </main>
+
+            <Footer />
+          </div>
+
           <BottomNav />
+          <FirstVisitNotice />
         </Providers>
       </body>
     </html>

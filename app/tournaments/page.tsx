@@ -53,12 +53,12 @@ export default function TournamentsPage() {
           </Link>
         </section>
       ) : (
-        <ul className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+        <ul className="ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
           {demoTournaments.map((t) => (
             <li key={t.slug}>
               <Link
                 href={`/tournaments/${t.slug}`}
-                className="ccg-surface block rounded-[var(--radius-large)] p-[var(--spacing-5)] transition-colors hover:border-bone/25"
+                className="ccg-surface ccg-lift block rounded-[var(--radius-large)] p-[var(--spacing-5)]"
               >
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <StatusPill>{t.status}</StatusPill>

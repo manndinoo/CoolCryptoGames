@@ -65,7 +65,30 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
+  /* Width the fixed sidebar occupies, and therefore the offset every piece of
+     page chrome needs. Read as a custom property so the server-rendered shell
+     can reserve the space without knowing the client's stored preference. */
+  --sidebar-w: 248px;
+
+  /* Dark only, always. There is no light palette to fall back to: this is a
+     games surface, the art is the content, and every cover and screenshot on
+     it was captured against this ground. `color-scheme` also makes the
+     browser's own furniture — scrollbars, form controls, the space past the
+     end of a scroll — dark, which is what stops a white bar flashing in at
+     the edges during navigation. */
   color-scheme: dark;
+}
+
+body[data-sidebar='collapsed'] {
+  --sidebar-w: 76px;
+}
+
+/* Below the sidebar breakpoint there is no rail, so nothing is reserved. */
+@media (max-width: 1023.98px) {
+  body,
+  body[data-sidebar='collapsed'] {
+    --sidebar-w: 0px;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -82,6 +105,30 @@ body {
   background: var(--color-carbon);
   color: var(--color-bone);
   -webkit-font-smoothing: antialiased;
+}
+
+/* A single fixed wash behind everything, rather than a gradient per section.
+   Two very low-opacity radials give the flat carbon ground somewhere to fall
+   away to, which is most of what separates a dark interface that reads as
+   deliberate from one that reads as an unstyled page. Fixed and
+   pointer-events-none, so it costs one paint and never intercepts a tap. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      1100px 620px at 12% -8%,
+      color-mix(in srgb, var(--color-cobalt) 16%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      900px 520px at 92% 4%,
+      color-mix(in srgb, var(--color-acid) 6%, transparent),
+      transparent 58%
+    );
 }
 
 /* Visible keyboard focus everywhere. Acceptance test F requires it, and the
@@ -111,6 +158,169 @@ body {
   }
   .ccg-rail > * {
     scroll-snap-align: start;
+  }
+
+  /* -------------------------------------------------------------- shell */
+
+  /* Offset for the fixed rail. `padding-left` reflows on toggle, which is a
+     deliberate one-off cost: the alternative — no transition — makes the rail
+     appear to slide out from under content that jumps to meet it. */
+  .ccg-shell {
+    padding-left: var(--sidebar-w);
+    transition: padding-left var(--duration-normal) var(--ease-ccg);
+  }
+
+  /* ------------------------------------------------------------ sidebar */
+
+  .ccg-sidebar {
+    transition: width var(--duration-normal) var(--ease-ccg);
+  }
+
+  /* The active marker slides and grows rather than appearing. Both properties
+     are compositor-only (transform, opacity), so the animation does not
+     trigger layout on a low-end device. */
+  .ccg-side-marker {
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0.2);
+    transition:
+      opacity var(--duration-normal) var(--ease-ccg),
+      transform var(--duration-normal) var(--ease-ccg);
+  }
+  .ccg-side-link[data-active] .ccg-side-marker {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
+  }
+  .ccg-side-link[data-active] {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Collapsed: labels shrink to nothing instead of disappearing, so the rail
+     reads as one movement rather than a redraw. */
+  .ccg-side-text {
+    transition:
+      opacity var(--duration-fast) var(--ease-ccg),
+      max-width var(--duration-normal) var(--ease-ccg);
+    max-width: 12rem;
+  }
+  .ccg-sidebar[data-collapsed] .ccg-side-text {
+    max-width: 0;
+    opacity: 0;
+  }
+  .ccg-sidebar[data-collapsed] .ccg-side-link,
+  .ccg-sidebar[data-collapsed] .ccg-side-cta,
+  .ccg-sidebar[data-collapsed] .ccg-side-toggle {
+    gap: 0;
+    justify-content: center;
+  }
+
+  /* -------------------------------------------------------------- motion */
+
+  /* Entrance for page content. Short and small: 10px and 420ms reads as the
+     page settling, where a longer or larger move reads as a delay you are
+     waiting out. Everything here is disabled wholesale by the
+     prefers-reduced-motion block below. */
+  @keyframes ccg-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .ccg-reveal {
+    animation: ccg-rise var(--duration-slow) var(--ease-ccg) both;
+  }
+
+  /* Staggered children. Capped at eight steps and 40ms apart: the last item in
+     a long list must not wait longer than the eye is willing to, and 8 x 40ms
+     keeps the whole sequence inside the 400ms the interface has to answer in. */
+  .ccg-stagger > * {
+    animation: ccg-rise var(--duration-slow) var(--ease-ccg) both;
+  }
+  .ccg-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .ccg-stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .ccg-stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .ccg-stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .ccg-stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .ccg-stagger > *:nth-child(6) { animation-delay: 200ms; }
+  .ccg-stagger > *:nth-child(7) { animation-delay: 240ms; }
+  .ccg-stagger > *:nth-child(n + 8) { animation-delay: 280ms; }
+
+  /* Interactive cards. The lift is 3px — enough to read as "this responds",
+     small enough that a grid of them does not shimmer as the pointer crosses. */
+  .ccg-lift {
+    transition:
+      transform var(--duration-normal) var(--ease-ccg),
+      border-color var(--duration-normal) var(--ease-ccg),
+      box-shadow var(--duration-normal) var(--ease-ccg);
+  }
+  @media (hover: hover) {
+    .ccg-lift:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 20px 44px -26px rgba(0, 0, 0, 0.95);
+    }
+  }
+  .ccg-lift:active {
+    transform: translateY(-1px);
+  }
+
+  /* The play control's resting state.
+     A ring that expands and fades once every three seconds, drawn on a
+     pseudo-element so it never affects the button's own size or hit area.
+     Slow and low-contrast on purpose: a fast or bright pulse is an urgency
+     cue, and there is nothing urgent about a free game that will still be
+     here tomorrow. This is a pointer to where the action is, not a timer. */
+  @keyframes ccg-ring {
+    0% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(1.7);
+    }
+  }
+
+  .ccg-pulse {
+    position: relative;
+  }
+  .ccg-pulse::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--color-acid);
+    animation: ccg-ring 3s var(--ease-ccg) infinite;
+    pointer-events: none;
+  }
+
+  /* The first-visit notice. Rises in, drops out — the same 10px and the same
+     easing as page content, so it reads as part of the page arriving rather
+     than as something thrown on top of it. */
+  @keyframes ccg-notice-out {
+    to {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  .ccg-notice {
+    animation: ccg-rise var(--duration-slow) var(--ease-ccg) both;
+  }
+  .ccg-notice[data-leaving] {
+    animation: ccg-notice-out var(--duration-normal) var(--ease-ccg) forwards;
+  }
+
+  /* Reserved for genuinely live or verified states, per the token rules. */
+  .ccg-glow {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-acid) 30%, transparent),
+      0 0 28px -8px color-mix(in srgb, var(--color-acid) 50%, transparent);
   }
 
   /* Restrained depth. One shared recipe so "glass" cannot drift per component. */

@@ -20,7 +20,7 @@ export default function GamesPage() {
         </p>
       </header>
 
-      <div className="mt-[var(--spacing-6)] grid grid-cols-2 gap-[var(--spacing-4)] lg:grid-cols-4">
+      <div className="ccg-stagger mt-[var(--spacing-6)] grid grid-cols-2 gap-[var(--spacing-4)] lg:grid-cols-4">
         {demoGames.map((game) => (
           <GameCard key={game.slug} game={game} />
         ))}

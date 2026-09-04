@@ -24,7 +24,7 @@ export default function DevelopersPage() {
         </p>
       </header>
 
-      <ul className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+      <ul className="ccg-stagger mt-[var(--spacing-6)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
         {demoDevelopers.map((dev) => {
           const games = demoGames.filter((g) => g.developerSlug === dev.slug)
           const ranked = games.filter(
@@ -35,7 +35,7 @@ export default function DevelopersPage() {
             <li key={dev.slug}>
               <Link
                 href={`/developers/${dev.slug}`}
-                className="ccg-surface block h-full rounded-[var(--radius-large)] p-[var(--spacing-5)] transition-colors hover:border-bone/25"
+                className="ccg-surface ccg-lift block h-full rounded-[var(--radius-large)] p-[var(--spacing-5)]"
               >
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <StatusPill>{games.length === 1 ? '1 game' : `${games.length} games`}</StatusPill>

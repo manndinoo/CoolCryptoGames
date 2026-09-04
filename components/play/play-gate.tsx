@@ -134,7 +134,7 @@ export function PlayGate({ game }: { game: GameSummary }) {
         )}
 
         <span className="relative flex flex-col items-center gap-3">
-          <span className="grid size-16 place-items-center rounded-full bg-acid text-carbon shadow-xl transition-transform duration-[var(--duration-normal)] group-hover:scale-105">
+          <span className="ccg-pulse grid size-16 place-items-center rounded-full bg-acid text-carbon shadow-xl transition-transform duration-[var(--duration-normal)] group-hover:scale-105">
             <svg viewBox="0 0 24 24" className="ml-1 size-7" aria-hidden>
               <path d="M8 5v14l11-7L8 5Z" fill="currentColor" />
             </svg>
