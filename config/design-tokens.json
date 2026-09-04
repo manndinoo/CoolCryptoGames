@@ -63,8 +63,7 @@
     "acid": "Primary play, register, live, and verified states only",
     "orange": "Alerts, expiring states, and rare event emphasis only",
     "glow": "Use sparingly around active or live elements; never on body text",
-    "crypto": "Do not use charts, coins, rockets, moons, or market imagery",
+    "crypto": "Platform surfaces: no charts, coins, rockets, moons, or market imagery, and never live market data. Game content is exempt \u2014 a game may depict charts, candlesticks or bonding curves as subject matter.",
     "contentTruth": "Never display generated-image statistics as real product data"
   }
 }
-

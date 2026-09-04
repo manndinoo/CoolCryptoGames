@@ -11,7 +11,15 @@ alt="Cool Crypto Games desktop brand and homepage direction with dark graphite, 
 | **NORTH STAR Build the game platform WEBCADE was reaching for: excellent games, fair developer economics, trusted competition, live community, and optional crypto infrastructure that never gets in the way of fun.** |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
-Version 0.1 \| September 4, 2026 \| Founding working draft
+Version 0.2 \| September 4, 2026 \| Founding working draft
+
+**Amendment 0.2 — September 4, 2026.** Clarified that the exclusion on
+market imagery applies to CCG platform surfaces, not to game content. Games
+may depict charts, candlesticks and bonding curves as subject matter; the
+platform may not display live market data. Added "Market imagery: games
+versus platform"; updated the brand system section, the lower-risk founding
+boundaries table, and the launch non-negotiables to match. Requested by the
+product owner.
 
 This document defines the intended product and operating model. Legal,
 tax, payments, privacy, promotion, and gaming counsel must review
@@ -129,10 +137,49 @@ states, and rare safety-orange alerts. The interface is sleek and
 gamer-forward without retro nostalgia, casino imagery, market charts, or
 excessive cyberpunk effects.
 
+This describes the platform shell. It is not a restriction on what games
+may depict. See "Market imagery: games versus platform" below.
+
 | **Role**       | **Specification**   | **Usage**                                                |
 |----------------|---------------------|----------------------------------------------------------|
 | **Foundation** | \#080A0D / \#15191F | Navigation, page shell, game theater, streaming surfaces |
 | **Primary**    | \#1857FF cobalt     | Links, selected states, navigation, developer identity   |
+
+## Market imagery: games versus platform
+
+Games may depict market imagery freely. Charts, candlesticks, tickers,
+bonding curves and the culture around them are legitimate subject matter
+for a game, and the catalogue treats such a game like any other theme.
+
+The platform may not display live market data.
+
+The distinction is between fiction and a feed. A game whose subject is a
+token climbing to bonding is game content. A CCG surface that renders an
+actual price, an actual chart, or an actual trading feed is CCG making a
+market representation, and that is what stays excluded.
+
+Rules that follow:
+
+- No live or delayed market data on any platform surface — home, catalog,
+  game cards, tournament modules, developer pages, profiles, or live pages.
+
+- No price, market capitalisation, or token value presented as CCG data,
+  including for a game whose own theme is about one.
+
+- Game key art and in-game visuals are exempt. They are the developer's
+  creative content and are reviewed like any other submission.
+
+- Platform copy stays free of investment language regardless of what any
+  game depicts. A game may be about a bonding curve; CCG does not describe
+  it as an opportunity.
+
+- A game's market imagery must never be presented as real market activity.
+  The same truthfulness rule that governs player counts and prizes applies
+  to anything a game surface implies about live markets.
+
+Displaying live market data or investment language can attract financial
+promotion regulation in several jurisdictions. That is a substantial part of
+why the boundary sits at the platform edge rather than at the game.
 | **Action**     | \#DFFF00 acid       | Play, register, live status, verified result             |
 | **Surface**    | \#F5F2E9 bone       | Readable contrast, editorial cards, announcements        |
 | **Alert**      | \#FF5A19 orange     | Limited events, warnings, expiring states                |
@@ -786,7 +833,7 @@ implementation for every jurisdiction served.
 | **Competition** | Free entry and objective skill                      | Entry fees, paid attempts, chance                  |
 | **Prizes**      | Fixed and sponsor/platform funded                   | Player-funded pools or tradable prize currency     |
 | **Commerce**    | Cosmetics and content; no competitive power         | Cash-out, secondary-market promises                |
-| **Crypto**      | Optional collectibles and supported payouts later   | Platform token, investment language                |
+| **Crypto**      | Optional collectibles and supported payouts later   | Platform token, investment language, live market data on platform surfaces |
 | **Streaming**   | Curated and moderated                               | Open broadcasting or anonymous chat                |
 | **Age**         | 18+ founding account/competition policy             | Expansion to children or mixed-age social features |
 
@@ -996,6 +1043,10 @@ rather than calendar promises.
 ## CCG will not launch with
 
 - A platform token
+
+- Live market data, price charts, or trading feeds on platform surfaces
+  (games may depict market imagery as game content — see "Market imagery:
+  games versus platform")
 
 - Pay-to-play prize tournaments
 

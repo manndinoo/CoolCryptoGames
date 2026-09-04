@@ -43,7 +43,10 @@ The public product line is:
 Do not add or imply any of the following:
 
 - A CCG platform token
-- Token-price charts, candlesticks, trading feeds, or investment language
+- Live token-price charts, candlesticks, or trading feeds on CCG platform
+  surfaces, and investment language in platform copy (games may depict market
+  imagery as game content — see "Market imagery: games versus platform" in the
+  Product Bible)
 - Pay-to-play prize events
 - Player-funded prize pools
 - Peer-to-peer wagering

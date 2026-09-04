@@ -96,3 +96,38 @@ The concept art's chain logos, player counts, tournament prize values and game
 names are **not** reproduced. Acceptance test A forbids presenting fake live
 state, player numbers or prizes as real, so demo records carry visible demo
 labelling and counts read `0 verified players` until stored session data exists.
+
+## 8. Amended the handoff kit: market imagery (Bible v0.2)
+
+The kit README asks that its files be preserved. They have been, but the
+Product Bible was amended on the product owner's instruction rather than left
+frozen — a founding document that cannot be corrected stops being the source of
+truth the moment reality moves.
+
+**The change.** The original exclusion read "token-price charts, candlesticks,
+trading feeds, or investment language" without saying where it applied. Read
+literally it barred a game from having a chart in it, which was not the intent.
+The boundary now sits at the platform edge: games may depict market imagery as
+subject matter; CCG surfaces may not display live market data.
+
+**Why four files changed, not one.** The kit's authority order puts
+`CLAUDE_MASTER_BUILD_PROMPT.md` above `CCG_PRODUCT_BIBLE.md`. Amending only the
+Bible would have left the stricter rule in force by that ordering and produced
+exactly the drift the kit warns about. Changed together:
+
+- `docs/CCG_PRODUCT_BIBLE.md` — new section "Market imagery: games versus
+  platform"; brand system scoped to the shell; boundaries table and launch
+  non-negotiables updated; version 0.1 → 0.2 with an amendment note
+- `CLAUDE_MASTER_BUILD_PROMPT.md` — exclusion list rewritten to match
+- `config/design-tokens.json` — `usageRules.crypto` rewritten to match
+- `config/design-tokens.json` at the repository root — same file, kept mirrored
+
+**Unchanged by this.** The truthfulness rules still hold in full: a game's
+market imagery must not be presented as real market activity, and platform copy
+carries no investment language whatever a game depicts. The exclusion on a CCG
+platform token is untouched.
+
+Live market data and investment language attract financial promotion regulation
+in several jurisdictions, which is a large part of why the line is drawn at the
+platform edge rather than at the game. That remains for counsel to review — the
+Bible's standing instruction that legal must review before launch applies here.
