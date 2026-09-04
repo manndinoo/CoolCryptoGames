@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  chatHandle,
   checkChatPermission,
   MAX_MESSAGE_LENGTH,
   normalizeMessage,
@@ -13,7 +12,6 @@ const NOW = 1_000_000
 const NUL = String.fromCharCode(0x00)
 const ZWSP = String.fromCharCode(0x200b)
 const ZWNJ = String.fromCharCode(0x200c)
-const ELLIPSIS = String.fromCharCode(0x2026)
 
 function ctx(over: Partial<ChatContext> = {}): ChatContext {
   return {
@@ -151,10 +149,3 @@ describe('checkChatPermission', () => {
   })
 })
 
-describe('chatHandle', () => {
-  it('shortens a wallet for display', () => {
-    expect(chatHandle('DemoWa11et1111111111111111111111111111111111')).toBe(
-      `Demo${ELLIPSIS}1111`,
-    )
-  })
-})

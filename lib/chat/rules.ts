@@ -138,7 +138,7 @@ function deny(reason: ChatDenyReason, retryAfterMs?: number): ChatPermission {
   return { allowed: false, reason, retryAfterMs }
 }
 
-/** Short display handle for a wallet. Chat is attributed, never anonymous. */
-export function chatHandle(wallet: string): string {
-  return `${wallet.slice(0, 4)}…${wallet.slice(-4)}`
-}
+// A wallet-shortening helper used to live here. It is gone deliberately:
+// public surfaces render `displayName(username)` from lib/identity/username,
+// and keeping a tested function that formats an address for display is an
+// invitation to reintroduce the leak that removing it closed.
