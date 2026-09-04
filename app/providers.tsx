@@ -6,7 +6,7 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import "@solana/wallet-adapter-react-ui/styles.css";
+import "@/styles/wallet-adapter.css";
 
 /**
  * An empty `wallets` array is intentional: every current Solana wallet

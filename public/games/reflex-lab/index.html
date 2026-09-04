@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>CCG Reflex Lab</title>
+    <style>
+      :root {
+        --carbon: #080a0d;
+        --graphite: #15191f;
+        --bone: #f5f2e9;
+        --acid: #dfff00;
+        --cobalt: #1857ff;
+        --muted: #9aa4b2;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        background: var(--carbon);
+        color: var(--bone);
+        font: 450 15px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #stage {
+        display: grid;
+        place-items: center;
+        height: 100%;
+        text-align: center;
+        padding: 24px;
+        cursor: pointer;
+        transition: background 90ms linear;
+      }
+      #stage.armed { background: var(--graphite); }
+      #stage.go { background: var(--acid); color: var(--carbon); }
+      #stage.foul { background: #2a1416; }
+      h1 {
+        font-size: clamp(22px, 6vw, 40px);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin: 0 0 8px;
+        text-transform: uppercase;
+      }
+      p { margin: 0; color: var(--muted); max-width: 34ch; }
+      #stage.go p { color: rgba(8, 10, 13, 0.72); }
+      .rounds {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+      }
+      .pip {
+        width: 22px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .pip.done { background: var(--acid); }
+      .list { margin-top: 14px; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+      @media (prefers-reduced-motion: reduce) {
+        #stage { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="rounds" id="pips" aria-hidden="true"></div>
+    <div id="stage" role="button" tabindex="0" aria-live="polite">
+      <div>
+        <h1 id="title">Reflex Lab</h1>
+        <p id="hint">Loading…</p>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+
+    <script>
+      // CCG Reflex Lab.
+      //
+      // Runs in a sandboxed frame with an opaque origin: no access to the
+      // parent's cookies, storage, or wallet. It talks to the shell only
+      // through postMessage, and it never computes or reports a score — it
+      // reports the times at which keys were pressed, and the server works out
+      // what they were worth.
+      ;(function () {
+        'use strict'
+
+        var PROTOCOL_VERSION = '1'
+        var ROUNDS = 5
+        var MIN_DELAY_MS = 700
+        var MAX_DELAY_MS = 2600
+
+        var stage = document.getElementById('stage')
+        var title = document.getElementById('title')
+        var hint = document.getElementById('hint')
+        var list = document.getElementById('list')
+        var pips = document.getElementById('pips')
+
+        var session = null // { seed, playSessionId }
+        var delays = []
+        var inputs = []
+        var reactions = []
+        var round = 0
+        var startedAt = 0
+        var targetAt = 0
+        var armed = false
+        var timer = null
+        var finished = false
+
+        for (var i = 0; i < ROUNDS; i++) {
+          var pip = document.createElement('div')
+          pip.className = 'pip'
+          pips.appendChild(pip)
+        }
+
+        // ---- deterministic delays -----------------------------------------
+        // Mirrors lib/games/reflex-lab/engine.ts exactly. The server replays a
+        // run with the same function, so any drift between the two would show
+        // up as an honest player's run being rejected.
+        function hashSeed(seed) {
+          var h = 2166136261
+          for (var i = 0; i < seed.length; i++) {
+            h ^= seed.charCodeAt(i)
+            h = Math.imul(h, 16777619)
+          }
+          return h >>> 0
+        }
+
+        function prng(state) {
+          var a = state
+          return function () {
+            a = (a + 0x6d2b79f5) >>> 0
+            var t = a
+            t = Math.imul(t ^ (t >>> 15), t | 1)
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+          }
+        }
+
+        function roundDelays(seed) {
+          var next = prng(hashSeed(seed))
+          var out = []
+          for (var i = 0; i < ROUNDS; i++) {
+            out.push(MIN_DELAY_MS + Math.floor(next() * (MAX_DELAY_MS - MIN_DELAY_MS)))
+          }
+          return out
+        }
+
+        // ---- shell protocol -------------------------------------------------
+        var requestSeq = 0
+        function send(type, extra) {
+          var msg = {
+            type: type,
+            protocolVersion: PROTOCOL_VERSION,
+            requestId: 'g' + ++requestSeq,
+          }
+          for (var k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) msg[k] = extra[k]
+          // The shell has an opaque origin from here, so '*' is the only
+          // possible target. It is safe because nothing sensitive is sent: the
+          // payload is key-press timings.
+          parent.postMessage(msg, '*')
+        }
+
+        window.addEventListener('message', function (event) {
+          // Only the shell can be our parent frame.
+          if (event.source !== parent) return
+          var data = event.data
+          if (!data || data.protocolVersion !== PROTOCOL_VERSION) return
+
+          if (data.type === 'SESSION_START') {
+            session = { seed: String(data.seed), playSessionId: String(data.playSessionId) }
+            delays = roundDelays(session.seed)
+            beginIdle()
+          }
+        })
+
+        // ---- game loop ------------------------------------------------------
+        function beginIdle() {
+          title.textContent = 'Reflex Lab'
+          hint.textContent = 'Press when the screen turns yellow. Five rounds. Tap or press space to begin.'
+          stage.className = ''
+        }
+
+        function beginRun() {
+          inputs = []
+          reactions = []
+          round = 0
+          finished = false
+          list.textContent = ''
+          for (var i = 0; i < pips.children.length; i++) pips.children[i].className = 'pip'
+          startedAt = performance.now()
+          nextRound()
+        }
+
+        function nextRound() {
+          armed = false
+          stage.className = 'armed'
+          title.textContent = 'Wait'
+          hint.textContent = 'Round ' + (round + 1) + ' of ' + ROUNDS
+
+          // Round 1 starts at t=0; every later round starts when the previous
+          // press landed. The server reconstructs the same schedule.
+          var roundStart = round === 0 ? 0 : inputs[round - 1].t
+          targetAt = roundStart + delays[round]
+
+          timer = setTimeout(
+            function () {
+              armed = true
+              stage.className = 'go'
+              title.textContent = 'Press'
+              hint.textContent = ''
+            },
+            Math.max(0, targetAt - (performance.now() - startedAt)),
+          )
+        }
+
+        function press() {
+          if (finished) return
+
+          if (!session) return
+          if (!inputs.length && !armed && stage.className === '') {
+            beginRun()
+            return
+          }
+
+          var t = Math.round(performance.now() - startedAt)
+
+          if (!armed) {
+            // Pressed before the target. The server would reject this run, so
+            // it is ended here rather than submitted.
+            clearTimeout(timer)
+            finished = true
+            stage.className = 'foul'
+            title.textContent = 'Too early'
+            hint.textContent = 'You pressed before the target appeared. Reload to try again.'
+            send('REPORT_ERROR', { message: 'false start on round ' + (round + 1) })
+            return
+          }
+
+          inputs.push({ t: t, k: 'press' })
+          reactions.push(t - targetAt)
+          pips.children[round].className = 'pip done'
+          list.textContent = reactions.map(function (r) { return r + 'ms' }).join('  ')
+
+          round++
+          if (round < ROUNDS) {
+            nextRound()
+          } else {
+            finish()
+          }
+        }
+
+        function finish() {
+          finished = true
+          stage.className = ''
+          var mean = Math.round(
+            reactions.reduce(function (a, b) { return a + b }, 0) / reactions.length,
+          )
+          title.textContent = mean + 'ms'
+          hint.textContent = 'Submitted for verification. The server replays your inputs to confirm it.'
+
+          // Inputs, not a score. `claimedScore` is sent only so a mismatch
+          // against the server's own replay is visible as a signal — it is
+          // never what gets recorded.
+          send('SCORE_SUBMIT', {
+            playSessionId: session.playSessionId,
+            inputs: inputs,
+            claimedScore: mean,
+          })
+        }
+
+        stage.addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          press()
+        })
+        window.addEventListener('keydown', function (e) {
+          if (e.code === 'Space' || e.code === 'Enter') {
+            e.preventDefault()
+            press()
+          }
+        })
+
+        send('GAME_READY', {})
+      })()
+    </script>
+  </body>
+</html>

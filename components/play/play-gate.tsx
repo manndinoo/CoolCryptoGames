@@ -5,7 +5,13 @@ import { useWalletAuth } from './use-wallet-auth'
 import { UsernameSetup } from './username-setup'
 import { WalletSheet } from './wallet-sheet'
 
-type GameSummary = { slug: string; title: string; status: 'playable' | 'coming-soon' }
+type GameSummary = {
+  slug: string
+  title: string
+  status: 'playable' | 'coming-soon'
+  /** Whether the server can replay this game's runs and vouch for a score. */
+  ranked: boolean
+}
 
 /**
  * Guards the theater.
@@ -38,16 +44,42 @@ export function PlayGate({ game }: { game: GameSummary }) {
   }
 
   if (state.status === 'signed-in' && requested) {
+    // Unranked games mount directly: the wallet gate has been satisfied, and
+    // there is no score to issue a capability for. Ranked games additionally
+    // need a server-issued play capability scoped to an exact build.
+    if (!game.ranked) {
+      return (
+        <div>
+          <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--color-subtle-border)] bg-carbon">
+            <iframe
+              src={`/games/${game.slug}/index.html`}
+              title={game.title}
+              className="aspect-[9/16] w-full sm:aspect-video"
+              // No allow-same-origin: the frame runs on an opaque origin and
+              // cannot reach this page's cookies, storage, or wallet provider.
+              // No camera or microphone in `allow`, either.
+              sandbox="allow-scripts"
+              allow="autoplay; fullscreen; gamepad"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+          <p className="mt-3 text-xs text-[var(--color-muted)]">
+            This game runs unranked. Its results are not submitted to a leaderboard
+            because the server cannot yet replay them independently.
+          </p>
+        </div>
+      )
+    }
+
     return (
       <div className="ccg-surface grid aspect-video w-full place-items-center rounded-[var(--radius-large)] text-center">
         <div className="p-6">
           <p className="font-display text-sm font-bold tracking-[var(--tracking-label)] uppercase">
-            Runtime not yet wired
+            Ranked runtime not yet wired
           </p>
           <p className="mt-2 max-w-md text-sm text-[var(--color-muted)]">
-            Authentication succeeded. The sandboxed runtime and the server-issued play
-            capability that mounts it are the next build step — no game frame will load
-            until the server can scope a capability to this exact game and build.
+            Authentication succeeded. A ranked session needs a server-issued play
+            capability scoped to this exact build, which is the next build step.
           </p>
         </div>
       </div>

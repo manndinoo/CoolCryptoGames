@@ -65,7 +65,14 @@ export default async function GamePage({ params }: Props) {
       {/* The theater. Nothing mounts here until the server has issued a
           play capability for this specific game and build. */}
       <div className="mt-[var(--spacing-6)]">
-        <PlayGate game={{ slug: game.slug, title: game.title, status: game.status }} />
+        <PlayGate
+          game={{
+            slug: game.slug,
+            title: game.title,
+            status: game.status,
+            ranked: game.scoreVerification === 'deterministic-replay',
+          }}
+        />
       </div>
 
       <section className="mt-[var(--spacing-7)] max-w-xl">

@@ -8,6 +8,7 @@ export default defineConfig({
     env: {
       IP_HASH_PEPPER: 'test-pepper-value-at-least-32-characters-long',
       FINGERPRINT_PEPPER: 'test-fp-pepper-at-least-32-characters-long!!',
+      SESSION_SECRET: 'test-session-secret-at-least-32-characters-long',
     },
   },
   resolve: {

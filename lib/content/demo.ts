@@ -44,6 +44,23 @@ export type DemoDeveloper = {
 
 export const demoGames: DemoGame[] = [
   {
+    slug: 'road-to-bonded',
+    title: 'Road to Bonded',
+    developerSlug: 'ccg-platform',
+    category: 'Puzzle',
+    blurb:
+      'A portrait-first strategic match-3 arcade game. Launch a coin, build volume, survive dips and climb the bonding curve across fifty levels.',
+    verifiedPlayers: 0,
+    // The engine is deterministic and replays are byte-identical, so verified
+    // scoring is reachable — but it needs a server-side port of the engine
+    // before a result can be vouched for. Unranked until that exists.
+    scoreVerification: 'unranked',
+    status: 'playable',
+    updatedAt: '2026-09-04',
+    demo: false,
+    art: ['#1857FF', '#DFFF00'],
+  },
+  {
     slug: 'reflex-lab',
     title: 'CCG Reflex Lab',
     developerSlug: 'ccg-platform',

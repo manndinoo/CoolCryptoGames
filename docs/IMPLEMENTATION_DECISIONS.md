@@ -223,3 +223,61 @@ competition tables all key on the wallet address, which is correct — it is the
 stable internal identifier. The audit is that no *read path serving a public
 surface* selects it, which is currently true and worth a test once the database
 exists to test against.
+
+## 11. Road to Bonded: removed the paid lives store
+
+The game arrived from `solana-intel-engine`, branch
+`claude/road-to-bonded-game-snkvn1`, as a self-contained static app. It ships a
+`js/store.js` that sold lives for real SOL: connect an injected wallet provider,
+fetch a live SOL/USD rate, transfer lamports to a treasury address, credit
+lives on confirmation.
+
+**Every part of that is an excluded mechanic here.** The founding non-negotiables
+rule out purchased tournament lives or attempts, purchased competitive power,
+and undisclosed wallet transactions; the SDK contract states a game may never
+initiate a wallet transaction; and the product line is "never pay to play".
+
+The shipped config had `treasury: ''`, which closes the store — but that leaves
+the entire flow one config edit from live. The implementation is therefore
+replaced with a permanently-closed stub of the same shape, and the original
+kept at `tools/store.original.js` for reference. Nothing in the hosted build
+touches a wallet provider, fetches a price, or loads a web3 library.
+
+The frame is also sandboxed without `allow-same-origin`, so a wallet provider
+would be unreachable regardless. That is a second line, not the first: isolation
+should not be the only thing standing between a player and a payment.
+
+**Left alone, and needing your decision.** The free lives economy remains — five
+lives, six-hour regeneration, a lost life on a failed level. It is not a
+purchase, so it does not breach a non-negotiable. It is still a soft gate on
+play, and it exists because a store was going to be attached to it. Whether a
+game on CCG may gate play behind regenerating lives at all is a product call I
+have not made either way.
+
+## 12. Two external requests removed
+
+**The game fetched Google Fonts.** `index.html` pulled Space Grotesk and
+JetBrains Mono from `fonts.googleapis.com`, sending every player's IP and
+referer to a third party and rendering wrong wherever that host is blocked. The
+link is gone; the CSS variables already carried system fallbacks.
+
+**So did the wallet adapter.** `@solana/wallet-adapter-react-ui/styles.css`
+opens with an `@import` of DM Sans from Google Fonts, so *every page rendering
+wallet UI* — including the home page — made that request before a visitor did
+anything. The stylesheet is now vendored at `styles/wallet-adapter.css` with
+that one line removed. Re-vendor when upgrading the package and check the first
+line again.
+
+Verified: four pages, zero requests off-origin.
+
+## 13. Road to Bonded is unranked for now
+
+Its engine is deterministic — seeded RNG, and `tools/verify.mjs` confirms
+byte-identical replays across all 100 levels — so verified scoring is genuinely
+reachable, which is not true of most third-party games.
+
+It is listed unranked anyway, because reachable is not the same as done. A
+leaderboard needs the server to replay a submitted run through the same engine,
+and that means porting `js/engine.js` to a module the server imports. Until that
+exists the server cannot vouch for a score, and `/api/play/start` refuses to
+open a ranked session for a game with no registered rules.

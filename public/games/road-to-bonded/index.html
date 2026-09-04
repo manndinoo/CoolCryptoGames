@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#17423d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>BONDED</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230b2320'/><rect x='30' y='6' width='4' height='52' fill='%233fd987'/><rect x='20' y='20' width='24' height='30' rx='3' fill='%2357d69b' stroke='%2314332f' stroke-width='4'/></svg>">
+<!-- No external font fetch. Loading webfonts from a third party would send
+     every player's IP and referer to it, and the game would render wrong
+     anywhere that host is blocked. The CSS falls back to system faces. -->
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="shell" class="motion-full">
+
+  <!-- 1. LOADING -->
+  <section class="screen active" id="s-loading">
+    <div class="load-inner">
+      <div class="load-chart" id="load-chart"></div>
+      <div class="load-title">BONDED</div>
+      <div class="load-sub">INITIALISING MARKET TERMINAL</div>
+      <div class="load-bar"><div class="load-bar-fill" id="load-fill"></div></div>
+      <div class="load-pct mono" id="load-pct">0%</div>
+    </div>
+  </section>
+
+  <!-- 2. TITLE -->
+  <section class="screen" id="s-title">
+    <div class="title-bg"></div>
+    <div class="title-inner">
+      <h1 class="title-logo"><span>BONDED</span></h1>
+      <div class="title-sub">CLIMB THE <span class="x">CURVE</span></div>
+      <div class="title-chart" id="title-chart"></div>
+      <div class="title-buttons">
+        <button class="btn primary big" id="btn-play">PLAY</button>
+        <button class="btn" id="btn-roadmap">ROADMAP</button>
+        <div class="row">
+          <button class="btn small" id="btn-help">HELP</button>
+          <button class="btn small" id="btn-settings-title">SETTINGS</button>
+        </div>
+      </div>
+      <div class="title-progress mono" id="title-progress"></div>
+      <div class="title-lives mono" id="title-lives"></div>
+      <div class="title-rank mono" id="title-rank"></div>
+      <div class="title-footer">ORIGINAL ARCADE MATCH · NO REAL TRADING · NEVER PAY TO PLAY</div>
+    </div>
+  </section>
+
+  <!-- 4. ROADMAP -->
+  <section class="screen" id="s-map">
+    <div class="topbar">
+      <button class="icon-btn" id="map-back" aria-label="Back to title">‹</button>
+      <div class="topbar-title"><div class="tb-name" id="map-region-name">LAUNCH LAB</div><div class="tb-sub mono" id="map-progress">1 / 50</div></div>
+      <button class="icon-btn" id="map-settings" aria-label="Settings">⚙</button>
+    </div>
+    <div id="map-scroll">
+      <div id="map-spacer"></div>
+      <canvas id="map-canvas"></canvas>
+    </div>
+    <button class="btn small float" id="map-center">CENTER</button>
+  </section>
+
+  <!-- 6. GAMEPLAY -->
+  <section class="screen" id="s-game">
+    <canvas id="backdrop"></canvas>
+    <div id="hud">
+      <button class="icon-btn" id="btn-pause" aria-label="Pause">II</button>
+      <div class="hud-mid">
+        <div class="hud-level mono" id="hud-level">LAUNCH LAB · 01</div>
+        <div class="hud-name" id="hud-name">First Mint</div>
+      </div>
+      <div class="hud-moves"><div class="lbl">MOVES</div><div class="val mono" id="hud-moves">18</div></div>
+    </div>
+    <div id="objectives"></div>
+    <div id="curve"><div class="curve-track"><div class="curve-fill" id="curve-fill"></div></div><div class="curve-label mono" id="curve-label">BONDING CURVE 0%</div></div>
+    <div id="board-wrap">
+      <div id="board-frame"><canvas id="board"></canvas><div id="board-flash"></div></div>
+      <div id="meter">
+        <div class="meter-label mono">BONDED</div>
+        <canvas id="meter-canvas"></canvas>
+        <button id="pill-btn" aria-label="Next power-up drop"><canvas id="next-canvas" width="72" height="72"></canvas><span class="pill-text mono">NEXT</span></button>
+      </div>
+    </div>
+    <div id="bottombar">
+      <div class="bb-score"><div class="lbl">MCAP</div><div class="val mono" id="hud-score">$0</div></div>
+      <div class="bb-mult mono" id="hud-mult">VOL ×1</div>
+      <div class="bb-pressure" id="hud-pressure" title="Sell pressure"><span class="lbl">SELL</span><i></i><i></i><i></i></div>
+      <div class="bb-status mono" id="hud-status">READY</div>
+    </div>
+    <div id="cinematic" hidden>
+      <div class="cine-pill"><img src="assets/pill.png" alt="" draggable="false"></div>
+      <div class="cine-stamp">BONDED</div>
+      <div class="cine-wave"></div>
+      <div class="cine-ticker mono"></div>
+    </div>
+    <div id="tutorial-hand" hidden></div>
+  </section>
+
+  <!-- 12. HELP -->
+  <section class="screen" id="s-help">
+    <div class="topbar">
+      <button class="icon-btn" id="help-back" aria-label="Back">‹</button>
+      <div class="topbar-title"><div class="tb-name">HELP & TUTORIALS</div><div class="tb-sub mono">REPLAY ANY LESSON</div></div>
+      <div class="icon-btn spacer"></div>
+    </div>
+    <div class="help-list" id="help-list"></div>
+  </section>
+
+  <!-- 10. MILESTONE -->
+  <section class="screen" id="s-milestone">
+    <div class="ms-bg" id="ms-bg"></div>
+    <div class="ms-inner">
+      <div class="ms-kicker mono">MILESTONE REACHED</div>
+      <div class="ms-title" id="ms-title">CURVE CLIMB</div>
+      <div class="ms-desc" id="ms-desc"></div>
+      <button class="btn primary big" id="ms-continue">CONTINUE</button>
+    </div>
+  </section>
+
+  <!-- 11. CAMPAIGN COMPLETE -->
+  <section class="screen" id="s-complete">
+    <div class="cp-candle" id="cp-candle"></div>
+    <div class="cp-inner">
+      <div class="cp-kicker mono">ALL-TIME HIGH</div>
+      <div class="cp-title">BONDED</div>
+      <div class="cp-desc">You carried the coin from first mint to the top of the curve. Every level stays open to replay for higher grades.</div>
+      <div class="cp-stats mono" id="cp-stats"></div>
+      <div class="cp-credits">Original arcade match design · All artwork drawn in code · No real trading and nothing to buy</div>
+      <button class="btn primary big" id="cp-map">BACK TO ROADMAP</button>
+    </div>
+  </section>
+
+  <!-- MODALS -->
+  <div class="modal" id="m-prelevel">
+    <div class="card">
+      <div class="card-kicker mono" id="pl-region">LAUNCH LAB · LEVEL 01</div>
+      <div class="card-title" id="pl-name">First Mint</div>
+      <div class="pl-diff mono" id="pl-diff">EASY</div>
+      <div class="pl-objectives" id="pl-objectives"></div>
+      <div class="pl-moves mono" id="pl-moves">18 MOVES</div>
+      <div class="pl-grades" id="pl-grades"></div>
+      <div class="pl-note" id="pl-note"></div>
+      <div class="pl-lives mono" id="pl-lives"></div>
+      <button class="btn primary big" id="pl-launch">LAUNCH</button>
+      <button class="btn small ghost" id="pl-close">BACK</button>
+    </div>
+  </div>
+
+  <div class="modal" id="m-pause">
+    <div class="card">
+      <div class="card-title">PAUSED</div>
+      <div class="pause-lives mono" id="pause-lives"></div>
+      <div class="settings" id="settings-panel"></div>
+      <div class="card-buttons">
+        <button class="btn primary" id="pause-resume">RESUME</button>
+        <button class="btn" id="pause-store">BUY LIVES · SOL</button>
+        <button class="btn" id="pause-restart">RESTART LEVEL</button>
+        <button class="btn" id="pause-help">HELP</button>
+        <button class="btn ghost" id="pause-quit">QUIT TO ROADMAP</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="m-settings">
+    <div class="card">
+      <div class="card-title">SETTINGS</div>
+      <div class="settings" id="settings-panel-2"></div>
+      <div class="card-buttons">
+        <button class="btn primary" id="settings-close">DONE</button>
+        <button class="btn" id="settings-store">BUY LIVES · SOL</button>
+        <button class="btn ghost danger" id="settings-reset">RESET ALL PROGRESS</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="m-win">
+    <div class="card win">
+      <div class="win-candle" id="win-candle"><div class="wick"></div><div class="body"></div></div>
+      <div class="card-kicker mono">LEVEL CLEARED</div>
+      <div class="card-title" id="win-name">First Mint</div>
+      <div class="win-grade mono" id="win-grade">LISTED</div>
+      <div class="win-score mono" id="win-score">0</div>
+      <div class="win-detail mono" id="win-detail"></div>
+      <div class="card-buttons">
+        <button class="btn primary big" id="win-next">NEXT LEVEL</button>
+        <button class="btn" id="win-replay">REPLAY</button>
+        <button class="btn ghost" id="win-map">ROADMAP</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="m-lose">
+    <div class="card lose">
+      <div class="lose-candle"><div class="wick"></div><div class="body"></div></div>
+      <div class="card-kicker mono">OUT OF MOVES</div>
+      <div class="card-title">DIP</div>
+      <div class="lose-detail" id="lose-detail"></div>
+      <div class="card-buttons">
+        <button class="btn primary big" id="lose-retry">RETRY</button>
+        <button class="btn ghost" id="lose-map">ROADMAP</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="m-tutorial">
+    <div class="card tut">
+      <div class="tut-art" id="tut-art"></div>
+      <div class="card-title" id="tut-title"></div>
+      <div class="tut-text" id="tut-text"></div>
+      <div class="tut-dots mono" id="tut-dots"></div>
+      <button class="btn primary" id="tut-next">GOT IT</button>
+    </div>
+  </div>
+
+  <div class="modal" id="m-confirm">
+    <div class="card">
+      <div class="card-title" id="confirm-title">ARE YOU SURE?</div>
+      <div class="tut-text" id="confirm-text"></div>
+      <div class="card-buttons">
+        <button class="btn primary" id="confirm-yes">YES</button>
+        <button class="btn ghost" id="confirm-no">NO</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="m-lives">
+    <div class="card">
+      <div class="lose-candle"><div class="wick"></div><div class="body"></div></div>
+      <div class="card-kicker mono">OUT OF LIVES</div>
+      <div class="card-title">RUGGED</div>
+      <div class="tut-text">Every loss costs a life. Lives come back one at a time, and three wins in a row earn a bonus life.</div>
+      <div class="win-score mono" id="lives-timer">15:00</div>
+      <div class="tut-dots mono">NEXT LIFE</div>
+      <button class="btn primary" id="lives-buy">BUY LIVES · SOL</button>
+      <button class="btn" id="lives-ok">BACK TO ROADMAP</button>
+    </div>
+  </div>
+
+  <div class="modal" id="m-store">
+    <div class="card">
+      <div class="card-kicker mono">STORE</div>
+      <div class="card-title">BUY LIVES</div>
+      <div class="store-wallet mono" id="store-wallet">NO WALLET CONNECTED</div>
+      <div class="store-rate mono" id="store-rate"></div>
+      <div class="store-packs" id="store-packs"></div>
+      <div class="store-msg mono" id="store-msg"></div>
+      <div class="card-buttons">
+        <button class="btn" id="store-connect">CONNECT WALLET</button>
+        <button class="btn ghost" id="store-close">CLOSE</button>
+      </div>
+      <div class="store-note">There is nothing to buy. Cool Crypto Games does not sell lives, attempts, or any other advantage.</div>
+    </div>
+  </div>
+
+  <div class="modal" id="m-locked">
+    <div class="card">
+      <div class="card-kicker mono">LOCKED</div>
+      <div class="card-title" id="locked-title"></div>
+      <div class="tut-text" id="locked-text"></div>
+      <button class="btn primary" id="locked-ok">OK</button>
+    </div>
+  </div>
+
+  <div id="toast" class="mono" hidden></div>
+  <div id="rotate"><div class="rot-inner"><div class="rot-phone"></div><div class="rot-text">ROTATE TO PORTRAIT</div><div class="rot-sub">Your run is safe. The market waits.</div></div></div>
+</div>
+
+<script src="js/rng.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/config.js"></script>
+<script src="js/levels.js"></script>
+<script src="js/levels2.js"></script>
+<script src="js/seeds.js"></script>
+<script src="js/save.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/store.js"></script>
+<script src="js/pieces.js"></script>
+<script src="js/board.js"></script>
+<script src="js/roadmap.js"></script>
+<script src="js/backdrop.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
