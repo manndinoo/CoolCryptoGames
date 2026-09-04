@@ -17,8 +17,8 @@ Everything user-facing reads from `site.config.ts`. Edit that one file:
 
 ```ts
 export const site = {
-  name: 'YOUR_SITE_NAME',        // shown in the header, footer and page titles
-  domain: 'YOUR_DOMAIN.com',     // the domain you bought — no https://, no trailing slash
+  name: 'CoolCryptoGames',        // shown in the header, footer and page titles
+  domain: 'coolcryptogames.fun',     // the domain you bought — no https://, no trailing slash
   tagline: '...',
   description: '...',
 }
@@ -36,7 +36,7 @@ export const site = {
 ## Point your domain at the site
 
 In Vercel: **Project → Settings → Domains → Add**, enter your domain, and add the
-**apex** (`yourdomain.com`) and **www** (`www.yourdomain.com`) forms. Vercel then
+**apex** (`coolcryptogames.fun`) and **www** (`www.coolcryptogames.fun`) forms. Vercel then
 shows you exactly which DNS records to create.
 
 Add those records at your **registrar** (wherever you bought the domain —

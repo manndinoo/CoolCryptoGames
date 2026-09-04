@@ -1,10 +1,10 @@
 /**
  * Single place to change the site's identity.
- * Update `domain` to the domain you purchased — everything else reads from here.
+ * Change a value here and it propagates to metadata, canonical URLs and the sitemap.
  */
 export const site = {
   name: 'CoolCryptoGames',
-  domain: 'YOUR_DOMAIN.com',
+  domain: 'coolcryptogames.fun',
   tagline: 'Games worth losing an afternoon to.',
   description:
     'A small studio building browser games you can start playing in one click.',
