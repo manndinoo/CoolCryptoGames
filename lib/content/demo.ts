@@ -1,4 +1,5 @@
 import type { StandingEntry, Tournament } from '@/lib/tournaments/types'
+import type { StreamChannel } from '@/lib/streams/types'
 
 /**
  * Demo catalogue content.
@@ -188,35 +189,59 @@ export const demoStandings: Record<string, StandingEntry[]> = {
   ],
 }
 
-export type DemoStream = {
-  slug: string
-  title: string
-  scheduledFor: string
-  /** Never 'live' without a configured, approved, actually-broadcasting source. */
-  state: 'scheduled' | 'offline'
-  /** Validated against the allow-list and the feature flag before it is framed. */
-  embedUrl: string | null
-  demo: boolean
-}
-
-export const demoStreams: DemoStream[] = [
+/**
+ * Channels.
+ *
+ * Two source kinds, matching the streaming rollout: an approved creator
+ * broadcasting through their own provider (which is how a camera-over-game
+ * stream works today — their encoder composites it), and a CCG-hosted native
+ * channel (which is the platform-phase capability and stays flagged off).
+ */
+export const demoChannels: StreamChannel[] = [
   {
-    slug: 'platform-preview',
-    title: 'Platform preview stream',
-    scheduledFor: '2026-09-15T19:00:00.000Z',
+    slug: 'ccg-official',
+    title: 'CCG official channel',
+    broadcaster: 'Cool Crypto Games',
+    approved: true,
     state: 'scheduled',
-    embedUrl: null,
+    scheduledFor: '2026-09-15T19:00:00.000Z',
+    // No provider is configured, so there is no URL to frame and nothing here
+    // can broadcast. A scheduled slot is not a live one.
+    source: null,
     demo: true,
   },
   {
-    slug: 'reflex-open-broadcast',
-    title: 'Reflex Open broadcast',
-    scheduledFor: '2026-09-22T17:00:00.000Z',
+    slug: 'approved-creator-preview',
+    title: 'Reflex Lab run — creator broadcast',
+    broadcaster: 'Approved Creator',
+    approved: true,
     state: 'offline',
-    embedUrl: null,
+    scheduledFor: '2026-09-22T17:00:00.000Z',
+    source: null,
+    demo: true,
+  },
+  {
+    slug: 'native-preview',
+    title: 'Native broadcast preview',
+    broadcaster: 'CCG Platform',
+    approved: true,
+    state: 'offline',
+    scheduledFor: null,
+    // Composition is modelled and rendered even while distribution is off, so
+    // the layout is real code rather than a promise.
+    source: {
+      kind: 'native',
+      layout: 'game-primary',
+      gameSlug: 'reflex-lab',
+      hasCamera: true,
+    },
     demo: true,
   },
 ]
+
+export function getDemoChannel(slug: string): StreamChannel | undefined {
+  return demoChannels.find((c) => c.slug === slug)
+}
 
 export function getDemoTournament(slug: string): Tournament | undefined {
   return demoTournaments.find((t) => t.slug === slug)

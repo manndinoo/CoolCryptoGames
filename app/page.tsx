@@ -6,7 +6,7 @@ import { Section, SectionHeader } from '@/components/ui/section'
 import {
   demoDevelopers,
   demoGames,
-  demoStreams,
+  demoChannels,
   demoTournaments,
 } from '@/lib/content/demo'
 import { site } from '@/site.config'
@@ -16,7 +16,7 @@ export default function Home() {
   const playable = demoGames.filter((g) => g.status === 'playable')
   const recentlyUpdated = [...demoGames].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   const tournament = demoTournaments[0]
-  const stream = demoStreams[0]
+  const channel = demoChannels[0]
   const spotlight = demoDevelopers[0]
 
   return (
@@ -162,11 +162,11 @@ export default function Home() {
               Live programming
             </span>
             {/* Offline is the honest state until a provider stream is configured. */}
-            <StatusPill>{stream.state}</StatusPill>
+            <StatusPill>{channel.state}</StatusPill>
           </div>
 
           <h3 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
-            {stream.title}
+            {channel.title}
           </h3>
           <p className="mt-2 text-sm text-[var(--color-muted)]">
             No stream is currently broadcasting. Scheduled programming appears here once a
