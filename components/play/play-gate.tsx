@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { GameStage } from "./game-stage";
+import { getGameRuntime } from "./runtimes";
 import { useWalletAuth } from "./use-wallet-auth";
 import { UsernameSetup } from "./username-setup";
 import { WalletSheet } from "./wallet-sheet";
@@ -59,13 +60,37 @@ export function PlayGate({ game }: { game: GameSummary }) {
     // Mounting straight away matters as much as the size: pressing Play is the
     // decision, and a second button confirming it is a step that exists only
     // because the code was written in two passes.
+    // Games take the whole screen. A game boxed into a card competes with the
+    // site's own chrome for the same taps, and on a phone that is most of the
+    // display spent on navigation nobody looks at mid-run.
+    //
+    // Mounting straight away matters as much as the size: pressing Play is the
+    // decision, and a second button confirming it is a step that exists only
+    // because the code was written in two passes.
     if (!game.ranked) {
+      // Two kinds of game ship here. One is a static build hosted under
+      // /games/<slug>/ and framed in a sandbox; the other is a component this
+      // site compiles. A slug with a registered runtime takes the second path.
+      const Runtime = getGameRuntime(game.slug);
+
       return (
-        <GameStage
-          src={`/games/${game.slug}/index.html`}
-          title={game.title}
-          onExit={() => setRequested(false)}
-        />
+        <GameStage title={game.title} onExit={() => setRequested(false)}>
+          {Runtime ? (
+            <Runtime />
+          ) : (
+            <iframe
+              src={`/games/${game.slug}/index.html`}
+              title={game.title}
+              className="h-full w-full border-0"
+              // No allow-same-origin: the frame runs on an opaque origin with
+              // no reach into cookies, storage or a wallet provider, and
+              // `allow` grants no camera or microphone.
+              sandbox="allow-scripts"
+              allow="autoplay; fullscreen; gamepad; accelerometer; gyroscope"
+              referrerPolicy="no-referrer"
+            />
+          )}
+        </GameStage>
       );
     }
 

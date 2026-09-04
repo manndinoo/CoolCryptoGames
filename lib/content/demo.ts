@@ -54,6 +54,36 @@ export type DemoDeveloper = {
 
 export const demoGames: DemoGame[] = [
   {
+    slug: 'zero-signal',
+    title: 'ZERO SIGNAL',
+    developerSlug: 'ccg-platform',
+    category: 'Arcade',
+    blurb:
+      'One thumb, no brakes. The ball drifts sideways and a tap reverses it — thread every gate, clear a level, and the world changes under you. Six worlds, power-ups that get rarer the deeper you go, and one free Revive a day.',
+    // Stays 0 until the game has verified sessions to count.
+    verifiedPlayers: 0,
+    // The run advances on a variable frame delta and an unseeded RNG, so it is
+    // not reproducible from an input log and the server cannot replay it. This
+    // site will not call a score verified that it cannot reproduce.
+    scoreVerification: 'unranked',
+    status: 'playable',
+    updatedAt: '2026-09-04',
+    demo: false,
+    art: ['#19072D', '#FF3F92'],
+    cover: '/games/zero-signal/cover.jpg',
+    screenshots: [
+      '/games/zero-signal/shots/3-play.jpg',
+      '/games/zero-signal/shots/1-title.jpg',
+      '/games/zero-signal/shots/2-run.jpg',
+    ],
+    facts: [
+      { label: 'Worlds', value: 'Six, cycling themes' },
+      { label: 'Play', value: 'One tap or one key' },
+      { label: 'Session', value: 'Single player, saves locally' },
+      { label: 'Purchases', value: 'Locked — chips and credits are in-game only' },
+    ],
+  },
+  {
     slug: 'road-to-bonded',
     title: 'Road to Bonded',
     developerSlug: 'ccg-platform',
@@ -117,7 +147,7 @@ export const demoDevelopers: DemoDeveloper[] = [
     slug: 'ccg-platform',
     name: 'CCG Platform',
     bio: 'The platform team. Publishes integration and reference builds used to validate the SDK.',
-    gameSlugs: ['reflex-lab'],
+    gameSlugs: ['zero-signal', 'road-to-bonded', 'reflex-lab'],
     demo: false,
   },
 ]
