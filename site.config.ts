@@ -3,7 +3,7 @@
  * Update `domain` to the domain you purchased — everything else reads from here.
  */
 export const site = {
-  name: 'YOUR_SITE_NAME',
+  name: 'CoolCryptoGames',
   domain: 'YOUR_DOMAIN.com',
   tagline: 'Games worth losing an afternoon to.',
   description:
