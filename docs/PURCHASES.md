@@ -16,6 +16,7 @@ defaults:
 | Treasury | `EwyzBV1hAVYWvtP6dUiFkXVvwaB9WQ2ghMxP1TjgAkQy` | `CCG_TREASURY_ADDRESS` |
 | RPC | `https://api.mainnet-beta.solana.com` | `SOLANA_RPC_URL` |
 | Cluster | `mainnet-beta` | `SOLANA_CLUSTER` |
+| Price feed | CoinGecko's public SOL/USD endpoint | `SOL_PRICE_URL` |
 
 The treasury is committed rather than left to a dashboard because every setup
 step is a step that gets skipped or mistyped, and a mistyped recipient sends
@@ -48,6 +49,46 @@ somebody else can answer.
 6. Sign in with a third wallet: it must own nothing.
 
 Only then point `SOLANA_CLUSTER` at `mainnet-beta`.
+
+## Pricing
+
+Items are listed in **US dollars** and charged in **SOL**. A dollar is what a
+price means to a person; SOL is what the wallet sends.
+
+The conversion happens once, when a purchase is quoted, at that moment's rate.
+The resulting lamport figure is written onto the intent, so the amount the
+player approves is the amount the server later checks against the chain — a
+move in the SOL price between the quote and the signature cannot change what
+they owe. That is also why a quote expires after ten minutes: a price held open
+indefinitely is a price somebody comes back to claim after the market has moved.
+
+Both the dollar price and the rate used are stored on the intent and on the
+resulting entitlement, so a settled purchase is still explicable a year later.
+`0.0093 SOL` on its own does not say whether that was the intended $1.99 or a
+feed returning nonsense.
+
+**No usable rate means no sale.** If the feed is unreachable the last rate is
+reused for up to ten minutes; past that, quoting stops and the route answers
+503. Guessing a rate is the only failure mode that could charge somebody many
+times what an item costs, so the failure is a refused sale rather than an
+invented number. A rate outside $1–$10,000, or a quote above 5 SOL, is refused
+outright — those are guards against a feed returning zero, a string, or a
+number in the wrong units.
+
+Displayed SOL figures are always rounded **up**. A shown amount below what is
+actually charged is the thing that reads as a bait.
+
+### Current prices
+
+| Item | Game | Kind | Price |
+| --- | --- | --- | --- |
+| Neon trail | Zero Signal | cosmetic | $0.99 |
+| Chrome fighters | Signal Brawl | cosmetic | $1.99 |
+| Extra arenas | Signal Brawl | content | $2.99 |
+
+Edit `lib/store/catalogue.ts` to change them. A test asserts every price stays
+between $0.50 and $5.00, so a stray zero has to argue with the suite rather
+than slip past.
 
 ## What is sold, and what is not
 

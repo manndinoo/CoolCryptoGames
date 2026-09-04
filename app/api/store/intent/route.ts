@@ -8,6 +8,7 @@ import { withRouteGuard } from '@/lib/api/guard'
 import { features } from '@/lib/flags'
 import { findItem } from '@/lib/store/catalogue'
 import { treasuryAddress } from '@/lib/store/treasury'
+import { lamportsForUsd, solUsdRate } from '@/lib/store/pricing'
 import { cluster, rpcUrl } from '@/lib/solana/rpc'
 
 export const runtime = 'nodejs'
@@ -60,15 +61,36 @@ async function handlePOST(request: Request) {
     return NextResponse.json({ error: 'already_owned' }, { status: 409 })
   }
 
+  // The dollar price becomes a SOL price here, once, at this moment's rate.
+  // No usable rate means no quote: guessing one is the only failure mode that
+  // could charge somebody many times what an item costs.
+  const rate = await solUsdRate()
+  if (rate === null) {
+    return NextResponse.json(
+      { error: 'service_unavailable', reason: 'price_unavailable' },
+      { status: 503 },
+    )
+  }
+
+  const priced = lamportsForUsd(item.usdCents, rate)
+  if (!priced.ok) {
+    console.error('[ccg] refusing to quote:', priced.reason, { item: item.id, rate })
+    return NextResponse.json(
+      { error: 'service_unavailable', reason: 'price_unavailable' },
+      { status: 503 },
+    )
+  }
+
   // A throwaway keypair used only as a marker. Its private half is discarded
   // immediately — it never signs anything and holds nothing.
   const reference = Keypair.generate().publicKey.toBase58()
   const expiresAt = new Date(Date.now() + INTENT_TTL_MS)
 
   const rows = (await sql`
-    INSERT INTO purchase_intents (wallet, game_slug, item_id, lamports, treasury, reference, expires_at)
-    VALUES (${claims.wallet}, ${item.gameSlug}, ${item.id}, ${item.lamports}, ${treasury},
-            ${reference}, ${expiresAt})
+    INSERT INTO purchase_intents
+      (wallet, game_slug, item_id, lamports, usd_cents, sol_usd_rate, treasury, reference, expires_at)
+    VALUES (${claims.wallet}, ${item.gameSlug}, ${item.id}, ${priced.lamports},
+            ${item.usdCents}, ${rate}, ${treasury}, ${reference}, ${expiresAt})
     RETURNING id, expires_at
   `) as Array<{ id: string; expires_at: Date }>
 
@@ -77,7 +99,9 @@ async function handlePOST(request: Request) {
     // Everything the player is about to authorise, stated before they are asked.
     treasury,
     reference,
-    lamports: item.lamports,
+    lamports: priced.lamports,
+    usdCents: item.usdCents,
+    solUsdRate: rate,
     cluster: cluster(),
     item: { id: item.id, name: item.name, description: item.description, kind: item.kind },
     expiresAt: rows[0].expires_at,

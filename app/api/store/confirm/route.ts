@@ -45,7 +45,8 @@ async function handlePOST(request: Request) {
 
   const sql = db()
   const rows = (await sql`
-    SELECT id, wallet, game_slug, item_id, lamports, treasury, reference, expires_at, settled_at
+    SELECT id, wallet, game_slug, item_id, lamports, usd_cents, sol_usd_rate,
+           treasury, reference, expires_at, settled_at
     FROM purchase_intents
     WHERE id = ${body.intentId}::uuid AND wallet = ${claims.wallet}
   `) as Array<{
@@ -54,6 +55,8 @@ async function handlePOST(request: Request) {
     game_slug: string
     item_id: string
     lamports: string
+    usd_cents: number | null
+    sol_usd_rate: string | null
     treasury: string
     reference: string
     expires_at: Date
@@ -114,9 +117,11 @@ async function handlePOST(request: Request) {
   // The signature column is UNIQUE, so a payment presented twice — against this
   // intent or any other — inserts nothing the second time.
   const granted = (await sql`
-    INSERT INTO entitlements (wallet, game_slug, item_id, kind, lamports_paid, signature, intent_id)
+    INSERT INTO entitlements
+      (wallet, game_slug, item_id, kind, lamports_paid, usd_cents, sol_usd_rate, signature, intent_id)
     VALUES (${claims.wallet}, ${item.gameSlug}, ${item.id}, ${item.kind},
-            ${decision.lamportsPaid}, ${body.signature}, ${intent.id}::uuid)
+            ${decision.lamportsPaid}, ${intent.usd_cents}, ${intent.sol_usd_rate},
+            ${body.signature}, ${intent.id}::uuid)
     ON CONFLICT DO NOTHING
     RETURNING id, created_at
   `) as Array<{ id: string; created_at: Date }>

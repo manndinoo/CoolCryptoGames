@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PublicKey } from '@solana/web3.js'
-import { findItem, formatSol, LAMPORTS_PER_SOL, storeItems } from '@/lib/store/catalogue'
+import { findItem, storeItems } from '@/lib/store/catalogue'
+import { formatSol, formatUsd, LAMPORTS_PER_SOL } from '@/lib/store/pricing'
 import { isValidAddress, treasuryAddress } from '@/lib/store/treasury'
 import { settlePayment, type ChainTransaction, type IntentToSettle } from '@/lib/store/verify'
 
@@ -58,8 +59,20 @@ describe('the store catalogue', () => {
     }
   })
 
-  it('never prices an item at zero or below', () => {
-    for (const item of storeItems) expect(item.lamports).toBeGreaterThan(0)
+  it('prices every item in whole cents, above zero', () => {
+    for (const item of storeItems) {
+      expect(Number.isInteger(item.usdCents)).toBe(true)
+      expect(item.usdCents).toBeGreaterThan(0)
+    }
+  })
+
+  it('keeps every price in the region of a dollar', () => {
+    // The owner's instruction was "reasonably priced of a dollar". This is the
+    // assertion that a future edit has to argue with rather than slip past.
+    for (const item of storeItems) {
+      expect(item.usdCents).toBeGreaterThanOrEqual(50)
+      expect(item.usdCents).toBeLessThanOrEqual(500)
+    }
   })
 
   it('gives every item a description of what is actually bought', () => {
@@ -71,9 +84,18 @@ describe('the store catalogue', () => {
     expect(findItem('zero-signal', 'zero-signal-neon')?.id).toBe('zero-signal-neon')
   })
 
-  it('shows a price without rounding it up', () => {
+  it('shows a dollar price the way a price is written', () => {
+    expect(formatUsd(99)).toBe('$0.99')
+    expect(formatUsd(199)).toBe('$1.99')
+    expect(formatUsd(300)).toBe('$3')
+  })
+
+  it('never displays a SOL figure below what is actually charged', () => {
+    // Rounded up, so the shown amount always covers the transfer. A displayed
+    // figure under the real one is the thing that reads as a bait.
     expect(formatSol(0.05 * LAMPORTS_PER_SOL)).toBe('0.05 SOL')
     expect(formatSol(LAMPORTS_PER_SOL)).toBe('1 SOL')
+    expect(formatSol(43_210)).toBe('0.0001 SOL')
   })
 })
 

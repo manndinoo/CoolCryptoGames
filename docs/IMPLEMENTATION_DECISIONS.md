@@ -984,3 +984,57 @@ The RPC now defaults to Solana's public endpoint so a deployment can settle
 without further setup, with a documented warning to replace it: it is rate
 limited hard enough to fail under load. A failed settlement does not lose a
 payment — the intent stays open — but players see it.
+
+## 26. Dollar prices, SOL payments
+
+The owner asked for items priced around a dollar and converted to SOL. The
+catalogue now carries `usdCents` and the conversion happens at quote time.
+
+### Why not just store a SOL price
+
+A fixed lamport price is a dollar price that silently drifts. Set 0.05 SOL today
+and it is $10 one month and $4 the next, without anyone deciding that. Pricing
+in dollars and converting per quote keeps the number that was actually chosen
+as the number being charged.
+
+The existing intent structure already suited this exactly: the quote stores its
+own lamport figure and expires in ten minutes. So the price the player approves
+is the price the settlement check uses, and a market move between signature and
+confirmation cannot change what they owe or cause a false `underpaid`.
+
+### Refusing to quote is a feature
+
+`solUsdRate()` returns null when there is no usable rate, and the intent route
+answers 503 rather than proceeding. A stale rate is reused for up to ten
+minutes — better a slightly old price than no sales — but past that it stops.
+
+Guessing is the one failure that could overcharge somebody by orders of
+magnitude, so every path that could produce a wrong number refuses instead: a
+rate outside $1–$10,000, a non-integer cent amount, a quote above 5 SOL, or a
+feed body in a shape the parser does not recognise. `readRate` deliberately
+does not scan for "the first number that looks plausible".
+
+### Rounding
+
+Lamports round **up**. A lamport is a billionth of a SOL, so it costs the buyer
+nothing measurable, and rounding down could land the transfer a lamport short
+of the price — which the settlement check would then reject as underpaid, on a
+payment that had already left their wallet. Displayed SOL figures round up for
+the same reason in reverse: a shown amount below what is charged reads as a
+bait.
+
+### Prices
+
+$0.99, $1.99, $2.99. "Reasonably priced of a dollar" is a range rather than a
+figure, so this is a ladder anchored at a dollar: one cosmetic, a cosmetic set,
+and a content pack. A test holds every price between $0.50 and $5.00 so a stray
+zero has to argue with the suite.
+
+### Tested against a stub
+
+The price feed is blocked from this environment, like the RPC. `readRate`,
+the conversion, the bounds and the staleness policy are unit tested directly;
+the end-to-end run drives the real routes against a local server answering in
+CoinGecko's shape, and confirms that paying exactly the quoted amount settles,
+that one lamport short is refused, and that pointing the feed at nothing makes
+the route refuse to quote rather than invent a price.

@@ -10,7 +10,11 @@ export type StoreItemView = {
   name: string
   description: string
   kind: 'cosmetic' | 'content'
-  lamports: number
+  /** The listed price, in whole cents. */
+  usdCents: number
+  /** What that comes to right now — an indication only. The binding SOL amount
+   *  is the one the quote returns at the moment of purchase. */
+  estimatedLamports: number | null
   owned: boolean
 }
 

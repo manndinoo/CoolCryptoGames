@@ -7,6 +7,7 @@ import { features } from '@/lib/flags'
 import { itemsForGame } from '@/lib/store/catalogue'
 import { treasuryAddress } from '@/lib/store/treasury'
 import { cluster, rpcUrl } from '@/lib/solana/rpc'
+import { lamportsForUsd, solUsdRate } from '@/lib/store/pricing'
 
 export const runtime = 'nodejs'
 
@@ -35,8 +36,14 @@ async function handleGET(request: Request) {
     owned = rows.map((r) => r.item_id)
   }
 
+  // An indication, not a quote. The binding price is set by /api/store/intent
+  // at the moment of purchase; this is only so the button can show what the
+  // dollar price comes to right now.
+  const rate = enabled && items.length > 0 ? await solUsdRate() : null
+
   return NextResponse.json({
     enabled,
+    solUsdRate: rate,
     cluster: enabled ? cluster() : null,
     treasury: enabled ? treasuryAddress() : null,
     items: items.map((i) => ({
@@ -44,7 +51,8 @@ async function handleGET(request: Request) {
       name: i.name,
       description: i.description,
       kind: i.kind,
-      lamports: i.lamports,
+      usdCents: i.usdCents,
+      estimatedLamports: rate ? (lamportsForUsd(i.usdCents, rate) as { lamports?: number }).lamports ?? null : null,
       owned: owned.includes(i.id),
     })),
   })

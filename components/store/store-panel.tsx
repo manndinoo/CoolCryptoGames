@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useState } from 'react'
-import { formatSol } from '@/lib/store/catalogue'
+import { formatSol, formatUsd } from '@/lib/store/pricing'
 import type { StoreItemView } from './purchase-flow'
 
 const PurchaseFlow = dynamic(
@@ -14,6 +14,7 @@ type Catalogue = {
   enabled: boolean
   cluster: string | null
   treasury: string | null
+  solUsdRate: number | null
   items: StoreItemView[]
 }
 
@@ -79,6 +80,12 @@ export function StorePanel({ gameSlug, title }: { gameSlug: string; title: strin
                   </span>
                 </p>
                 <p className="mt-1 text-sm text-[var(--color-muted)]">{item.description}</p>
+                {item.estimatedLamports !== null && (
+                  <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+                    {formatUsd(item.usdCents)} · about {formatSol(item.estimatedLamports)} at
+                    today&apos;s rate
+                  </p>
+                )}
               </div>
 
               {item.owned ? (
@@ -91,7 +98,7 @@ export function StorePanel({ gameSlug, title }: { gameSlug: string; title: strin
                   disabled={buying !== null}
                   className="ccg-btn ccg-btn-ghost shrink-0 disabled:opacity-50"
                 >
-                  Buy · {formatSol(item.lamports)}
+                  Buy · {formatUsd(item.usdCents)}
                 </button>
               )}
             </div>
@@ -105,8 +112,10 @@ export function StorePanel({ gameSlug, title }: { gameSlug: string; title: strin
 
       <dl className="mt-[var(--spacing-5)] grid gap-2 border-t border-[var(--color-line)] pt-[var(--spacing-4)] text-xs text-[var(--color-muted)]">
         <Row label="You pay">
-          Once, from your own wallet, plus the network fee. CCG holds no balance
-          for you and cannot charge you again.
+          In SOL, once, from your own wallet, plus the network fee. Prices are
+          set in dollars and converted when you press Buy; the exact SOL amount
+          is fixed at that moment and shown by your wallet before you approve
+          it. CCG holds no balance for you and cannot charge you again.
         </Row>
         <Row label="Goes to">
           <span className="font-mono break-all">{catalogue.treasury}</span> on {catalogue.cluster}

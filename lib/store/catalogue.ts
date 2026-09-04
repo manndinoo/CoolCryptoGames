@@ -27,11 +27,17 @@ export type StoreItem = {
   /** What the buyer actually gets, in plain words. Shown before the prompt. */
   description: string
   kind: ItemKind
-  /** Price in lamports. 1 SOL = 1_000_000_000 lamports. */
-  lamports: number
+  /**
+   * Price in whole US cents.
+   *
+   * Priced in dollars and charged in SOL: a dollar is what a price means to a
+   * person, and the conversion happens when a purchase is quoted, at that
+   * moment's rate. The lamport figure is then fixed on the intent, so a move in
+   * the SOL price between the quote and the signature cannot change what the
+   * player owes.
+   */
+  usdCents: number
 }
-
-export const LAMPORTS_PER_SOL = 1_000_000_000
 
 /**
  * The live catalogue.
@@ -47,7 +53,7 @@ export const storeItems: StoreItem[] = [
     description:
       'A brighter trail behind the ball, and a matching gate colourway. Appearance only — the ball handles exactly the same.',
     kind: 'cosmetic',
-    lamports: 0.05 * LAMPORTS_PER_SOL,
+    usdCents: 99,
   },
   {
     id: 'signal-brawl-chrome',
@@ -56,7 +62,7 @@ export const storeItems: StoreItem[] = [
     description:
       'A metallic set of fighter skins for all four slots. Appearance only — no change to reach, damage, speed or health.',
     kind: 'cosmetic',
-    lamports: 0.05 * LAMPORTS_PER_SOL,
+    usdCents: 199,
   },
   {
     id: 'signal-brawl-arenas',
@@ -65,7 +71,7 @@ export const storeItems: StoreItem[] = [
     description:
       'Three more arenas with their own hazards, added to the rotation. The six that ship with the game stay free and are not affected.',
     kind: 'content',
-    lamports: 0.15 * LAMPORTS_PER_SOL,
+    usdCents: 299,
   },
 ]
 
@@ -75,10 +81,4 @@ export function itemsForGame(gameSlug: string): StoreItem[] {
 
 export function findItem(gameSlug: string, itemId: string): StoreItem | null {
   return storeItems.find((i) => i.gameSlug === gameSlug && i.id === itemId) ?? null
-}
-
-/** Price for display. Trailing zeros trimmed, never rounded up. */
-export function formatSol(lamports: number): string {
-  const sol = lamports / LAMPORTS_PER_SOL
-  return `${sol.toFixed(4).replace(/\.?0+$/, '')} SOL`
 }
