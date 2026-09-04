@@ -89,11 +89,26 @@ const FRESH_MS = 60_000
  */
 const MAX_STALE_MS = 10 * 60_000
 
-export function priceFeedUrl(): string {
-  return (
-    process.env.SOL_PRICE_URL ??
-    'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd'
-  )
+/**
+ * Where to ask for the SOL price, in order.
+ *
+ * Several, because one is a single point of failure and the failure mode is
+ * "no sales". These are public endpoints that rate limit rather than charge,
+ * and they return different shapes on purpose — `readRate` handles all of
+ * them, so a provider going down is a fallthrough rather than an outage.
+ *
+ * `SOL_PRICE_URL` replaces the list entirely, which is how a deployment points
+ * at a paid provider.
+ */
+export function priceFeedUrls(): string[] {
+  const override = process.env.SOL_PRICE_URL
+  if (override) return [override]
+  return [
+    'https://api.coinbase.com/v2/prices/SOL-USD/spot',
+    'https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT',
+    'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd',
+    'https://api.kraken.com/0/public/Ticker?pair=SOLUSD',
+  ]
 }
 
 /**
@@ -106,7 +121,21 @@ export function priceFeedUrl(): string {
 export function readRate(body: unknown): number | null {
   if (typeof body !== 'object' || body === null) return null
   const b = body as Record<string, any>
-  const candidates = [b?.solana?.usd, b?.price, b?.data?.amount, b?.USD, b?.usd]
+
+  // One entry per shape the configured feeds actually return. Listed rather
+  // than discovered: this number is multiplied by a real payment, and a
+  // heuristic that hunts for "the first plausible number" will eventually find
+  // a volume, a market cap, or a percentage.
+  const candidates = [
+    b?.solana?.usd,                       // CoinGecko
+    b?.data?.amount,                      // Coinbase
+    b?.price,                             // Binance
+    b?.result?.SOLUSD?.c?.[0],            // Kraken
+    b?.result?.SOLUSDT?.c?.[0],           // Kraken, alternate pair naming
+    b?.USD,
+    b?.usd,
+  ]
+
   for (const c of candidates) {
     const n = typeof c === 'string' ? Number(c) : c
     if (typeof n === 'number' && Number.isFinite(n) && n >= MIN_SOL_USD && n <= MAX_SOL_USD) {
@@ -126,20 +155,22 @@ export function readRate(body: unknown): number | null {
 export async function solUsdRate(now = Date.now()): Promise<number | null> {
   if (cached && now - cached.at < FRESH_MS) return cached.solUsd
 
-  try {
-    const res = await fetch(priceFeedUrl(), {
-      headers: { accept: 'application/json' },
-      signal: AbortSignal.timeout(6_000),
-    })
-    if (res.ok) {
+  // First usable answer wins. A feed that is down, rate limited, or returning
+  // a shape we do not recognise is skipped rather than fatal.
+  for (const url of priceFeedUrls()) {
+    try {
+      const res = await fetch(url, {
+        headers: { accept: 'application/json' },
+        signal: AbortSignal.timeout(4_000),
+      })
+      if (!res.ok) continue
       const rate = readRate(await res.json())
-      if (rate !== null) {
-        cached = { solUsd: rate, at: now }
-        return rate
-      }
+      if (rate === null) continue
+      cached = { solUsd: rate, at: now }
+      return rate
+    } catch {
+      // Next provider.
     }
-  } catch {
-    // Falls through to the cached value below.
   }
 
   if (cached && now - cached.at < MAX_STALE_MS) return cached.solUsd

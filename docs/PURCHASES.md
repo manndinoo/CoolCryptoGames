@@ -16,7 +16,7 @@ defaults:
 | Treasury | `EwyzBV1hAVYWvtP6dUiFkXVvwaB9WQ2ghMxP1TjgAkQy` | `CCG_TREASURY_ADDRESS` |
 | RPC | `https://api.mainnet-beta.solana.com` | `SOLANA_RPC_URL` |
 | Cluster | `mainnet-beta` | `SOLANA_CLUSTER` |
-| Price feed | CoinGecko's public SOL/USD endpoint | `SOL_PRICE_URL` |
+| Price feed | Coinbase, then Binance, CoinGecko, Kraken | `SOL_PRICE_URL` (replaces the list) |
 
 The treasury is committed rather than left to a dashboard because every setup
 step is a step that gets skipped or mistyped, and a mistyped recipient sends
@@ -67,6 +67,11 @@ resulting entitlement, so a settled purchase is still explicable a year later.
 `0.0093 SOL` on its own does not say whether that was the intended $1.99 or a
 feed returning nonsense.
 
+The feeds are tried in order and the first usable answer wins — a provider
+that is down, rate limited, or returning an unfamiliar shape is skipped rather
+than fatal. `SOL_PRICE_URL` replaces the whole list, which is how a deployment
+points at a paid provider.
+
 **No usable rate means no sale.** If the feed is unreachable the last rate is
 reused for up to ten minutes; past that, quoting stops and the route answers
 503. Guessing a rate is the only failure mode that could charge somebody many
@@ -101,6 +106,36 @@ There is no kind for lives, attempts, boosts, revives, stat increases or
 tournament entries, and the `entitlements` table has a CHECK constraint that
 refuses one. Every game is complete and playable, ranked or not, by a wallet
 that has never spent anything.
+
+## How it was tested
+
+The environment this was built in denies every Solana RPC host at its egress
+proxy, so a live devnet payment was not possible from there. Rather than leave
+the settlement path proven only against fixtures this repository wrote, the
+tests run it against an **embedded Solana runtime** (`solana-bankrun`).
+
+That is not a stub for the chain. The transfer is assembled with
+`@solana/web3.js` exactly as `purchase-flow.tsx` assembles it — including the
+reference key appended to the instruction — signed, and executed by the real
+System Program. The balances the verifier reads are the ones the runtime
+produced.
+
+`tests/settlement.chain.test.ts` uses it to confirm the things a hand-written
+fixture cannot:
+
+- the reference key survives into the compiled message, which the entire
+  anti-replay design depends on
+- the fee payer really is account index 0, which the payer check reads
+- a genuine transfer settles, and tampered variants do not
+
+The end-to-end run goes further and puts that runtime behind an RPC-shaped
+socket, so the real `/api/store/confirm` route reads a real transaction and
+writes a real entitlement. Eleven checks pass there, including a real payment
+being reused for a second item, a second wallet claiming it, a transfer one
+lamport short, and a transfer to the wrong address.
+
+What that leaves untested is the network hop and the cluster's own consensus —
+which is what the devnet procedure above covers. Run it before mainnet.
 
 ## How a payment is verified
 

@@ -1038,3 +1038,56 @@ the end-to-end run drives the real routes against a local server answering in
 CoinGecko's shape, and confirms that paying exactly the quoted amount settles,
 that one lamport short is refused, and that pointing the feed at nothing makes
 the route refuse to quote rather than invent a price.
+
+## 27. Settlement, proven against a real Solana runtime
+
+The previous two entries both ended with the same caveat: the environment's
+egress proxy denies every Solana RPC host, so the settlement path was exercised
+only against transaction objects this repository wrote. That is a real gap —
+the risk was never the decision logic, it was whether a *genuine* transaction
+arrives in the shape the verifier expects.
+
+Confirmed the block first rather than assuming it: `registry.npmjs.org` and
+`api.github.com` both answer 200; seven Solana RPC hosts, including three
+third-party providers, all return `connect_rejected` at the gateway. The
+network is fine, the hosts are denied by policy.
+
+`solana-bankrun` is on npm and reachable. It embeds the Solana VM as a native
+addon, so the transfer can be executed locally by the **real System Program**
+instead of imagined. `tests/settlement.chain.test.ts` builds the transaction
+with `@solana/web3.js` exactly as `purchase-flow.tsx` builds it — reference key
+appended to the instruction — signs it, processes it, and reads the balances
+the runtime produced.
+
+Two of those assertions could not have been made any other way, and both are
+load-bearing:
+
+- **The reference key survives into the compiled message.** The whole
+  anti-replay design assumes an extra read-only key is carried through message
+  compilation. If web3.js dropped it, every settlement would fail in production
+  and pass against a fixture.
+- **The fee payer really is account index 0.** The payer check reads that
+  index. A fixture asserting it proves nothing; the runtime agreeing does.
+
+The end-to-end run then puts that runtime behind an RPC-shaped socket, so the
+real route reads a real transaction and writes a real entitlement. A genuine
+payment settles; the same payment reused for a second item is refused
+(`reference_missing`); a second wallet claiming it is refused
+(`payer_mismatch`); a real transfer one lamport short is refused
+(`underpaid`); a real transfer to another address is refused
+(`treasury_missing`).
+
+What remains untested is the network hop and the cluster's own consensus, which
+is what the devnet procedure covers. The test skips where the native addon has
+no prebuilt binary — it raises confidence, it is not a gate on every machine.
+
+### The price feed was the other single point of failure
+
+One provider means one failure mode: no sales. The feed is now a list —
+Coinbase, Binance, CoinGecko, Kraken — tried in order, first usable answer
+wins, with `SOL_PRICE_URL` replacing the list for a paid provider.
+
+`readRate` gained the extra shapes those return and is still a listed set
+rather than a search. A heuristic that hunts for "the first plausible number"
+in a JSON body will eventually find a volume, a market cap, or a percentage,
+and this number gets multiplied by a real payment.

@@ -7,6 +7,7 @@ import {
   formatSol,
   formatUsd,
   lamportsForUsd,
+  priceFeedUrls,
   readRate,
   solUsdRate,
   __setCachedRate,
@@ -73,13 +74,28 @@ describe('formatting', () => {
   })
 })
 
-describe('readRate', () => {
-  it('reads the CoinGecko shape', () => {
-    expect(readRate({ solana: { usd: 213.44 } })).toBe(213.44)
+describe('the price feed list', () => {
+  it('carries several providers, so one going down is not an outage', () => {
+    // A single feed's failure mode is "no sales".
+    expect(priceFeedUrls().length).toBeGreaterThan(1)
+    expect(new Set(priceFeedUrls().map((u) => new URL(u).host)).size).toBe(priceFeedUrls().length)
   })
 
-  it('reads a flat exchange ticker, including a string price', () => {
-    expect(readRate({ price: '213.44' })).toBe(213.44)
+  it('lets a deployment replace the whole list with a paid provider', () => {
+    const previous = process.env.SOL_PRICE_URL
+    process.env.SOL_PRICE_URL = 'https://example.test/price'
+    expect(priceFeedUrls()).toEqual(['https://example.test/price'])
+    if (previous === undefined) delete process.env.SOL_PRICE_URL
+    else process.env.SOL_PRICE_URL = previous
+  })
+})
+
+describe('readRate', () => {
+  it('reads every shape the configured feeds return', () => {
+    expect(readRate({ solana: { usd: 213.44 } })).toBe(213.44)          // CoinGecko
+    expect(readRate({ data: { amount: '213.44' } })).toBe(213.44)        // Coinbase
+    expect(readRate({ price: '213.44' })).toBe(213.44)                   // Binance
+    expect(readRate({ result: { SOLUSD: { c: ['213.44', '1'] } } })).toBe(213.44) // Kraken
   })
 
   it('refuses a shape it does not recognise rather than guessing', () => {
