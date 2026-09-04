@@ -1,6 +1,6 @@
 # SIGNAL BRAWL
 
-*A WEBCADE original stick-figure platform brawler*
+*A stick-figure platform brawler*
 
 One player against three CPU rivals, three lives each, on a ninety-second
 timer. Light combos, a charged heavy, a directional dash, a guard with a guard

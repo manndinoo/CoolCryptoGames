@@ -33,7 +33,7 @@
   const MAX_FALL = 1280;
   const COLORS = ["#27e7ff", "#ff326f", "#b7ff3c", "#ffc53d"];
   const NAMES = ["YOU", "GLITCH", "BYTE", "SPARK"];
-  const ICONS = ["W", "X", "B", "⚡"];
+  const ICONS = ["Y", "X", "B", "⚡"];
   const STAGE_NAMES = ["SIGNAL FOUNDRY", "ROOFTOP RELAY", "CRUSHER VAULT", "NEON REACTOR", "ZERO-G TERMINAL", "FINAL BROADCAST"];
   const isTouch = matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -52,7 +52,7 @@
    * Persistence.
    *
    * Two hosts have to work. Opening index.html directly gives the game its own
-   * origin and `localStorage` behaves normally. A WEBCADE listing frames the
+   * origin and `localStorage` behaves normally. A catalogue listing frames the
    * same files with `sandbox="allow-scripts"` and deliberately without
    * `allow-same-origin`, which puts the game on an opaque origin where every
    * `localStorage` access throws SecurityError. Swallowing that error keeps the
@@ -1737,7 +1737,7 @@
     // The pause and sound buttons are DOM, the HUD is drawn into the world and
     // then letterboxed, so pinning the buttons to the viewport's top-right put
     // them straight through the fourth fighter's card at 16:9 — which is the
-    // desktop case and the shape of the WEBCADE player. Anchor them to the
+    // desktop case and the shape of the site player. Anchor them to the
     // world rect instead: inside its right edge, below the HUD band.
     const worldRight = width - (viewX + WORLD.w * viewScale);
     const inset = Math.round(worldRight + 16 * viewScale);

@@ -95,28 +95,6 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; }
   mask-image: radial-gradient(circle at center, #000 10%, transparent 76%);
 }
 
-.brand-kicker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #cbd7e8;
-  font: 700 13px/1 "Space Mono", monospace;
-  letter-spacing: .24em;
-  margin-bottom: 12px;
-}
-
-.w-mark {
-  display: grid;
-  place-items: center;
-  width: 29px;
-  height: 29px;
-  transform: skew(-8deg);
-  border: 2px solid var(--cyan);
-  color: var(--cyan);
-  font: 900 20px/1 "Barlow Condensed", sans-serif;
-  box-shadow: 0 0 18px rgba(39,231,255,.25), inset 0 0 12px rgba(39,231,255,.12);
-}
-
 h1 {
   position: relative;
   margin: 0;
@@ -448,7 +426,6 @@ h1 strong {
 }
 
 @media (max-height: 560px) {
-  .brand-kicker { margin-bottom: 8px; }
   h1 span { font-size: clamp(43px, 9vh, 76px); }
   h1 strong { font-size: clamp(69px, 16vh, 122px); }
   .menu-copy { margin: 13px 0 8px; font-size: 11px; }
@@ -467,7 +444,6 @@ h1 strong {
 
 @media (max-height: 430px) {
   .overlay { padding-top: 10px; padding-bottom: 10px; }
-  .brand-kicker { margin-bottom: 4px; }
   .menu-copy { display: none; }
   h1 span { font-size: clamp(28px, 8vh, 52px); }
   h1 strong { font-size: clamp(44px, 14vh, 86px); }

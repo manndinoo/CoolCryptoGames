@@ -150,6 +150,15 @@ describe('the shipped build', () => {
     expect(html).not.toMatch(/(?:src|href)\s*=\s*["']?(?:https?:)?\/\//i)
   })
 
+  it('carries no WEBCADE branding', () => {
+    // The build arrived branded as a WEBCADE original: a title tag, a meta
+    // description, a boxed-W kicker over the logo, and the same W worn by the
+    // player's fighter. The owner asked for all of it gone.
+    for (const file of ['index.html', 'game.js', 'styles.css', 'README.md']) {
+      expect(readFileSync(join(GAME_DIR, file), 'utf8')).not.toMatch(/webcade/i)
+    }
+  })
+
   it('talks to the host on the save channel the shell listens on', () => {
     // The game is plain JS the bundler never sees, so nothing but a test keeps
     // the two ends of this protocol spelled the same.
