@@ -6,10 +6,11 @@ import { readSession, sessionCookie } from '@/lib/auth/session'
 import { getGameRules } from '@/lib/anticheat/registry'
 import { banFor, linkIdentity, resolveIdentity } from '@/lib/security/identity'
 import { HEARTBEAT_INTERVAL_MS } from '@/lib/anticheat/constants'
+import { withRouteGuard } from '@/lib/api/guard'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const jar = await cookies()
   const claims = await readSession(jar.get(sessionCookie.name)?.value)
   if (!claims) return NextResponse.json({ error: 'not_authenticated' }, { status: 401 })
@@ -80,3 +81,5 @@ export async function POST(request: Request) {
     heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
   })
 }
+
+export const POST = withRouteGuard(handlePOST)

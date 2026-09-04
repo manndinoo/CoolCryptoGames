@@ -5,6 +5,7 @@ import { readSession, sessionCookie } from '@/lib/auth/session'
 import { checkChatPermission, RATE_WINDOW_MS } from '@/lib/chat/rules'
 import { displayName } from '@/lib/identity/username'
 import { getDemoChannel } from '@/lib/content/demo'
+import { withRouteGuard } from '@/lib/api/guard'
 
 export const runtime = 'nodejs'
 
@@ -21,7 +22,7 @@ type MessageRow = {
  * Reading chat needs no wallet and no account, in line with "watch freely".
  * Removed messages are excluded rather than tombstoned in the feed.
  */
-export async function GET(_request: Request, ctx: { params: Promise<{ slug: string }> }) {
+async function handleGET(_request: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params
   if (!getDemoChannel(slug)) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
@@ -51,7 +52,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ slug: stri
  * the client: a disabled send button is presentation, and a script posting
  * straight at this route never sees it.
  */
-export async function POST(request: Request, ctx: { params: Promise<{ slug: string }> }) {
+async function handlePOST(request: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params
   const channel = getDemoChannel(slug)
   if (!channel) return NextResponse.json({ error: 'not_found' }, { status: 404 })
@@ -131,3 +132,6 @@ export async function POST(request: Request, ctx: { params: Promise<{ slug: stri
     },
   })
 }
+
+export const GET = withRouteGuard(handleGET)
+export const POST = withRouteGuard(handlePOST)

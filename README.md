@@ -27,11 +27,37 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 least 32 characters. Rotating either pepper changes every derived hash and
 therefore drops every existing device or network sanction.
 
+## Database
+
+The wallet sign-in, username, chat, tournament and scoring routes all need
+Postgres. Without a `DATABASE_URL` they return `503 service_unavailable` and
+the sign-in button reports that it could not complete — the site still browses,
+but nobody can sign in.
+
+```bash
+export DATABASE_URL=postgres://user:pass@host:5432/dbname
+npm run db:migrate     # apply db/*.sql, once each, in order
+npm run db:status      # show what is applied and what is pending
+```
+
+Migrations are idempotent: each is recorded in `schema_migrations` and runs
+inside a transaction, so re-running is a no-op and a failure leaves the previous
+version intact.
+
+To check the whole auth path end to end against a running server:
+
+```bash
+npm start &
+npm run smoke:auth
+```
+
 ## Scripts
 
 | Command | Does |
 | --- | --- |
 | `npm run dev` | Development server |
+| `npm run db:migrate` | Apply pending migrations |
+| `npm run smoke:auth` | End-to-end auth, username and chat check |
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 | `npm test` | Unit tests |

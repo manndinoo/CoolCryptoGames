@@ -3,12 +3,13 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { issueSession, readSession, sessionCookie } from '@/lib/auth/session'
 import { checkUsername } from '@/lib/identity/username'
+import { withRouteGuard } from '@/lib/api/guard'
 
 export const runtime = 'nodejs'
 
 /** Availability check for the setup form. Requires a session, so it cannot be
  *  used anonymously to enumerate who exists. */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const jar = await cookies()
   const claims = await readSession(jar.get(sessionCookie.name)?.value)
   if (!claims) return NextResponse.json({ error: 'not_authenticated' }, { status: 401 })
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
  * The session is reissued afterwards because it carries the username, and a
  * stale cookie would keep rendering the player as unnamed until it expired.
  */
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const jar = await cookies()
   const claims = await readSession(jar.get(sessionCookie.name)?.value)
   if (!claims) return NextResponse.json({ error: 'not_authenticated' }, { status: 401 })
@@ -92,3 +93,6 @@ export async function POST(request: Request) {
 function isUniqueViolation(err: unknown): boolean {
   return typeof err === 'object' && err !== null && (err as { code?: string }).code === '23505'
 }
+
+export const GET = withRouteGuard(handleGET)
+export const POST = withRouteGuard(handlePOST)

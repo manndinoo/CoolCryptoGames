@@ -4,12 +4,13 @@ import { db } from '@/lib/db'
 import { buildSignInMessage, isValidWalletAddress } from '@/lib/auth/siws'
 import { banFor, resolveIdentity } from '@/lib/security/identity'
 import { site } from '@/site.config'
+import { withRouteGuard } from '@/lib/api/guard'
 
 export const runtime = 'nodejs'
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const body = await request.json().catch(() => null)
   const address = (body as { address?: unknown })?.address
 
@@ -52,3 +53,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ nonce, message: buildSignInMessage(challenge) })
 }
+
+export const POST = withRouteGuard(handlePOST)

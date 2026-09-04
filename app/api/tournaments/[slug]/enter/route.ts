@@ -5,6 +5,7 @@ import { readSession, sessionCookie } from '@/lib/auth/session'
 import { checkEligibility } from '@/lib/tournaments/rules'
 import { getDemoTournament } from '@/lib/content/demo'
 import { findActiveBan } from '@/lib/security/bans'
+import { withRouteGuard } from '@/lib/api/guard'
 
 export const runtime = 'nodejs'
 
@@ -15,7 +16,7 @@ export const runtime = 'nodejs'
  * that decides the outcome runs here: session, sanctions, event state, entry
  * window, and the exact rules version accepted.
  */
-export async function POST(request: Request, ctx: { params: Promise<{ slug: string }> }) {
+async function handlePOST(request: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params
 
   const jar = await cookies()
@@ -66,3 +67,5 @@ export async function POST(request: Request, ctx: { params: Promise<{ slug: stri
 
   return NextResponse.json({ entered: true, rulesVersion: tournament.rules.version })
 }
+
+export const POST = withRouteGuard(handlePOST)

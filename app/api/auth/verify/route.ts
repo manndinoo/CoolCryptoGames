@@ -4,10 +4,11 @@ import { verifyChallenge } from '@/lib/auth/siws'
 import { issueSession, sessionCookie } from '@/lib/auth/session'
 import { banFor, linkIdentity, resolveIdentity } from '@/lib/security/identity'
 import { site } from '@/site.config'
+import { withRouteGuard } from '@/lib/api/guard'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     nonce?: unknown
     signature?: unknown
@@ -93,3 +94,5 @@ export async function POST(request: Request) {
   response.cookies.set(sessionCookie.name, token, sessionCookie.options)
   return response
 }
+
+export const POST = withRouteGuard(handlePOST)
