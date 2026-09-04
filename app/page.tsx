@@ -1,8 +1,8 @@
 import Image from "next/image";
-import { ContinuePlaying } from "@/components/home/continue-playing";
 import Link from "next/link";
+import { CcgMonogram } from "@/components/brand/logo";
+import { ContinuePlaying } from "@/components/home/continue-playing";
 import { DemoBadge, StatusPill, VerifiedBadge } from "@/components/ui/badges";
-import { SectionHeader } from "@/components/ui/section";
 import {
   demoChannels,
   demoDevelopers,
@@ -10,105 +10,174 @@ import {
   demoTournaments,
   type DemoGame,
 } from "@/lib/content/demo";
+import { gridColumns } from "@/lib/ui/columns";
 import { site } from "@/site.config";
 
 /**
- * Home.
+ * Home, in the shape of the supplied reference: a featured game holding the
+ * first screen on its own art, a fact strip beneath it, then the catalogue.
  *
- * Games are the first thing on the screen. The page used to open with a
- * full-height slogan and an oversized watermark, and you had to scroll past all
- * of it to reach two small cards — on a catalogue, the catalogue is the design,
- * and the argument for the product is the art, not a headline about the art.
- *
- * The intro is three lines and a link. Everything it used to say at 72px is
- * still said, in a size that leaves room for the thing it is introducing.
+ * Where the reference carries figures — players online, a prize pool, follower
+ * counts — this carries the real ones. There are no stored sessions yet, so
+ * those slots show what is actually true instead. The layout is the reference's;
+ * the numbers have to be ours.
  */
 export default function Home() {
   const games = demoGames;
+  const featured = games[0];
+  const rest = games.slice(1);
   const tournament = demoTournaments[0] ?? null;
   const channel = demoChannels[0];
   const spotlight = demoDevelopers[0];
 
   return (
     <>
-      {/* --------------------------------------------------------------- intro */}
-      <section className="pt-[var(--spacing-6)] pb-[var(--spacing-6)]">
-        <h1 className="font-display text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.1] font-semibold tracking-[var(--tracking-display)]">
-          {site.tagline}
-        </h1>
-        <p className="mt-3 max-w-xl text-[var(--color-muted)]">
-          {site.description}
-        </p>
-        <p className="mt-4 text-sm text-[var(--color-muted)]">
-          {site.productLine}
-        </p>
-      </section>
+      {/* ---------------------------------------------------------------- hero */}
+      {featured && <Hero game={featured} />}
 
-      {/* Returning players only. Absent, and rendering nothing, for everyone else. */}
+      {/* --------------------------------------------------------- fact strip */}
+      <div className="-mx-[var(--mobile-gutter)] flex flex-wrap items-stretch border-y border-[var(--color-line)] lg:-mx-[var(--desktop-gutter)]">
+        <Fact accent label="Entry" value="Always free" />
+        <Fact label="Wallet" value="Identity only" />
+        <Fact label="Catalogue" value={`${games.length} games`} />
+        <Fact label="Purchases" value="None, anywhere" />
+      </div>
+
       <ContinuePlaying
         games={games.map((g) => ({ slug: g.slug, title: g.title, cover: g.cover }))}
       />
 
-      {/* --------------------------------------------------------------- games
-          Two-up at desktop with the cover at 16:9. A four-column grid holding a
-          two-game catalogue reads as a page that failed to load; a two-column
-          one reads as a page with two games on it, and grows into rows rather
-          than into gaps. */}
-      <section className="ccg-stagger grid gap-[var(--spacing-4)] lg:grid-cols-2">
-        {games.map((game, i) => (
-          // `priority` marks the LCP image, and a page has one. It was on every
-          // card, which put a preload link on each of them; the first two then
-          // never finished loading at all — the browser held them at
-          // `complete: false` with an empty currentSrc while the unprioritised
-          // third card loaded normally, and the page never fired `load`.
-          <FeatureCard key={game.slug} game={game} priority={i === 0} />
-        ))}
+      {/* --------------------------------------------------------- catalogue */}
+      <section className="relative mt-[var(--spacing-7)]">
+        {/* The reference bleeds the mark behind this heading. Ours is the real
+            artwork at low opacity, and it is decorative, so it is hidden from
+            assistive technology. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-6 right-0 hidden opacity-[0.05] lg:block"
+        >
+          <CcgMonogram size={170} />
+        </div>
+
+        <h2 className="font-display text-2xl font-black tracking-[var(--tracking-display)] uppercase">
+          Play something good
+        </h2>
+        <div className="ccg-rule mt-3 mb-[var(--spacing-5)]" />
+
+        <div
+          className={`ccg-stagger grid gap-[var(--spacing-4)] sm:grid-cols-2 ${gridColumns(rest.length, 2)}`}
+        >
+          {rest.map((game) => (
+            <GameTile key={game.slug} game={game} />
+          ))}
+        </div>
       </section>
 
-      {/* ------------------------------------------------------------- modules
-          Three quiet rows rather than three panels. Each states what is
-          genuinely there — which right now is mostly "nothing yet", and a large
-          card is a lot of surface to spend saying that. */}
-      <section className="mt-[var(--spacing-7)]">
-        <SectionHeader title="Elsewhere on CCG" />
-        <ul className="ccg-stagger grid gap-px overflow-hidden rounded-[var(--radius-large)] border border-[var(--color-subtle-border)] bg-[var(--color-subtle-border)] lg:grid-cols-3">
-          <ModuleRow
-            href={tournament ? `/tournaments/${tournament.slug}` : "/tournaments"}
-            label="Tournaments"
-            title={tournament ? tournament.name : "No event scheduled"}
-            note={
-              tournament
-                ? tournament.format
-                : "Free entry, published rules, verified results."
-            }
-            badge={tournament?.demo ? <DemoBadge label="Demo event" /> : null}
-          />
-          <ModuleRow
-            href="/live"
-            label="Live"
-            title={channel.title}
-            note="Nothing is broadcasting. Scheduled programming appears here once a provider is approved."
-            badge={<StatusPill>{channel.state}</StatusPill>}
-          />
-          <ModuleRow
-            href={`/developers/${spotlight.slug}`}
-            label="Developers"
-            title={spotlight.name}
-            note={spotlight.bio}
-            badge={spotlight.demo ? <DemoBadge /> : null}
-          />
-        </ul>
+      {/* ----------------------------------------------------------- modules */}
+      <section className="mt-[var(--spacing-7)] grid gap-[var(--spacing-4)] lg:grid-cols-2">
+        <Module
+          label="Creator spotlight"
+          title={spotlight.name}
+          note={spotlight.bio}
+          href={`/developers/${spotlight.slug}`}
+          action="View developer"
+          badge={spotlight.demo ? <DemoBadge /> : <VerifiedBadge />}
+        />
+        <Module
+          label={tournament ? "Open tournament" : "Tournaments"}
+          title={tournament ? tournament.name : "No event scheduled"}
+          note={
+            tournament
+              ? `${tournament.format} · free entry`
+              : "Free entry, published rules, verified results. Nothing is running and nothing is announced."
+          }
+          href={tournament ? `/tournaments/${tournament.slug}` : "/tournaments"}
+          action={tournament ? "Read the rules" : "How it works"}
+          badge={tournament?.demo ? <DemoBadge label="Demo event" /> : null}
+        />
+      </section>
+
+      {/* -------------------------------------------------------------- live */}
+      <section className="ccg-surface mt-[var(--spacing-4)] flex flex-wrap items-center gap-[var(--spacing-5)] p-[var(--spacing-5)]">
+        <span className="flex items-center gap-2 text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
+          <span aria-hidden className="size-2 bg-[var(--color-muted)]" />
+          Live
+        </span>
+        <p className="min-w-56 flex-1">
+          <span className="font-display font-extrabold uppercase">{channel.title}</span>
+          <span className="mt-1 block text-sm text-[var(--color-muted)]">
+            Nothing is broadcasting. Scheduled programming appears here once a
+            provider is configured and approved.
+          </span>
+        </p>
+        <StatusPill>{channel.state}</StatusPill>
+        <Link href="/live" className="ccg-btn ccg-btn-ghost">
+          See the schedule
+        </Link>
       </section>
     </>
   );
 }
 
-/** A game at the size its art deserves. */
-function FeatureCard({ game, priority }: { game: DemoGame; priority: boolean }) {
+/** The first screen: one game, on its own art. */
+function Hero({ game }: { game: DemoGame }) {
+  return (
+    <section className="relative -mx-[var(--mobile-gutter)] overflow-hidden lg:-mx-[var(--desktop-gutter)]">
+      {game.cover && (
+        <Image
+          src={game.cover}
+          alt=""
+          aria-hidden
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      )}
+      {/* Two stops rather than one: the art has to stay readable at the top and
+          the type has to stay readable at the bottom. */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, color-mix(in srgb, var(--color-carbon) 25%, transparent) 0%, color-mix(in srgb, var(--color-carbon) 72%, transparent) 55%, var(--color-carbon) 100%)",
+        }}
+      />
+
+      <div className="relative px-[var(--mobile-gutter)] pt-[var(--spacing-8)] pb-[var(--spacing-6)] lg:px-[var(--desktop-gutter)] lg:pt-[calc(var(--spacing-8)*2)]">
+        <p className="text-[11px] font-bold tracking-[var(--tracking-label)] text-accent uppercase">
+          Featured
+        </p>
+        <h1 className="mt-2 font-display text-[clamp(2.4rem,8vw,4.25rem)] leading-[0.92] font-black tracking-[var(--tracking-display)] uppercase">
+          {game.title}
+        </h1>
+        <p className="mt-3 max-w-md text-[var(--color-muted)]">{game.blurb}</p>
+
+        <div className="mt-[var(--spacing-5)] flex flex-wrap items-center gap-3">
+          <Link href={`/games/${game.slug}`} className="ccg-btn ccg-btn-primary">
+            <CcgMonogram size={22} />
+            Play
+          </Link>
+          <Link href="/games" className="ccg-btn ccg-btn-ghost">
+            Browse the catalogue
+          </Link>
+        </div>
+
+        <p className="mt-[var(--spacing-5)] text-xs text-[var(--color-muted)]">
+          {site.productLine}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/** One catalogue tile, with the reference's clipped corner. */
+function GameTile({ game }: { game: DemoGame }) {
   const ranked = game.scoreVerification === "deterministic-replay";
 
   return (
-    <article className="ccg-surface ccg-lift group/card overflow-hidden rounded-[var(--radius-large)]">
+    <article className="ccg-notch ccg-lift group/card">
       <Link href={`/games/${game.slug}`} className="block">
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--color-carbon)]">
           {game.cover ? (
@@ -116,9 +185,8 @@ function FeatureCard({ game, priority }: { game: DemoGame; priority: boolean }) 
               src={game.cover}
               alt={`${game.title} gameplay`}
               fill
-              sizes="(max-width: 1024px) 100vw, 640px"
-              className="object-cover transition-transform duration-[var(--duration-slow)] ease-[var(--ease-ccg)] group-hover/card:scale-[1.03]"
-              priority={priority}
+              sizes="(max-width: 640px) 100vw, 520px"
+              className="object-cover transition-transform duration-[var(--duration-slow)] ease-[var(--ease-ccg)] group-hover/card:scale-[1.04]"
             />
           ) : (
             <div
@@ -131,7 +199,7 @@ function FeatureCard({ game, priority }: { game: DemoGame; priority: boolean }) 
           )}
         </div>
 
-        <div className="p-[var(--spacing-5)]">
+        <div className="p-[var(--spacing-4)]">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               {game.category}
@@ -140,62 +208,73 @@ function FeatureCard({ game, priority }: { game: DemoGame; priority: boolean }) 
             {ranked ? <VerifiedBadge /> : <StatusPill>Unranked</StatusPill>}
           </div>
 
-          <h2 className="font-display text-xl font-semibold tracking-[var(--tracking-display)]">
-            {game.title}
-          </h2>
-          <p className="mt-2 line-clamp-2 text-sm text-[var(--color-muted)]">
-            {game.blurb}
-          </p>
-
-          <span className="mt-[var(--spacing-4)] inline-flex items-center gap-2 text-sm font-semibold text-accent">
-            Play
-            <svg viewBox="0 0 20 20" className="size-4" aria-hidden>
-              <path
-                d="M3 10h13m0 0-5-5m5 5-5 5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
+          <div className="flex items-end justify-between gap-4">
+            <h3 className="font-display text-lg font-extrabold tracking-[var(--tracking-display)] uppercase">
+              {game.title}
+            </h3>
+            <span className="shrink-0 text-[11px] font-bold tracking-[var(--tracking-label)] text-accent uppercase">
+              Play ▸
+            </span>
+          </div>
         </div>
       </Link>
     </article>
   );
 }
 
-function ModuleRow({
-  href,
+function Fact({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="flex-1 border-r border-[var(--color-line)] px-[var(--mobile-gutter)] py-3 last:border-r-0 lg:px-[var(--desktop-gutter)]">
+      <p className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-display text-sm font-extrabold whitespace-nowrap uppercase ${accent ? "text-accent" : ""}`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Module({
   label,
   title,
   note,
+  href,
+  action,
   badge,
 }: {
-  href: string;
   label: string;
   title: string;
   note: string;
+  href: string;
+  action: string;
   badge?: React.ReactNode;
 }) {
   return (
-    <li className="bg-[var(--color-graphite)]">
-      <Link
-        href={href}
-        className="flex h-full flex-col p-[var(--spacing-5)] transition-colors duration-[var(--duration-fast)] hover:bg-[var(--color-graphite-raised)]"
-      >
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
-            {label}
-          </span>
-          {badge}
-        </div>
-        <p className="font-display text-base font-semibold tracking-[var(--tracking-display)]">
-          {title}
-        </p>
-        <p className="mt-1.5 line-clamp-2 text-sm text-[var(--color-muted)]">{note}</p>
+    <div className="ccg-surface flex flex-col p-[var(--spacing-5)]">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="text-[10px] font-bold tracking-[var(--tracking-label)] text-accent uppercase">
+          {label}
+        </span>
+        {badge}
+      </div>
+      <h3 className="font-display text-xl font-extrabold tracking-[var(--tracking-display)] uppercase">
+        {title}
+      </h3>
+      <p className="mt-2 flex-1 text-sm text-[var(--color-muted)]">{note}</p>
+      <Link href={href} className="ccg-btn ccg-btn-ghost mt-[var(--spacing-5)] self-start">
+        {action}
       </Link>
-    </li>
+    </div>
   );
 }

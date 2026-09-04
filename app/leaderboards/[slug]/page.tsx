@@ -79,7 +79,7 @@ export default async function GameLeaderboardPage({ params }: Props) {
               </StatusPill>
             )}
           </div>
-          <h1 className="font-display text-[clamp(1.9rem,6vw,2.8rem)] leading-[1.05] font-bold tracking-[var(--tracking-display)]">
+          <h1 className="font-display text-[clamp(1.9rem,6vw,2.8rem)] leading-[1.05] font-black tracking-[var(--tracking-display)] uppercase">
             {game.title}
           </h1>
           <Link
@@ -104,7 +104,7 @@ export default async function GameLeaderboardPage({ params }: Props) {
           </p>
           <Link
             href={`/games/${game.slug}`}
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            className="mt-[var(--spacing-5)] ccg-btn ccg-btn-primary90"
           >
             Play {game.title}
           </Link>

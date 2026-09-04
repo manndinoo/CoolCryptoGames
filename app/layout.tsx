@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Archivo, Inter } from 'next/font/google'
 import { Header } from '@/components/shell/header'
 import { Sidebar } from '@/components/shell/sidebar'
 import { PageTransition } from '@/components/shell/page-transition'
@@ -12,9 +12,12 @@ import './globals.css'
 // Both are SIL Open Font License, so they can ship without a licence purchase.
 // The tokens file asks for a geometric grotesk for display and a highly legible
 // sans for body; these are the pairing the reference boards were drawn with.
-const display = Space_Grotesk({
+// Archivo, for the wordmark's register: a wide grotesk that holds up at 900
+// where Space Grotesk topped out at 700 and read light beside the supplied
+// artwork. SIL Open Font License, so it ships without a licence purchase.
+const display = Archivo({
   subsets: ['latin'],
-  weight: ['500', '700'],
+  weight: ['600', '700', '800', '900'],
   variable: '--font-display',
 })
 const body = Inter({ subsets: ['latin'], variable: '--font-body' })
@@ -35,7 +38,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0B0C0F',
+  themeColor: '#08090B',
   // Lets the shell paint under the status bar and home indicator; the safe-area
   // tokens then keep actual content clear of them.
   viewportFit: 'cover',
@@ -59,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <>
           <a
             href="#main"
-            className="sr-only rounded-[var(--radius-small)] bg-accent-solid px-4 py-2 font-semibold text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
+            className="sr-only rounded-[var(--radius-small)] bg-accent px-4 py-2 font-semibold text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
           >
             Skip to content
           </a>

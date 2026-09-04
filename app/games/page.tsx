@@ -29,7 +29,7 @@ export default function GamesPage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+        <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
           Games
         </h1>
         <p className="mt-3 max-w-lg text-[var(--color-muted)]">

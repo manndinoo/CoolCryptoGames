@@ -91,7 +91,7 @@ export default async function GamePage({ params }: Props) {
                 {ranked ? <VerifiedBadge /> : <StatusPill>Unranked</StatusPill>}
               </div>
 
-              <h1 className="font-display text-[clamp(2.2rem,8vw,3.5rem)] leading-[0.95] font-bold tracking-[var(--tracking-display)]">
+              <h1 className="font-display text-[clamp(2.2rem,8vw,3.5rem)] leading-[0.95] font-black tracking-[var(--tracking-display)] uppercase">
                 {game.title}
               </h1>
 
@@ -198,7 +198,7 @@ export default async function GamePage({ params }: Props) {
         {ranked && (
           <Link
             href={`/leaderboards/${game.slug}`}
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+            className="mt-[var(--spacing-5)] ccg-btn ccg-btn-ghost"
           >
             View the leaderboard
           </Link>

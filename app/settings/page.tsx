@@ -27,7 +27,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="pt-[var(--spacing-7)] pb-[var(--spacing-6)]">
-      <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+      <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
         Settings
       </h1>
       <p className="mt-3 max-w-xl text-[var(--color-muted)]">

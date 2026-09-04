@@ -96,7 +96,7 @@ export function FirstVisitNotice() {
           <Link
             href="/games"
             onClick={dismiss}
-            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-5 text-sm font-semibold text-white transition-transform duration-[var(--duration-fast)] hover:scale-[1.03] active:scale-[0.98]"
+            className="ccg-btn ccg-btn-primary[1.03] active:scale-[0.98]"
           >
             See the games
           </Link>
@@ -105,7 +105,7 @@ export function FirstVisitNotice() {
               rest of this component exists to avoid. */}
           <button
             onClick={dismiss}
-            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-5 text-sm font-semibold transition-colors duration-[var(--duration-fast)] hover:border-bone/40"
+            className="ccg-btn ccg-btn-ghost"
           >
             Got it
           </button>

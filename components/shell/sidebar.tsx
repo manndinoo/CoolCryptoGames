@@ -99,7 +99,7 @@ export function Sidebar() {
                           compositor and costs nothing on a low-end phone. */}
                       <span
                         aria-hidden
-                        className="ccg-side-marker absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent-solid"
+                        className="ccg-side-marker absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent"
                       />
                       {Icon && <Icon className="size-5 shrink-0" />}
                       <span className="ccg-side-text truncate">{item.label}</span>
@@ -120,7 +120,7 @@ export function Sidebar() {
       <div className="shrink-0 border-t border-[var(--color-subtle-border)] p-3">
         <Link
           href="/games"
-          className="ccg-side-cta flex h-11 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-accent-solid px-4 text-sm font-semibold text-white transition-transform duration-[var(--duration-fast)] hover:scale-[1.02] active:scale-[0.99]"
+          className="ccg-side-cta ccg-btn ccg-btn-primary w-full"
         >
           <svg viewBox="0 0 24 24" className="size-4 shrink-0" aria-hidden>
             <path d="M8 5v14l11-7L8 5Z" fill="currentColor" />

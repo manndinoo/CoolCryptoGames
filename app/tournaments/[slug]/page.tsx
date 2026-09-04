@@ -39,7 +39,7 @@ export default async function TournamentPage({ params }: Props) {
           <StatusPill>{tournament.status}</StatusPill>
           {tournament.demo && <DemoBadge label="Demo event" />}
         </div>
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)] lg:text-5xl">
+        <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase lg:text-5xl">
           {tournament.name}
         </h1>
         <p className="mt-2 text-[var(--color-muted)]">{tournament.format}</p>

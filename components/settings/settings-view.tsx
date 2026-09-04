@@ -156,7 +156,7 @@ export function SettingsView({ session }: { session: SessionState }) {
     <div className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)]">
       {/* ------------------------------------------------------- identity */}
       <Panel title="Player name">
-        <p className="mt-2 font-display text-2xl font-semibold tracking-[var(--tracking-display)]">
+        <p className="mt-2 font-display text-2xl font-extrabold tracking-[var(--tracking-display)] uppercase">
           {state.username}
         </p>
         <p className="mt-2 max-w-lg text-sm text-[var(--color-muted)]">
@@ -191,7 +191,7 @@ export function SettingsView({ session }: { session: SessionState }) {
         </p>
         <button
           onClick={signOut}
-          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-ghost"
         >
           Sign out
         </button>
@@ -204,7 +204,7 @@ export function SettingsView({ session }: { session: SessionState }) {
           <button
             onClick={downloadData}
             disabled={busy !== null}
-            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40 disabled:opacity-50"
+            className="ccg-btn ccg-btn-ghost disabled:opacity-50"
           >
             {busy === 'export' ? 'Preparing…' : 'Download my data'}
           </button>
@@ -280,7 +280,7 @@ export function SettingsView({ session }: { session: SessionState }) {
         )}
         <Link
           href="/profile"
-          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-ghost"
         >
           Back to profile
         </Link>

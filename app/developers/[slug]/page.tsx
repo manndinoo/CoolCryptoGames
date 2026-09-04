@@ -43,7 +43,7 @@ export default async function DeveloperPage({ params }: Props) {
           <StatusPill>Publisher</StatusPill>
           {dev.demo && <DemoBadge label="Demo studio" />}
         </div>
-        <h1 className="font-display text-[clamp(2rem,7vw,3rem)] leading-[1] font-bold tracking-[var(--tracking-display)]">
+        <h1 className="font-display text-[clamp(2rem,7vw,3rem)] leading-[1] font-black tracking-[var(--tracking-display)] uppercase">
           {dev.name}
         </h1>
         <p className="mt-[var(--spacing-4)] max-w-xl text-[var(--color-muted)]">{dev.bio}</p>
@@ -120,7 +120,7 @@ function Fact({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
         {label}
       </p>
-      <p className="mt-1.5 font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+      <p className="mt-1.5 font-display text-2xl font-extrabold tracking-[var(--tracking-display)] uppercase">
         {value}
       </p>
     </div>

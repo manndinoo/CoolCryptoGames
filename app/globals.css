@@ -12,38 +12,42 @@
 @custom-variant short (@media (max-height: 520px));
 
 @theme {
-  /* Ground and elevation.
-     Four steps, each visibly lighter than the last. The previous ramp moved
-     about 5% in lightness between the page and a card, which is below what the
-     eye reads as a layer — cards looked like flat rectangles drawn on the
-     background rather than sitting above it. */
-  --color-carbon: #0b0c0f;
-  --color-graphite: #14161b;
-  --color-graphite-raised: #1c1f26;
-  --color-bone: #e8eaed;
+  /* Ground and elevation, taken from the supplied app reference. */
+  --color-carbon: #08090b;
+  --color-graphite: #121416;
+  --color-graphite-raised: #1a1d21;
 
-  /* One accent, two values.
-     `accent` is the readable-on-dark version, used for text, icons, borders and
-     the active marker: 4.8:1 on the page ground. `accent-solid` is darker so
-     that white text on a filled button clears 4.5:1, which the lighter value
-     does not. Two values because one cannot serve both jobs accessibly. */
-  --color-accent: #4c7dff;
-  --color-accent-solid: #3563e9;
+  /* The sheet's two inks. Cream is text on dark; ink is text on cream. */
+  --color-bone: #f1ece4;
+  --color-cream: #f1ece4;
+  --color-ink: #0d0d0f;
 
-  /* Status colours, each reserved for exactly one meaning. */
+  /* One accent, from the mark's square. It carries the primary action, the
+     live state and the active navigation item, and nothing else.
+
+     5.4:1 against the page ground, so it is safe as text and as an icon.
+     White on an accent fill is 3.5:1 — that meets AA for large text only, so
+     the primary button sets its label at 18px/800, which clears the bar. Any
+     smaller control uses the accent as text on dark rather than as a fill. */
+  --color-accent: #fe3f0e;
+
   --color-success: #3ecf8e;
   --color-danger: #ff4d5e;
   --color-orange: #e8a33d;
-
   --color-muted: #8a9099;
 
-  --color-subtle-border: rgba(255, 255, 255, 0.08);
-  --color-strong-border: rgba(76, 125, 255, 0.55);
+  --color-line: rgba(241, 236, 228, 0.12);
+  --color-subtle-border: rgba(241, 236, 228, 0.12);
+  --color-strong-border: rgba(254, 63, 14, 0.65);
 
-  --radius-small: 10px;
-  --radius-medium: 14px;
-  --radius-large: 18px;
-  --radius-pill: 999px;
+  /* Square. The reference has no rounded controls anywhere — buttons, cards
+     and chips are all rectangles, and the only curve on the sheet is the one
+     inside the letterforms. `--radius-pill` is kept as a name so the pill
+     class names across the codebase resolve to a rectangle in one place. */
+  --radius-small: 2px;
+  --radius-medium: 2px;
+  --radius-large: 3px;
+  --radius-pill: 2px;
 
   --spacing-1: 4px;
   --spacing-2: 8px;
@@ -59,10 +63,8 @@
   --duration-normal: 220ms;
   --duration-slow: 420ms;
 
-  /* Display tracking eased off from -0.035em. That much negative tracking was
-     drawn for all-caps settings; on sentence case it closes up the counters. */
-  --tracking-display: -0.02em;
-  --tracking-label: 0.08em;
+  --tracking-display: -0.01em;
+  --tracking-label: 0.14em;
 
   --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-body), ui-sans-serif, system-ui, sans-serif;
@@ -87,9 +89,8 @@
   /* Dark only, always. There is no light palette to fall back to: this is a
      games surface, the art is the content, and every cover and screenshot on
      it was captured against this ground. `color-scheme` also makes the
-     browser's own furniture — scrollbars, form controls, the space past the
-     end of a scroll — dark, which is what stops a white bar flashing in at
-     the edges during navigation. */
+     browser's own furniture dark, which is what stops a white bar flashing in
+     at the edges during navigation. */
   color-scheme: dark;
 }
 
@@ -106,18 +107,19 @@ body[data-sidebar='collapsed'] {
 }
 
 /* ---------------------------------------------------------------------------
-   Token usage rules. These are product rules, not preferences.
+   Token usage rules, from the brand sheet.
 
-     accent  — the primary action, the active navigation item, focus. One use
-               per screen for the filled version; a second filled accent button
-               on the same screen halves what the first one means.
-     success — verified results only. Never decoration.
-     danger  — live broadcasts and destructive actions only.
-     orange  — alerts and expiring states only.
+     accent   — the primary action, the live state, the active nav item. One
+                filled accent element per screen; everything else uses it as
+                text or as a 1px edge.
+     success  — verified results only.
+     danger   — destructive actions only. Live uses the accent, as the
+                reference does.
+     cream    — all text on dark, and the light surface.
 
-   Colour is carried by game art, not by chrome. Every surface here is neutral
-   so that a cover image is the most saturated thing on the screen, which is
-   the point of a catalogue.
+   Type carries hierarchy through size and weight, not through case. Display
+   text is uppercase and heavy; labels are 10-11px uppercase with wide
+   tracking; body is sentence case. That is the sheet's own system.
 --------------------------------------------------------------------------- */
 
 body {
@@ -319,13 +321,104 @@ body {
   }
 
   /* Restrained depth. One shared recipe so "glass" cannot drift per component. */
-  /* Flat, not gradient. A vertical gradient inside a card fights the elevation
-     ramp: the bottom of a card ends up darker than the page it sits on, so the
-     card reads as a hole rather than a layer. One flat value per step. */
+  /* -------------------------------------------------------------- buttons
+
+     Rectangles, uppercase, heavy — the sheet has no rounded control on it.
+
+     The primary is set at 19px/900 for a reason beyond scale: white on the
+     accent is 3.5:1, which meets AA for large text only, and 14pt bold
+     (18.66px) is where "large" begins. The ghost carries cream on the page
+     ground at 13:1, so it is free to be smaller — and the reference sets its
+     secondary button smaller too. */
+  .ccg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: var(--tap-target);
+    padding: 0 24px;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    white-space: nowrap;
+    transition:
+      background-color var(--duration-fast) var(--ease-ccg),
+      border-color var(--duration-fast) var(--ease-ccg),
+      transform var(--duration-fast) var(--ease-ccg);
+  }
+  .ccg-btn:active {
+    transform: translateY(1px);
+  }
+
+  .ccg-btn-primary {
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 19px;
+    font-weight: 900;
+    padding: 0 28px;
+    min-height: 52px;
+  }
+  @media (hover: hover) {
+    .ccg-btn-primary:hover {
+      background: color-mix(in srgb, var(--color-accent) 88%, white);
+    }
+  }
+
+  .ccg-btn-ghost {
+    border: 1px solid var(--color-line);
+    color: var(--color-bone);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  @media (hover: hover) {
+    .ccg-btn-ghost:hover {
+      border-color: color-mix(in srgb, var(--color-bone) 40%, transparent);
+    }
+  }
+
+  .ccg-btn-accent-ghost {
+    border: 1px solid var(--color-strong-border);
+    color: var(--color-accent);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* Flat, not gradient. One value per elevation step. */
   .ccg-surface {
     background: var(--color-graphite);
-    border: 1px solid var(--color-subtle-border);
+    border: 1px solid var(--color-line);
   }
+
+  /* The clipped corner from the reference's cards.
+     Drawn as two clipped layers rather than a border, because a border does
+     not follow a clip-path — the outer layer is the edge colour, the inner is
+     inset by 1px and carries the fill, so the 1px line traces the notch. */
+  .ccg-notch {
+    background: var(--color-line);
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  }
+  .ccg-notch > * {
+    background: var(--color-graphite);
+    clip-path: polygon(0 0, calc(100% - 17px) 0, 100% 17px, 100% 100%, 0 100%);
+    margin: 1px;
+  }
+  @media (hover: hover) {
+    .ccg-notch:hover > * {
+      background: var(--color-graphite-raised);
+    }
+  }
+
+  /* A hairline rule led by the accent, as the sheet uses under section
+     titles. */
+  .ccg-rule {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent) 0 34px,
+      var(--color-line) 34px 100%
+    );
+  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

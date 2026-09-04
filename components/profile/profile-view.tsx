@@ -70,7 +70,7 @@ export function ProfileView({ session }: { session: SessionState }) {
             <p className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
               Player name
             </p>
-            <p className="mt-1 font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+            <p className="mt-1 font-display text-2xl font-extrabold tracking-[var(--tracking-display)] uppercase">
               {state.username}
             </p>
             <p className="mt-1 text-xs text-[var(--color-muted)]">
@@ -128,7 +128,7 @@ export function ProfileView({ session }: { session: SessionState }) {
         </p>
         <Link
           href="/games"
-          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-ghost"
         >
           Find a game
         </Link>
@@ -148,7 +148,7 @@ export function ProfileView({ session }: { session: SessionState }) {
         </p>
         <Link
           href="/settings"
-          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-ghost"
         >
           Privacy and data settings
         </Link>

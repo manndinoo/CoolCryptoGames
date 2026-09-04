@@ -83,7 +83,7 @@ export function EntryPanel({ tournament }: { tournament: Tournament }) {
           <button
             onClick={() => (signedIn ? submit() : setShowWallet(true))}
             disabled={!accepted || entry.status === 'submitting'}
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] w-full items-center justify-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
+            className="mt-[var(--spacing-5)] ccg-btn ccg-btn-primary90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
           >
             {entry.status === 'submitting'
               ? 'Entering…'

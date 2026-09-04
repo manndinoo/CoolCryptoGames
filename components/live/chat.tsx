@@ -148,7 +148,7 @@ export function Chat({ channelSlug, enabled }: { channelSlug: string; enabled: b
                 <button
                   type="submit"
                   disabled={sending || draft.trim().length === 0}
-                  className="min-h-[var(--tap-target)] shrink-0 rounded-[var(--radius-pill)] bg-accent-solid px-5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
+                  className="min-h-[var(--tap-target)] shrink-0 rounded-[var(--radius-pill)] bg-accent px-5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   Send
                 </button>

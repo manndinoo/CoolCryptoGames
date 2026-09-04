@@ -7,33 +7,36 @@
     "productLine": "Browse freely. Watch freely. Connect to play. Never pay to play."
   },
   "color": {
-    "carbon": "#0B0C0F",
-    "graphite": "#14161B",
-    "graphiteRaised": "#1C1F26",
-    "bone": "#E8EAED",
+    "carbon": "#08090B",
+    "graphite": "#121416",
+    "graphiteRaised": "#1A1D21",
+    "bone": "#F1ECE4",
+    "cream": "#F1ECE4",
+    "ink": "#0D0D0F",
     "white": "#FFFFFF",
-    "accent": "#4C7DFF",
-    "accentSolid": "#3563E9",
-    "orange": "#E8A33D",
+    "accent": "#FE3F0E",
     "success": "#3ECF8E",
     "danger": "#FF4D5E",
+    "orange": "#E8A33D",
     "mutedText": "#8A9099",
-    "subtleBorder": "rgba(255,255,255,0.08)",
-    "strongBorder": "rgba(76,125,255,0.55)"
+    "line": "rgba(241,236,228,0.12)",
+    "subtleBorder": "rgba(241,236,228,0.12)",
+    "strongBorder": "rgba(254,63,14,0.65)"
   },
   "typography": {
-    "display": "Use a licensed or open geometric grotesk selected during implementation",
+    "display": "Archivo (SIL OFL), 600-900. Chosen for the wordmark's register.",
     "body": "Use a highly legible open sans-serif",
     "displayWeight": 800,
     "bodyWeight": 450,
-    "letterSpacingDisplay": "-0.02em",
-    "letterSpacingLabel": "0.08em"
+    "letterSpacingDisplay": "-0.01em",
+    "letterSpacingLabel": "0.14em",
+    "caseRule": "Display headings uppercase and heavy; labels 10-11px uppercase with wide tracking; body sentence case. Hierarchy comes from size and weight, not from case."
   },
   "radius": {
-    "small": "10px",
-    "medium": "14px",
-    "large": "18px",
-    "pill": "999px"
+    "small": "2px",
+    "medium": "2px",
+    "large": "3px",
+    "pill": "2px"
   },
   "space": {
     "1": "4px",
@@ -66,5 +69,17 @@
     "crypto": "Platform surfaces: no charts, coins, rockets, moons, or market imagery, and never live market data. Game content is exempt \u2014 a game may depict charts, candlesticks or bonding curves as subject matter.",
     "contentTruth": "Never display generated-image statistics as real product data"
   },
-  "colorNotes": "Revised from the founding kit's acid/cobalt pair on the owner's direction. accent is the readable-on-dark value for text, icons and the active marker; accentSolid is darker so white button text clears 4.5:1. success is verified results only, danger is live and destructive only, orange is alerts only. Chrome is neutral so that game art is the most saturated thing on any screen."
+  "colorNotes": "Sampled from the supplied brand sheet and app reference, replacing the founding acid/cobalt pair. accent is the mark's own square: 5.4:1 on the ground, so it is safe as text and as an icon. White on an accent fill is 3.5:1, which meets AA for large text only, so .ccg-btn-primary sets its label at 19px/900; smaller controls use the accent as text rather than as a fill. Chrome is neutral so a game's cover is the most saturated thing on any screen.",
+  "radiusNotes": "Square. The sheet has no rounded control on it; 'pill' is kept as a name so existing class names resolve to a rectangle in one place.",
+  "assets": {
+    "source": "Supplied brand sheet and lockup export.",
+    "files": [
+      "public/brand/symbol-light.png",
+      "public/brand/symbol-dark.png",
+      "public/brand/lockup-light.png",
+      "public/brand/lockup-dark.png",
+      "public/brand/stacked-light.png"
+    ],
+    "note": "Keyed to transparency from the sheet's one-colour panels and issued in both inks with the accent square kept. Nothing is redrawn."
+  }
 }

@@ -65,7 +65,7 @@ export function Header() {
               page; showing it twice would spend the reserved colour twice. */}
           <Link
             href="/games"
-            className="hidden rounded-[var(--radius-pill)] bg-accent-solid px-5 py-2.5 text-sm font-semibold text-white transition-transform duration-[var(--duration-fast)] hover:scale-[1.03] active:scale-[0.98] sm:inline-flex lg:hidden"
+            className="ccg-btn ccg-btn-primary hidden sm:inline-flex lg:hidden"
           >
             Play now
           </Link>

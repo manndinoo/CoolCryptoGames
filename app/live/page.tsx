@@ -17,7 +17,7 @@ export default function LivePage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+        <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
           Live
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -42,7 +42,7 @@ export default function LivePage() {
 
       <section className="mt-[var(--spacing-6)]">
         <div className="mb-[var(--spacing-4)] flex items-center gap-3">
-          <h2 className="font-display text-lg font-semibold tracking-[var(--tracking-display)]">
+          <h2 className="font-display text-lg font-extrabold tracking-[var(--tracking-display)] uppercase">
             Channels
           </h2>
           <StatusPill>{demoChannels.length}</StatusPill>
@@ -86,7 +86,7 @@ export default function LivePage() {
         </p>
         <Link
           href="/live/go-live"
-          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-ghost"
         >
           Broadcaster setup
         </Link>

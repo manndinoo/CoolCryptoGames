@@ -34,7 +34,7 @@ export default async function LeaderboardsPage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+        <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
           Leaderboards
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -87,7 +87,7 @@ export default async function LeaderboardsPage() {
                         {game.scoreDirection === 'lower' ? 'Lowest wins' : 'Highest wins'}
                       </StatusPill>
                     </div>
-                    <h2 className="font-display text-xl font-bold tracking-[var(--tracking-display)]">
+                    <h2 className="font-display text-xl font-extrabold tracking-[var(--tracking-display)] uppercase">
                       {game.title}
                     </h2>
                   </div>
@@ -103,7 +103,7 @@ export default async function LeaderboardsPage() {
 
                 <Link
                   href={`/leaderboards/${game.slug}`}
-                  className="mt-[var(--spacing-4)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+                  className="mt-[var(--spacing-4)] ccg-btn ccg-btn-ghost"
                 >
                   Full board
                 </Link>

@@ -14,7 +14,7 @@ export default function TournamentsPage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+        <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
           Tournaments
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -33,7 +33,7 @@ export default function TournamentsPage() {
 
       {demoTournaments.length === 0 ? (
         <section className="ccg-surface mt-[var(--spacing-6)] max-w-xl rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-          <h2 className="font-display text-xl font-bold tracking-[var(--tracking-display)]">
+          <h2 className="font-display text-xl font-extrabold tracking-[var(--tracking-display)] uppercase">
             No event scheduled
           </h2>
           <p className="mt-3 text-sm text-[var(--color-muted)]">
@@ -48,7 +48,7 @@ export default function TournamentsPage() {
           </p>
           <Link
             href="/games"
-            className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-6 text-sm font-semibold transition-colors hover:border-bone/40"
+            className="mt-[var(--spacing-5)] ccg-btn ccg-btn-ghost"
           >
             Play something in the meantime
           </Link>
@@ -68,7 +68,7 @@ export default function TournamentsPage() {
                   {t.demo && <DemoBadge label="Demo event" />}
                 </div>
 
-                <h2 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+                <h2 className="font-display text-2xl font-extrabold tracking-[var(--tracking-display)] uppercase">
                   {t.name}
                 </h2>
                 <p className="mt-1 text-sm text-[var(--color-muted)]">{t.format}</p>

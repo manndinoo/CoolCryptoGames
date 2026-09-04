@@ -17,7 +17,7 @@ export default function DevelopersPage() {
   return (
     <>
       <header className="pt-[var(--spacing-7)]">
-        <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+        <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
           Developers
         </h1>
         <p className="mt-3 max-w-xl text-[var(--color-muted)]">
@@ -48,7 +48,7 @@ export default function DevelopersPage() {
                   {dev.demo && <DemoBadge label="Demo studio" />}
                 </div>
 
-                <h2 className="font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+                <h2 className="font-display text-2xl font-extrabold tracking-[var(--tracking-display)] uppercase">
                   {dev.name}
                 </h2>
                 <p className="mt-2 text-sm text-[var(--color-muted)]">{dev.bio}</p>

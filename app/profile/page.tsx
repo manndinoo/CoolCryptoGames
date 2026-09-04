@@ -25,7 +25,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="pt-[var(--spacing-7)]">
-      <h1 className="font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+      <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
         Profile
       </h1>
       <ProfileView session={session} />

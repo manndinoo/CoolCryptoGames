@@ -83,7 +83,7 @@ export function UsernameSetup({ onDone }: { onDone: (username: string) => void }
 
   return (
     <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-6)]">
-      <h3 className="font-display text-xl font-bold tracking-[var(--tracking-display)]">
+      <h3 className="font-display text-xl font-extrabold tracking-[var(--tracking-display)] uppercase">
         Choose your player name
       </h3>
 
@@ -136,7 +136,7 @@ export function UsernameSetup({ onDone }: { onDone: (username: string) => void }
         <button
           type="submit"
           disabled={submitting || availability.state !== 'free'}
-          className="mt-[var(--spacing-4)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-7 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
+          className="mt-[var(--spacing-4)] ccg-btn ccg-btn-primary90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
         >
           {submitting ? 'Saving…' : 'Claim name'}
         </button>

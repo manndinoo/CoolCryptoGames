@@ -17,7 +17,7 @@ export default function GoLivePage() {
         ← Live
       </Link>
 
-      <h1 className="mt-[var(--spacing-5)] font-display text-4xl font-bold tracking-[var(--tracking-display)]">
+      <h1 className="mt-[var(--spacing-5)] font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
         Broadcaster setup
       </h1>
       <p className="mt-3 max-w-xl text-[var(--color-muted)]">

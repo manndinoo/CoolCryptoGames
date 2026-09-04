@@ -1,60 +1,79 @@
 import type { Metadata } from 'next'
-import { CcgCascade, CcgTile, CcgTriTile, CcgWordmark } from '@/components/brand/logo'
+import { CcgMonogram, CcgStacked, CcgWordmark } from '@/components/brand/logo'
 
 export const metadata: Metadata = { title: 'Brand', robots: { index: false } }
 
-const VARIANTS = [
-  { key: 'A', name: 'Cascade', Mark: CcgCascade, note: 'Overlapping letterforms, knockout gaps' },
-  { key: 'B', name: 'Tri-tile', Mark: CcgTriTile, note: 'Three connected tiles, letters drop below 28px' },
-  { key: 'C', name: 'Tile', Mark: CcgTile, note: 'Single notched tile, stacked letters' },
+const SWATCHES = [
+  { name: 'Accent', value: '#FE3F0E', note: 'The one accent. Primary action, live, active.' },
+  { name: 'Cream', value: '#F1ECE4', note: 'Text on dark, and the light surface.' },
+  { name: 'Ink', value: '#0D0D0F', note: 'Text on cream. The sheet’s black.' },
+  { name: 'Ground', value: '#08090B', note: 'The page.' },
+  { name: 'Surface', value: '#121416', note: 'Cards.' },
+  { name: 'Raised', value: '#1A1D21', note: 'Hover and active surfaces.' },
 ]
 
-/** Internal reference sheet for choosing the mark. Not indexed, not in the nav. */
 export default function BrandPage() {
   return (
-    <div className="py-[var(--spacing-7)]">
-      <h1 className="font-display text-3xl font-semibold tracking-[var(--tracking-display)]">Mark options</h1>
-      <p className="mt-2 text-sm text-[var(--color-muted)]">
-        Each row: large, small, favicon size, and one-colour. A mark only works if the
-        16px and one-colour cells still read.
+    <div className="pt-[var(--spacing-7)] pb-[var(--spacing-8)]">
+      <h1 className="font-display text-4xl font-black tracking-[var(--tracking-display)] uppercase">
+        Brand
+      </h1>
+      <p className="mt-3 max-w-xl text-[var(--color-muted)]">
+        The supplied artwork, as it ships. The lockups are the identity’s own files
+        keyed to transparency — nothing here is redrawn.
       </p>
 
-      <div className="mt-[var(--spacing-6)] grid gap-[var(--spacing-4)]">
-        {VARIANTS.map(({ key, name, Mark, note }) => (
-          <section key={key} className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-5)]">
-            <div className="mb-5 flex items-baseline gap-3">
-              <h2 className="font-display text-xl font-bold">{key} — {name}</h2>
-              <span className="text-xs text-[var(--color-muted)]">{note}</span>
-            </div>
+      <Section title="Lockups">
+        <div className="ccg-surface flex flex-wrap items-center gap-[var(--spacing-7)] p-[var(--spacing-6)]">
+          <CcgWordmark size={44} />
+          <CcgMonogram size={52} />
+          <CcgStacked size={92} />
+        </div>
+        <div className="mt-px flex flex-wrap items-center gap-[var(--spacing-7)] bg-[var(--color-cream)] p-[var(--spacing-6)]">
+          <CcgWordmark size={44} ink="dark" />
+          <CcgMonogram size={52} ink="dark" />
+        </div>
+      </Section>
 
-            <div className="flex flex-wrap items-end gap-10">
-              <Cell label="96px"><Mark size={96} /></Cell>
-              <Cell label="40px"><Mark size={40} /></Cell>
-              <Cell label="16px"><Mark size={16} /></Cell>
-              <Cell label="one colour">
-                <span className="text-bone"><Mark size={56} monochrome /></span>
-              </Cell>
-              <Cell label="on accent">
-                <span className="grid size-[72px] place-items-center rounded-[var(--radius-medium)] bg-accent-solid text-white">
-                  <Mark size={44} monochrome />
-                </span>
-              </Cell>
-              <Cell label="lockup"><CcgWordmark size={40} Mark={Mark} /></Cell>
+      <Section title="At size">
+        <div className="ccg-surface flex flex-wrap items-end gap-[var(--spacing-6)] p-[var(--spacing-6)]">
+          {[16, 24, 32, 48, 64].map((s) => (
+            <span key={s} className="text-center">
+              <CcgMonogram size={s} />
+              <span className="mt-3 block text-[10px] tracking-[var(--tracking-label)] text-[var(--color-muted)]">
+                {s}px
+              </span>
+            </span>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Colour">
+        <div className="grid gap-px bg-[var(--color-line)] sm:grid-cols-2 lg:grid-cols-3">
+          {SWATCHES.map((s) => (
+            <div key={s.name} className="bg-[var(--color-graphite)] p-[var(--spacing-5)]">
+              <span
+                className="block h-16 w-full border border-white/10"
+                style={{ background: s.value }}
+              />
+              <p className="mt-3 font-display text-sm font-bold uppercase">{s.name}</p>
+              <p className="font-mono text-xs text-[var(--color-muted)]">{s.value}</p>
+              <p className="mt-1.5 text-xs text-[var(--color-muted)]">{s.note}</p>
             </div>
-          </section>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Section>
     </div>
   )
 }
 
-function Cell({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex min-h-[96px] items-center">{children}</div>
-      <span className="text-[10px] tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
-        {label}
-      </span>
-    </div>
+    <section className="mt-[var(--spacing-7)]">
+      <h2 className="mb-[var(--spacing-4)] text-[11px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
+        {title}
+      </h2>
+      {children}
+    </section>
   )
 }

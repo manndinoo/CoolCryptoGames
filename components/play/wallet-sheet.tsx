@@ -40,7 +40,7 @@ export function WalletSheet({
         </p>
         <button
           onClick={onSignIn}
-          className="mt-[var(--spacing-5)] inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-primary90"
         >
           Try again
         </button>
@@ -65,7 +65,7 @@ export function WalletSheet({
 
   return (
     <div className="ccg-surface rounded-[var(--radius-large)] p-[var(--spacing-6)]">
-      <h3 className="font-display text-xl font-bold tracking-[var(--tracking-display)]">
+      <h3 className="font-display text-xl font-extrabold tracking-[var(--tracking-display)] uppercase">
         Connect a wallet to play
       </h3>
 
@@ -94,7 +94,7 @@ export function WalletSheet({
           <button
             onClick={onSignIn}
             disabled={state.status === "signing-in"}
-            className="inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] bg-accent-solid px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="ccg-btn ccg-btn-primary90 disabled:opacity-50"
           >
             {state.status === "signing-in"
               ? "Check your wallet…"

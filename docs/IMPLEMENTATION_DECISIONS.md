@@ -780,3 +780,71 @@ place they are exercised. It skips when `DATABASE_URL` is unset.
 
 `scripts/smoke-auth.mjs` had its base URL hardcoded to port 3000, so it could
 only ever run against a default dev server. It reads `CCG_BASE_URL` now.
+
+## 23. The supplied identity
+
+A brand sheet, an app reference and a lockup export replaced the invented
+identity. The founding kit's acid/cobalt palette and the drawn CCG letterforms
+are both gone.
+
+### The mark is the artwork, not a rebuild
+
+First attempt was wrong: I traced the symbol's geometry and rebuilt it as SVG
+paths. That is the wrong instinct for a supplied identity — a redraw is a
+near-copy that drifts from the brand the moment anything changes, and there is
+no reason to approximate a file that already exists.
+
+`public/brand/*.png` are the sheet's own one-colour panels, keyed to
+transparency and issued in both inks with the accent square preserved.
+`components/brand/logo.tsx` renders those files and does no drawing at all.
+`components/brand/letterforms.tsx` and the three drawn marks are deleted.
+
+The keying is worth recording because the first pass produced noise. Alpha has
+to come from the SOURCE artwork — how far each pixel travelled from the sheet's
+cream toward the sheet's black — not from the target ink. Using the target in
+the denominator made the cream version a solid block, because cream against
+cream is a zero-length interval. A small alpha floor discards the sheet's paper
+grain, which would otherwise survive as speckle across every flat area.
+
+The supplied transparent lockup could not be used directly: it is flattened
+onto white, and its wordmark is cream on that white, so it carries no usable
+alpha. The sheet's panels are cleaner sources.
+
+### Colour
+
+Sampled rather than eyeballed: accent `#FE3F0E`, cream `#F1ECE4`, ink
+`#0D0D0F`, and the app reference's ground `#08090B` with `#121416` cards.
+
+One contrast decision falls out of the brand. White on the accent is 3.5:1,
+which meets AA for large text only, and "large" for bold begins at 18.66px. The
+primary button therefore sets its label at 19px/900 — which is also what the
+reference does, its PLAY being visibly larger than its secondary button. Every
+smaller control uses the accent as text on the ground, where it is 5.4:1.
+
+### Shape and type
+
+Square. The sheet has no rounded control on it, so every radius token drops to
+2-3px; `--radius-pill` is kept as a name so the pill class names already spread
+across the codebase resolve to a rectangle in one edit rather than forty.
+
+Cards carry the reference's clipped corner. A border does not follow a
+`clip-path`, so `.ccg-notch` is two clipped layers — the outer is the edge
+colour, the inner is inset by 1px and carries the fill — and the 1px line
+traces the notch.
+
+Display type is uppercase and heavy again, which reverses decision 19. That
+decision was right about the problem and wrong about the cause: the old build
+was unreadable because *everything* was uppercase at one weight, not because
+uppercase is wrong. The sheet gets its hierarchy from size and weight contrast
+— a 4xl/900 heading against a 10px tracked label — so case is free to carry the
+brand. Body copy stays sentence case. Space Grotesk gave way to Archivo, which
+has the wordmark's width and reaches 900.
+
+### What was not copied
+
+The reference mockup carries figures: 8.4K playing, a $5,000 prize pool, 312
+players, 14.2K followers, per-game player counts. Those are placeholders in
+exactly the sense the games were, and the Product Bible forbids fabricated
+counts and unapproved prizes. The layout is the reference's; the fact strip
+under the hero carries what is actually true instead — entry always free,
+wallet is identity only, the real catalogue size, no purchases anywhere.
