@@ -131,3 +131,47 @@ Live market data and investment language attract financial promotion regulation
 in several jurisdictions, which is a large part of why the line is drawn at the
 platform edge rather than at the game. That remains for counsel to review — the
 Bible's standing instruction that legal must review before launch applies here.
+
+## 9. Chat is open, not anonymous
+
+Chat is open to anyone: no approved-participant list, no invitation. Posting
+requires a wallet session; reading requires nothing at all.
+
+**Why this is not the excluded thing.** The Bible's escalation trigger for
+streaming is "open broadcasting or **anonymous** chat", and the founding
+moderation level reads "pre-approved accounts; monitored chat". Those two words
+get used interchangeably and they are not the same:
+
+- *Anonymous* chat has no identity behind a message, so there is nothing to
+  mute, time out, or ban. That is the thing excluded, and it is not built.
+- *Open* chat lets anyone participate, under an identity. Every message here is
+  bound to a wallet, so moderation has a subject.
+
+I read "pre-approved accounts" as applying to the accounts that **broadcast**,
+which the same table pairs with "monitored chat" for everyone else. If it was
+meant to gate chat participation to an approved list too, this is the wrong
+call and the fix is one flag on `chat_channels`. Say so and I will change it.
+
+**Consequences taken deliberately.**
+
+- Requiring a wallet to post is a friction cost on the most casual form of
+  participation, and it will lose some chatters. The alternative is unattributed
+  messages, which cannot be moderated at all.
+- It is consistent with how the platform already treats play: browse freely,
+  connect to play — now also connect to chat. Watching and reading stay free.
+
+**The honest weakness.** A wallet costs nothing to create, so a chat ban is
+evaded by minting a new one, exactly as described in `SECURITY.md` for play.
+Rate limits and slow mode raise the cost of flooding, and the device and network
+clustering already in `identity_links` is what makes a ban apply to a person
+rather than to one keypair. None of that makes a determined abuser go away — it
+makes them work, and it makes the ring visible.
+
+**Chat sanctions are separate from platform bans.** Muting someone in chat is a
+much smaller act than barring them from competing, and conflating the two makes
+the smaller one too expensive to use. `chat_sanctions` is its own table, and a
+timeout with an expiry is the expected shape rather than a permanent ban.
+
+Removed messages are soft-deleted. A moderation decision needs an auditable
+subject; hard-deleting the message erases the evidence for the action taken
+against it.

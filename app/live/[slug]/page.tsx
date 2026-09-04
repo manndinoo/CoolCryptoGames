@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DemoBadge, StatusPill } from '@/components/ui/badges'
 import { Theater } from '@/components/live/theater'
+import { Chat } from '@/components/live/chat'
 import { demoChannels, getDemoChannel, getDemoGame } from '@/lib/content/demo'
 import { features } from '@/lib/flags'
 import { allowedHosts } from '@/lib/streams/embed'
@@ -78,23 +79,7 @@ export default async function ChannelPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Chat is monitored, per the founding moderation level. It is a shell
-            here because there is no live channel to carry messages. */}
-        <aside className="ccg-surface flex h-[420px] flex-col rounded-[var(--radius-large)] p-[var(--spacing-4)] lg:h-[560px]">
-          <div className="mb-3 flex items-center gap-2">
-            <h2 className="font-display text-xs font-bold tracking-[var(--tracking-label)] uppercase">
-              Chat
-            </h2>
-            <StatusPill>Monitored</StatusPill>
-          </div>
-
-          <div className="flex flex-1 items-center justify-center rounded-[var(--radius-medium)] border border-dashed border-[var(--color-subtle-border)] px-4 text-center">
-            <p className="text-xs text-[var(--color-muted)]">
-              Chat opens when the channel goes live. Messages are attributed to an
-              account — anonymous chat is not offered.
-            </p>
-          </div>
-        </aside>
+        <Chat channelSlug={channel.slug} enabled />
       </div>
     </article>
   )
