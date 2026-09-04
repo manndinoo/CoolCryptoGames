@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import { games } from '@/lib/games'
-import { site } from '@/site.config'
+import Link from "next/link";
+import { games } from "@/lib/games";
+import { site } from "@/site.config";
 
 export default function Home() {
   return (
@@ -33,7 +33,7 @@ export default function Home() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="font-semibold">{game.title}</h3>
-                  {game.status === 'coming-soon' && (
+                  {game.status === "coming-soon" && (
                     <span className="shrink-0 rounded-full border border-white/15 px-2 py-0.5 text-xs text-white/50">
                       Coming soon
                     </span>
@@ -46,5 +46,5 @@ export default function Home() {
         </ul>
       </section>
     </>
-  )
+  );
 }

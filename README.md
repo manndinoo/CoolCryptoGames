@@ -9,7 +9,10 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-Other scripts: `npm run build`, `npm start`, `npm run typecheck`.
+Other scripts: `npm run build`, `npm start`, `npm run typecheck`, `npm test`.
+
+Copy `.env.example` to `.env.local` and fill it in — the wallet gate and the
+scoring routes need a database and three secrets to run.
 
 ## Set your site identity
 
@@ -84,6 +87,14 @@ and `ns2.vercel-dns.com`. Vercel then manages the whole zone. Simpler for a site
 domain, but it moves *all* DNS for the domain to Vercel — including any email records,
 so avoid it if you plan to run mail on this domain.
 
+## Security
+
+Games are wallet-gated, and scores are computed by the server from a replay of
+the player's inputs rather than reported by the client. Read
+[SECURITY.md](./SECURITY.md) before changing anything under `lib/anticheat/`,
+`lib/auth/` or `lib/security/` — it documents what each layer is actually worth
+and, more importantly, what it is not.
+
 ## Adding a game
 
 1. Drop the playable build into `public/games/<slug>/` so its entry point is
@@ -106,6 +117,26 @@ so avoid it if you plan to run mail on this domain.
 Games are embedded in an `<iframe>`, so anything that runs in a browser works —
 a plain HTML/canvas build, a Unity or Godot web export, a Phaser bundle.
 
+### Ranked games need a server-side simulation
+
+A game with a leaderboard must also register deterministic rules the server can
+replay:
+
+```ts
+registerGame({
+  slug: 'my-game',
+  maxDurationMs: 120_000,
+  maxScore: 10_000,
+  maxInputsPerSecond: 12,
+  simulate(seed, inputs) { /* same logic the browser build runs */ },
+})
+```
+
+Keep that logic in one module both the browser build and the server import, so
+the two cannot drift apart. A game with no registered rules still runs — it just
+cannot have a score this server is able to vouch for, and `/api/play/start`
+refuses to open a ranked session for it.
+
 ## Layout
 
 ```
@@ -114,7 +145,14 @@ app/
   page.tsx                home page + games listing
   games/[slug]/page.tsx   individual game page
   globals.css             Tailwind import + theme tokens
+app/api/auth/*            wallet challenge, verify, session
+app/api/play/*            ranked session start, heartbeat, score submit
+components/               wallet gate and auth hook
+lib/anticheat/            deterministic replay + submission validation
+lib/auth/                 Sign-In With Solana, session tokens
+lib/security/             device fingerprint, IP handling, bans, sybil gate
 lib/games.ts              the games catalogue
+db/001_init.sql           schema
 site.config.ts            site name, domain, tagline
 public/games/             playable game builds
 ```
