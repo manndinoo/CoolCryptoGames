@@ -32,6 +32,7 @@ export function Chat({ channelSlug, enabled }: { channelSlug: string; enabled: b
   const listRef = useRef<HTMLDivElement | null>(null)
 
   const signedIn = state.status === 'signed-in'
+  const needsName = state.status === 'needs-username'
 
   const load = useCallback(async () => {
     try {
@@ -161,14 +162,15 @@ export function Chat({ channelSlug, enabled }: { channelSlug: string; enabled: b
           ) : (
             <div className="rounded-[var(--radius-medium)] border border-[var(--color-subtle-border)] p-3">
               <p className="text-xs text-[var(--color-muted)]">
-                Reading chat is open to everyone. Connect a wallet to post — messages are
-                attributed, so anonymous chat is not offered.
+                {needsName
+                  ? 'Choose a player name to post. Chat shows your name, never your wallet address.'
+                  : 'Reading chat is open to everyone. Connect a wallet to post — messages are attributed, so anonymous chat is not offered.'}
               </p>
               <Link
                 href="/profile"
                 className="mt-3 inline-flex min-h-[var(--tap-target)] items-center rounded-[var(--radius-pill)] border border-[var(--color-subtle-border)] px-5 text-xs font-semibold transition-colors hover:border-bone/40"
               >
-                Connect a wallet
+                {needsName ? 'Choose a name' : 'Connect a wallet'}
               </Link>
             </div>
           )}

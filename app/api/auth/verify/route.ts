@@ -67,20 +67,29 @@ export async function POST(request: Request) {
     )
   }
 
-  await sql`
+  const walletRows = (await sql`
     INSERT INTO wallets (address)
     VALUES (${wallet})
     ON CONFLICT (address) DO UPDATE SET last_seen = now()
-  `
+    RETURNING username
+  `) as Array<{ username: string | null }>
+  const username = walletRows[0]?.username ?? null
   await linkIdentity({ wallet, deviceId: identity.deviceId, ipHash: identity.ipHash })
 
   const token = await issueSession({
     wallet,
     deviceId: identity.deviceId ?? '',
     ipHash: identity.ipHash ?? '',
+    username,
   })
 
-  const response = NextResponse.json({ wallet })
+  // The address is returned only to the person who just proved they control
+  // it, so the client can show them which wallet they signed in with.
+  const response = NextResponse.json({
+    wallet,
+    username,
+    needsUsername: username === null,
+  })
   response.cookies.set(sessionCookie.name, token, sessionCookie.options)
   return response
 }

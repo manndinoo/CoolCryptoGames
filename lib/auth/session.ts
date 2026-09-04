@@ -8,6 +8,12 @@ export type SessionClaims = {
   deviceId: string
   /** Bound so a stolen cookie replayed from elsewhere is detectable. */
   ipHash: string
+  /**
+   * Public identity. Null until the player has chosen one — an account is
+   * authenticated before it is named, and no public surface may fall back to
+   * the address in the meantime.
+   */
+  username: string | null
 }
 
 function secret(): Uint8Array {
@@ -30,11 +36,16 @@ export async function readSession(token: string | undefined): Promise<SessionCla
   if (!token) return null
   try {
     const { payload } = await jwtVerify(token, secret())
-    const { wallet, deviceId, ipHash } = payload as Record<string, unknown>
+    const { wallet, deviceId, ipHash, username } = payload as Record<string, unknown>
     if (typeof wallet !== 'string' || typeof deviceId !== 'string' || typeof ipHash !== 'string') {
       return null
     }
-    return { wallet, deviceId, ipHash }
+    return {
+      wallet,
+      deviceId,
+      ipHash,
+      username: typeof username === 'string' ? username : null,
+    }
   } catch {
     return null
   }

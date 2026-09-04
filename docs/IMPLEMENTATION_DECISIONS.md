@@ -175,3 +175,51 @@ timeout with an expiry is the expected shape rather than a permanent ban.
 Removed messages are soft-deleted. A moderation decision needs an auditable
 subject; hard-deleting the message erases the evidence for the action taken
 against it.
+
+## 10. Wallet addresses are never public; usernames are the identity
+
+A wallet address is the credential, not the identity. Every public surface —
+leaderboards, standings, chat, profiles — shows a username. The address is shown
+back only to the person who controls it, behind a Show control on their own
+profile, and appears in no API response that anyone else can read.
+
+**Why this matters more than it looks.** A Solana address is a permanent public
+key into a public ledger. Publishing one on a leaderboard also publishes the
+balance behind it, every counterparty it has transacted with, and any other
+account it has touched — and address clustering makes tying that to a real
+person routine. Entering a tournament should not disclose someone's finances.
+The privacy note in `SECURITY.md` flagged this; this closes it.
+
+**Rules the implementation follows.**
+
+- Uniqueness is case-insensitive, via a unique index on `lower(username)`.
+  Without that, "Alice" and "alice" are two accounts that nobody can tell apart
+  on a leaderboard.
+- Names are ASCII letters, digits and single underscores, starting with a
+  letter. Restricting the alphabet removes homoglyph impersonation outright:
+  allowing the full Unicode letter range would let someone register a name using
+  Cyrillic "а" that renders identically to an existing player's.
+- The reserved list is checked twice — against the literal name and against an
+  `impersonationKey` that strips underscores and reverses digit substitutions.
+  A list checked literally is sidestepped by one character: `ccg_0fficial`.
+- `displayName(null)` returns "Unnamed player", never anything address-shaped.
+  An account is authenticated before it is named, and a fallback to the address
+  would leak exactly what this exists to prevent.
+
+**Concurrency.** The availability check the form runs is advisory. Between it
+and the write, another wallet can claim the same name, and the unique index is
+what actually decides — that surfaces as a constraint violation rather than an
+empty result, so the route catches SQLSTATE 23505 rather than inferring the
+outcome from a row count.
+
+**Not built: changing a name.** The claim route only sets a name where none
+exists. A username is a public identity other players learn to recognise, so
+free reassignment lets someone shed a reputation or take a name someone else
+just released. Renaming should be a separate, rate-limited, audited operation
+with the old name held in reserve for a period. It is not in this pass.
+
+**Still to do.** `identity_links`, `submission_rejections` and the chat and
+competition tables all key on the wallet address, which is correct — it is the
+stable internal identifier. The audit is that no *read path serving a public
+surface* selects it, which is currently true and worth a test once the database
+exists to test against.

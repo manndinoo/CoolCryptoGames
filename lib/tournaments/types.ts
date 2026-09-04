@@ -31,7 +31,8 @@ export type Tournament = {
 
 export type StandingEntry = {
   entryId: string
-  wallet: string
+  /** Public identity. Standings never carry a wallet address. */
+  displayName: string
   score: number
   /** Only 'VERIFIED' results are allowed to affect final standings. */
   verification: 'VERIFIED' | 'HELD_FOR_REVIEW' | 'REJECTED'

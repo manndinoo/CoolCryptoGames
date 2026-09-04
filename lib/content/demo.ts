@@ -164,7 +164,7 @@ export const demoStandings: Record<string, StandingEntry[]> = {
   'reflex-open-preview': [
     {
       entryId: 'demo-1',
-      wallet: 'DemoWa11et1111111111111111111111111111111111',
+      displayName: 'ReflexKing',
       score: 214,
       verification: 'VERIFIED',
       submittedAt: '2026-09-16T10:02:00.000Z',
@@ -172,7 +172,7 @@ export const demoStandings: Record<string, StandingEntry[]> = {
     },
     {
       entryId: 'demo-2',
-      wallet: 'DemoWa11et2222222222222222222222222222222222',
+      displayName: 'QuickDraw',
       score: 231,
       verification: 'VERIFIED',
       submittedAt: '2026-09-16T11:40:00.000Z',
@@ -180,7 +180,7 @@ export const demoStandings: Record<string, StandingEntry[]> = {
     },
     {
       entryId: 'demo-3',
-      wallet: 'DemoWa11et3333333333333333333333333333333333',
+      displayName: 'FastHands',
       score: 118,
       verification: 'HELD_FOR_REVIEW',
       submittedAt: '2026-09-16T12:15:00.000Z',

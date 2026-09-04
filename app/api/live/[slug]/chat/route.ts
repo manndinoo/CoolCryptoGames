@@ -2,11 +2,8 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { readSession, sessionCookie } from '@/lib/auth/session'
-import {
-  chatHandle,
-  checkChatPermission,
-  RATE_WINDOW_MS,
-} from '@/lib/chat/rules'
+import { checkChatPermission, RATE_WINDOW_MS } from '@/lib/chat/rules'
+import { displayName } from '@/lib/identity/username'
 import { getDemoChannel } from '@/lib/content/demo'
 
 export const runtime = 'nodejs'
@@ -15,7 +12,7 @@ const PAGE_SIZE = 100
 
 type MessageRow = {
   id: string
-  wallet: string
+  username: string | null
   body: string
   created_at: string
 }
@@ -28,18 +25,21 @@ export async function GET(_request: Request, ctx: { params: Promise<{ slug: stri
   const { slug } = await ctx.params
   if (!getDemoChannel(slug)) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
+  // Joined to wallets for the display name. The address itself never leaves
+  // this query — a public feed must not carry it.
   const rows = (await db()`
-    SELECT id, wallet, body, created_at
-    FROM chat_messages
-    WHERE channel_slug = ${slug} AND removed_at IS NULL
-    ORDER BY created_at DESC
+    SELECT m.id, w.username, m.body, m.created_at
+    FROM chat_messages m
+    JOIN wallets w ON w.address = m.wallet
+    WHERE m.channel_slug = ${slug} AND m.removed_at IS NULL
+    ORDER BY m.created_at DESC
     LIMIT ${PAGE_SIZE}
   `) as MessageRow[]
 
   return NextResponse.json({
     messages: rows.reverse().map((r) => ({
       id: r.id,
-      handle: chatHandle(r.wallet),
+      handle: displayName(r.username),
       body: r.body,
       at: r.created_at,
     })),
@@ -125,7 +125,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ slug: stri
   return NextResponse.json({
     message: {
       id: inserted[0].id,
-      handle: chatHandle(claims!.wallet),
+      handle: displayName(claims!.username),
       body: decision.text,
       at: inserted[0].created_at,
     },

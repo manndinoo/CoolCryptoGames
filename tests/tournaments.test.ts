@@ -110,7 +110,7 @@ describe('checkEligibility', () => {
 function entry(over: Partial<StandingEntry>): StandingEntry {
   return {
     entryId: 'e1',
-    wallet: 'W1',
+    displayName: 'PlayerOne',
     score: 100,
     verification: 'VERIFIED',
     submittedAt: '2026-09-18T10:00:00.000Z',

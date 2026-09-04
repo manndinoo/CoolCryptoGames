@@ -9,7 +9,8 @@ export type AuthState =
   | { status: 'loading' }
   | { status: 'signed-out' }
   | { status: 'signing-in' }
-  | { status: 'signed-in'; wallet: string }
+  | { status: 'needs-username'; wallet: string }
+  | { status: 'signed-in'; wallet: string; username: string }
   | { status: 'blocked'; reason: string }
 
 /**
@@ -25,9 +26,9 @@ export function useWalletAuth() {
     let cancelled = false
     fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((data: { wallet: string | null }) => {
+      .then((data: { wallet: string | null; username: string | null }) => {
         if (cancelled) return
-        setState(data.wallet ? { status: 'signed-in', wallet: data.wallet } : { status: 'signed-out' })
+        setState(resolveSignedIn(data))
       })
       .catch(() => !cancelled && setState({ status: 'signed-out' }))
     return () => {
@@ -71,7 +72,7 @@ export function useWalletAuth() {
         return
       }
 
-      setState({ status: 'signed-in', wallet: verified.wallet })
+      setState(resolveSignedIn(verified))
     } catch {
       // Covers the common case of the player dismissing the wallet's signing
       // prompt, which is not an error worth surfacing as one.
@@ -85,5 +86,26 @@ export function useWalletAuth() {
     setState({ status: 'signed-out' })
   }, [disconnect])
 
-  return { state, signIn, signOut, connected: Boolean(publicKey) }
+  /** Called once a name has been claimed, so the UI advances without a reload. */
+  const setUsername = useCallback((username: string) => {
+    setState((prev) =>
+      prev.status === 'needs-username' || prev.status === 'signed-in'
+        ? { status: 'signed-in', wallet: prev.wallet, username }
+        : prev,
+    )
+  }, [])
+
+  return { state, signIn, signOut, setUsername, connected: Boolean(publicKey) }
+}
+
+/**
+ * An authenticated wallet with no name yet is a distinct state, not a signed-out
+ * one. Collapsing the two would either lock a new player out or leave public
+ * surfaces with nothing to render but an address.
+ */
+function resolveSignedIn(data: { wallet: string | null; username?: string | null }): AuthState {
+  if (!data.wallet) return { status: 'signed-out' }
+  return data.username
+    ? { status: 'signed-in', wallet: data.wallet, username: data.username }
+    : { status: 'needs-username', wallet: data.wallet }
 }

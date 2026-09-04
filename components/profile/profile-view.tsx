@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { useWalletAuth } from '@/components/play/use-wallet-auth'
+import { UsernameSetup } from '@/components/play/username-setup'
 import { WalletSheet } from '@/components/play/wallet-sheet'
 import { StatusPill } from '@/components/ui/badges'
 
@@ -14,10 +16,19 @@ import { StatusPill } from '@/components/ui/badges'
  * would still teach a player to read these numbers as theirs.
  */
 export function ProfileView() {
-  const { state, signIn, signOut, connected } = useWalletAuth()
+  const { state, signIn, signOut, setUsername, connected } = useWalletAuth()
+  const [addressShown, setAddressShown] = useState(false)
 
   if (state.status === 'loading') {
     return <p className="mt-6 text-sm text-[var(--color-muted)]">Loading…</p>
+  }
+
+  if (state.status === 'needs-username') {
+    return (
+      <div className="mt-[var(--spacing-6)]">
+        <UsernameSetup onDone={setUsername} />
+      </div>
+    )
   }
 
   if (state.status !== 'signed-in') {
@@ -38,9 +49,14 @@ export function ProfileView() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
-              Wallet
+              Player name
             </p>
-            <p className="mt-1 font-mono text-sm break-all">{state.wallet}</p>
+            <p className="mt-1 font-display text-2xl font-bold tracking-[var(--tracking-display)]">
+              {state.username}
+            </p>
+            <p className="mt-1 text-xs text-[var(--color-muted)]">
+              This is what other players see. Your wallet address is never shown publicly.
+            </p>
           </div>
           <button
             onClick={signOut}
@@ -49,10 +65,32 @@ export function ProfileView() {
             Sign out
           </button>
         </div>
-        <p className="mt-4 text-xs text-[var(--color-muted)]">
-          CCG holds no custody of this wallet and has no permission over its assets.
-          Signing in proved you control the key; nothing more was granted.
-        </p>
+
+        {/* The address is shown only here, only to the person who controls it,
+            and only on request. It is the credential behind the account, not
+            part of the account's public identity. */}
+        <div className="mt-[var(--spacing-5)] border-t border-[var(--color-subtle-border)] pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[10px] font-bold tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
+              Connected wallet
+            </p>
+            <button
+              onClick={() => setAddressShown((v) => !v)}
+              className="text-xs font-semibold text-[var(--color-muted)] transition-colors hover:text-bone"
+              aria-expanded={addressShown}
+            >
+              {addressShown ? 'Hide' : 'Show address'}
+            </button>
+          </div>
+          <p className="mt-2 font-mono text-sm break-all">
+            {addressShown ? state.wallet : '••••••••••••••••••••••••••••••••'}
+          </p>
+          <p className="mt-3 text-xs text-[var(--color-muted)]">
+            Only you can see this. CCG holds no custody of this wallet and has no
+            permission over its assets — signing in proved you control the key, nothing
+            more.
+          </p>
+        </div>
       </section>
 
       <div className="grid gap-[var(--spacing-4)] lg:grid-cols-3">

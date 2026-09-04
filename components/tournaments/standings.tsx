@@ -35,7 +35,7 @@ export function Standings({
             <thead>
               <tr className="text-left text-[10px] tracking-[var(--tracking-label)] text-[var(--color-muted)] uppercase">
                 <th scope="col" className="py-2 pr-4 font-semibold">#</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">Wallet</th>
+                <th scope="col" className="py-2 pr-4 font-semibold">Player</th>
                 <th scope="col" className="py-2 pr-4 text-right font-semibold">Score</th>
                 <th scope="col" className="py-2 text-right font-semibold">Verified</th>
               </tr>
@@ -44,9 +44,7 @@ export function Standings({
               {ranked.map((e, i) => (
                 <tr key={e.entryId} className="border-t border-[var(--color-subtle-border)]">
                   <td className="py-2.5 pr-4 font-display font-bold">{i + 1}</td>
-                  <td className="py-2.5 pr-4 font-mono text-xs">
-                    {e.wallet.slice(0, 4)}…{e.wallet.slice(-4)}
-                  </td>
+                  <td className="py-2.5 pr-4 font-medium">{e.displayName}</td>
                   <td className="py-2.5 pr-4 text-right font-medium">{e.score}</td>
                   <td className="py-2.5 text-right text-xs text-[var(--color-muted)]">
                     {e.verifiedAt ? new Date(e.verifiedAt).toISOString().slice(11, 16) : '—'}
@@ -71,9 +69,7 @@ export function Standings({
           <ul className="grid gap-2 text-sm text-[var(--color-muted)]">
             {held.map((e) => (
               <li key={e.entryId} className="flex justify-between gap-4">
-                <span className="font-mono text-xs">
-                  {e.wallet.slice(0, 4)}…{e.wallet.slice(-4)}
-                </span>
+                <span className="font-medium text-bone/80">{e.displayName}</span>
                 <span>Not placed until verified</span>
               </li>
             ))}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useWalletAuth } from './use-wallet-auth'
+import { UsernameSetup } from './username-setup'
 import { WalletSheet } from './wallet-sheet'
 
 type GameSummary = { slug: string; title: string; status: 'playable' | 'coming-soon' }
@@ -14,7 +15,7 @@ type GameSummary = { slug: string; title: string; status: 'playable' | 'coming-s
  * game page must never trigger a wallet prompt on its own.
  */
 export function PlayGate({ game }: { game: GameSummary }) {
-  const { state, signIn, connected } = useWalletAuth()
+  const { state, signIn, setUsername, connected } = useWalletAuth()
   const [requested, setRequested] = useState(false)
 
   if (game.status === 'coming-soon') {
@@ -30,6 +31,10 @@ export function PlayGate({ game }: { game: GameSummary }) {
         </div>
       </div>
     )
+  }
+
+  if (state.status === 'needs-username' && requested) {
+    return <UsernameSetup onDone={setUsername} />
   }
 
   if (state.status === 'signed-in' && requested) {
