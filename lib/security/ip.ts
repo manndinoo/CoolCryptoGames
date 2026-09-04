@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto'
+import { getSecret } from '@/lib/secrets'
 
 /**
  * IP handling for identity and bans.
@@ -173,20 +174,17 @@ export function stripPort(value: string): string {
   return value
 }
 
-function pepper(): string {
-  const p = process.env.IP_HASH_PEPPER
-  if (!p || p.length < 32) {
-    throw new Error(
-      'IP_HASH_PEPPER must be set to at least 32 characters. Rotating it invalidates every stored IP hash and therefore every IP ban.',
-    )
-  }
-  return p
+/**
+ * Async because the pepper may have to be read from storage the first time.
+ * Rotating it invalidates every stored IP hash and therefore every network
+ * sanction keyed on one.
+ */
+export async function hashIp(canonical: string): Promise<string> {
+  const pepper = await getSecret('IP_HASH_PEPPER')
+  return createHmac('sha256', pepper).update(`ip:${canonical}`).digest('hex')
 }
 
-export function hashIp(canonical: string): string {
-  return createHmac('sha256', pepper()).update(`ip:${canonical}`).digest('hex')
-}
-
-export function hashIpPrefix(prefix: string): string {
-  return createHmac('sha256', pepper()).update(`ipprefix:${prefix}`).digest('hex')
+export async function hashIpPrefix(prefix: string): Promise<string> {
+  const pepper = await getSecret('IP_HASH_PEPPER')
+  return createHmac('sha256', pepper).update(`ipprefix:${prefix}`).digest('hex')
 }

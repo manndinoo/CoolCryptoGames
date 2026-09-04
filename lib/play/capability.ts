@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
+import { getSecret } from '@/lib/secrets'
 
 /**
  * Play capabilities.
@@ -29,14 +30,11 @@ export type PlayCapability = {
 
 const DEFAULT_TTL_SECONDS = 900
 
-function secret(): Uint8Array {
-  const s = process.env.SESSION_SECRET
-  if (!s || s.length < 32) {
-    throw new Error('SESSION_SECRET must be set to at least 32 characters')
-  }
+async function secret(): Promise<Uint8Array> {
   // Domain-separated from the platform session key material, so a capability
   // can never be presented as a session or the reverse.
-  return new TextEncoder().encode(`${s}:play-capability`)
+  const base = await getSecret('SESSION_SECRET')
+  return new TextEncoder().encode(`${base}:play-capability`)
 }
 
 export function capabilityTtlSeconds(): number {
@@ -50,13 +48,13 @@ export async function issueCapability(capability: PlayCapability): Promise<strin
     .setIssuedAt()
     .setExpirationTime(`${capabilityTtlSeconds()}s`)
     .setAudience('ccg:play')
-    .sign(secret())
+    .sign(await secret())
 }
 
 export async function readCapability(token: string | undefined): Promise<PlayCapability | null> {
   if (!token) return null
   try {
-    const { payload } = await jwtVerify(token, secret(), { audience: 'ccg:play' })
+    const { payload } = await jwtVerify(token, await secret(), { audience: 'ccg:play' })
     const { capabilityId, matchId, playSessionId, gameSlug, buildHash, actions } =
       payload as Record<string, unknown>
 

@@ -47,23 +47,26 @@ describe('normalizeComponents', () => {
 })
 
 describe('hashFingerprint', () => {
-  it('is stable for the same components', () => {
-    expect(hashFingerprint(base)).toBe(hashFingerprint({ ...base }))
+  it('is stable for the same components', async () => {
+    expect(await hashFingerprint(base)).toBe(await hashFingerprint({ ...base }))
   })
 
-  it('changes when any component changes', () => {
-    expect(hashFingerprint({ ...base, canvas: 'different' })).not.toBe(hashFingerprint(base))
+  it('changes when any component changes', async () => {
+    expect(await hashFingerprint({ ...base, canvas: 'different' })).not.toBe(
+      await hashFingerprint(base),
+    )
   })
 
-  it('does not leak the raw components', () => {
-    expect(hashFingerprint(base)).not.toContain('macintel')
-    expect(hashFingerprint(base)).toMatch(/^[0-9a-f]{64}$/)
+  it('does not leak the raw components', async () => {
+    const hash = await hashFingerprint(base)
+    expect(hash).not.toContain('macintel')
+    expect(hash).toMatch(/^[0-9a-f]{64}$/)
   })
 
-  it('does not confuse two devices that differ only in field boundaries', () => {
+  it('does not confuse two devices that differ only in field boundaries', async () => {
     // Naive concatenation would hash "ab"+"c" and "a"+"bc" identically.
-    const a = hashFingerprint({ ...base, platform: 'ab', timezone: 'c' })
-    const b = hashFingerprint({ ...base, platform: 'a', timezone: 'bc' })
+    const a = await hashFingerprint({ ...base, platform: 'ab', timezone: 'c' })
+    const b = await hashFingerprint({ ...base, platform: 'a', timezone: 'bc' })
     expect(a).not.toBe(b)
   })
 })

@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
+import { getSecret } from '@/lib/secrets'
 
 const COOKIE_NAME = 'ccg_session'
 const MAX_AGE_SECONDS = 60 * 60 * 12
@@ -16,12 +17,8 @@ export type SessionClaims = {
   username: string | null
 }
 
-function secret(): Uint8Array {
-  const s = process.env.SESSION_SECRET
-  if (!s || s.length < 32) {
-    throw new Error('SESSION_SECRET must be set to at least 32 characters')
-  }
-  return new TextEncoder().encode(s)
+async function secret(): Promise<Uint8Array> {
+  return new TextEncoder().encode(await getSecret('SESSION_SECRET'))
 }
 
 export async function issueSession(claims: SessionClaims): Promise<string> {
@@ -29,13 +26,13 @@ export async function issueSession(claims: SessionClaims): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${MAX_AGE_SECONDS}s`)
-    .sign(secret())
+    .sign(await secret())
 }
 
 export async function readSession(token: string | undefined): Promise<SessionClaims | null> {
   if (!token) return null
   try {
-    const { payload } = await jwtVerify(token, secret())
+    const { payload } = await jwtVerify(token, await secret())
     const { wallet, deviceId, ipHash, username } = payload as Record<string, unknown>
     if (typeof wallet !== 'string' || typeof deviceId !== 'string' || typeof ipHash !== 'string') {
       return null

@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto'
+import { getSecret } from '@/lib/secrets'
 
 /**
  * Device fingerprinting.
@@ -59,24 +60,17 @@ export function normalizeComponents(raw: unknown): FingerprintComponents | null 
   return out
 }
 
-function pepper(): string {
-  const p = process.env.FINGERPRINT_PEPPER
-  if (!p || p.length < 32) {
-    throw new Error(
-      'FINGERPRINT_PEPPER must be set to at least 32 characters. Rotating it gives every existing device a new identity and drops every device ban.',
-    )
-  }
-  return p
-}
-
 /**
  * Order-independent, whitespace-independent hash of the components.
  * Peppered so a database leak cannot be replayed against a rainbow table of
  * common device configurations.
  */
-export function hashFingerprint(components: FingerprintComponents): string {
+export async function hashFingerprint(
+  components: FingerprintComponents,
+): Promise<string> {
+  const pepper = await getSecret('FINGERPRINT_PEPPER')
   const canonical = FIELDS.map((f) => `${f}=${components[f]}`).join('|')
-  return createHmac('sha256', pepper()).update(`fp:${canonical}`).digest('hex')
+  return createHmac('sha256', pepper).update(`fp:${canonical}`).digest('hex')
 }
 
 /**

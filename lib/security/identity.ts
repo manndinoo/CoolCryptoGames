@@ -28,7 +28,7 @@ export async function resolveIdentity(args: {
   let deviceId: string | null = null
   const components = normalizeComponents(args.fingerprint)
   if (components) {
-    const fp = hashFingerprint(components)
+    const fp = await hashFingerprint(components)
     const rows = (await sql`
       INSERT INTO devices (fingerprint_hash)
       VALUES (${fp})
@@ -46,8 +46,8 @@ export async function resolveIdentity(args: {
   const raw = clientIpFromHeaders(args.headers)
   const norm = raw ? normalizeIp(raw) : null
   if (norm) {
-    ipHash = hashIp(norm.canonical)
-    ipPrefixHash = hashIpPrefix(norm.prefix)
+    ipHash = await hashIp(norm.canonical)
+    ipPrefixHash = await hashIpPrefix(norm.prefix)
     ipDisplay = norm.display
     await sql`
       INSERT INTO ip_records (ip_hash, prefix_hash, ip_display)
