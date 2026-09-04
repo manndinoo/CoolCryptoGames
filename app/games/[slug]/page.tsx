@@ -157,15 +157,21 @@ export default async function GamePage({ params }: Props) {
             {game.screenshots.map((shot, i) => (
               <div
                 key={shot}
-                className="w-[52vw] max-w-[230px] shrink-0 overflow-hidden rounded-[var(--radius-medium)] border border-[var(--color-subtle-border)]"
+                // A fixed frame, with the image cropped to fill it. Letting each
+                // shot set its own height made 500px-tall tiles out of portrait
+                // captures, and the rail overflowed whatever was below it.
+                className="relative aspect-[3/4] w-[52vw] max-w-[230px] shrink-0 overflow-hidden rounded-[var(--radius-medium)] border border-[var(--color-subtle-border)] bg-carbon"
               >
                 <Image
                   src={shot}
                   alt={`${game.title} screenshot ${i + 1}`}
-                  width={540}
-                  height={1170}
+                  fill
                   sizes="(max-width: 640px) 52vw, 230px"
-                  className="h-auto w-full"
+                  // Centre crop. Anchoring to the top seemed right — phone
+                  // screenshots put the HUD up there — but it framed the empty
+                  // sky above a completion screen and cut the BONDED banner in
+                  // half. These games keep their subject mid-frame.
+                  className="object-cover object-center"
                 />
               </div>
             ))}
