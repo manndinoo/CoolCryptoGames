@@ -32,6 +32,12 @@ export type DemoGame = {
   demo: boolean
   /** Two token colours, used to render a placeholder tile — not real key art. */
   art: [string, string]
+  /**
+   * Path to a cover image. These are real screenshots captured from the game
+   * itself, not illustrations of one — a card should show what a player is
+   * actually about to open. Null for entries with nothing to screenshot.
+   */
+  cover: string | null
 }
 
 export type DemoDeveloper = {
@@ -59,6 +65,7 @@ export const demoGames: DemoGame[] = [
     updatedAt: '2026-09-04',
     demo: false,
     art: ['#1857FF', '#DFFF00'],
+    cover: '/games/road-to-bonded/cover.jpg',
   },
   {
     slug: 'reflex-lab',
@@ -73,6 +80,7 @@ export const demoGames: DemoGame[] = [
     updatedAt: '2026-09-04',
     demo: false, // Real, shipped by the platform — it just is not a flagship game.
     art: ['#1857FF', '#DFFF00'],
+    cover: '/games/reflex-lab/cover.jpg',
   },
   {
     slug: 'sample-runner',
@@ -87,6 +95,7 @@ export const demoGames: DemoGame[] = [
     updatedAt: '2026-09-01',
     demo: true,
     art: ['#15191F', '#1857FF'],
+    cover: null,
   },
   {
     slug: 'sample-puzzle',
@@ -101,6 +110,7 @@ export const demoGames: DemoGame[] = [
     updatedAt: '2026-08-28',
     demo: true,
     art: ['#1D232B', '#76E65C'],
+    cover: null,
   },
   {
     slug: 'sample-tactics',
@@ -114,6 +124,7 @@ export const demoGames: DemoGame[] = [
     updatedAt: '2026-08-22',
     demo: true,
     art: ['#15191F', '#FF5A19'],
+    cover: null,
   },
 ]
 

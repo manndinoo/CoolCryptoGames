@@ -281,3 +281,29 @@ leaderboard needs the server to replay a submitted run through the same engine,
 and that means porting `js/engine.js` to a module the server imports. Until that
 exists the server cannot vouch for a score, and `/api/play/start` refuses to
 open a ranked session for a game with no registered rules.
+
+## 14. Game cards use real screenshots
+
+Cards now show a cover image captured from the running game rather than a
+gradient. The covers are produced by driving the actual game in a headless
+browser and clipping the frame — Road to Bonded mid-level with the board and
+BONDED meter, Reflex Lab three rounds into a run with its pips and reaction
+times visible.
+
+Two reasons for screenshots over illustration. A card is a promise about what
+opening it gets you, and a drawn image can promise something the build does not
+deliver. And the concept art in the handoff kit depicts games that do not
+exist, so borrowing from it would put fictional key art next to real entries.
+
+Reflex Lab's first capture was its full-screen acid state, which is what the
+game genuinely looks like mid-press but reads as a broken card at 320px. The
+mid-run state was used instead: same honesty, actual structure on screen.
+
+Catalogue placeholders keep the gradient. There is no game behind them to
+photograph, and a gradient reads as a placeholder in a way that invented art
+would not.
+
+**Operational note.** `next/image` caches optimised output keyed on the request
+URL, so replacing a cover at the same path serves the stale image until the
+cache clears — that bit me locally and would bite harder behind a CDN. Version
+the filename when a cover changes, rather than overwriting it.
