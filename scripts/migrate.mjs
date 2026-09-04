@@ -20,6 +20,15 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const dbDir = path.join(here, '..', 'db')
 
 const url = findDatabaseUrl()
+
+// Used by the build step. Before a database is connected there is nothing to
+// migrate and that is not a failure — the site still builds and browses, it
+// just cannot sign anyone in yet.
+if (!url && process.argv.includes('--if-configured')) {
+  console.log('No database configured yet — skipping migrations.')
+  process.exit(0)
+}
+
 if (!url) {
   console.error(
     `${MISSING_DATABASE_URL}\n\n` +

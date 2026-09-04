@@ -34,6 +34,13 @@ Postgres. Without a `DATABASE_URL` they return `503 service_unavailable` and
 the sign-in button reports that it could not complete — the site still browses,
 but nobody can sign in.
 
+**Migrations run automatically on every deploy.** `npm run build` applies any
+pending ones first, so connecting a database and redeploying is all the setup
+there is — no terminal step. With no database configured the build skips them
+and succeeds, because the site still browses without one.
+
+To run them by hand:
+
 ```bash
 export DATABASE_URL=postgres://user:pass@host:5432/dbname
 npm run db:migrate     # apply db/*.sql, once each, in order
