@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { enterFullscreen } from "@/lib/play/fullscreen";
 import { SignInPrompt } from "./sign-in-prompt";
 import type { GameSummary } from "./types";
 
@@ -87,6 +88,20 @@ export function PlayGate({
     );
   }
 
+  /**
+   * Fullscreen has to be asked for here, not in the stage.
+   *
+   * A browser only grants it while the click that asked is still counted as
+   * active, and the stage does not exist at this instant — its module is still
+   * being fetched, which on a phone can outlast that window. Asking at the
+   * press means the overlay arrives into a screen that is already the whole
+   * display. A refusal costs nothing: the overlay fills whatever it is given.
+   */
+  function start() {
+    enterFullscreen();
+    setRequested(true);
+  }
+
   if (requested) {
     const exit = () => setRequested(false);
     return gated ? (
@@ -99,7 +114,7 @@ export function PlayGate({
   return (
     <div>
       <button
-        onClick={() => setRequested(true)}
+        onClick={start}
         onPointerEnter={() => preload(gated)}
         onFocus={() => preload(gated)}
         // Touch has no hover, so the download starts on the press rather than on

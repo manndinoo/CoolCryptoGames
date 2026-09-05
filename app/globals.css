@@ -227,15 +227,25 @@ body {
     }
   }
 
+  /* `backwards`, not `both`, and the difference is not cosmetic.
+     `both` keeps filling forwards after the animation ends, so the element
+     holds an animated `transform` for the rest of its life. The final keyframe
+     is `transform: none`, but a filled `none` computes to the identity matrix
+     rather than to nothing — and any transform other than the keyword makes the
+     element the containing block for every `position: fixed` descendant. Since
+     this class wraps every page, that quietly trapped fullscreen overlays
+     inside the content column. `backwards` still applies the opening state
+     before the animation runs, which is all this needed it for, and leaves no
+     transform behind once it is over. */
   .ccg-reveal {
-    animation: ccg-rise var(--duration-slow) var(--ease-ccg) both;
+    animation: ccg-rise var(--duration-slow) var(--ease-ccg) backwards;
   }
 
   /* Staggered children. Capped at eight steps and 40ms apart: the last item in
      a long list must not wait longer than the eye is willing to, and 8 x 40ms
      keeps the whole sequence inside the 400ms the interface has to answer in. */
   .ccg-stagger > * {
-    animation: ccg-rise var(--duration-slow) var(--ease-ccg) both;
+    animation: ccg-rise var(--duration-slow) var(--ease-ccg) backwards;
   }
   .ccg-stagger > *:nth-child(1) { animation-delay: 0ms; }
   .ccg-stagger > *:nth-child(2) { animation-delay: 40ms; }

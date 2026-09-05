@@ -1168,3 +1168,80 @@ rewrite had mangled six class attributes into `ccg-btn-primary90` and
 buttons rendered with `ccg-btn` alone and no accent fill. It hit "Sign in to
 play", the username save, tournament entry, the leaderboard CTA, the first-visit
 CTA, and the connect panel: most of the primary actions on the site. Fixed.
+
+## 29. The game stage was never actually filling the screen
+
+The owner asked that pressing Play put the game on the whole screen. It was
+already meant to. It usually wasn't, and the reason took measuring to find.
+
+### An identity transform on the page wrapper
+
+`PageTransition` wraps every page in `.ccg-reveal`, whose animation carried
+`both`. That fill keeps the final keyframe applied for the life of the element,
+and while a rule of `transform: none` computes to the keyword, a *filled*
+`transform: none` computes to the identity matrix instead. Any transform other
+than the keyword makes an element the containing block for its
+`position: fixed` descendants.
+
+So the stage — `fixed inset-0`, and correct — was resolving against the content
+column, not the viewport. Measured on a 1280x800 screen it came out 968x800 at
+x=280: a game in a box, beside the sidebar, under the header.
+
+What hid it was the fullscreen request. A fullscreen element is promoted to the
+top layer, which escapes ancestor containing blocks, so wherever the browser
+granted fullscreen the stage looked perfect and every screenshot agreed. The
+bug was visible only where fullscreen was refused — an iPhone, a denied
+request, or any moment after the player left fullscreen themselves. That is a
+coincidence doing the work of a design.
+
+Both halves are fixed. `.ccg-reveal` and `.ccg-stagger > *` now use `backwards`,
+which still applies the opening state before the animation and leaves nothing
+behind after it. And the stage renders through a portal into `document.body`,
+so it no longer depends on every ancestor it happens to have staying
+untransformed. `tests/page-wrapper-css.test.ts` guards the fill mode, because
+this failure has no error message and no visible symptom on the machine of
+whoever reintroduces it.
+
+### The request now happens at the press
+
+`requestFullscreen` is only granted while the click that asked for it still
+counts as active, and that window is a few seconds. The stage asked for it on
+mount — but the stage mounts only after its lazy chunk has been fetched, which
+on a phone can outlast the gesture. `PlayGate` asks at the press instead, before
+awaiting anything.
+
+It also asks on `document.documentElement` rather than on the stage. The stage
+does not exist yet at that moment, and rooting it means the fullscreen element
+never changes afterwards, so a game inside the frame cannot take it and strand
+the player. A refusal is not reported: the overlay covers the screen either way,
+and there is nothing the player could do about it.
+
+### The bar stopped being a permanent tax
+
+It occupied 44px of every game for the whole session — about 5% of a phone
+screen, taken from the thing the player came for. It is now drawn over the game
+rather than beside it, shown for the first four seconds and then retracted,
+brought back by a small handle at top centre.
+
+Overlaying rather than reflowing is the part that matters: the game is sized
+once and never resized. A canvas that changes size mid-round has to rebuild its
+backing store, and some of these games lay their level out to the viewport they
+were handed. The handle sits at top centre because that is the least contested
+strip across the three games shipping — Zero Signal holds both upper corners,
+Signal Brawl puts fighter health in them.
+
+A fullscreen toggle joins the exit in the bar, rendered only where the browser
+has the API at all, so an iPhone gets no button that would do nothing. Leaving
+fullscreen no longer exits the game, since there is now a control that means
+just that; Escape and the exit button still leave.
+
+### What this did not fix
+
+Zero Signal and Road to Bonded are portrait games. They cap themselves at 470px
+and 520px wide and lay their content out in fixed pixels, so on a landscape
+monitor they sit in a tall column with the screen dark either side. That is not
+the stage: raising the cap only stretches the frame around content that stays
+320px wide, which was tried and looks worse. Filling a 16:9 screen with them
+means making their own layouts landscape-aware, which is work inside each game,
+not in the shell. Signal Brawl is landscape and already fills the screen edge to
+edge.
