@@ -104,7 +104,7 @@ export default async function GameLeaderboardPage({ params }: Props) {
           </p>
           <Link
             href={`/games/${game.slug}`}
-            className="mt-[var(--spacing-5)] ccg-btn ccg-btn-primary90"
+            className="mt-[var(--spacing-5)] ccg-btn ccg-btn-primary"
           >
             Play {game.title}
           </Link>

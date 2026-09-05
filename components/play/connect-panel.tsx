@@ -38,7 +38,7 @@ export function ConnectPanel({ onSignedIn }: { onSignedIn: () => void }) {
       onPointerEnter={preload}
       onFocus={preload}
       onTouchStart={preload}
-      className="ccg-btn ccg-btn-primary[1.02] active:scale-[0.99]"
+      className="ccg-btn ccg-btn-primary active:scale-[0.99]"
     >
       Connect a wallet
     </button>

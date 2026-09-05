@@ -11,7 +11,14 @@ alt="Cool Crypto Games desktop brand and homepage direction with dark graphite, 
 | **NORTH STAR Build the game platform WEBCADE was reaching for: excellent games, fair developer economics, trusted competition, live community, and optional crypto infrastructure that never gets in the way of fun.** |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
-Version 0.3 \| September 4, 2026 \| Founding working draft
+Version 0.4 \| September 5, 2026 \| Founding working draft
+
+**Amendment 0.4 — September 5, 2026.** Scoped the locked rule "a wallet is
+required to play" to what a wallet is actually accountable for. Opening and
+completing an unranked game no longer requires a wallet. Ranked play, score
+submission, leaderboard entry, tournament entry, prize claims, chat and
+purchases continue to require a connected and signed-in wallet, unchanged.
+Rewrote the positioning statement accordingly. Requested by the product owner.
 
 **Amendment 0.3 — September 4, 2026.** Authorised in-game purchases, limited
 to appearance and additional content. Added "Purchases: what may be sold" under
@@ -76,12 +83,13 @@ Appendix C Sources and policy references
 
 CCG will launch as a curated, web-first gaming network. Anybody can
 browse the catalog, watch streams, inspect leaderboards, discover
-developers, and view tournament schedules without a wallet. A wallet
-connection and free message signature are required only when a player
-starts a game, submits a score, enters a tournament, or claims a prize.
+developers, view tournament schedules, and play any unranked game without a
+wallet. A wallet connection and free message signature are required only when
+a player starts a ranked game, submits a score, enters a tournament, claims a
+prize, posts in chat, or buys anything.
 
-| **POSITIONING Browse freely. Watch freely. Connect to play. Never pay to play.** |
-|----------------------------------------------------------------------------------|
+| **POSITIONING Browse freely. Play freely. Connect to keep your progress. Never pay to play.** |
+|-----------------------------------------------------------------------------------------------|
 
 "Never pay to play" is a statement about play, and it is literal. Every game is
 complete and playable — ranked or not — by a wallet that has never spent
@@ -277,12 +285,24 @@ game cards, live tournament module, and persistent bottom navigation.
 
 # Wallet-gated play and security
 
-| **LOCKED RULE A wallet is required to play. It is an authentication and accountability requirement, not a payment requirement.** |
-|----------------------------------------------------------------------------------------------------------------------------------|
+| **LOCKED RULE A wallet is required for anything a result attaches to. It is an authentication and accountability requirement, not a payment requirement.** |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+The requirement follows the accountability, not the game. A wallet is required
+to play ranked, submit a score, take a leaderboard place, enter a tournament,
+claim a prize, post in chat, or buy anything — each produces a record that has
+to belong to a person. An unranked game issues no score, enters no competition
+and pays out nothing, so it opens for anyone, with no wallet and no signature.
+
+Progress in an unranked game is saved either way. Signed out it is kept in the
+player's browser; signed in it is kept against the wallet and follows them
+between devices. The platform-wide gate can be reinstated across every game at
+any time without a code change.
 
 ## Wallet connection requirements
 
-- Any supported, valid wallet can play, including an empty wallet.
+- Any supported, valid wallet can play, including an empty wallet. No
+  wallet at all is required for unranked play.
 
 - No token holding, balance, NFT, transaction, gas payment, approval, or
   asset permission is required.
@@ -1042,7 +1062,7 @@ rather than calendar promises.
 
 | **Metric**                          | **Why it matters**                                            |
 |-------------------------------------|---------------------------------------------------------------|
-| **Play conversion**                 | Percent of game-page visitors who connect and begin a session |
+| **Play conversion**                 | Percent of game-page visitors who begin a play session        |
 | **Time to interactive**             | Friction from Play tap to control                             |
 | **D1 / D7 / D30 retention**         | Whether fun persists beyond prize events                      |
 | **Sessions per verified player**    | Strength of the game loop                                     |
@@ -1097,7 +1117,8 @@ rather than calendar promises.
 
 - Require a wallet signature before game play.
 
-- Allow empty wallets to play without a transaction.
+- Allow empty wallets to play without a transaction, and allow unranked
+  play with no wallet at all.
 
 - Prioritize game quality over catalog count.
 

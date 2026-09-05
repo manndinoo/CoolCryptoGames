@@ -1091,3 +1091,80 @@ wins, with `SOL_PRICE_URL` replacing the list for a paid provider.
 rather than a search. A heuristic that hunts for "the first plausible number"
 in a JSON body will eventually find a volume, a market cap, or a percentage,
 and this number gets multiplied by a real payment.
+
+## 28. The wallet is no longer the door
+
+The owner asked for the wallet-to-play requirement off, kept available for
+testing. It is off.
+
+### The requirement follows the accountability, not the game
+
+The Bible's locked rule said "a wallet is required to play", and gave its own
+reason: authentication and accountability, explicitly not payment. That reason
+is worth keeping and is what decided the shape of this. A wallet is how a
+result gets attached to somebody, so the requirement should extend exactly as
+far as there is a result worth attaching, and no further.
+
+An unranked game issues no score, takes no leaderboard place, enters no
+competition and pays out nothing. There is nothing for a signature to be
+accountable for, so asking for one bought a wallet prompt in front of a free
+game and nothing else. Those games now open for anyone.
+
+Everything that does produce a record still requires a signed-in wallet, and
+none of that changed: ranked play, score submission, tournament entry, prize
+claims, chat, purchases. `PlayGate` enforces the ranked half itself —
+`requireWallet || game.ranked` — so turning the platform switch off cannot
+quietly turn the leaderboard into an anonymous one. All three shipped games are
+unranked, so today the switch decides everything; the guard is there for the
+first ranked build.
+
+`walletRequiredToPlay()` in `lib/play/access.ts` is the switch, defaulting to
+false, with `CCG_REQUIRE_WALLET_TO_PLAY=true` putting the gate back across
+every game. The prop defaults to `true` rather than `false`, so a future caller
+that forgets to pass it gates rather than opens — the wrong default should cost
+a prompt, not a hole.
+
+### The ungated path deliberately imports no wallet code
+
+`OpenPlay` is a separate module from `PlayGateInner` for the same reason
+`PlayGate` was split from `PlaySession` in the first place. Pressing Play on an
+ungated game now fetches the game and the save bridge and nothing else;
+verified in the browser, zero wallet chunks requested against roughly 300KB of
+adapter that used to be mandatory.
+
+Saves needed no change and still bind to a wallet when there is one. The bridge
+asks the server for the game's copy either way — a signed-out visitor gets a
+401 it already treats as "nothing stored" and keeps progress in the browser,
+and someone signed in from `/settings` gets their wallet's copy here without
+this path knowing what a wallet is, because the session is a cookie and the
+adapter is only ever needed to create one.
+
+### Where the wallet stayed reachable
+
+`/settings` could already sign in, but only the game page can sign in, press
+Play, and watch the save land against the wallet rather than the browser — the
+thing actually worth testing. So `SignInPrompt` sits under the play button on
+ungated games. It says the one true remaining reason to connect and nothing
+more: signed out, progress stays in this browser. Both of its states occupy a
+row of the same height, so the session resolving swaps text instead of moving
+the store panel and the facts table below it.
+
+### Copy that had gone false
+
+Two claims were now wrong and one had been wrong since Amendment 0.3. The
+positioning line ("Connect to play") and the first-visit notice ("Playing needs
+a wallet") described the old gate. The same notice also promised "No purchases,
+no deposits, no transaction to approve. Ever." — which stopped being true when
+purchases shipped, and was being shown to every first-time visitor. All three
+are rewritten; the strongest claim that is actually true is that every game is
+complete and playable free, with no wallet, and nothing bought changes what any
+player can achieve.
+
+### Six buttons had no styling at all
+
+Unrelated to the gate, found in the sign-in path while testing it. A previous
+rewrite had mangled six class attributes into `ccg-btn-primary90` and
+`ccg-btn-primary[1.02]` — neither of which exists in `globals.css`, so those
+buttons rendered with `ccg-btn` alone and no accent fill. It hit "Sign in to
+play", the username save, tournament entry, the leaderboard CTA, the first-visit
+CTA, and the connect panel: most of the primary actions on the site. Fixed.

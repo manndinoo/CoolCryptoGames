@@ -96,7 +96,7 @@ export const demoGames: DemoGame[] = [
     facts: [
       { label: 'Worlds', value: 'Six, cycling themes' },
       { label: 'Play', value: 'One tap or one key' },
-      { label: 'Session', value: 'Single player, saves locally' },
+      { label: 'Session', value: 'Single player, progress saved' },
       { label: 'Purchases', value: 'Locked — chips and credits are in-game only' },
     ],
   },
@@ -130,7 +130,7 @@ export const demoGames: DemoGame[] = [
     facts: [
       { label: 'Levels', value: '50 across five regions' },
       { label: 'Play', value: 'Portrait, touch or mouse' },
-      { label: 'Session', value: 'Single player, saves locally' },
+      { label: 'Session', value: 'Single player, progress saved' },
       { label: 'Engine', value: 'Deterministic — same seed, same board' },
     ],
   },
@@ -167,7 +167,7 @@ export const demoGames: DemoGame[] = [
       { label: 'Arenas', value: 'Six, unlocked by winning' },
       { label: 'Play', value: 'Landscape, keyboard or touch' },
       { label: 'Match', value: 'Four fighters, three lives, 90 seconds' },
-      { label: 'Session', value: 'Single player, progress saves locally' },
+      { label: 'Session', value: 'Single player, progress saved' },
     ],
   },
 ]

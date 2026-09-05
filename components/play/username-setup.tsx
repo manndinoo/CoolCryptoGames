@@ -136,7 +136,7 @@ export function UsernameSetup({ onDone }: { onDone: (username: string) => void }
         <button
           type="submit"
           disabled={submitting || availability.state !== 'free'}
-          className="mt-[var(--spacing-4)] ccg-btn ccg-btn-primary90 disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
+          className="mt-[var(--spacing-4)] ccg-btn ccg-btn-primary disabled:cursor-not-allowed disabled:bg-[var(--color-graphite-raised)] disabled:text-[var(--color-muted)]"
         >
           {submitting ? 'Saving…' : 'Claim name'}
         </button>

@@ -40,7 +40,7 @@ export function WalletSheet({
         </p>
         <button
           onClick={onSignIn}
-          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-primary90"
+          className="mt-[var(--spacing-5)] ccg-btn ccg-btn-primary"
         >
           Try again
         </button>
@@ -94,7 +94,7 @@ export function WalletSheet({
           <button
             onClick={onSignIn}
             disabled={state.status === "signing-in"}
-            className="ccg-btn ccg-btn-primary90 disabled:opacity-50"
+            className="ccg-btn ccg-btn-primary disabled:opacity-50"
           >
             {state.status === "signing-in"
               ? "Check your wallet…"

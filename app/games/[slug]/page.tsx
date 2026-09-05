@@ -6,6 +6,7 @@ import { DemoBadge, StatusPill, VerifiedBadge } from "@/components/ui/badges";
 import { PlayGate } from "@/components/play/play-gate";
 import { StorePanel } from "@/components/store/store-panel";
 import { demoGames, getDemoDeveloper, getDemoGame } from "@/lib/content/demo";
+import { walletRequiredToPlay } from "@/lib/play/access";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -119,6 +120,7 @@ export default async function GamePage({ params }: Props) {
       {/* --------------------------------------------------------------- play */}
       <div className="mt-[var(--spacing-5)]">
         <PlayGate
+          requireWallet={walletRequiredToPlay()}
           game={{
             slug: game.slug,
             title: game.title,

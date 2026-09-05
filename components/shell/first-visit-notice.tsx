@@ -81,22 +81,26 @@ export function FirstVisitNotice() {
     >
       <div className="ccg-surface pointer-events-auto rounded-[var(--radius-large)] p-[var(--spacing-5)] shadow-2xl">
         <p className="font-display text-lg font-bold tracking-[var(--tracking-display)]">
-          Nothing here costs anything
+          Free to play, no wallet needed
         </p>
         <ul className="mt-3 grid gap-2 text-sm text-[var(--color-muted)]">
-          <li>Browsing and watching need no wallet at all.</li>
+          <li>Browsing, watching and playing need no wallet at all.</li>
           <li>
-            Playing needs a wallet as your <em className="not-italic text-bone">name</em>, not your
-            balance — an empty one works.
+            Connect one to carry progress between devices and to compete — it is
+            your <em className="not-italic text-bone">name</em>, not your balance,
+            so an empty wallet works.
           </li>
-          <li>No purchases, no deposits, no transaction to approve. Ever.</li>
+          <li>
+            Some games sell appearance and extra content. Nothing you buy changes
+            what any player can achieve, and no game asks for a deposit.
+          </li>
         </ul>
 
         <div className="mt-[var(--spacing-5)] flex flex-wrap gap-2">
           <Link
             href="/games"
             onClick={dismiss}
-            className="ccg-btn ccg-btn-primary[1.03] active:scale-[0.98]"
+            className="ccg-btn ccg-btn-primary active:scale-[0.98]"
           >
             See the games
           </Link>
