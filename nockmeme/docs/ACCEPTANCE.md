@@ -5,13 +5,25 @@ creation and a real transfer, and an indexer rebuilt from that chain reports the
 expected split. This document records what was established about that path, so
 the next session starts from facts rather than from guesses.
 
-## Environment: proven
+## Environment: builds here, cannot run a chain here
 
-The native stack builds and runs here. `nockchain`, `nockchain-wallet` and
-`zk-pow-mine` are built from revision `2bcb0b9`; the fakenet node boots and runs
-its recursive-verifier setup (real STARK proving, ~40 minutes of CPU on four
-cores before the kernel reaches `%born`). The three build blockers and their
-fixes are in [`DEVELOP.md`](./DEVELOP.md).
+`nockchain`, `nockchain-wallet` and `zk-pow-mine` build from revision `2bcb0b9`
+on a 15 GB / 4-core box. The four blockers and their fixes are in
+[`DEVELOP.md`](./DEVELOP.md).
+
+**A node will not run to `%born` on that box.** It boots, begins generating its
+recursive-verifier setup, and is OOM-killed at 13.9 GB resident after ~21
+minutes wall / ~80 minutes CPU:
+
+```
+Memory cgroup out of memory: Killed process 4372 (nockchain)
+total-vm:27549392kB, anon-rss:13881708kB
+```
+
+No block was ever mined. So the gate below is blocked on **memory, not on
+code** — the first requirement is a machine with ~32 GB (the repo's own
+`Makefile` uses `DOCKER_MEM ?= 32g`). Everything after that is the tool work
+described here.
 
 Two isolated fakenet wallets exist. Isolation is via `NOCKAPP_HOME`, not the
 working directory — running the wallet from two different directories without

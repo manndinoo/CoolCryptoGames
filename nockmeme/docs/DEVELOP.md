@@ -14,7 +14,7 @@ The workspace pins `nightly-2026-04-03` in `rust-toolchain.toml`; `rustup` picks
 it up automatically. Also required on the host: `clang`, `cmake`, `make`, `gcc`,
 `g++`, `pkg-config`.
 
-## Three things that will stop the build
+## Four things that will stop you
 
 ### 1. `protoc` is not optional
 
@@ -81,8 +81,40 @@ echo 1 > /proc/sys/vm/overcommit_memory
 
 The mapping is reserved, not resident — a 15 GB machine compiles the kernels
 fine once overcommit is permitted. In a container this needs a writable
-`/proc/sys`, which is why the earlier attempt at this work concluded the native
-setup was impossible under container restrictions.
+`/proc/sys`.
+
+Note carefully what this does and does not buy. Allowing overcommit lets the
+*reservation* succeed, which is enough to build the kernels and to boot the
+node. It does not create memory. See §4.
+
+## 4. Running a node needs real RAM, not just address space
+
+Building everything works in 15 GB. **Running a fakenet node does not.**
+
+On this machine `scripts/fakenet-zk-pow-smoke.sh` boots the node, which then
+begins generating its recursive-verifier setup — real STARK proving, visible as
+repeated `prove_all_tables` passes. Memory climbs steadily through those passes.
+After about 21 minutes of wall time and 80 minutes of CPU across four cores, the
+kernel killed it:
+
+```
+Memory cgroup out of memory: Killed process 4372 (nockchain)
+total-vm:27549392kB, anon-rss:13881708kB
+```
+
+It never reached `%born`, so no block was ever mined. The smoke script reports
+this as `[fail ] node died before %born`, which on its own reads like a crash —
+check `dmesg` for the OOM line before assuming a bug, because the node itself
+logs nothing on its way out.
+
+13.9 GB resident is the floor observed here, and it was still climbing when the
+process died, so the real requirement is higher. **Budget 32 GB for a node.**
+The repository's own `Makefile` agrees: `DOCKER_MEM ?= 32g`.
+
+The verifier setup is proof-independent and the smoke script caches it
+(`AI_POW_VERIFIER_SETUP_CACHE_DIR`), so this cost is paid once per machine — but
+it has to be paid somewhere with enough memory, and a cache produced elsewhere
+would have to be copied in.
 
 ## Building nmeme-core
 

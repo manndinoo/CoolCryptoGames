@@ -13,7 +13,8 @@ support.
 | Consensus facts verified against source | done — [`docs/FINDINGS.md`](./docs/FINDINGS.md) |
 | Standard specified | done — [`docs/SPEC.md`](./docs/SPEC.md) |
 | Encoding + accounting implemented | in progress — [`crates/nmeme-core`](./crates/nmeme-core) |
-| Native stack built and node running | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
+| Native stack builds | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
+| Node runs a chain | **blocked** — OOM at 13.9 GB; needs ~32 GB |
 | Proven on a live fakenet chain | not done — [`docs/ACCEPTANCE.md`](./docs/ACCEPTANCE.md) |
 | Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |
 | Platform UI | not started |
@@ -22,6 +23,11 @@ support.
 a local node must accept and mine a real creation and a real transfer, and an
 indexer rebuilt from that chain must report the expected split. Until then this
 is a design with tests, not a working token.
+
+The gate is currently blocked on hardware rather than on code. The binaries
+build, but a fakenet node was OOM-killed at 13.9 GB resident while generating
+its recursive-verifier setup, before mining anything. Reproducing the gate needs
+a machine with roughly 32 GB. See [`docs/DEVELOP.md`](./docs/DEVELOP.md) §4.
 
 ## Why note-data
 
