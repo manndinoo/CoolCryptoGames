@@ -6,6 +6,11 @@ Nockchain has no token layer. NMEME adds one without touching consensus, by
 carrying token weight in the `note-data` field that Nockchain notes already
 support.
 
+## Start here
+
+[`RUNBOOK.md`](./RUNBOOK.md) has the measured hardware requirement and the exact
+commands to run the live proof on a machine that meets it.
+
 ## Status
 
 [`results/RESULTS.md`](./results/RESULTS.md) separates what has actually been

@@ -10,6 +10,8 @@ Toolchain: rustc 1.96.0-nightly (nightly-2026-04-03), 4 cores, Linux x86_64
 Totals: 26 nmeme-core (both profiles), 13 nmeme-tx attach, 5 nmeme-tx
         roundtrip, 1 fixture report, 8 nmeme-index decode, 9 gate checks.
 
+Re-run after the final nmeme-tx change: all suites green (see rerun below).
+
 SCOPE: encoding, accounting, attachment, file surgery, blob decoding and
 gate logic ONLY. Nothing here has touched a chain. No transaction has been
 broadcast. There are no transaction IDs, block heights, or on-chain
@@ -104,3 +106,10 @@ ok    unrelated error -> reject
 ok    crash exit code -> reject
 
 gate self-test: all checks passed
+
+### re-run after final change
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
