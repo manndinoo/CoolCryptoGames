@@ -127,8 +127,8 @@ tested without a node, including a repeated token and a runaway pager.
 A third party rebuilt the package inside the pinned workspace with zero
 modifications to the 27 uploaded crate files, ran every supplied test (81
 passed, 0 failed; 9 shell checks passed), and then wrote two checks of their
-own. Both found bugs. Their package is retained verbatim in
-[`independent-verification/`](./independent-verification/).
+own. Both found bugs. Their packages are retained verbatim in
+[`independent-verification/`](./independent-verification/), one directory per round.
 
 **Fee undercount for Merkle proofs.** `required_fee` passed
 `spend_condition_count: None` to the estimator, which means a one-condition
@@ -148,6 +148,11 @@ script only checked that *some* height had parsed, not that it reached
 Fixed: the wait is now a function in `lib-mine.sh` that fails closed, with a
 six-case self-test that the demo runs before mining. Their reproduction now
 refuses.
+
+**Round 8.** The same verifier re-ran against the fixed package: 88 tests and
+15 shell checks passed with zero source modifications (byte comparisons of all
+three crate directories), both fixes confirmed, the retained regression passing,
+no new findings. Their resolved `Cargo.lock` is kept for reproducibility.
 
 **What they also reported.** The default dev/test profile failed to link for
 them and needed `CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false`;

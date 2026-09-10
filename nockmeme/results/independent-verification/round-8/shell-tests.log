@@ -1,0 +1,19 @@
+ok    valid signature, exit 0 -> accept
+ok    invalid signature, exit 1 -> reject
+ok    "Invalid signature" does match grep -i valid (the old bug)
+ok    ...but verify_decision rejects it
+ok    exit 0 with failure text -> reject
+ok    exit 1 with success text -> reject
+ok    empty output -> reject
+ok    unrelated error -> reject
+ok    crash exit code -> reject
+
+gate self-test: all checks passed
+ok    no blocks at all -> fail (rc=1 out=)
+ok    height 1 below minimum 3 -> fail (the reproduced bug) (rc=1 out=)
+ok    height 2, one short -> fail (rc=1 out=)
+ok    height 3 meets minimum 3 -> pass (rc=0 out=3)
+ok    height 7 exceeds minimum -> pass (rc=0 out=7)
+ok    latest line wins -> pass (rc=0 out=5)
+
+height-gate self-test: all checks passed
