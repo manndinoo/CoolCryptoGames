@@ -55,7 +55,7 @@ use std::collections::BTreeMap;
 use nmeme_core::claim::NOTE_DATA_KEY;
 use nockchain_types::tx_engine::common::{Hash, Name};
 use nockchain_types::tx_engine::v1::note::NoteDataValue;
-use nockchain_types::tx_engine::v1::tx::Spend;
+use nockchain_types::tx_engine::v1::tx::{Seed, Spend};
 
 /// What one lock-root receives in a transaction: its merged gift, and the claim
 /// attached to it if any.
@@ -66,6 +66,13 @@ pub struct Destination {
     /// one into a single note (FINDINGS §3).
     pub gift: u64,
     pub claim: Option<Claim>,
+    /// Every seed paying this lock-root; the merged note's identity is a
+    /// function of exactly this set.
+    pub seeds: Vec<Seed>,
+    /// The complete `Name` consensus assigns to the merged output, computed
+    /// from `seeds` (`nmeme_tx::names::output_name`). This is what binds a
+    /// claim to one specific note rather than to a recipient.
+    pub name: Name,
 }
 
 /// The inputs a transaction spends and the destinations it pays.
@@ -92,7 +99,8 @@ pub fn read_tx_plan(path: &std::path::Path) -> Result<TxPlan, String> {
     let spends = parsed.spliced().map_err(|e| format!("splice: {e}"))?;
 
     let mut inputs = Vec::new();
-    let mut merged: BTreeMap<Vec<u8>, Destination> = BTreeMap::new();
+    struct Partial { lock_root: Hash, gift: u64, claim: Option<Claim>, seeds: Vec<Seed> }
+    let mut merged: BTreeMap<Vec<u8>, Partial> = BTreeMap::new();
 
     for (name, spend) in &spends.0 {
         inputs.push(name.clone());
@@ -101,12 +109,14 @@ pub fn read_tx_plan(path: &std::path::Path) -> Result<TxPlan, String> {
         };
         for seed in &spend1.seeds.0 {
             let key = seed.lock_root.to_be_bytes().to_vec();
-            let entry = merged.entry(key).or_insert_with(|| Destination {
+            let entry = merged.entry(key).or_insert_with(|| Partial {
                 lock_root: seed.lock_root.clone(),
                 gift: 0,
                 claim: None,
+                seeds: Vec::new(),
             });
             entry.gift = entry.gift.saturating_add(seed.gift.0 as u64);
+            entry.seeds.push(seed.clone());
 
             for data in seed.note_data.iter() {
                 if data.key != NOTE_DATA_KEY {
@@ -130,68 +140,66 @@ pub fn read_tx_plan(path: &std::path::Path) -> Result<TxPlan, String> {
         }
     }
 
-    Ok(TxPlan {
-        inputs,
-        destinations: merged.into_values().collect(),
-    })
+    let mut destinations = Vec::new();
+    for partial in merged.into_values() {
+        let name = nmeme_tx::output_name(&partial.lock_root, &partial.seeds)
+            .map_err(|e| format!("output name for {}: {e}", partial.lock_root.to_base58()))?;
+        destinations.push(Destination {
+            lock_root: partial.lock_root,
+            gift: partial.gift,
+            claim: partial.claim,
+            seeds: partial.seeds,
+            name,
+        });
+    }
+    Ok(TxPlan { inputs, destinations })
 }
 
-/// The first-name every note at `lock_root` carries.
-///
-/// A note's `Name` is `{first, last}`, where `first` is derived from the
-/// lock-root and `last` distinguishes notes at the same lock. So `first`
-/// identifies the *destination* exactly — no amount matching, no guessing.
-pub fn first_name_of(lock_root: &Hash) -> Result<Hash, String> {
-    use nockchain_types::tx_engine::common::FirstName;
-    FirstName::from_lock_root(lock_root)
-        .map(|f| f.into_hash())
-        .map_err(|e| format!("first-name of {}: {e}", lock_root.to_base58()))
+/// The first-name every note at `lock_root` carries — the lock, not the note.
+pub fn first_name_of(lock_root: &Hash) -> Hash {
+    nmeme_tx::first_name(lock_root)
 }
 
-/// Assigns the chain-assigned output note names to a step's destinations.
+/// Binds each destination's computed output name to a note the chain knows.
 ///
-/// `candidates` is every note name that could be an output of this step: the
-/// inputs of any later step (which must have been created earlier), plus the
-/// notes still unspent at the end. `taken` carries assignments already made, so
-/// the same note is never attributed to two steps.
+/// `candidates` is every note that could be an output of this step: the inputs
+/// of any later step (full names, from their transaction files) plus the notes
+/// still unspent at the end (full names, from the node). A destination's
+/// computed name must appear there **exactly** — first and last. Matching on
+/// first-name alone would identify the recipient and nothing more: successive
+/// change outputs to the same lock share it.
 ///
-/// Matching is by first-name, and every failure is an error rather than a
-/// fallback. Attributing a claim to the wrong note would silently move weight
-/// between owners.
-pub fn assign_outputs(
+/// Every failure is an error. A destination whose computed name is absent
+/// means either the transaction file does not describe what was mined, or the
+/// note was spent by something not in the replay; both invalidate the rebuild.
+pub fn bind_outputs(
     destinations: &[Destination],
     candidates: &[Name],
     taken: &mut Vec<Vec<u8>>,
 ) -> Result<Vec<(Name, Destination)>, String> {
     let mut out = Vec::new();
     for dest in destinations {
-        let first = first_name_of(&dest.lock_root)?;
-        let matches: Vec<&Name> = candidates
-            .iter()
-            .filter(|n| n.first == first)
-            .filter(|n| !taken.contains(&name_key(n)))
-            .collect();
-        match matches.as_slice() {
-            [] => {
-                return Err(format!(
-                    "no chain note matches lock-root {} (first-name {})",
-                    dest.lock_root.to_base58(),
-                    first.to_base58()
-                ))
-            }
-            [only] => {
-                taken.push(name_key(only));
-                out.push(((*only).clone(), dest.clone()));
-            }
-            several => {
-                return Err(format!(
-                    "ambiguous: {} unassigned notes share first-name {}; cannot attribute \
-                     claims safely",
-                    several.len(),
-                    first.to_base58()
-                ))
-            }
+        let key = name_key(&dest.name);
+        if taken.contains(&key) {
+            return Err(format!(
+                "note {} computed for lock-root {} was already produced by an earlier step",
+                dest.name.first.to_base58(),
+                dest.lock_root.to_base58()
+            ));
         }
+        let present = candidates.iter().any(|c| name_key(c) == key);
+        if !present {
+            return Err(format!(
+                "no chain note has the identity computed for lock-root {}: first {} last {}. \
+                 The transaction file does not describe a mined output, or the note was \
+                 consumed outside the replay.",
+                dest.lock_root.to_base58(),
+                dest.name.first.to_base58(),
+                dest.name.last.to_base58()
+            ));
+        }
+        taken.push(key);
+        out.push((dest.name.clone(), dest.clone()));
     }
     Ok(out)
 }

@@ -222,7 +222,8 @@ value, because a claim is exactly one such value under the `meme` key.
 4. `nmeme-tx attach --sig <sig>` — splice into witness-data, re-jam.
 5. `nockchain-wallet send-tx` — broadcast.
 6. Poll `tx-status` / `tx-accepted` until mined.
-7. Read the canonical chain, build `TxView`s, run `Indexer`, compare balances.
+7. Bind each local transaction file to the mined transaction, derive complete
+   output identities from its seeds, replay through `Indexer`, assert balances.
 
 Steps 2 and 4 are the tool. Everything else is stock.
 

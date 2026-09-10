@@ -52,12 +52,20 @@ regression tests that fail without the fix.
 `many_capped_claims_cannot_overflow_the_indexer` is robustness only — the
 conservation check rejects it either way.
 
-### A5. Attachment, digest behaviour, file surgery, blob decoding — 27 tests
+### A5. Attachment, digest, file surgery, identity, binding — 42 tests
 
 ```bash
-cargo test -p nmeme-tx       # 13 attach + 5 roundtrip + 1 fixture report
-cargo test -p nmeme-index    # 8 decode
+cargo test -p nmeme-tx       # 13 attach + 6 roundtrip + 8 names + 1 fixture report
+cargo test -p nmeme-index    # 8 decode + 6 binding
 ```
+
+`names` derives a merged output's complete `Name` from the transaction's own
+seeds, transcribed from `build-outputs`. One of its tests is ground truth rather
+than self-consistency: the transcribed `first` must equal the repository's own
+`FirstName::from_lock_root`. `binding` covers successive transactions paying the
+same recipient with equal amounts — the case first-name or amount matching
+cannot distinguish — and requires a note with the right recipient but the wrong
+identity to be refused.
 
 The decode tests cover the seam between what `nmeme-tx` writes and what the
 node hands back as a jammed blob, including a foreign payload under the `meme`
@@ -131,11 +139,12 @@ and no on-chain balances to report.
 
 `nmeme-index rebuild` replays the mined transactions through the real
 `Indexer` — genesis rules, exact conservation, burn-on-invalid — and asserts
-per-lock-root balances and total supply. Output notes are paired to
-destinations by first-name (derived from the lock-root), with ambiguity an
-error. An earlier version summed anything under the `meme` key and would have
-counted an unrelated token's genesis; that is gone. But none of this has run
-against a chain.
+per-lock-root balances and total supply. Before a step is replayed, the local
+file is bound to the mined transaction (`verify_canonical`: same inputs, same
+outputs, same merged amounts, present in a block), and each output is bound by
+its **complete computed name** to a note the chain knows (`bind_outputs`).
+Earlier versions summed anything under the `meme` key, then matched outputs by
+recipient; both are gone. None of this has run against a chain.
 
 ### B4. Trading
 

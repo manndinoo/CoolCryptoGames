@@ -31,7 +31,9 @@ use nmeme_core::{Indexer, Ticker, TokenId};
 use nmeme_tx::txfile::ParsedTransaction;
 use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockapp_grpc_proto::pb::common::v2::note::NoteVersion;
+use nockapp_grpc_proto::pb::public::v2::nockchain_block_service_client::NockchainBlockServiceClient;
 use nockapp_grpc_proto::pb::public::v2::nockchain_service_client::NockchainServiceClient;
+use nockapp_grpc_proto::pb::public::v2::{get_transaction_details_response, GetTransactionDetailsRequest};
 use nockapp_grpc_proto::pb::public::v2::{
     wallet_get_balance_request, wallet_get_balance_response, WalletGetBalanceRequest,
 };
@@ -133,7 +135,7 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
         let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
             .await
             .map_err(|e| format!("connect {addr}: {e}"))?;
-        let want_first = nmeme_index::first_name_of(&lock)?;
+        let want_first = nmeme_index::first_name_of(&lock);
         let request = WalletGetBalanceRequest {
             selector: Some(wallet_get_balance_request::Selector::Address(
                 nockapp_grpc_proto::pb::common::v1::Base58Pubkey { key: address.clone() },
@@ -303,7 +305,11 @@ async fn rebuild(
         }
         candidates.extend(unspent.iter().map(|(n, _)| n.clone()));
 
-        let paired = nmeme_index::assign_outputs(&plan.destinations, &candidates, &mut taken)?;
+        // Bind the local file to the mined transaction before trusting it.
+        let (height, block) = verify_canonical(&addr, txid, plan).await?;
+        println!("CANONICAL\t{txid}\theight={height}\tblock={block}");
+
+        let paired = nmeme_index::bind_outputs(&plan.destinations, &candidates, &mut taken)?;
         let outputs: Vec<NoteView> = paired
             .into_iter()
             .map(|(name, dest)| NoteView {
@@ -366,6 +372,109 @@ async fn rebuild(
         return Err(format!("{failures} assertion(s) failed"));
     }
     Ok(ExitCode::SUCCESS)
+}
+
+/// Checks that a transaction file describes the transaction the chain mined
+/// under `txid`: same inputs, same outputs, same amounts, and that it sits in
+/// a block. Returns (height, block id).
+///
+/// The details RPC exposes only first-names, so this binds the *shape* of the
+/// transaction — every input lock, every output lock and its merged amount —
+/// not the last-names. Those are bound separately by `bind_outputs`, which
+/// requires the computed full name to exist on chain. Together the two leave
+/// no field of the replayed transaction unchecked against canonical data.
+async fn verify_canonical(
+    addr: &str,
+    txid: &str,
+    plan: &nmeme_index::TxPlan,
+) -> Result<(u64, String), String> {
+    let mut client = NockchainBlockServiceClient::connect(format!("http://{addr}"))
+        .await
+        .map_err(|e| format!("connect block service {addr}: {e}"))?;
+    let request = GetTransactionDetailsRequest {
+        tx_id: Some(nockapp_grpc_proto::pb::common::v1::Base58Hash { hash: txid.to_string() }),
+    };
+    let response = client
+        .get_transaction_details(request)
+        .await
+        .map_err(|e| format!("get_transaction_details({txid}): {e}"))?
+        .into_inner();
+    let details = match response.result {
+        Some(get_transaction_details_response::Result::Details(d)) => d,
+        Some(get_transaction_details_response::Result::Pending(_)) => {
+            return Err(format!("{txid} is still pending; not canonical"))
+        }
+        Some(get_transaction_details_response::Result::Error(e)) => {
+            return Err(format!("get_transaction_details: {}", e.message))
+        }
+        None => return Err("get_transaction_details returned nothing".to_string()),
+    };
+    if details.tx_id != txid {
+        return Err(format!("chain returned tx {} for {txid}", details.tx_id));
+    }
+    let block = details
+        .block_id
+        .as_ref()
+        .map(|b| decode_hash(b).map(|h| h.to_base58()))
+        .transpose()?
+        .ok_or_else(|| format!("{txid} has no block id; not mined"))?;
+    if details.height == 0 && details.block_id.is_none() {
+        return Err(format!("{txid} reports no height"));
+    }
+
+    // Inputs: every spend name in the file must be an input on chain, by
+    // first-name, and the counts must agree.
+    let chain_inputs: Vec<String> = details.inputs.iter().map(|i| i.note_name_b58.clone()).collect();
+    if chain_inputs.len() != plan.inputs.len() {
+        return Err(format!(
+            "{txid}: file has {} input(s), chain has {}",
+            plan.inputs.len(),
+            chain_inputs.len()
+        ));
+    }
+    for input in &plan.inputs {
+        let f = input.first.to_base58();
+        if !chain_inputs.contains(&f) {
+            return Err(format!("{txid}: file input {f} is not an input of the mined transaction"));
+        }
+    }
+
+    // Outputs: every destination must appear on chain with the same
+    // first-name and the same merged amount, one-to-one.
+    let mut chain_outputs: Vec<(String, u64)> = details
+        .outputs
+        .iter()
+        .map(|o| {
+            let amount = match &o.amount_required {
+                Some(nockapp_grpc_proto::pb::public::v2::transaction_output::AmountRequired::Amount(n)) => n.value,
+                None => 0,
+            };
+            (o.note_name_b58.clone(), amount)
+        })
+        .collect();
+    if chain_outputs.len() != plan.destinations.len() {
+        return Err(format!(
+            "{txid}: file has {} output(s), chain has {}",
+            plan.destinations.len(),
+            chain_outputs.len()
+        ));
+    }
+    for dest in &plan.destinations {
+        let f = dest.name.first.to_base58();
+        let pos = chain_outputs
+            .iter()
+            .position(|(name, amount)| *name == f && *amount == dest.gift)
+            .ok_or_else(|| {
+                format!(
+                    "{txid}: no mined output pays {} to first-name {} (lock-root {})",
+                    dest.gift,
+                    f,
+                    dest.lock_root.to_base58()
+                )
+            })?;
+        chain_outputs.remove(pos);
+    }
+    Ok((details.height, block))
 }
 
 fn decode_name(name: &nockapp_grpc_proto::pb::common::v1::Name) -> Result<Name, String> {

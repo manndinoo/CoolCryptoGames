@@ -14,10 +14,12 @@
 
 pub mod attach;
 pub mod cli;
+pub mod names;
 pub mod sighash;
 pub mod txfile;
 
 pub use attach::attach_claim;
+pub use names::{first_name, output_name};
 pub use sighash::{note_data_digest, seed_sig_digest, seeds_sig_digest, spend_sig_hash};
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]

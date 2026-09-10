@@ -44,6 +44,17 @@ wallet() {
       --client private --private-grpc-server-port "$PORT" --fakenet "$@" )
 }
 
+# send-tx, tx-status and tx-accepted each declare their OWN --client option,
+# defaulting to `public` with a hard-coded internet address
+# (23.252.122.18:5556). A global --client private is shadowed by that
+# subcommand-level default, so those three were being sent to the public
+# internet node. They are routed here to the LOCAL public gRPC bind instead.
+wallet_pub() {
+  local who="$1" cmd="$2"; shift 2
+  ( cd "$W/$who" && NOCKAPP_HOME="$W/$who" RUST_LOG=error "$WALLET" --fakenet \
+      "$cmd" --client public --public-grpc-server-addr "${PUBLIC_ADDR:-127.0.0.1:5556}" "$@" )
+}
+
 # sign_hash <who> <digest> <dest.jam>
 # The wallet always writes to $W/<who>/hash.sig. Locating it by mtime, or by
 # globbing for the newest .jam, picks up unrelated files; use the documented
@@ -136,7 +147,7 @@ echo "height=$HEIGHT"
 # subshell swallows a failure.
 broadcast_and_confirm() {
   local tx="$1" label="$2" result="$3"
-  wallet alice send-tx "$tx" >"$RUN/send-$label.txt" 2>&1 \
+  wallet_pub alice send-tx "$tx" >"$RUN/send-$label.txt" 2>&1 \
     || die "send-tx failed for $label (see $RUN/send-$label.txt)"
   strip < "$RUN/send-$label.txt" | tail -5 >&2
 
@@ -148,7 +159,7 @@ broadcast_and_confirm() {
   local deadline=$((SECONDS + ${INCLUDE_TIMEOUT:-900}))
   while (( SECONDS < deadline )); do
     set +e
-    wallet alice tx-status "$txid" >"$RUN/status-$label.txt" 2>&1
+    wallet_pub alice tx-status "$txid" >"$RUN/status-$label.txt" 2>&1
     set -e
     if grep -qi "confirmed" "$RUN/status-$label.txt"; then
       local h
@@ -177,12 +188,12 @@ build_sign_send() {
     log "  spending note(s): $names"
     wallet alice create-tx --names "$names" \
       --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
-      --fee "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
+      --fee-nicks "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
       || die "$label: create-tx failed (see $dir/create.txt)"
   else
     wallet alice create-tx \
       --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
-      --fee "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
+      --fee-nicks "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
       || die "$label: create-tx failed (see $dir/create.txt)"
   fi
   list_tx_files alice > "$dir/tx-after.txt"
@@ -240,7 +251,7 @@ mkdir -p "$RUN/genesis"
 list_tx_files alice > "$RUN/genesis/probe-before.txt"
 wallet alice create-tx \
   --recipient "{\"kind\":\"p2pkh\",\"address\":\"$BOB\",\"amount\":${SEND_NICKS:-1000}}" \
-  --fee "${FEE_NICKS:-256}" --allow-low-fee >"$RUN/genesis/probe.txt" 2>&1 \
+  --fee-nicks "${FEE_NICKS:-256}" --allow-low-fee >"$RUN/genesis/probe.txt" 2>&1 \
   || die "probe create-tx failed"
 list_tx_files alice > "$RUN/genesis/probe-after.txt"
 comm -13 "$RUN/genesis/probe-before.txt" "$RUN/genesis/probe-after.txt" > "$RUN/genesis/probe-new.txt"
