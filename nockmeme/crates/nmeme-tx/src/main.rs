@@ -17,6 +17,7 @@ use std::process::ExitCode;
 
 use nmeme_core::Claim;
 use nmeme_tx::cli::{parse_claim, witness_with_signature};
+use nmeme_tx::fee::{enforce_fee, required_fee, FeeParams};
 use nmeme_tx::sighash::spend_sig_hash;
 use nmeme_tx::txfile::{rewrite, ParsedTransaction};
 use nmeme_tx::{attach_claim, Error};
@@ -31,6 +32,7 @@ fn main() -> ExitCode {
     let result = match args.get(1).map(String::as_str) {
         Some("sighash") if args.len() == 3 || args.len() == 4 => cmd_sighash(&args),
         Some("seeds") if args.len() == 3 => cmd_seeds(&args),
+        Some("fee") if args.len() >= 3 => cmd_fee(&args),
         Some("attach") if args.len() >= 5 => cmd_attach(&args),
         Some("set-sig") if args.len() == 8 => cmd_set_sig(&args),
         _ => {
@@ -50,6 +52,7 @@ fn main() -> ExitCode {
 const USAGE: &str = "usage:
   nmeme-tx sighash <tx.jam> [out-dir]
   nmeme-tx seeds   <tx.jam>
+  nmeme-tx fee     <tx.jam> [--height N] [--mainnet]
   nmeme-tx attach  <tx.jam> <out.jam> <lock-root>=<claim-spec> [more...]
   nmeme-tx set-sig <tx.jam> <name-b58> <pkh-b58> <pubkey-b58> <sig.jam> <out.jam>
 
@@ -219,6 +222,15 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
         }
     }
 
+    // The claims added words. Refuse to write a transaction the chain would
+    // reject for fee, and say by how much.
+    let params = fee_params_from_env();
+    let report = enforce_fee(&spends, params).map_err(|e| format!("{e}"))?;
+    println!(
+        "FEE\tcurrent={}\trequired={}\tseed_words={}\twitness_words={}",
+        report.current, report.required, report.seed_words, report.witness_words
+    );
+
     let mut out_slab: NounSlab<NockJammer> = NounSlab::new();
     let jammed = rewrite(noun.in_space(&space), &mut out_slab, &spends, &|_| None)
         .map_err(|e| format!("rewrite: {e}"))?;
@@ -243,6 +255,34 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
         let digest = spend_sig_hash(&spend1.seeds, spend1.fee.0 as u64)
             .map_err(|e| format!("sighash: {e}"))?;
         println!("NEWSIGHASH\t{}\t{}", name.first.to_base58(), digest.to_base58());
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+/// NMEME_FEE_HEIGHT and NMEME_FEE_NETWORK (fakenet|mainnet) select the fee
+/// constants; fakenet at height 1 unless told otherwise.
+fn fee_params_from_env() -> FeeParams {
+    let height = std::env::var("NMEME_FEE_HEIGHT").ok().and_then(|h| h.parse().ok()).unwrap_or(1);
+    match std::env::var("NMEME_FEE_NETWORK").as_deref() {
+        Ok("mainnet") => FeeParams::mainnet(height),
+        _ => FeeParams::fakenet(height),
+    }
+}
+
+fn cmd_fee(args: &[String]) -> Result<ExitCode, String> {
+    let (_slab, _bare, spends) = load(&args[2])?;
+    let mut params = fee_params_from_env();
+    if let Some(i) = args.iter().position(|a| a == "--height") {
+        params.height = args.get(i + 1).and_then(|h| h.parse().ok()).ok_or("--height needs a number")?;
+    }
+    if args.iter().any(|a| a == "--mainnet") {
+        params = FeeParams::mainnet(params.height);
+    }
+    let r = required_fee(&spends, params).map_err(|e| format!("{e}"))?;
+    println!("FEE\tcurrent={}\trequired={}\tseed_words={}\twitness_words={}", r.current, r.required, r.seed_words, r.witness_words);
+    if r.current < r.required {
+        println!("SHORTFALL\t{}", r.required - r.current);
+        return Ok(ExitCode::from(1));
     }
     Ok(ExitCode::SUCCESS)
 }

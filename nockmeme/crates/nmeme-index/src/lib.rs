@@ -209,3 +209,117 @@ pub fn name_key(name: &Name) -> Vec<u8> {
     key.extend_from_slice(&name.last.to_be_bytes());
     key
 }
+
+// ---------------------------------------------------------------------------
+// One canonical snapshot, read completely.
+// ---------------------------------------------------------------------------
+
+/// One page of a balance read, as the node returned it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Page {
+    pub height: Option<u64>,
+    pub block_id: Option<String>,
+    /// (note name, owning address, raw note-data entries as (key, blob)).
+    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>)>,
+    pub next_page_token: String,
+}
+
+/// Every unspent note the queried addresses hold, at exactly one block.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Snapshot {
+    pub height: u64,
+    pub block_id: String,
+    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>)>,
+}
+
+/// Upper bound on pages per address. A node that never returns an empty
+/// `next_page_token` would otherwise loop forever.
+pub const MAX_PAGES: usize = 10_000;
+
+/// Drives a page loop to completion.
+///
+/// `fetch` is called with the page token to request (empty for the first
+/// page) and returns that page. The loop follows `next_page_token` until the
+/// node returns an empty one. A read that stops after the first page silently
+/// drops every note beyond the server's page size, and a balance rebuilt from
+/// a partial note set is simply wrong — so the loop is here, separated from
+/// the transport, and tested.
+pub fn collect_pages<F>(mut fetch: F) -> Result<Vec<Page>, String>
+where
+    F: FnMut(&str) -> Result<Page, String>,
+{
+    let mut pages = Vec::new();
+    let mut token = String::new();
+    loop {
+        let page = fetch(&token)?;
+        let next = page.next_page_token.clone();
+        pages.push(page);
+        if next.is_empty() {
+            return Ok(pages);
+        }
+        if pages.len() >= MAX_PAGES {
+            return Err(format!("more than {MAX_PAGES} pages; refusing to loop forever"));
+        }
+        if next == token {
+            return Err("node returned the same page token twice".to_string());
+        }
+        token = next;
+    }
+}
+
+/// Merges pages — possibly from several addresses — into one snapshot,
+/// requiring every page to report the **same** height and block id.
+///
+/// Reads that span a block boundary describe two different chains. A balance
+/// assembled from Alice's notes at height N and Bob's at height N+1 can show
+/// weight that was spent, or miss weight that was received, and no later
+/// check would notice. Disagreement is therefore an error; the caller
+/// re-reads rather than proceeding.
+pub fn fold_pages(pages: &[Page]) -> Result<Snapshot, String> {
+    let mut height: Option<u64> = None;
+    let mut block_id: Option<String> = None;
+    let mut notes = Vec::new();
+    for (i, page) in pages.iter().enumerate() {
+        let h = page.height.ok_or_else(|| format!("page {i} carries no height"))?;
+        let b = page
+            .block_id
+            .clone()
+            .ok_or_else(|| format!("page {i} carries no block id"))?;
+        match (&height, &block_id) {
+            (None, None) => {
+                height = Some(h);
+                block_id = Some(b);
+            }
+            (Some(h0), Some(b0)) => {
+                if *h0 != h || *b0 != b {
+                    return Err(format!(
+                        "pages disagree on the chain snapshot: page 0 at height {h0} block {b0}, \
+                         page {i} at height {h} block {b}. The chain advanced mid-read; re-read."
+                    ));
+                }
+            }
+            _ => unreachable!("height and block id are set together"),
+        }
+        notes.extend(page.notes.iter().cloned());
+    }
+    Ok(Snapshot {
+        height: height.ok_or("no pages")?,
+        block_id: block_id.ok_or("no pages")?,
+        notes,
+    })
+}
+
+/// Requires two snapshots to be the same block. Used to bracket the
+/// transaction-detail reads: if the tip moved between the balance read and the
+/// transaction reads, the two describe different states and the rebuild is
+/// discarded.
+pub fn require_same_snapshot(before: &Snapshot, after: &Snapshot) -> Result<(), String> {
+    if before.block_id != after.block_id || before.height != after.height {
+        return Err(format!(
+            "chain advanced during the read: began at height {} block {}, ended at height {} \
+             block {}. Rebuild discarded; re-run to read a single snapshot.",
+            before.height, before.block_id, after.height, after.block_id
+        ));
+    }
+    Ok(())
+}

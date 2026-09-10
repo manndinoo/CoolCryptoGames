@@ -188,12 +188,12 @@ build_sign_send() {
     log "  spending note(s): $names"
     wallet alice create-tx --names "$names" \
       --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
-      --fee-nicks "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
+      --fee-nicks "${FEE_NICKS:-4096}" --allow-low-fee >"$dir/create.txt" 2>&1 \
       || die "$label: create-tx failed (see $dir/create.txt)"
   else
     wallet alice create-tx \
       --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
-      --fee-nicks "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
+      --fee-nicks "${FEE_NICKS:-4096}" --allow-low-fee >"$dir/create.txt" 2>&1 \
       || die "$label: create-tx failed (see $dir/create.txt)"
   fi
   list_tx_files alice > "$dir/tx-after.txt"
@@ -220,8 +220,13 @@ build_sign_send() {
     log "  verified output lock-root $lock"
   done
 
-  "$NMEME_TX" attach "$tx" "$dir/attached.jam" "$@" >"$dir/attach.txt" \
-    || die "$label: attach failed"
+  # attach computes the post-claim minimum fee with the repository's own
+  # estimator and refuses if the wallet-chosen fee is below it. FEE_NICKS
+  # defaults to 4096 (0.0625 NOCK on fakenet) to clear it; the FEE line shows
+  # the actual numbers and a refusal names the shortfall.
+  NMEME_FEE_HEIGHT="${HEIGHT:-1}" "$NMEME_TX" attach "$tx" "$dir/attached.jam" "$@" >"$dir/attach.txt" \
+    || die "$label: attach refused (fee or claim): $(tail -1 "$dir/attach.txt" 2>/dev/null)"
+  grep '^FEE' "$dir/attach.txt" >&2 || die "$label: attach reported no fee line"
   local newhash spendname
   newhash=$(awk -F'\t' '$1=="NEWSIGHASH"{print $3}' "$dir/attach.txt" | head -1)
   spendname=$(awk -F'\t' '$1=="NEWSIGHASH"{print $2}' "$dir/attach.txt" | head -1)
@@ -251,7 +256,7 @@ mkdir -p "$RUN/genesis"
 list_tx_files alice > "$RUN/genesis/probe-before.txt"
 wallet alice create-tx \
   --recipient "{\"kind\":\"p2pkh\",\"address\":\"$BOB\",\"amount\":${SEND_NICKS:-1000}}" \
-  --fee-nicks "${FEE_NICKS:-256}" --allow-low-fee >"$RUN/genesis/probe.txt" 2>&1 \
+  --fee-nicks "${FEE_NICKS:-4096}" --allow-low-fee >"$RUN/genesis/probe.txt" 2>&1 \
   || die "probe create-tx failed"
 list_tx_files alice > "$RUN/genesis/probe-after.txt"
 comm -13 "$RUN/genesis/probe-before.txt" "$RUN/genesis/probe-after.txt" > "$RUN/genesis/probe-new.txt"

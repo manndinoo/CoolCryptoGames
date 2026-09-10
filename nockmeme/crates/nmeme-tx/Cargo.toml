@@ -13,6 +13,7 @@ nockvm = { workspace = true }
 noun-serde = { workspace = true }
 thiserror = { workspace = true }
 bytes = { workspace = true }
+wallet-tx-builder = { workspace = true }
 
 [dev-dependencies]
 tracing = { workspace = true }

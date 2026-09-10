@@ -14,11 +14,13 @@
 
 pub mod attach;
 pub mod cli;
+pub mod fee;
 pub mod names;
 pub mod sighash;
 pub mod txfile;
 
 pub use attach::attach_claim;
+pub use fee::{enforce_fee, required_fee, FeeParams, FeeReport};
 pub use names::{first_name, output_name};
 pub use sighash::{note_data_digest, seed_sig_digest, seeds_sig_digest, spend_sig_hash};
 
@@ -41,6 +43,8 @@ pub enum Error {
     DuplicateKey(String),
     #[error("claim encoding failed: {0}")]
     Claim(#[from] nmeme_core::Error),
+    #[error("fee {current} is below the minimum {required} for this transaction (short by {shortfall})")]
+    FeeTooLow { current: u64, required: u64, shortfall: u64 },
     #[error("unsupported transaction tag {0}")]
     UnsupportedTxTag(u64),
     #[error("unsupported witness-data tag {0}")]

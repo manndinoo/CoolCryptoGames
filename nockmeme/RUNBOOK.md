@@ -66,6 +66,11 @@ until grep -aq "handle-command: born" "$RUN/node.log"; do sleep 30; done
 bash /path/to/nockmeme/scripts/live-demo.sh 2>"$RUN/progress.log" | tee "$RUN/results.txt"
 ```
 
+Fees: `create-tx` is given `--fee-nicks ${FEE_NICKS:-4096}`. `attach` then
+recomputes the minimum for the transaction *with* the claim attached and
+refuses if the fee is below it, printing a `FEE current=… required=…` line to
+the progress log. If it refuses, raise `FEE_NICKS` to the number it names.
+
 `node-lowmem.sh` already binds the public gRPC service, which `nmeme-index`
 needs and which is off by default. If the node was started some other way,
 `run-after-born.sh` restarts it correctly once the setup cache exists.

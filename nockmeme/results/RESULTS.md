@@ -92,6 +92,36 @@ The self-test demonstrates that directly, then shows the replacement rejecting
 the same input. The decision now keys on the wallet's exit code
 (`wallet.hoon:2028-2030`).
 
+### A8. Fee enforcement after attachment — 5 tests
+
+```bash
+cargo test -p nmeme-tx --test fee
+```
+
+Attaching a claim adds words to a seed after the wallet has already sized the
+fee. `nmeme-tx attach` now computes the post-attach minimum with the
+repository's own estimator (`wallet_tx_builder::word_count`) and
+`fee::compute_minimum_fee`, and **refuses to write** a transaction whose fee
+is below it, naming the shortfall. `nmeme-tx fee` reports the same numbers.
+Constants are parameters with fakenet defaults (base fee 128, bythos at 1,
+divisor 4, floor 256), not baked in. One test pins that attaching raises the
+required fee; one that exactly the minimum passes and one nick less does not.
+
+### A9. Snapshot-consistent, paginated reads — 8 tests
+
+```bash
+cargo test -p nmeme-index --test snapshot
+```
+
+Balance reads follow `next_page_token` to the end for every address (a read
+that stops after one page silently drops every note past the server's page
+size), and every page from every address must report the **same** height and
+block id or the fold refuses — a balance assembled across a block boundary is
+two chains, not one. The transaction-detail reads are bracketed by a second
+snapshot read that must match the first, and each mined transaction's height
+must not exceed the snapshot's. The page loop and the fold are pure functions
+tested without a node, including a repeated token and a runaway pager.
+
 ### A7. Environment limits, measured
 
 | `RAYON_NUM_THREADS` | Peak RSS | Outcome |
@@ -106,6 +136,12 @@ Numbers, `dmesg` evidence and the full RSS series:
 [`environment.md`](./environment.md), [`node-memory-1thread.tsv`](./node-memory-1thread.tsv).
 
 ---
+
+---
+
+**Everything above in A is an offline code check. What follows in B is
+separate: it is not a code defect list, it is what cannot be shown without
+a chain.**
 
 ## B. Designed, implemented, or assumed — but NOT verified
 

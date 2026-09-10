@@ -136,43 +136,20 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
             .await
             .map_err(|e| format!("connect {addr}: {e}"))?;
         let want_first = nmeme_index::first_name_of(&lock);
-        let request = WalletGetBalanceRequest {
-            selector: Some(wallet_get_balance_request::Selector::Address(
-                nockapp_grpc_proto::pb::common::v1::Base58Pubkey { key: address.clone() },
-            )),
-            page: None,
-        };
-        let response = client
-            .wallet_get_balance(request)
-            .await
-            .map_err(|e| format!("wallet_get_balance: {e}"))?
-            .into_inner();
-        let balance = match response.result {
-            Some(wallet_get_balance_response::Result::Balance(b)) => b,
-            Some(wallet_get_balance_response::Result::Error(err)) => {
-                return Err(format!("wallet_get_balance: {}", err.message))
-            }
-            None => return Err("wallet_get_balance returned no result".to_string()),
-        };
+        let snapshot = read_snapshot(&mut client, &[address.clone()]).await?;
+        println!("# snapshot height {} block {}", snapshot.height, snapshot.block_id);
 
         let mut found = Vec::new();
-        for entry in &balance.notes {
-            let Some(name) = entry.name.as_ref() else { continue };
-            let name = decode_name(name)?;
+        for (name, _owner, data) in &snapshot.notes {
             if name.first != want_first {
                 continue;
             }
-            let Some(note) = entry.note.as_ref() else { continue };
-            let Some(NoteVersion::V1(v1)) = note.note_version.as_ref() else { continue };
-            let Some(nd) = v1.note_data.as_ref() else { continue };
-            for data in &nd.entries {
-                if data.key != nmeme_core::NOTE_DATA_KEY {
+            for (key, blob) in data {
+                if key != nmeme_core::NOTE_DATA_KEY {
                     continue;
                 }
-                let claim = nmeme_index::decode_claim(&data.blob)
-                    .map_err(|e| format!("claim on note: {e}"))?;
-                let assets = v1.assets.as_ref().map(|a| a.value).unwrap_or(0);
-                found.push((name.clone(), assets, claim.amount()));
+                let claim = nmeme_index::decode_claim(blob).map_err(|e| format!("claim on note: {e}"))?;
+                found.push((name.clone(), 0u64, claim.amount()));
             }
         }
 
@@ -252,41 +229,12 @@ async fn rebuild(
         .await
         .map_err(|e| format!("connect {addr}: {e}"))?;
 
-    // 1. The canonical unspent note set, with full names and note-data.
-    let mut unspent: Vec<(Name, String)> = Vec::new();
-    let mut height_seen: Option<u64> = None;
-    for address in &addresses {
-        let request = WalletGetBalanceRequest {
-            selector: Some(wallet_get_balance_request::Selector::Address(
-                nockapp_grpc_proto::pb::common::v1::Base58Pubkey { key: address.clone() },
-            )),
-            page: None,
-        };
-        let response = client
-            .wallet_get_balance(request)
-            .await
-            .map_err(|e| format!("wallet_get_balance({address}): {e}"))?
-            .into_inner();
-        let balance = match response.result {
-            Some(wallet_get_balance_response::Result::Balance(b)) => b,
-            Some(wallet_get_balance_response::Result::Error(err)) => {
-                return Err(format!("wallet_get_balance: {}", err.message))
-            }
-            None => return Err("wallet_get_balance returned no result".to_string()),
-        };
-        if let Some(h) = balance.height.as_ref() {
-            height_seen = Some(h.value);
-        }
-        for entry in &balance.notes {
-            let Some(name) = entry.name.as_ref() else { continue };
-            let name = decode_name(name)?;
-            unspent.push((name, address.clone()));
-        }
-    }
-    println!("# canonical note set: {} unspent note(s)", unspent.len());
-    if let Some(h) = height_seen {
-        println!("HEIGHT\t{h}");
-    }
+    // 1. One canonical snapshot: every address, every page, one block.
+    let snapshot = read_snapshot(&mut client, &addresses).await?;
+    let unspent: Vec<(Name, String)> = snapshot.notes.iter().map(|(n, a, _)| (n.clone(), a.clone())).collect();
+    println!("# canonical snapshot: {} unspent note(s) at height {} block {}", unspent.len(), snapshot.height, snapshot.block_id);
+    println!("HEIGHT\t{}", snapshot.height);
+    println!("BLOCK\t{}", snapshot.block_id);
 
     // 2. Candidate output names: inputs of later steps, plus the final unspent
     //    set. An output of step N is one or the other.
@@ -307,6 +255,12 @@ async fn rebuild(
 
         // Bind the local file to the mined transaction before trusting it.
         let (height, block) = verify_canonical(&addr, txid, plan).await?;
+        if height > snapshot.height {
+            return Err(format!(
+                "{txid} is at height {height}, beyond the snapshot at {}; the reads are not of one chain state",
+                snapshot.height
+            ));
+        }
         println!("CANONICAL\t{txid}\theight={height}\tblock={block}");
 
         let paired = nmeme_index::bind_outputs(&plan.destinations, &candidates, &mut taken)?;
@@ -324,6 +278,12 @@ async fn rebuild(
         let outcome = indexer.apply(&view);
         println!("STEP\t{txid}\t{outcome:?}");
     }
+
+    // 3b. Bracket: the transaction reads happened after the balance read. If
+    //     the tip moved in between, the two describe different states.
+    let after = read_snapshot(&mut client, &addresses).await?;
+    nmeme_index::require_same_snapshot(&snapshot, &after)?;
+    println!("SNAPSHOT\tstable\theight={}\tblock={}", snapshot.height, snapshot.block_id);
 
     // 4. Report validated balances, keyed by lock-root.
     println!("TOKEN\t{}", token.to_base58());
@@ -475,6 +435,74 @@ async fn verify_canonical(
         chain_outputs.remove(pos);
     }
     Ok((details.height, block))
+}
+
+/// Reads every unspent note for every address, following pagination to the
+/// end for each, and folds the pages into one snapshot — refusing if any page
+/// reports a different block than the first.
+async fn read_snapshot(
+    client: &mut NockchainServiceClient<tonic::transport::Channel>,
+    addresses: &[String],
+) -> Result<nmeme_index::Snapshot, String> {
+    let mut all_pages: Vec<nmeme_index::Page> = Vec::new();
+    for address in addresses {
+        // collect_pages is synchronous over a closure; fetch each page here.
+        let mut token = String::new();
+        let mut pages_for_address = Vec::new();
+        loop {
+            let request = WalletGetBalanceRequest {
+                selector: Some(wallet_get_balance_request::Selector::Address(
+                    nockapp_grpc_proto::pb::common::v1::Base58Pubkey { key: address.clone() },
+                )),
+                page: Some(nockapp_grpc_proto::pb::common::v1::PageRequest {
+                    client_page_items_limit: 0,
+                    page_token: token.clone(),
+                    max_bytes: 0,
+                }),
+            };
+            let response = client
+                .wallet_get_balance(request)
+                .await
+                .map_err(|e| format!("wallet_get_balance({address}): {e}"))?
+                .into_inner();
+            let balance = match response.result {
+                Some(wallet_get_balance_response::Result::Balance(b)) => b,
+                Some(wallet_get_balance_response::Result::Error(err)) => {
+                    return Err(format!("wallet_get_balance({address}): {}", err.message))
+                }
+                None => return Err("wallet_get_balance returned no result".to_string()),
+            };
+            let mut notes = Vec::new();
+            for entry in &balance.notes {
+                let Some(name) = entry.name.as_ref() else { continue };
+                let name = decode_name(name)?;
+                let mut data = Vec::new();
+                if let Some(note) = entry.note.as_ref() {
+                    if let Some(NoteVersion::V1(v1)) = note.note_version.as_ref() {
+                        if let Some(nd) = v1.note_data.as_ref() {
+                            for e in &nd.entries {
+                                data.push((e.key.clone(), e.blob.clone()));
+                            }
+                        }
+                    }
+                }
+                notes.push((name, address.clone(), data));
+            }
+            let next = balance.page.as_ref().map(|p| p.next_page_token.clone()).unwrap_or_default();
+            pages_for_address.push(nmeme_index::Page {
+                height: balance.height.as_ref().map(|h| h.value),
+                block_id: balance.block_id.as_ref().map(|b| decode_hash(b).map(|h| h.to_base58())).transpose()?,
+                notes,
+                next_page_token: next.clone(),
+            });
+            if next.is_empty() { break; }
+            if next == token { return Err("node repeated a page token".to_string()); }
+            if pages_for_address.len() >= nmeme_index::MAX_PAGES { return Err("too many pages".to_string()); }
+            token = next;
+        }
+        all_pages.extend(pages_for_address);
+    }
+    nmeme_index::fold_pages(&all_pages)
 }
 
 fn decode_name(name: &nockapp_grpc_proto::pb::common::v1::Name) -> Result<Name, String> {
