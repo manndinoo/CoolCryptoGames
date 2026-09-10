@@ -52,11 +52,17 @@ regression tests that fail without the fix.
 `many_capped_claims_cannot_overflow_the_indexer` is robustness only — the
 conservation check rejects it either way.
 
-### A5. Attachment, digest behaviour and file surgery — 19 tests
+### A5. Attachment, digest behaviour, file surgery, blob decoding — 27 tests
 
 ```bash
-cargo test -p nmeme-tx    # 13 attach + 5 roundtrip + 1 fixture report
+cargo test -p nmeme-tx       # 13 attach + 5 roundtrip + 1 fixture report
+cargo test -p nmeme-index    # 8 decode
 ```
+
+The decode tests cover the seam between what `nmeme-tx` writes and what the
+node hands back as a jammed blob, including a foreign payload under the `meme`
+key and a future-version claim, both of which must be rejected rather than
+coerced into a v0 claim.
 
 The load-bearing round-trip test asserts that the signing hash computed before
 writing a transaction equals the one computed after reading it back. If jam/cue
@@ -120,12 +126,13 @@ Implemented (`nmeme-tx attach`/`set-sig`, `nmeme-index`,
 transaction has been broadcast. There are no transaction IDs, no block heights,
 and no on-chain balances to report.
 
-Note also what `nmeme-index rebuild` is, once it does run: it reconstructs
-balances from the node's canonical *unspent-note set* at a stated height and
-block id, by decoding note-data over gRPC. It is **not** a replay from genesis —
-the summary `TransactionDetails` RPC carries no note-data. It checks that the
-chain agrees with the expected split; it does not independently re-derive it.
-SPEC §8's replay rebuild remains unimplemented.
+`nmeme-index rebuild` replays the mined transactions through the real
+`Indexer` — genesis rules, exact conservation, burn-on-invalid — and asserts
+per-lock-root balances and total supply. Output notes are paired to
+destinations by first-name (derived from the lock-root), with ambiguity an
+error. An earlier version summed anything under the `meme` key and would have
+counted an unrelated token's genesis; that is gone. But none of this has run
+against a chain.
 
 ### B4. Trading
 
