@@ -17,8 +17,30 @@ use crate::ticker::Ticker;
 use crate::Error;
 
 /// A token's permanent identity.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+///
+/// `Hash` implements neither `Ord` nor `std::hash::Hash`, so both are defined
+/// here over the canonical limb array. That gives a stable, well-defined order
+/// for the maps the indexer keys on.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenId(pub NockHash);
+
+impl PartialOrd for TokenId {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TokenId {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.to_array().cmp(&other.0.to_array())
+    }
+}
+
+impl std::hash::Hash for TokenId {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.to_array().hash(state);
+    }
+}
 
 impl TokenId {
     /// Derives the identity of the token created by a genesis transaction.
