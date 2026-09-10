@@ -16,3 +16,4 @@ noun-serde = { workspace = true }
 tonic = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 bytes = { workspace = true }
+thiserror = { workspace = true }

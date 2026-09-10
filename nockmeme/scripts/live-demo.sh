@@ -29,6 +29,10 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 . "$HERE/lib-verify.sh"
 
+# Progress goes to stderr; only transaction results go to stdout and to
+# result files. An earlier version returned the txid through stdout while also
+# echoing progress there, so the caller captured a progress line as the txid.
+log() { echo "$*" >&2; }
 die() { echo "FAIL: $*" >&2; exit 1; }
 strip() { sed 's/\x1b\[[0-9;]*m//g'; }
 
@@ -126,15 +130,20 @@ done
 [ -n "$HEIGHT" ] || die "no block mined within ${MINE_TIMEOUT:-1800}s"
 echo "height=$HEIGHT"
 
-# broadcast_and_confirm <tx.jam> <label> -> echoes "<txid> <height>"
+# broadcast_and_confirm <tx.jam> <label> <result-file>
+# Writes TXID= and HEIGHT= to the result file. Nothing is returned through
+# stdout, so no caller has to disentangle results from progress, and no
+# subshell swallows a failure.
 broadcast_and_confirm() {
-  local tx="$1" label="$2"
+  local tx="$1" label="$2" result="$3"
   wallet alice send-tx "$tx" >"$RUN/send-$label.txt" 2>&1 \
     || die "send-tx failed for $label (see $RUN/send-$label.txt)"
-  strip < "$RUN/send-$label.txt" | tail -5
+  strip < "$RUN/send-$label.txt" | tail -5 >&2
+
   local txid
   txid=$(grep -oE '[0-9A-Za-z]{40,}' "$RUN/send-$label.txt" | head -1 || true)
   [ -n "$txid" ] || die "$label: no transaction id in send-tx output"
+  log "  txid=$txid"
 
   local deadline=$((SECONDS + ${INCLUDE_TIMEOUT:-900}))
   while (( SECONDS < deadline )); do
@@ -143,8 +152,10 @@ broadcast_and_confirm() {
     set -e
     if grep -qi "confirmed" "$RUN/status-$label.txt"; then
       local h
-      h=$(grep -oE 'height[^0-9]*([0-9]+)' "$RUN/status-$label.txt" | grep -oE '[0-9]+' | head -1 || true)
-      echo "$txid ${h:-unknown}"
+      h=$(grep -oiE 'height[^0-9]*([0-9]+)' "$RUN/status-$label.txt" \
+          | grep -oE '[0-9]+' | head -1 || true)
+      { echo "TXID=$txid"; echo "HEIGHT=${h:-unknown}"; } > "$result"
+      log "  confirmed at height ${h:-unknown}"
       return 0
     fi
     sleep 15
@@ -152,55 +163,59 @@ broadcast_and_confirm() {
   die "$label: transaction $txid not confirmed within ${INCLUDE_TIMEOUT:-900}s"
 }
 
-# build_sign_send <label> <recipient-pkh> <amount> <claim-spec> <lock-selector>
-# Builds an ordinary transaction, gates it, attaches a claim, re-signs,
-# re-verifies, and broadcasts. Echoes "<txid> <height>".
+# build_sign_send <label> <recipient> <amount> <result-file> [--names <names>] <lock=claim>...
+# Called directly, never in $( ), so die() actually stops the script.
 build_sign_send() {
-  local label="$1" to="$2" amount="$3" claim="$4"
-  local dir="$RUN/$label"; mkdir -p "$dir"
+  local label="$1" to="$2" amount="$3" result="$4"; shift 4
+  local names=""
+  if [ "${1:-}" = "--names" ]; then names="$2"; shift 2; fi
+  local dir="$RUN/$label"; mkdir -p "$dir" "$dir/final"
 
   local tx
-  # The wallet writes ./txs/<name>.tx relative to its cwd (wallet.hoon:1687),
-  # but the same file can land under wallet/txs depending on how NOCKAPP_HOME
-  # resolves. Rather than guess a path or a timestamp window, snapshot the file
-  # set before and after and take the difference: exactly one new file is
-  # expected, and anything else is an error rather than a lucky pick.
   list_tx_files alice > "$dir/tx-before.txt"
-  wallet alice create-tx \
-    --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
-    --fee "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
-    || die "$label: create-tx failed (see $dir/create.txt)"
+  if [ -n "$names" ]; then
+    log "  spending note(s): $names"
+    wallet alice create-tx --names "$names" \
+      --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
+      --fee "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
+      || die "$label: create-tx failed (see $dir/create.txt)"
+  else
+    wallet alice create-tx \
+      --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
+      --fee "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
+      || die "$label: create-tx failed (see $dir/create.txt)"
+  fi
   list_tx_files alice > "$dir/tx-after.txt"
   comm -13 "$dir/tx-before.txt" "$dir/tx-after.txt" > "$dir/tx-new.txt"
-
-  local count
-  count=$(wc -l < "$dir/tx-new.txt")
-  [ "$count" -eq 1 ] || die "$label: expected exactly 1 new transaction file, got $count
-$(cat "$dir/tx-new.txt")"
+  local count; count=$(wc -l < "$dir/tx-new.txt")
+  [ "$count" -eq 1 ] || die "$label: expected exactly 1 new transaction file, got $count"
   tx=$(head -1 "$dir/tx-new.txt")
-  [ -s "$tx" ] || die "$label: transaction file $tx is missing or empty"
-  echo "  tx=$tx"
+  [ -s "$tx" ] || die "$label: transaction file $tx missing or empty"
+  log "  tx=$tx"
 
   "$NMEME_TX" sighash "$tx" "$dir" >"$dir/sighash.txt" \
     || die "$label: sighash failed (unsigned transaction?)"
   verify_all alice "$dir/sighash.txt" "$label-gate"
 
-  # Which seed carries the claim: Alice's change (the larger gift), so the
-  # supply stays with her at genesis and the transfer pays Bob explicitly.
   "$NMEME_TX" seeds "$tx" >"$dir/seeds.txt" || die "$label: seeds failed"
-  grep -q '^MERGED' "$dir/seeds.txt" && die "$label: two seeds share a lock-root; only one may carry a claim"
-  local lock
-  lock=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$dir/seeds.txt" | sort -rn | head -1 | cut -f2)
-  [ -n "$lock" ] || die "$label: could not resolve a lock-root"
-  echo "  lock-root=$lock"
+  grep -q '^MERGED' "$dir/seeds.txt" && die "$label: two seeds share a lock-root"
 
-  "$NMEME_TX" attach "$tx" "$lock" "$claim" "$dir/attached.jam" >"$dir/attach.txt" \
+  # Every lock-root named in a claim must actually be paid by this transaction.
+  local spec
+  for spec in "$@"; do
+    local lock="${spec%%=*}"
+    grep -qF "$lock" "$dir/seeds.txt" \
+      || die "$label: no seed pays lock-root $lock (claims must match outputs)"
+    log "  verified output lock-root $lock"
+  done
+
+  "$NMEME_TX" attach "$tx" "$dir/attached.jam" "$@" >"$dir/attach.txt" \
     || die "$label: attach failed"
   local newhash spendname
   newhash=$(awk -F'\t' '$1=="NEWSIGHASH"{print $3}' "$dir/attach.txt" | head -1)
   spendname=$(awk -F'\t' '$1=="NEWSIGHASH"{print $2}' "$dir/attach.txt" | head -1)
   [ -n "$newhash" ] && [ -n "$spendname" ] || die "$label: attach produced no digest"
-  echo "  new sig-hash=$newhash"
+  log "  new sig-hash=$newhash"
 
   sign_hash alice "$newhash" "$dir/new.sig"
 
@@ -210,38 +225,77 @@ $(cat "$dir/tx-new.txt")"
   "$NMEME_TX" set-sig "$dir/attached.jam" "$spendname" "$pkh" "$pubkey" "$dir/new.sig" \
     "$dir/final.jam" >>"$dir/attach.txt" || die "$label: set-sig failed"
 
-  # Re-verify the finished transaction against its own new digest.
-  mkdir -p "$dir/final"
   "$NMEME_TX" sighash "$dir/final.jam" "$dir/final" >"$dir/final-sighash.txt" \
     || die "$label: sighash of the re-signed transaction failed"
   verify_all alice "$dir/final-sighash.txt" "$label-resigned"
 
-  broadcast_and_confirm "$dir/final.jam" "$label"
+  broadcast_and_confirm "$dir/final.jam" "$label" "$result"
 }
 
-echo "== stage 5: genesis =="
-read -r GENESIS_TXID GENESIS_HEIGHT < <(
-  build_sign_send genesis "$BOB" "${SEND_NICKS:-1000}" \
-    "genesis:${TICKER:-DOGE}:6:${SUPPLY:-1000000}"
-)
+log "== stage 5: genesis =="
+# The genesis transaction pays Bob a little NOCK; Alice's change seed carries
+# the whole token supply.
+"$NMEME_TX" seeds /dev/null >/dev/null 2>&1 || true
+mkdir -p "$RUN/genesis"
+list_tx_files alice > "$RUN/genesis/probe-before.txt"
+wallet alice create-tx \
+  --recipient "{\"kind\":\"p2pkh\",\"address\":\"$BOB\",\"amount\":${SEND_NICKS:-1000}}" \
+  --fee "${FEE_NICKS:-256}" --allow-low-fee >"$RUN/genesis/probe.txt" 2>&1 \
+  || die "probe create-tx failed"
+list_tx_files alice > "$RUN/genesis/probe-after.txt"
+comm -13 "$RUN/genesis/probe-before.txt" "$RUN/genesis/probe-after.txt" > "$RUN/genesis/probe-new.txt"
+PROBE=$(head -1 "$RUN/genesis/probe-new.txt")
+[ -s "$PROBE" ] || die "probe produced no transaction"
+"$NMEME_TX" seeds "$PROBE" > "$RUN/genesis/probe-seeds.txt" || die "probe seeds failed"
+ALICE_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$RUN/genesis/probe-seeds.txt" | sort -rn | head -1 | cut -f2)
+BOB_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$RUN/genesis/probe-seeds.txt" | sort -n | head -1 | cut -f2)
+[ -n "$ALICE_LOCK" ] && [ -n "$BOB_LOCK" ] || die "could not resolve lock-roots"
+[ "$ALICE_LOCK" != "$BOB_LOCK" ] || die "alice and bob resolved to the same lock-root"
+log "alice lock-root=$ALICE_LOCK"
+log "bob   lock-root=$BOB_LOCK"
+rm -f "$PROBE"
+
+build_sign_send genesis "$BOB" "${SEND_NICKS:-1000}" "$RUN/genesis.env" \
+  "$ALICE_LOCK=genesis:${TICKER:-DOGE}:6:${SUPPLY:-1000000}"
+. "$RUN/genesis.env"
+GENESIS_TXID="$TXID"; GENESIS_HEIGHT="$HEIGHT"
 echo "GENESIS txid=$GENESIS_TXID height=$GENESIS_HEIGHT"
 
-echo "== stage 6: transfer =="
 TOKEN=$("$NMEME_INDEX" token-id --tx "$RUN/genesis/final.jam" \
   --ticker "${TICKER:-DOGE}" --decimals 6) || die "could not derive token id"
-echo "token=$TOKEN"
-read -r XFER_TXID XFER_HEIGHT < <(
-  build_sign_send xfer "$BOB" "${SEND_NICKS:-1000}" \
-    "transfer:$TOKEN:${XFER_AMOUNT:-100}"
-)
+echo "TOKEN $TOKEN"
+
+log "== stage 6: transfer 100 to bob, 999900 back to alice =="
+# Spend the token-bearing note EXPLICITLY. Auto-selection would either miss it
+# or spend it with no claim attached, which burns the supply (SPEC §7).
+"$NMEME_INDEX" token-note --addr "${PUBLIC_ADDR:-127.0.0.1:5556}" \
+  --address "$ALICE" --lock "$ALICE_LOCK" > "$RUN/token-note.txt" \
+  || die "could not find alice's token-bearing note"
+cat "$RUN/token-note.txt" >&2
+TOKEN_NOTE=$(awk -F'\t' '$1=="NOTE"{print $2}' "$RUN/token-note.txt")
+[ -n "$TOKEN_NOTE" ] || die "no token note name"
+
+XFER_TO_BOB="${XFER_AMOUNT:-100}"
+XFER_CHANGE=$(( ${SUPPLY:-1000000} - XFER_TO_BOB ))
+log "  allocating $XFER_TO_BOB to bob, $XFER_CHANGE back to alice"
+
+build_sign_send xfer "$BOB" "${SEND_NICKS:-1000}" "$RUN/xfer.env" \
+  --names "$TOKEN_NOTE" \
+  "$BOB_LOCK=transfer:$TOKEN:$XFER_TO_BOB" \
+  "$ALICE_LOCK=transfer:$TOKEN:$XFER_CHANGE"
+. "$RUN/xfer.env"
+XFER_TXID="$TXID"; XFER_HEIGHT="$HEIGHT"
 echo "TRANSFER txid=$XFER_TXID height=$XFER_HEIGHT"
 
-echo "== stage 7: rebuild balances from the canonical chain =="
-# The public gRPC service (off by default) is the only one exposing
-# WalletGetBalance, which is where note-data is readable back.
+log "== stage 7: replay the mined transactions and assert balances =="
 "$NMEME_INDEX" rebuild --addr "${PUBLIC_ADDR:-127.0.0.1:5556}" --token "$TOKEN" \
-  --address "$ALICE" --address "$BOB" >"$RUN/balances.txt" \
-  || die "balance rebuild failed"
+  --step "$GENESIS_TXID:$RUN/genesis/final.jam" \
+  --step "$XFER_TXID:$RUN/xfer/final.jam" \
+  --address "$ALICE" --address "$BOB" \
+  --expect "$ALICE_LOCK=$XFER_CHANGE" \
+  --expect "$BOB_LOCK=$XFER_TO_BOB" \
+  --expect-total "${SUPPLY:-1000000}" \
+  > "$RUN/balances.txt" || die "balance rebuild or assertions failed"
 cat "$RUN/balances.txt"
 
 echo
@@ -249,4 +303,3 @@ echo "== summary =="
 echo "genesis  txid=$GENESIS_TXID height=$GENESIS_HEIGHT"
 echo "transfer txid=$XFER_TXID height=$XFER_HEIGHT"
 echo "token    $TOKEN"
-cat "$RUN/balances.txt"

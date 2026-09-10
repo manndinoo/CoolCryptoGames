@@ -9,20 +9,25 @@
 //! input note names, which are fixed before signing (SPEC §4), so it can be
 //! computed from the transaction file alone.
 //!
-//! `rebuild` reads the node's canonical unspent-note set over the public gRPC
-//! service and decodes each note's `meme` entry.
+//! `rebuild` replays the mined transactions through the real
+//! `nmeme_core::Indexer` and checks the result against the node's canonical
+//! unspent-note set.
 //!
-//! Be precise about what that is and is not. It reconstructs balances from
-//! **canonical chain state at a stated height and block id** — not by replaying
-//! history from genesis. It is therefore a check that the chain agrees with the
-//! expected split, not an independent re-derivation of it. SPEC §8's replay
-//! rebuild needs full transaction history including note-data, which the
-//! summary `TransactionDetails` RPC does not carry.
+//! It does **not** sum claims. Summing whatever carries a `meme` key would
+//! count an unrelated token's genesis, an inflated transfer, or a claim on a
+//! note nobody validated. The Indexer applies SPEC §5–§7 — genesis rules, exact
+//! conservation, burn-on-invalid — so a forged transfer contributes nothing and
+//! a foreign genesis registers a different token id.
+//!
+//! Note identity comes from the chain, not from guesswork: a note's `first`
+//! name is derived from its lock-root, so outputs pair with destinations
+//! exactly. Ambiguity is an error.
 
 use std::collections::BTreeMap;
 use std::process::ExitCode;
 
-use nmeme_core::{Claim, Ticker, TokenId};
+use nmeme_core::indexer::{NoteView, TxView};
+use nmeme_core::{Indexer, Ticker, TokenId};
 use nmeme_tx::txfile::ParsedTransaction;
 use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockapp_grpc_proto::pb::common::v2::note::NoteVersion;
@@ -37,6 +42,7 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().collect();
     let result = match args.get(1).map(String::as_str) {
         Some("token-id") => cmd_token_id(&args),
+        Some("token-note") => cmd_token_note(&args),
         Some("rebuild") => cmd_rebuild(&args),
         _ => {
             eprintln!("{USAGE}");
@@ -54,7 +60,11 @@ fn main() -> ExitCode {
 
 const USAGE: &str = "usage:
   nmeme-index token-id --tx <tx.jam> --ticker <TICKER> --decimals <N>
-  nmeme-index rebuild  --addr <host:port> --token <token-b58> --address <addr> [--address <addr>...]";
+  nmeme-index token-note --addr <host:port> --address <addr> --lock <lock-root-b58>
+  nmeme-index rebuild  --addr <host:port> --token <token-b58>
+                       --step <txid>:<tx.jam> [--step ...]   (canonical order)
+                       --address <addr> [--address ...]
+                       [--expect <lock-root-b58>=<amount>]... [--expect-total <n>]";
 
 fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter()
@@ -100,46 +110,153 @@ fn cmd_token_id(args: &[String]) -> Result<ExitCode, String> {
     Ok(ExitCode::SUCCESS)
 }
 
-fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
+/// Finds the note at a lock-root that actually carries token weight.
+///
+/// A transfer must spend that note explicitly. Letting the wallet auto-select
+/// inputs would very likely spend a plain NOCK note instead, leaving the token
+/// note untouched — or worse, spend the token note in a transaction with no
+/// claim attached, which burns the tokens outright (SPEC §7).
+///
+/// Prints `NOTE\t[<first> <last>]\t<assets>\t<amount>` in the bracket form
+/// `create-tx --names` expects.
+fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
     let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
-    let token_b58 = flag(args, "--token").ok_or("missing --token")?;
-    let token = TokenId(Hash::from_base58(token_b58).map_err(|e| format!("token: {e}"))?);
-    let addresses: Vec<String> = flags(args, "--address")
-        .into_iter()
-        .map(str::to_string)
-        .collect();
-    if addresses.is_empty() {
-        return Err("at least one --address is required".to_string());
-    }
+    let address = flag(args, "--address").ok_or("missing --address")?.to_string();
+    let lock = Hash::from_base58(flag(args, "--lock").ok_or("missing --lock")?)
+        .map_err(|e| format!("lock: {e}"))?;
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .map_err(|e| format!("tokio: {e}"))?;
-    runtime.block_on(rebuild(addr, token, addresses))
+    runtime.block_on(async move {
+        let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
+            .await
+            .map_err(|e| format!("connect {addr}: {e}"))?;
+        let want_first = nmeme_index::first_name_of(&lock)?;
+        let request = WalletGetBalanceRequest {
+            selector: Some(wallet_get_balance_request::Selector::Address(
+                nockapp_grpc_proto::pb::common::v1::Base58Pubkey { key: address.clone() },
+            )),
+            page: None,
+        };
+        let response = client
+            .wallet_get_balance(request)
+            .await
+            .map_err(|e| format!("wallet_get_balance: {e}"))?
+            .into_inner();
+        let balance = match response.result {
+            Some(wallet_get_balance_response::Result::Balance(b)) => b,
+            Some(wallet_get_balance_response::Result::Error(err)) => {
+                return Err(format!("wallet_get_balance: {}", err.message))
+            }
+            None => return Err("wallet_get_balance returned no result".to_string()),
+        };
+
+        let mut found = Vec::new();
+        for entry in &balance.notes {
+            let Some(name) = entry.name.as_ref() else { continue };
+            let name = decode_name(name)?;
+            if name.first != want_first {
+                continue;
+            }
+            let Some(note) = entry.note.as_ref() else { continue };
+            let Some(NoteVersion::V1(v1)) = note.note_version.as_ref() else { continue };
+            let Some(nd) = v1.note_data.as_ref() else { continue };
+            for data in &nd.entries {
+                if data.key != nmeme_core::NOTE_DATA_KEY {
+                    continue;
+                }
+                let claim = nmeme_index::decode_claim(&data.blob)
+                    .map_err(|e| format!("claim on note: {e}"))?;
+                let assets = v1.assets.as_ref().map(|a| a.value).unwrap_or(0);
+                found.push((name.clone(), assets, claim.amount()));
+            }
+        }
+
+        match found.as_slice() {
+            [] => Err(format!("no token-bearing note at lock-root {}", lock.to_base58())),
+            [(name, assets, amount)] => {
+                println!(
+                    "NOTE\t[{} {}]\t{}\t{}",
+                    name.first.to_base58(),
+                    name.last.to_base58(),
+                    assets,
+                    amount
+                );
+                Ok(ExitCode::SUCCESS)
+            }
+            several => Err(format!(
+                "{} token-bearing notes at that lock-root; refusing to pick one",
+                several.len()
+            )),
+        }
+    })
 }
 
+fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
+    let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
+    let token_b58 = flag(args, "--token").ok_or("missing --token")?;
+    let token = TokenId(Hash::from_base58(token_b58).map_err(|e| format!("token: {e}"))?);
+
+    let mut steps: Vec<(String, std::path::PathBuf)> = Vec::new();
+    for spec in flags(args, "--step") {
+        let (txid, path) = spec
+            .split_once(':')
+            .ok_or_else(|| format!("expected <txid>:<file>, got {spec:?}"))?;
+        steps.push((txid.to_string(), std::path::PathBuf::from(path)));
+    }
+    if steps.is_empty() {
+        return Err("at least one --step <txid>:<file> is required".to_string());
+    }
+
+    let addresses: Vec<String> = flags(args, "--address").into_iter().map(str::to_string).collect();
+    if addresses.is_empty() {
+        return Err("at least one --address is required".to_string());
+    }
+
+    let mut expectations: Vec<(String, u64)> = Vec::new();
+    for spec in flags(args, "--expect") {
+        let (lock, amount) = spec
+            .split_once('=')
+            .ok_or_else(|| format!("expected <lock-root>=<amount>, got {spec:?}"))?;
+        expectations.push((
+            lock.to_string(),
+            amount.parse().map_err(|e| format!("amount: {e}"))?,
+        ));
+    }
+    let expect_total: Option<u64> = match flag(args, "--expect-total") {
+        Some(v) => Some(v.parse().map_err(|e| format!("--expect-total: {e}"))?),
+        None => None,
+    };
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("tokio: {e}"))?;
+    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total))
+}
+
+#[allow(clippy::too_many_arguments)]
 async fn rebuild(
     addr: String,
     token: TokenId,
+    steps: Vec<(String, std::path::PathBuf)>,
     addresses: Vec<String>,
+    expectations: Vec<(String, u64)>,
+    expect_total: Option<u64>,
 ) -> Result<ExitCode, String> {
     let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
         .await
         .map_err(|e| format!("connect {addr}: {e}"))?;
 
-    let mut balances: BTreeMap<String, u64> = BTreeMap::new();
-    let mut total: u64 = 0;
-    let mut notes_seen = 0usize;
+    // 1. The canonical unspent note set, with full names and note-data.
+    let mut unspent: Vec<(Name, String)> = Vec::new();
     let mut height_seen: Option<u64> = None;
-    let mut block_seen: Option<String> = None;
-
     for address in &addresses {
         let request = WalletGetBalanceRequest {
             selector: Some(wallet_get_balance_request::Selector::Address(
-                nockapp_grpc_proto::pb::common::v1::Base58Pubkey {
-                    key: address.clone(),
-                },
+                nockapp_grpc_proto::pb::common::v1::Base58Pubkey { key: address.clone() },
             )),
             page: None,
         };
@@ -148,84 +265,125 @@ async fn rebuild(
             .await
             .map_err(|e| format!("wallet_get_balance({address}): {e}"))?
             .into_inner();
-
         let balance = match response.result {
-            Some(wallet_get_balance_response::Result::Balance(balance)) => balance,
+            Some(wallet_get_balance_response::Result::Balance(b)) => b,
             Some(wallet_get_balance_response::Result::Error(err)) => {
-                return Err(format!("wallet_get_balance error: {}", err.message))
+                return Err(format!("wallet_get_balance: {}", err.message))
             }
             None => return Err("wallet_get_balance returned no result".to_string()),
         };
-
         if let Some(h) = balance.height.as_ref() {
             height_seen = Some(h.value);
         }
-        if let Some(b) = balance.block_id.as_ref() {
-            block_seen = Some(format!("{:?}", b));
-        }
-
-        let mut owner_total: u64 = 0;
         for entry in &balance.notes {
-            let Some(note) = entry.note.as_ref() else { continue };
-            let Some(NoteVersion::V1(v1)) = note.note_version.as_ref() else {
-                continue; // legacy v0 notes cannot carry note-data
-            };
-            let Some(note_data) = v1.note_data.as_ref() else { continue };
-            for data_entry in &note_data.entries {
-                if data_entry.key != nmeme_core::NOTE_DATA_KEY {
-                    continue;
-                }
-                notes_seen += 1;
-                match decode_claim(&data_entry.blob) {
-                    Ok(claim) => {
-                        let claim_token = match &claim {
-                            Claim::Transfer { token, .. } => Some(token.clone()),
-                            // A genesis claim's identity is not carried in the
-                            // payload; it is derived from the creating
-                            // transaction's inputs, so it cannot be matched here.
-                            Claim::Genesis { .. } => None,
-                        };
-                        let matches = claim_token.as_ref() == Some(&token) || claim_token.is_none();
-                        if matches {
-                            owner_total = owner_total.saturating_add(claim.amount());
-                        }
-                    }
-                    Err(err) => {
-                        // A note whose payload does not decode carries no token
-                        // weight (SPEC §7). Reported, not silently skipped.
-                        println!("UNDECODABLE\t{address}\t{err}");
-                    }
-                }
-            }
+            let Some(name) = entry.name.as_ref() else { continue };
+            let name = decode_name(name)?;
+            unspent.push((name, address.clone()));
         }
-        balances.insert(address.clone(), owner_total);
-        total = total.saturating_add(owner_total);
+    }
+    println!("# canonical note set: {} unspent note(s)", unspent.len());
+    if let Some(h) = height_seen {
+        println!("HEIGHT\t{h}");
     }
 
-    println!("# balances rebuilt from the node's canonical note set");
-    println!("# NOT a replay from genesis — see the module docs");
-    if let Some(height) = height_seen {
-        println!("HEIGHT\t{height}");
+    // 2. Candidate output names: inputs of later steps, plus the final unspent
+    //    set. An output of step N is one or the other.
+    let mut plans = Vec::new();
+    for (txid, path) in &steps {
+        plans.push((txid.clone(), nmeme_index::read_tx_plan(path)?));
     }
-    if let Some(block) = block_seen {
-        println!("BLOCK\t{block}");
+
+    // 3. Replay through the real Indexer.
+    let mut indexer = Indexer::new();
+    let mut taken: Vec<Vec<u8>> = Vec::new();
+    for (i, (txid, plan)) in plans.iter().enumerate() {
+        let mut candidates: Vec<Name> = Vec::new();
+        for (_, later) in plans.iter().skip(i + 1) {
+            candidates.extend(later.inputs.iter().cloned());
+        }
+        candidates.extend(unspent.iter().map(|(n, _)| n.clone()));
+
+        let paired = nmeme_index::assign_outputs(&plan.destinations, &candidates, &mut taken)?;
+        let outputs: Vec<NoteView> = paired
+            .into_iter()
+            .map(|(name, dest)| NoteView {
+                name,
+                lock_root: dest.lock_root,
+                claim: dest.claim,
+            })
+            .collect();
+
+        let tx_id = Hash::from_base58(txid).map_err(|e| format!("txid {txid}: {e}"))?;
+        let view = TxView { id: tx_id, inputs: plan.inputs.clone(), outputs };
+        let outcome = indexer.apply(&view);
+        println!("STEP\t{txid}\t{outcome:?}");
     }
+
+    // 4. Report validated balances, keyed by lock-root.
     println!("TOKEN\t{}", token.to_base58());
-    for (address, amount) in &balances {
-        println!("BALANCE\t{address}\t{amount}");
+    let balances = indexer.balances(&token);
+    let mut total: u64 = 0;
+    let mut by_lock: BTreeMap<String, u64> = BTreeMap::new();
+    for (lock_bytes, amount) in &balances {
+        let bytes: [u8; 32] = lock_bytes
+            .as_slice()
+            .try_into()
+            .map_err(|_| "lock-root key is not 32 bytes".to_string())?;
+        let lock = Hash::from_be_bytes(&bytes);
+        by_lock.insert(lock.to_base58(), *amount);
+        total = total.saturating_add(*amount);
+        println!("BALANCE\t{}\t{}", lock.to_base58(), amount);
     }
     println!("TOTAL\t{total}");
-    println!("NOTES\t{notes_seen}");
+    println!("CIRCULATING\t{}", indexer.circulating(&token));
+    if let Some(meta) = indexer.token(&token) {
+        println!("SUPPLY\t{}", meta.supply);
+        println!("TICKER\t{}", meta.ticker.as_str());
+    } else {
+        println!("SUPPLY\tunregistered");
+    }
+
+    // 5. Assertions.
+    let mut failures = 0usize;
+    for (lock, expected) in &expectations {
+        let got = by_lock.get(lock).copied().unwrap_or(0);
+        if got == *expected {
+            println!("ASSERT-OK\t{lock}\t{expected}");
+        } else {
+            println!("ASSERT-FAIL\t{lock}\texpected {expected}, got {got}");
+            failures += 1;
+        }
+    }
+    if let Some(expected) = expect_total {
+        if total == expected {
+            println!("ASSERT-OK\ttotal\t{expected}");
+        } else {
+            println!("ASSERT-FAIL\ttotal\texpected {expected}, got {total}");
+            failures += 1;
+        }
+    }
+    if failures > 0 {
+        return Err(format!("{failures} assertion(s) failed"));
+    }
     Ok(ExitCode::SUCCESS)
 }
 
-fn decode_claim(blob: &[u8]) -> Result<Claim, String> {
-    use nockchain_math::owned_based_noun::OwnedBasedNoun;
-    let mut slab: NounSlab<NockJammer> = NounSlab::new();
-    let noun = slab
-        .cue_into(bytes::Bytes::copy_from_slice(blob))
-        .map_err(|e| format!("cue: {e}"))?;
-    let space = slab.noun_space();
-    let owned = OwnedBasedNoun::from_noun(noun, &space).map_err(|e| format!("based: {e}"))?;
-    Claim::from_noun(&owned).map_err(|e| format!("claim: {e}"))
+fn decode_name(name: &nockapp_grpc_proto::pb::common::v1::Name) -> Result<Name, String> {
+    let first = name.first.as_ref().ok_or("name has no first")?;
+    let last = name.last.as_ref().ok_or("name has no last")?;
+    Ok(Name::new(decode_hash(first)?, decode_hash(last)?))
+}
+
+/// The proto carries a tip5 hash as five field elements.
+fn decode_hash(hash: &nockapp_grpc_proto::pb::common::v1::Hash) -> Result<Hash, String> {
+    let limb = |b: &Option<nockapp_grpc_proto::pb::common::v1::Belt>, which: &str| -> Result<u64, String> {
+        b.as_ref().map(|b| b.value).ok_or_else(|| format!("hash missing {which}"))
+    };
+    Ok(Hash::from_limbs(&[
+        limb(&hash.belt_1, "belt_1")?,
+        limb(&hash.belt_2, "belt_2")?,
+        limb(&hash.belt_3, "belt_3")?,
+        limb(&hash.belt_4, "belt_4")?,
+        limb(&hash.belt_5, "belt_5")?,
+    ]))
 }

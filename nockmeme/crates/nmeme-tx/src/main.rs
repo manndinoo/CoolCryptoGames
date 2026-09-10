@@ -3,7 +3,7 @@
 //!
 //! ```text
 //! nmeme-tx sighash <tx.jam> [out-dir]
-//! nmeme-tx attach  <tx.jam> <lock-root-b58> <claim-spec> <out.jam>
+//! nmeme-tx attach  <tx.jam> <out.jam> <lock-root>=<claim-spec> [<lock-root>=<claim-spec>...]
 //! nmeme-tx set-sig <tx.jam> <name-b58> <pkh-b58> <pubkey-b58> <sig.jam> <out.jam>
 //! ```
 //!
@@ -15,6 +15,7 @@
 
 use std::process::ExitCode;
 
+use nmeme_core::Claim;
 use nmeme_tx::cli::{parse_claim, witness_with_signature};
 use nmeme_tx::sighash::spend_sig_hash;
 use nmeme_tx::txfile::{rewrite, ParsedTransaction};
@@ -30,7 +31,7 @@ fn main() -> ExitCode {
     let result = match args.get(1).map(String::as_str) {
         Some("sighash") if args.len() == 3 || args.len() == 4 => cmd_sighash(&args),
         Some("seeds") if args.len() == 3 => cmd_seeds(&args),
-        Some("attach") if args.len() == 6 => cmd_attach(&args),
+        Some("attach") if args.len() >= 5 => cmd_attach(&args),
         Some("set-sig") if args.len() == 8 => cmd_set_sig(&args),
         _ => {
             eprintln!("{}", USAGE);
@@ -49,7 +50,7 @@ fn main() -> ExitCode {
 const USAGE: &str = "usage:
   nmeme-tx sighash <tx.jam> [out-dir]
   nmeme-tx seeds   <tx.jam>
-  nmeme-tx attach  <tx.jam> <lock-root-b58> <claim-spec> <out.jam>
+  nmeme-tx attach  <tx.jam> <out.jam> <lock-root>=<claim-spec> [more...]
   nmeme-tx set-sig <tx.jam> <name-b58> <pkh-b58> <pubkey-b58> <sig.jam> <out.jam>
 
 claim-spec: transfer:<token-b58>:<amount> | genesis:<TICKER>:<decimals>:<amount>";
@@ -161,12 +162,30 @@ fn cmd_seeds(args: &[String]) -> Result<ExitCode, String> {
     Ok(ExitCode::SUCCESS)
 }
 
+/// Attaches one claim per lock-root.
+///
+/// A transfer needs a claim on **every** output that carries weight, not just
+/// the recipient's: SPEC §6 T3 demands exact conservation, so a sender who
+/// leaves their own change uncoloured burns the remainder. Passing several
+/// `<lock-root>=<claim>` pairs is therefore the normal case, not an advanced
+/// one.
 fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
-    let lock_root =
-        Hash::from_base58(&args[3]).map_err(|e| format!("lock-root: {e}"))?;
-    let claim = parse_claim(&args[4])?;
+    let tx_path = &args[2];
+    let out_path = &args[3];
 
-    let bytes = std::fs::read(&args[2]).map_err(|e| format!("read {}: {e}", args[2]))?;
+    let mut wanted: Vec<(Hash, Claim)> = Vec::new();
+    for spec in &args[4..] {
+        let (lock, claim) = spec
+            .split_once('=')
+            .ok_or_else(|| format!("expected <lock-root>=<claim-spec>, got {spec:?}"))?;
+        let lock = Hash::from_base58(lock).map_err(|e| format!("lock-root {lock}: {e}"))?;
+        wanted.push((lock, parse_claim(claim)?));
+    }
+    if wanted.is_empty() {
+        return Err("at least one <lock-root>=<claim-spec> is required".to_string());
+    }
+
+    let bytes = std::fs::read(tx_path).map_err(|e| format!("read {tx_path}: {e}"))?;
     let mut slab: NounSlab<NockJammer> = NounSlab::new();
     let noun = slab.cue_into(bytes.into()).map_err(|e| format!("cue: {e}"))?;
     let space = slab.noun_space();
@@ -174,42 +193,50 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
         ParsedTransaction::from_noun(noun.in_space(&space)).map_err(|e| format!("decode: {e}"))?;
     let mut spends = parsed.spliced().map_err(|e| format!("splice: {e}"))?;
 
-    // Exactly one spend may own the target lock-root; ambiguity here would mean
-    // guessing which half of a transaction the claim belongs to.
-    let mut touched: Option<Name> = None;
-    for (name, spend) in spends.0.iter_mut() {
-        let Spend::Witness(spend1) = spend else { continue };
-        if !spend1.seeds.0.iter().any(|s| s.lock_root == lock_root) {
-            continue;
+    let mut touched: Vec<Name> = Vec::new();
+    for (lock, claim) in &wanted {
+        let mut found = false;
+        for (name, spend) in spends.0.iter_mut() {
+            let Spend::Witness(spend1) = spend else { continue };
+            if !spend1.seeds.0.iter().any(|s| &s.lock_root == lock) {
+                continue;
+            }
+            if found {
+                return Err(format!(
+                    "lock-root {} appears in more than one spend",
+                    lock.to_base58()
+                ));
+            }
+            attach_claim(&mut spend1.seeds, lock, claim)
+                .map_err(|e: Error| format!("attach to {}: {e}", lock.to_base58()))?;
+            if !touched.contains(name) {
+                touched.push(name.clone());
+            }
+            found = true;
         }
-        if touched.is_some() {
-            return Err(format!(
-                "lock-root {} appears in more than one spend",
-                args[3]
-            ));
+        if !found {
+            return Err(format!("no seed pays lock-root {}", lock.to_base58()));
         }
-        attach_claim(&mut spend1.seeds, &lock_root, &claim)
-            .map_err(|e: Error| format!("attach: {e}"))?;
-        touched = Some(name.clone());
+        println!("ATTACHED\t{}\t{}", lock.to_base58(), claim.amount());
     }
-    let Some(name) = touched else {
-        return Err(format!("no spend pays lock-root {}", args[3]));
-    };
 
     let mut out_slab: NounSlab<NockJammer> = NounSlab::new();
     let jammed = rewrite(noun.in_space(&space), &mut out_slab, &spends, &|_| None)
         .map_err(|e| format!("rewrite: {e}"))?;
-    std::fs::write(&args[5], &jammed).map_err(|e| format!("write {}: {e}", args[5]))?;
+    std::fs::write(out_path, &jammed).map_err(|e| format!("write {out_path}: {e}"))?;
+    println!("WROTE\t{out_path}");
 
-    // The signature now in the file is stale: it covers the pre-attach digest.
-    for (spend_name, spend) in &spends.0 {
-        if spend_name != &name {
-            continue;
-        }
+    // Every touched spend's signature is now stale: it covers the pre-attach
+    // digest. Each one needs re-signing.
+    for name in &touched {
+        let (_, spend) = spends
+            .0
+            .iter()
+            .find(|(n, _)| n == name)
+            .ok_or("touched spend vanished")?;
         let Spend::Witness(spend1) = spend else { continue };
         let digest = spend_sig_hash(&spend1.seeds, spend1.fee.0 as u64)
             .map_err(|e| format!("sighash: {e}"))?;
-        println!("ATTACHED\t{}\t{}", args[5], name.first.to_base58());
         println!("NEWSIGHASH\t{}\t{}", name.first.to_base58(), digest.to_base58());
     }
     Ok(ExitCode::SUCCESS)
