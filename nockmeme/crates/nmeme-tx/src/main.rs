@@ -217,13 +217,18 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
         if !found {
             return Err(format!("no seed pays lock-root {}", lock.to_base58()));
         }
-        println!("ATTACHED\t{}\t{}", lock.to_base58(), claim.amount());
     }
 
     let mut out_slab: NounSlab<NockJammer> = NounSlab::new();
     let jammed = rewrite(noun.in_space(&space), &mut out_slab, &spends, &|_| None)
         .map_err(|e| format!("rewrite: {e}"))?;
     std::fs::write(out_path, &jammed).map_err(|e| format!("write {out_path}: {e}"))?;
+    // Reported only once the file exists: a claim that was applied in memory
+    // but never written is not attached, and saying so would mislead a caller
+    // that reads this output after a partial failure.
+    for (lock, claim) in &wanted {
+        println!("ATTACHED\t{}\t{}", lock.to_base58(), claim.amount());
+    }
     println!("WROTE\t{out_path}");
 
     // Every touched spend's signature is now stale: it covers the pre-attach

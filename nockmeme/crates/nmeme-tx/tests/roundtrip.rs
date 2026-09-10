@@ -259,3 +259,11 @@ fn a_substituted_witness_replaces_only_its_own_entry() {
         "the substituted witness must come back"
     );
 }
+
+/// Writes the synthetic transaction to `$NMEME_SYNTH_OUT` so the CLI can be
+/// driven against it without a node. A no-op unless the variable is set.
+#[test]
+fn dump_synthetic_transaction_when_asked() {
+    let Ok(path) = std::env::var("NMEME_SYNTH_OUT") else { return };
+    std::fs::write(&path, build_tx_file(&sample_spends())).expect("write synthetic tx");
+}
