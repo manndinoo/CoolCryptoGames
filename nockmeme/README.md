@@ -13,8 +13,9 @@ support.
 | Consensus facts verified against source | done — [`docs/FINDINGS.md`](./docs/FINDINGS.md) |
 | Standard specified | done — [`docs/SPEC.md`](./docs/SPEC.md) |
 | Encoding + accounting implemented | in progress — [`crates/nmeme-core`](./crates/nmeme-core) |
-| Proven on a live fakenet chain | not done — SPEC §11 |
-| Trading | designed, not implemented |
+| Native stack built and node running | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
+| Proven on a live fakenet chain | not done — [`docs/ACCEPTANCE.md`](./docs/ACCEPTANCE.md) |
+| Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |
 | Platform UI | not started |
 
 **Nothing here has touched a real chain yet.** The acceptance gate is SPEC §11:
