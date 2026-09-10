@@ -54,6 +54,14 @@ sign_hash() {
   mv "$src" "$dest"
 }
 
+# Every place the wallet may write a transaction file.
+list_tx_files() {
+  local who="$1"
+  { find "$W/$who/txs" -type f -name '*.tx' 2>/dev/null || true
+    find "$W/$who/wallet/txs" -type f -name '*.tx' 2>/dev/null || true
+  } | sort -u
+}
+
 verify_sig() { # verify_sig <who> <digest> <sigfile> <pubkey>
   local out rc
   set +e
@@ -151,14 +159,26 @@ build_sign_send() {
   local label="$1" to="$2" amount="$3" claim="$4"
   local dir="$RUN/$label"; mkdir -p "$dir"
 
-  local before after tx
-  before=$(ls -1 "$W/alice/txs" 2>/dev/null | wc -l || echo 0)
+  local tx
+  # The wallet writes ./txs/<name>.tx relative to its cwd (wallet.hoon:1687),
+  # but the same file can land under wallet/txs depending on how NOCKAPP_HOME
+  # resolves. Rather than guess a path or a timestamp window, snapshot the file
+  # set before and after and take the difference: exactly one new file is
+  # expected, and anything else is an error rather than a lucky pick.
+  list_tx_files alice > "$dir/tx-before.txt"
   wallet alice create-tx \
     --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
     --fee "${FEE_NICKS:-256}" --allow-low-fee >"$dir/create.txt" 2>&1 \
     || die "$label: create-tx failed (see $dir/create.txt)"
-  tx=$(find "$W/alice/txs" -type f -newermt '-10 minutes' 2>/dev/null | sort | tail -1 || true)
-  [ -n "$tx" ] || die "$label: create-tx produced no transaction file"
+  list_tx_files alice > "$dir/tx-after.txt"
+  comm -13 "$dir/tx-before.txt" "$dir/tx-after.txt" > "$dir/tx-new.txt"
+
+  local count
+  count=$(wc -l < "$dir/tx-new.txt")
+  [ "$count" -eq 1 ] || die "$label: expected exactly 1 new transaction file, got $count
+$(cat "$dir/tx-new.txt")"
+  tx=$(head -1 "$dir/tx-new.txt")
+  [ -s "$tx" ] || die "$label: transaction file $tx is missing or empty"
   echo "  tx=$tx"
 
   "$NMEME_TX" sighash "$tx" "$dir" >"$dir/sighash.txt" \
