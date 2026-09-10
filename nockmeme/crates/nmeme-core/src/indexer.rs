@@ -72,6 +72,22 @@ pub struct Indexer {
     audit: Vec<AuditEntry>,
 }
 
+/// Sums amounts, refusing to wrap.
+///
+/// Every accumulation of token amounts in this module goes through here.
+/// Amounts are bounded only by the field prime, which sits just below
+/// `u64::MAX`, so two valid amounts can sum past it. A wrapped total can be
+/// made to satisfy the conservation check in `interpret_transfer` while handing
+/// out arbitrary weight, so overflow must be a rejection rather than a wrap —
+/// and must not panic the indexer either, which is what plain `+` would do in a
+/// debug build.
+fn checked_total<I: IntoIterator<Item = u64>>(amounts: I) -> Option<u64> {
+    amounts
+        .into_iter()
+        .try_fold(0u64, |acc, amount| acc.checked_add(amount))
+        .filter(|total| *total <= crate::claim::MAX_SUPPLY)
+}
+
 fn name_key(name: &Name) -> Vec<u8> {
     let mut key = name.first.to_be_bytes().to_vec();
     key.extend_from_slice(&name.last.to_be_bytes());
@@ -125,7 +141,11 @@ impl Indexer {
     }
 
     fn interpret(&mut self, tx: &TxView, consumed: &[(TokenId, u64)]) -> Outcome {
-        let consumed_units: u64 = consumed.iter().map(|(_, amount)| amount).sum();
+        // Holdings are conserved and capped, so this cannot legitimately
+        // overflow; treating a failure as "everything is burned" keeps the
+        // burn path total rather than panicking on impossible input.
+        let consumed_units: u64 =
+            checked_total(consumed.iter().map(|(_, amount)| *amount)).unwrap_or(0);
         let burn = |reason: &'static str| {
             if consumed_units == 0 {
                 Outcome::Untouched
@@ -207,7 +227,13 @@ impl Indexer {
             return Outcome::Untouched;
         }
 
-        let supply: u64 = claimed.iter().map(|(_, claim)| claim.amount()).sum();
+        // G4: the declared supply is the sum of the genesis claims, and it must
+        // fit under the cap. A transaction whose claims overflow, or exceed
+        // MAX_SUPPLY, creates no token at all rather than a token whose recorded
+        // supply is unrelated to the weight it handed out.
+        let Some(supply) = checked_total(claimed.iter().map(|(_, claim)| claim.amount())) else {
+            return Outcome::Untouched;
+        };
         for (note, claim) in claimed {
             self.holdings.insert(
                 name_key(&note.name),
@@ -259,8 +285,17 @@ impl Indexer {
 
         // T3: exact conservation. A sender who forgets to colour their change
         // burns the remainder — the wallet must build the change claim.
-        let consumed_units: u64 = consumed.iter().map(|(_, amount)| amount).sum();
-        let claimed_units: u64 = claimed.iter().map(|(_, claim)| claim.amount()).sum();
+        let Some(consumed_units) = checked_total(consumed.iter().map(|(_, amount)| *amount))
+        else {
+            return burn("consumed amounts overflowed");
+        };
+        // This is the sum an attacker controls. Wrapping it is the inflation
+        // vector: consume one unit, claim two outputs summing to 2^64 + 1, and
+        // an unchecked total would read as 1 and conserve.
+        let Some(claimed_units) = checked_total(claimed.iter().map(|(_, claim)| claim.amount()))
+        else {
+            return burn("claimed amounts overflowed");
+        };
         if claimed_units != consumed_units {
             return burn("supply not conserved");
         }
@@ -279,7 +314,11 @@ impl Indexer {
         let mut out: BTreeMap<Vec<u8>, u64> = BTreeMap::new();
         for (held, amount, lock_root) in self.holdings.values() {
             if held == token {
-                *out.entry(hash_key(lock_root)).or_default() += amount;
+                let slot = out.entry(hash_key(lock_root)).or_default();
+                // Conservation plus the supply cap make this unreachable;
+                // saturating rather than wrapping keeps a read path from
+                // reporting a smaller balance than reality if it ever were.
+                *slot = slot.saturating_add(*amount);
             }
         }
         out
@@ -291,8 +330,7 @@ impl Indexer {
         self.holdings
             .values()
             .filter(|(held, _, _)| held == token)
-            .map(|(_, amount, _)| amount)
-            .sum()
+            .fold(0u64, |acc, (_, amount, _)| acc.saturating_add(*amount))
     }
 
     pub fn token(&self, token: &TokenId) -> Option<&TokenMeta> {

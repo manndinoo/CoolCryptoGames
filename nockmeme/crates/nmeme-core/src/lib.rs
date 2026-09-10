@@ -36,6 +36,10 @@ pub enum Error {
     ZeroAmount,
     #[error("amount {0} is not a field element")]
     AmountNotBased(u64),
+    #[error("amount {0} exceeds the maximum supply")]
+    AmountTooLarge(u64),
+    #[error("token amounts overflowed a u64")]
+    AmountOverflow,
     #[error("decimals {0} exceeds 18")]
     Decimals(u64),
     #[error("unsupported payload version {0}")]

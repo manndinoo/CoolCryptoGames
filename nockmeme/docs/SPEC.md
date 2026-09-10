@@ -35,11 +35,36 @@ The value under `meme` is a versioned noun:
   is the largest width that cannot exceed `PRIME` (FINDINGS §5). An 8-byte
   cord is not permitted because it can be rejected by `based`.
 - `decimals` is an atom, `0 <= decimals <= 18`.
-- `amount` is a positive integer, `0 < amount < PRIME`.
+- `amount` is a positive integer, `0 < amount <= MAX_SUPPLY` where
+  `MAX_SUPPLY = 2^63 - 1`.
 - `token-id` is a `hash` (five field elements), computed as in §4.
 
 Every atom is below `PRIME` by construction. The whole payload is well under
 the 2048-leaf merged limit (FINDINGS §4).
+
+### Why amounts are capped below the field prime
+
+Consensus only requires an amount to be a field element, and the prime
+`2^64 - 2^32 + 1` sits just *below* `u64::MAX` — the gap is about `4.3e9`. Two
+otherwise-valid amounts can therefore sum past `u64::MAX`.
+
+That matters because §6 accepts a transfer when the output total equals the
+input total. Under wrapping arithmetic an attacker holding **one** unit can
+claim two outputs of `2^63` and `2^63 + 1`: the total wraps to `1`, conservation
+appears to hold, and the transfer mints roughly `1.8e19` units out of nothing.
+In a debug build the same input panics the indexer instead.
+
+Two independent defences are required:
+
+> **A1.** Every amount and every declared supply MUST be at most
+> `MAX_SUPPLY = 2^63 - 1`. This leaves a full bit of headroom, so any *pair* of
+> valid amounts sums without wrapping.
+>
+> **A2.** Every accumulation of amounts MUST use checked arithmetic, and MUST
+> treat overflow as a rejection. A1 alone does not cover sums of more than two
+> claims.
+
+A conforming indexer that violates either is inflatable.
 
 ## 3. One claim per lock-root — the merging rule
 

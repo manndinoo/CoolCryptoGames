@@ -25,6 +25,21 @@ const TAG_TRANSFER: u64 = b't' as u64;
 /// The maximum decimals a token may declare.
 pub const MAX_DECIMALS: u64 = 18;
 
+/// The largest amount any single claim may carry, and the largest total supply
+/// a token may have: `2^63 - 1`.
+///
+/// This is a standard-level cap, not a consensus one. Consensus only requires an
+/// amount to be a field element, and the field prime `2^64 - 2^32 + 1` sits just
+/// *below* `u64::MAX` — close enough that two otherwise-valid amounts can sum
+/// past it. Accumulating such amounts without checking would wrap, and a wrapped
+/// total can be made to satisfy conservation while handing out arbitrary weight.
+///
+/// Capping at `2^63 - 1` leaves a full bit of headroom, so any *pair* of valid
+/// amounts sums without overflow. Sums of more than two are still guarded by
+/// checked arithmetic in the indexer; the cap is defence in depth, not the
+/// defence.
+pub const MAX_SUPPLY: u64 = (1 << 63) - 1;
+
 /// What a note claims to hold.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Claim {
@@ -50,6 +65,9 @@ impl Claim {
         let amount = self.amount();
         if amount == 0 {
             return Err(Error::ZeroAmount);
+        }
+        if amount > MAX_SUPPLY {
+            return Err(Error::AmountTooLarge(amount));
         }
         if !nockchain_math::belt::based_check(amount) {
             return Err(Error::AmountNotBased(amount));

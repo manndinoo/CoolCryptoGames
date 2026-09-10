@@ -410,3 +410,130 @@ fn supply_is_conserved_across_a_long_chain_of_transfers() {
         held = change;
     }
 }
+
+// ------------------------------------------------------------- overflow ---
+//
+// Amounts are bounded by the field prime (~1.845e19), which sits just below
+// u64::MAX (~1.845e19). Two valid amounts can therefore sum past u64::MAX.
+// Unchecked accumulation would wrap, and a wrapped sum can be made to satisfy
+// the conservation check while handing out arbitrary weight. These tests pin
+// that it cannot.
+
+#[test]
+fn wrapped_claim_sum_cannot_mint() {
+    // The attack: consume one unit, then claim two outputs whose amounts sum to
+    // 2^64 + 1. Under wrapping arithmetic that totals 1, matching the single
+    // consumed unit, and the transfer would be accepted — turning 1 unit into
+    // roughly 1.8e19.
+    let inputs = vec![name(1)];
+    let token = TokenId::derive(&inputs, &ticker(), 6).expect("derives");
+    let mut indexer = Indexer::new();
+    indexer.apply(&TxView {
+        id: hash(500),
+        inputs,
+        outputs: vec![NoteView {
+            name: name(10),
+            lock_root: alice(),
+            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1 }),
+        }],
+    });
+    assert_eq!(indexer.circulating(&token), 1);
+
+    let attack = TxView {
+        id: hash(600),
+        inputs: vec![name(10)],
+        outputs: vec![
+            NoteView {
+                name: name(20),
+                lock_root: bob(),
+                claim: Some(Claim::Transfer { token: token.clone(), amount: 1u64 << 63 }),
+            },
+            NoteView {
+                name: name(21),
+                lock_root: bob(),
+                claim: Some(Claim::Transfer { token: token.clone(), amount: (1u64 << 63) + 1 }),
+            },
+        ],
+    };
+    // Must not mint, and must not panic.
+    assert!(matches!(indexer.apply(&attack), Outcome::Burned { .. }));
+    assert_eq!(indexer.circulating(&token), 0, "overflow must never mint");
+}
+
+#[test]
+fn wrapped_genesis_supply_cannot_understate_holdings() {
+    // Two genesis claims of 2^63 sum to exactly 2^64, which wraps to 0. A
+    // wrapped supply would register a token whose recorded supply is unrelated
+    // to the weight actually handed out.
+    let inputs = vec![name(1)];
+    let token = TokenId::derive(&inputs, &ticker(), 6).expect("derives");
+    let mut indexer = Indexer::new();
+    let outcome = indexer.apply(&TxView {
+        id: hash(700),
+        inputs,
+        outputs: vec![
+            NoteView {
+                name: name(30),
+                lock_root: alice(),
+                claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1u64 << 63 }),
+            },
+            NoteView {
+                name: name(31),
+                lock_root: bob(),
+                claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1u64 << 63 }),
+            },
+        ],
+    });
+    assert_eq!(outcome, Outcome::Untouched, "genesis over the supply cap is rejected");
+    assert!(indexer.token(&token).is_none());
+    assert_eq!(indexer.circulating(&token), 0);
+}
+
+#[test]
+fn amounts_above_the_supply_cap_are_rejected_at_the_codec() {
+    use nmeme_core::claim::MAX_SUPPLY;
+    let over = Claim::Transfer { token: TokenId(hash(1)), amount: MAX_SUPPLY + 1 };
+    assert!(over.to_noun().is_err(), "amount above MAX_SUPPLY must not encode");
+
+    let at_cap = Claim::Transfer { token: TokenId(hash(1)), amount: MAX_SUPPLY };
+    let noun = at_cap.to_noun().expect("cap itself is valid");
+    assert_eq!(Claim::from_noun(&noun).expect("decodes"), at_cap);
+}
+
+#[test]
+fn two_capped_amounts_cannot_overflow_a_u64() {
+    // The cap is chosen so any pair of valid amounts sums without wrapping;
+    // checked arithmetic covers sums of more than two.
+    use nmeme_core::claim::MAX_SUPPLY;
+    assert!(MAX_SUPPLY.checked_add(MAX_SUPPLY).is_some());
+}
+
+#[test]
+fn many_capped_claims_cannot_overflow_the_indexer() {
+    // Sixteen outputs each at the cap sum far past u64::MAX. The transfer must
+    // be rejected rather than wrapping or panicking.
+    use nmeme_core::claim::MAX_SUPPLY;
+    let inputs = vec![name(1)];
+    let token = TokenId::derive(&inputs, &ticker(), 6).expect("derives");
+    let mut indexer = Indexer::new();
+    indexer.apply(&TxView {
+        id: hash(800),
+        inputs,
+        outputs: vec![NoteView {
+            name: name(40),
+            lock_root: alice(),
+            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1_000 }),
+        }],
+    });
+
+    let outputs = (0..16u64)
+        .map(|i| NoteView {
+            name: name(50_000 + i),
+            lock_root: hash(60_000 + i),
+            claim: Some(Claim::Transfer { token: token.clone(), amount: MAX_SUPPLY }),
+        })
+        .collect();
+    let attack = TxView { id: hash(900), inputs: vec![name(40)], outputs };
+    assert!(matches!(indexer.apply(&attack), Outcome::Burned { .. }));
+    assert_eq!(indexer.circulating(&token), 0);
+}
