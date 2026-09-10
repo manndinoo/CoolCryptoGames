@@ -14,7 +14,8 @@ support.
 | Standard specified | done — [`docs/SPEC.md`](./docs/SPEC.md) |
 | Encoding + accounting implemented | in progress — [`crates/nmeme-core`](./crates/nmeme-core) |
 | Native stack builds | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
-| Node runs a chain | **blocked** — OOM at 13.9 GB; needs ~32 GB |
+| Node runs a chain | yes at `RAYON_NUM_THREADS=1` (5.7 GiB); OOM at default parallelism — [`results/environment.md`](./results/environment.md) |
+| Transaction tooling | built, **digest not yet verified** — [`crates/nmeme-tx`](./crates/nmeme-tx) |
 | Proven on a live fakenet chain | not done — [`docs/ACCEPTANCE.md`](./docs/ACCEPTANCE.md) |
 | Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |
 | Platform UI | not started |
@@ -24,10 +25,12 @@ a local node must accept and mine a real creation and a real transfer, and an
 indexer rebuilt from that chain must report the expected split. Until then this
 is a design with tests, not a working token.
 
-The gate is currently blocked on hardware rather than on code. The binaries
-build, but a fakenet node was OOM-killed at 13.9 GB resident while generating
-its recursive-verifier setup, before mining anything. Reproducing the gate needs
-a machine with roughly 32 GB. See [`docs/DEVELOP.md`](./docs/DEVELOP.md) §4.
+One measured claim to be careful with: the `sig-hash` implementation in
+`nmeme-tx` is **not yet verified against a signature the wallet produced**. The
+obvious offline route does not work — the repository's transaction fixtures
+carry no signatures. Until the check in
+[`docs/ACCEPTANCE.md`](./docs/ACCEPTANCE.md) passes, treat every digest this
+crate computes as unproven.
 
 ## Why note-data
 

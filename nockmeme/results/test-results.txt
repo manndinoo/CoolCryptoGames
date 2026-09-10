@@ -1,37 +1,47 @@
 nmeme-core test run
 ===================
 
-Date:      2026-09-10 01:36 UTC
-Command:   cargo test -p nmeme-core
+Date:      2026-09-10 02:25 UTC
+Commands:  cargo test -p nmeme-core
+           cargo test -p nmeme-core --release
 Built as:  a member of the Nockchain workspace at 2bcb0b9dfd190f17252205afd1c8a067048a1ad9,
            so nockchain-types and nockchain-math are the real crates, not stand-ins,
            and the workspace's warnings = deny / clippy::unwrap_used = deny apply.
 Toolchain: rustc 1.96.0-nightly (nightly-2026-04-03), 4 cores, Linux x86_64
 
-These test the ENCODING and ACCOUNTING layer only. Nothing here has touched
-a chain. The acceptance gate is docs/ACCEPTANCE.md and it has NOT been met.
+Both profiles are run because the overflow bug behaved differently in each:
+unchecked accumulation panicked in debug and wrapped silently in release.
+Release: 26 passed, 0 failed.
+
+SCOPE: these cover the encoding and accounting layer ONLY. Nothing here has
+touched a chain. The acceptance gate (docs/ACCEPTANCE.md) is NOT met.
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test claiming_a_token_never_consumed_mints_nothing ... ok
-test genesis_cannot_consume_existing_token_weight ... ok
+test amounts_above_the_supply_cap_are_rejected_at_the_codec ... ok
+test claim_rejects_zero_and_oversized_values ... ok
+test every_ticker_limb_is_a_field_element ... ok
 test genesis_claim_round_trips ... ok
-test mixed_token_inputs_are_rejected_in_v0 ... ok
+test genesis_cannot_consume_existing_token_weight ... ok
+test claiming_a_token_never_consumed_mints_nothing ... ok
+test genesis_creates_fixed_supply ... ok
+test many_capped_claims_cannot_overflow_the_indexer ... ok
 test non_conserving_transfer_burns_everything ... ok
 test one_claim_per_lock_root_after_merging ... ok
+test mixed_token_inputs_are_rejected_in_v0 ... ok
 test reorg_rebuilds_from_replacement_history ... ok
 test replay_is_deterministic ... ok
 test spending_with_a_token_unaware_wallet_burns ... ok
-test genesis_creates_fixed_supply ... ok
-test every_ticker_limb_is_a_field_element ... ok
-test claim_rejects_zero_and_oversized_values ... ok
-test supply_is_conserved_across_a_long_chain_of_transfers ... ok
 test ticker_rejects_bad_input ... ok
-test token_id_is_independent_of_input_ordering ... ok
-test token_id_noun_round_trips ... ok
-test transfer_claim_round_trips ... ok
-test token_id_separates_same_ticker_from_different_anchors ... ok
 test ticker_round_trips_through_limbs ... ok
 test token_id_binds_ticker_and_decimals ... ok
+test token_id_noun_round_trips ... ok
+test token_id_is_independent_of_input_ordering ... ok
+test transfer_claim_round_trips ... ok
+test token_id_separates_same_ticker_from_different_anchors ... ok
+test two_capped_amounts_cannot_overflow_a_u64 ... ok
 test transfer_splits_and_conserves ... ok
-test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test wrapped_claim_sum_cannot_mint ... ok
+test wrapped_genesis_supply_cannot_understate_holdings ... ok
+test supply_is_conserved_across_a_long_chain_of_transfers ... ok
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
