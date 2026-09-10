@@ -55,20 +55,29 @@ where `witness-data` is carried *separately* from `spends` and is spliced back
 onto each spend by name before use (`apply_witness_data`,
 `upgrade_bythos.rs:1128-1173`). A tool must therefore rewrite both halves.
 
-## The hard part: `sig-hash` must be reimplemented in Rust
+## Re-signing: `sig-hash` in Rust is smaller than it looks
 
 Injecting note-data changes a seed, which changes the spend's `sig-hash`, which
-invalidates the existing signature. The signature has to be recomputed.
+invalidates the existing signature. The signature has to be recomputed, and
+`nockchain-types` exposes neither `sig_hash` nor signing — both live in the Hoon
+wallet kernel.
 
-`nockchain-types` exposes no `sig_hash` and no signing — both live in the Hoon
-wallet kernel. So the tool must compute the sig-hash itself, from
-`hoon/common/tx-engine-1.hoon`:
+That sounds like reimplementing consensus hashing. It is not, because every
+primitive is already exported and one of them matches exactly.
+
+The Hoon (`hoon/common/tx-engine-1.hoon`):
 
 ```
 ++  sig-hash                            :: spend-1, line 1116
   [(sig-hashable:seeds seeds.sen) leaf+fee.sen]
 
-++  sig-hashable                        :: seed, line 707
+++  sig-hashable:seeds                  :: line 749 — walks the z-set tree
+  ?@  form  leaf+form
+  :+  (sig-hashable:seed n.form)
+    $(form l.form)
+  $(form r.form)
+
+++  sig-hashable:seed                   :: line 707
   :*  (hashable-unit:source output-source.sed)
       hash+lock-root.sed
       hash+(hash:note-data note-data.sed)
@@ -77,19 +86,48 @@ wallet kernel. So the tool must compute the sig-hash itself, from
   ==
 ```
 
-The building blocks exist in `crates/nockchain-types/src/tx_engine/v1/hashable.rs`
-(`hash_leaf_belt`, `hash_leaf_null`, `hash_hashable_value`) and
-`nockchain_math::owned_based_noun::hash_owned_based_noun_varlen`.
+The seeds walk is precisely `HashableTreeHasher`
+(`crates/nockchain-types/src/tx_engine/v1/hashable.rs:121-134`), which is already
+implemented as
 
-**Verify before trusting it.** A Rust reimplementation of consensus hashing that
-is subtly wrong will produce a signature the node silently rejects, and the
-failure will look like a networking or fee problem. The check is cheap and
-should come first:
+```rust
+fn empty(&self)  -> Hash { hash_leaf_null() }
+fn node(&self, digest: &Hash, left: Hash, right: Hash) -> Hash {
+    hash_pair(digest, &hash_pair(&left, &right))
+}
+```
 
-> Take an unmodified wallet-built transaction, compute its `sig-hash` in Rust,
-> and confirm the signature already in the file verifies against it.
+— the same shape as `[seed-hashable [left right]]` with the empty branch hashing
+`leaf+0`. So `sig-hashable:seeds` is a fold of the existing z-set hasher, and
+`sig-hashable:seed` is four nested `hash_pair`s over primitives that also already
+exist: `hash_unit_belt`, `hash_leaf_belt`, `hash_leaf_null`, `hash_pair`, and the
+note-data digest.
 
-Only once that passes is it safe to change a seed and re-sign.
+There is also a fallback that avoids hand-composition entirely:
+`zkvm_jetpack::jets::tip5_jets::hash_hashable` is the real jet for
+`hash-hashable:tip5`, callable from Rust and already used this way by
+`crates/raw-tx-checker/src/main.rs`. Build the hashable noun, call the jet, and
+the digest is computed by the same code the chain uses.
+
+One thing to be careful of: the note-data digest is **not** a plain noun hash.
+`hash:note-data` (`tx-engine-1.hoon:637-650`) walks the map with its own
+`hashable` that pairs `leaf+key` with the value's noun-hashable, so
+`hash_owned_based_noun` on the whole map is *not* the right call.
+
+**Verify before trusting it.** The repository ships full signed transactions as
+fixtures — `crates/wallet-tx-builder/tests/fixtures/withdrawal_tx_fixtures.jam`
+decodes to entries carrying a complete `Transaction` with witnesses. That makes
+the check possible entirely offline:
+
+> Compute `sig-hash` for a fixture spend in Rust, then confirm the signature
+> already in that fixture verifies against it, using
+> `nockchain-wallet verify-hash`.
+
+Rust has no schnorr verifier of its own (`nockchain-math/src/crypto/cheetah.rs`
+exposes only limb conversions; verification is `batch-verify:affine:belt-schnorr`
+in Hoon), so the wallet does that half. Do this before touching a live chain: a
+wrong digest produces signatures the node rejects for reasons that read like
+networking or fee problems.
 
 Signing itself can be delegated to the wallet, which holds the keys:
 `nockchain-wallet sign-hash <base58-tip5-hash>`.
