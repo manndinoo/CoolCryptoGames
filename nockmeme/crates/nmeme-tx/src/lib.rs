@@ -14,6 +14,7 @@
 
 pub mod attach;
 pub mod sighash;
+pub mod txfile;
 
 pub use attach::attach_claim;
 pub use sighash::{note_data_digest, seed_sig_digest, seeds_sig_digest, spend_sig_hash};
@@ -37,4 +38,8 @@ pub enum Error {
     DuplicateKey(String),
     #[error("claim encoding failed: {0}")]
     Claim(#[from] nmeme_core::Error),
+    #[error("unsupported transaction tag {0}")]
+    UnsupportedTxTag(u64),
+    #[error("unsupported witness-data tag {0}")]
+    UnsupportedWitnessTag(u64),
 }
