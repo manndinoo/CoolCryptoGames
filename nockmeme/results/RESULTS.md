@@ -52,11 +52,16 @@ regression tests that fail without the fix.
 `many_capped_claims_cannot_overflow_the_indexer` is robustness only — the
 conservation check rejects it either way.
 
-### A5. Attachment and digest behaviour — 13 tests
+### A5. Attachment, digest behaviour and file surgery — 19 tests
 
 ```bash
-cargo test -p nmeme-tx --test attach   # 13 passed
+cargo test -p nmeme-tx    # 13 attach + 5 roundtrip + 1 fixture report
 ```
+
+The load-bearing round-trip test asserts that the signing hash computed before
+writing a transaction equals the one computed after reading it back. If jam/cue
+perturbed the note-data at all, a signature made against the pre-write digest
+would be silently worthless.
 
 Includes `note_data_digest_is_not_a_plain_noun_hash`, which pins a mistake that
 was made and corrected: `hash:note-data` is not `hash_owned_based_noun`.
@@ -108,11 +113,19 @@ Until the gate in [`../docs/ACCEPTANCE.md`](../docs/ACCEPTANCE.md) passes, every
 digest this crate computes is unproven, and so is everything built on it —
 including B3.
 
-### B3. Claim injection, re-signing, broadcast
+### B3. Claim injection, re-signing, broadcast, balance rebuild
 
-Implemented (`nmeme-tx attach`, `set-sig`; `scripts/live-demo.sh`) and **not yet
-executed against a chain**. No transaction has been broadcast. There are no
-transaction IDs, no block heights, and no on-chain balances to report.
+Implemented (`nmeme-tx attach`/`set-sig`, `nmeme-index`,
+`scripts/live-demo.sh`) and **not yet executed against a chain**. No
+transaction has been broadcast. There are no transaction IDs, no block heights,
+and no on-chain balances to report.
+
+Note also what `nmeme-index rebuild` is, once it does run: it reconstructs
+balances from the node's canonical *unspent-note set* at a stated height and
+block id, by decoding note-data over gRPC. It is **not** a replay from genesis —
+the summary `TransactionDetails` RPC carries no note-data. It checks that the
+chain agrees with the expected split; it does not independently re-derive it.
+SPEC §8's replay rebuild remains unimplemented.
 
 ### B4. Trading
 
