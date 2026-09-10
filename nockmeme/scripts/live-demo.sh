@@ -73,6 +73,10 @@ echo "tx=$TX"
 [ -n "$TX" ] || { echo "FAIL: no transaction file produced"; exit 1; }
 
 echo "== stage 4: GATE — verify the Rust sig-hash =="
+bash "$(dirname "${BASH_SOURCE[0]}")/gate-selftest.sh" || {
+  echo "FAIL: the gate's own decision logic is broken; refusing to continue"
+  exit 1
+}
 #
 # The wallet reports verification through its EXIT CODE, and prints
 #   "# Valid signature, hash verified"      with [%exit 0]
@@ -83,17 +87,18 @@ echo "== stage 4: GATE — verify the Rust sig-hash =="
 # "Invalid" — it would have reported a forged or mismatched digest as PASS.
 # The gate now requires the exit status to be 0, requires the exact success
 # string, and explicitly rejects the failure string.
+# The decision logic lives in lib-verify.sh so it can be tested without a
+# wallet or a node; scripts/gate-selftest.sh exercises it against the wallet's
+# real output strings, including the "Invalid" contains "valid" trap.
+. "$(dirname "${BASH_SOURCE[0]}")/lib-verify.sh"
+
 verify_sig() { # verify_sig <digest> <sigfile> <pubkey> ; 0 iff genuinely valid
   local out rc
   out=$(wallet alice verify-hash "$1" "$2" "$3" 2>&1); rc=$?
   out=$(printf '%s' "$out" | strip)
   printf '%s\n' "$out" >> "$RUN/verify.log"
-  [ "$rc" -eq 0 ] || return 1
-  printf '%s' "$out" | grep -qF 'Invalid signature' && return 1
-  printf '%s' "$out" | grep -qF 'Valid signature, hash verified' || return 1
-  return 0
+  verify_decision "$rc" "$out"
 }
-
 : > "$RUN/verify.log"
 "$NMEME_TX" sighash "$TX" "$RUN" | tee "$RUN/sighash.txt"
 
