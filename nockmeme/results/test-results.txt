@@ -1,47 +1,85 @@
-nmeme-core test run
-===================
+Test run
+========
 
-Date:      2026-09-10 02:25 UTC
-Commands:  cargo test -p nmeme-core
-           cargo test -p nmeme-core --release
+Date:      2026-09-10 02:40 UTC
 Built as:  a member of the Nockchain workspace at 2bcb0b9dfd190f17252205afd1c8a067048a1ad9,
            so nockchain-types and nockchain-math are the real crates, not stand-ins,
            and the workspace's warnings = deny / clippy::unwrap_used = deny apply.
 Toolchain: rustc 1.96.0-nightly (nightly-2026-04-03), 4 cores, Linux x86_64
 
-Both profiles are run because the overflow bug behaved differently in each:
-unchecked accumulation panicked in debug and wrapped silently in release.
-Release: 26 passed, 0 failed.
+Totals: 26 nmeme-core (x2 profiles) + 13 nmeme-tx attach + 1 fixture report
+        + 9 gate self-test checks.
 
-SCOPE: these cover the encoding and accounting layer ONLY. Nothing here has
-touched a chain. The acceptance gate (docs/ACCEPTANCE.md) is NOT met.
+SCOPE: encoding, accounting, attachment and gate logic ONLY.
+Nothing here has touched a chain. No transaction has been broadcast.
+See RESULTS.md section B for what remains unverified.
 
+### cargo test -p nmeme-core
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test amounts_above_the_supply_cap_are_rejected_at_the_codec ... ok
 test claim_rejects_zero_and_oversized_values ... ok
-test every_ticker_limb_is_a_field_element ... ok
+test amounts_above_the_supply_cap_are_rejected_at_the_codec ... ok
+test claiming_a_token_never_consumed_mints_nothing ... ok
 test genesis_claim_round_trips ... ok
 test genesis_cannot_consume_existing_token_weight ... ok
-test claiming_a_token_never_consumed_mints_nothing ... ok
+test every_ticker_limb_is_a_field_element ... ok
 test genesis_creates_fixed_supply ... ok
 test many_capped_claims_cannot_overflow_the_indexer ... ok
+test mixed_token_inputs_are_rejected_in_v0 ... ok
 test non_conserving_transfer_burns_everything ... ok
 test one_claim_per_lock_root_after_merging ... ok
-test mixed_token_inputs_are_rejected_in_v0 ... ok
 test reorg_rebuilds_from_replacement_history ... ok
 test replay_is_deterministic ... ok
 test spending_with_a_token_unaware_wallet_burns ... ok
 test ticker_rejects_bad_input ... ok
-test ticker_round_trips_through_limbs ... ok
 test token_id_binds_ticker_and_decimals ... ok
-test token_id_noun_round_trips ... ok
+test ticker_round_trips_through_limbs ... ok
 test token_id_is_independent_of_input_ordering ... ok
-test transfer_claim_round_trips ... ok
-test token_id_separates_same_ticker_from_different_anchors ... ok
-test two_capped_amounts_cannot_overflow_a_u64 ... ok
+test token_id_noun_round_trips ... ok
 test transfer_splits_and_conserves ... ok
-test wrapped_claim_sum_cannot_mint ... ok
+test token_id_separates_same_ticker_from_different_anchors ... ok
+test transfer_claim_round_trips ... ok
+test two_capped_amounts_cannot_overflow_a_u64 ... ok
 test wrapped_genesis_supply_cannot_understate_holdings ... ok
+test wrapped_claim_sum_cannot_mint ... ok
 test supply_is_conserved_across_a_long_chain_of_transfers ... ok
 test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+### cargo test -p nmeme-core --release
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+### cargo test -p nmeme-tx
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test attaching_a_claim_changes_the_signing_hash ... ok
+test attaches_to_the_seed_paying_the_named_lock_root ... ok
+test different_claims_give_different_note_data_digests ... ok
+test a_pinned_output_source_is_refused_rather_than_guessed ... ok
+test genesis_and_transfer_claims_are_distinguishable_in_the_digest ... ok
+test note_data_digest_is_not_a_plain_noun_hash ... ok
+test preserves_note_data_that_is_already_present ... ok
+test refuses_an_unknown_lock_root ... ok
+test empty_note_data_digests_as_the_null_leaf ... ok
+test refuses_to_overwrite_an_existing_meme_entry ... ok
+test refuses_two_seeds_sharing_one_lock_root ... ok
+test the_signing_hash_covers_the_fee ... ok
+test the_signing_hash_is_deterministic_and_order_independent ... ok
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test report_fixture_sig_hashes ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+### bash scripts/gate-selftest.sh
+ok    valid signature, exit 0 -> accept
+ok    invalid signature, exit 1 -> reject
+ok    "Invalid signature" does match grep -i valid (the old bug)
+ok    ...but verify_decision rejects it
+ok    exit 0 with failure text -> reject
+ok    exit 1 with success text -> reject
+ok    empty output -> reject
+ok    unrelated error -> reject
+ok    crash exit code -> reject
+
+gate self-test: all checks passed
