@@ -1,0 +1,137 @@
+# Generate the Nockchain verifier-setup seed cache on a GitHub-hosted runner.
+#
+# Why: the one phase of node startup this project's cloud environment cannot
+# afford is first-boot generation of ai-pow/verifier-setup-seeds-v1.bin — FRI
+# proving that was OOM-killed at ~13.9 GB under a 13.34 GiB cgroup. Public-repo
+# hosted runners are larger, and a swapfile on /mnt covers the rest. The file
+# is consensus-digest-validated by any node that loads it, so where it was
+# generated does not matter (nockmeme/scripts/generate-seed-cache.sh).
+#
+# Output: the tarball as a workflow artifact, and committed to the
+# `seed-cache` branch so it can be fetched with plain git.
+name: nmeme seed cache
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/new-session-wehujv]
+    paths: [.github/workflows/nmeme-seed-cache.yml]
+
+permissions:
+  contents: write
+
+env:
+  NOCKCHAIN_REV: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
+  WORK: /mnt/work
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Machine facts before anything else
+        run: |
+          nproc; free -g; df -h / /mnt; uname -m
+          cat /proc/sys/vm/overcommit_memory
+
+      - name: Swap and overcommit
+        run: |
+          sudo mkdir -p /mnt && sudo fallocate -l 24G /mnt/swapfile
+          sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile
+          sudo sysctl -w vm.overcommit_memory=1
+          free -g
+
+      - name: System deps
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q protobuf-compiler clang cmake make pkg-config
+          protoc --version
+
+      - name: Clone Nockchain at the pinned revision
+        run: |
+          sudo mkdir -p "$WORK" && sudo chown "$USER" "$WORK"
+          git init -q "$WORK/nockchain" && cd "$WORK/nockchain"
+          git remote add origin https://github.com/nockchain/nockchain.git
+          git fetch -q --depth 1 origin "$NOCKCHAIN_REV"
+          git checkout -q FETCH_HEAD
+          git rev-parse HEAD
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /mnt/work/nockchain/target
+          key: nmeme-seed-${{ env.NOCKCHAIN_REV }}-${{ runner.os }}-v1
+
+      - name: Build honk and the kernel assets
+        working-directory: /mnt/work/nockchain
+        run: |
+          cargo build --release -p honk --bin honk
+          mkdir -p assets/native
+          for k in dumb:hoon/apps/dumbnet/outer.hoon miner:hoon/apps/dumbnet/miner.hoon \
+                   wal:hoon/apps/wallet/wallet.hoon  peek:hoon/apps/peek/peek.hoon; do
+            RUST_LOG=warn ./target/release/honk --new --output "assets/native/${k%%:*}.jam" \
+              --prelude hoon/common/hoon.hoon "${k##*:}" hoon
+          done
+          cp assets/native/*.jam assets/
+          ls -la assets/*.jam
+
+      - name: Build the node only
+        working-directory: /mnt/work/nockchain
+        run: cargo build --release -p nockchain --bin nockchain
+
+      - name: Generate the seed cache (with RSS sampling)
+        run: |
+          mkdir -p "$WORK/run"
+          # sample the node's RSS every 15s until generation finishes
+          ( while true; do
+              P=$(pgrep -x nockchain | head -1) || true
+              if [ -n "$P" ]; then
+                R=$(awk '/^VmRSS:/{print $2}' /proc/$P/status 2>/dev/null || echo 0)
+                printf '%s\t%s\n' "$(date +%s)" "$R" >> "$WORK/run/rss.tsv"
+              fi
+              sleep 15
+            done ) &
+          SAMPLER=$!
+          GEN_TIMEOUT=18000 bash nockmeme/scripts/generate-seed-cache.sh "$WORK/nockchain" "$WORK/run"
+          kill $SAMPLER || true
+          echo "peak RSS: $(awk -F'\t' '{if($2>m)m=$2}END{printf "%.2f GiB", m/1048576}' "$WORK/run/rss.tsv")"
+          free -g
+
+      - name: Upload artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nmeme-seed-cache
+          path: |
+            /mnt/work/run/nmeme-seed-cache.tar.gz
+            /mnt/work/run/nmeme-seed-cache.sha256
+            /mnt/work/run/rss.tsv
+            /mnt/work/run/node.log
+          retention-days: 30
+
+      - name: Publish to the seed-cache branch (fetchable with plain git)
+        if: success()
+        run: |
+          git config user.name  "nmeme-seed-cache[bot]"
+          git config user.email "nmeme-seed-cache@users.noreply.github.com"
+          git checkout --orphan seed-cache
+          git rm -rfq . || true
+          cp "$WORK/run/nmeme-seed-cache.tar.gz" "$WORK/run/nmeme-seed-cache.sha256" "$WORK/run/rss.tsv" .
+          git add nmeme-seed-cache.tar.gz nmeme-seed-cache.sha256 rss.tsv
+          git commit -qm "Verifier-setup seed cache for Nockchain $NOCKCHAIN_REV (run ${{ github.run_id }})"
+          git push -f origin seed-cache
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nmeme-seed-cache-failure-logs
+          path: |
+            /mnt/work/run/node.log
+            /mnt/work/run/rss.tsv
+          if-no-files-found: ignore
