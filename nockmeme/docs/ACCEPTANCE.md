@@ -132,6 +132,45 @@ networking or fee problems.
 Signing itself can be delegated to the wallet, which holds the keys:
 `nockchain-wallet sign-hash <base58-tip5-hash>`.
 
+### The digest, spelled out
+
+`hash+X` is the identity on the digest: the `%hash` branch of the hashable
+dispatch returns `X` itself rather than hashing it again
+(`hashable/noun.rs:48`, `decode_hash_digest_noun`). `leaf+X` hashes the noun
+(`hashable/noun.rs:49`). So one seed's digest is four nested pairs:
+
+```rust
+// Seed { output_source, lock_root, note_data, gift, parent_hash }
+let seed_digest = hash_pair(
+    &hash_unit_belt(None),            // output_source: None in v0 create/transfer
+    &hash_pair(
+        &seed.lock_root,              // hash+  -> identity
+        &hash_pair(
+            &note_data_digest(&seed.note_data),
+            &hash_pair(
+                &hash_leaf_belt(Belt(seed.gift.0)),   // leaf+gift
+                &seed.parent_hash,                     // hash+ -> identity
+            ),
+        ),
+    ),
+);
+```
+
+Fold the seed digests over the z-set with `HashableTreeHasher`, then
+
+```rust
+let sig_hash = hash_pair(&seeds_digest, &hash_leaf_belt(Belt(fee)));
+```
+
+`note_data_digest` is the one piece with no ready-made helper: per
+`tx-engine-1.hoon:637-650` it walks the map tree pairing `leaf+key` with the
+value's *noun* hashable, so it is a tree fold of
+`hash_pair(hash_pair(hash_leaf_belt(key), hash_owned_based_noun(value)), ...)`
+and **not** `hash_owned_based_noun` over the map as a whole.
+
+For NMEME's own claims, `hash_owned_based_noun` is the right call on the claim
+value, because a claim is exactly one such value under the `meme` key.
+
 ## Proposed flow
 
 1. `nockchain-wallet create-tx …` — wallet builds a correct v1 spend and witness.
