@@ -13,6 +13,7 @@
 //! (`nockchain-wallet sign-hash`).
 
 pub mod attach;
+pub mod cli;
 pub mod sighash;
 pub mod txfile;
 
