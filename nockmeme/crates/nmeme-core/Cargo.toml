@@ -1,0 +1,12 @@
+[package]
+name = "nmeme-core"
+version = "0.1.0"
+edition = "2021"
+description = "NMEME v0 — fixed-supply token standard encoded in Nockchain note-data"
+
+[dependencies]
+nockchain-types = { workspace = true }
+nockchain-math = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
