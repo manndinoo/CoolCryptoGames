@@ -7,11 +7,13 @@
 //! `ParsedTransaction` / `apply_witness_data` in the repository's own
 //! `crates/nockchain-e2e/tests/upgrade_bythos.rs`.
 
+use bytes::Bytes;
+use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockchain_math::structs::HoonMapIter;
 use nockchain_types::tx_engine::common::{Name, Signature};
 use nockchain_types::tx_engine::v1::tx::{Spend, Spends, Witness};
-use nockvm::noun::NounHandle;
-use noun_serde::NounDecode;
+use nockvm::noun::{Noun, NounHandle};
+use noun_serde::{NounDecode, NounEncode};
 
 use crate::Error;
 
@@ -118,4 +120,73 @@ fn decode_map<T: NounDecode>(noun: NounHandle<'_>) -> Result<Vec<(Name, T)>, Err
             Ok((name, value))
         })
         .collect()
+}
+
+/// Rewrites a transaction file with modified spends and witness data.
+///
+/// The file is `[1 name spends display witness-data]`. `name` and `display` are
+/// carried through as the original nouns rather than re-derived, so nothing
+/// depends on this crate understanding them.
+///
+/// The witness-data map is rebuilt by walking the *original* map and
+/// substituting values, keeping its exact tree shape. Rebuilding a Hoon map
+/// from scratch would require reproducing its balancing, and a differently
+/// shaped map is a different noun.
+pub fn rewrite(
+    original: NounHandle<'_>,
+    slab: &mut NounSlab<NockJammer>,
+    spends: &Spends,
+    witness_for: &dyn Fn(&Name) -> Option<Witness>,
+) -> Result<Bytes, Error> {
+    let cell = original.as_cell().map_err(|_| Error::Shape)?;
+    let tag = cell.head().noun();
+    let after_tag = cell.tail().as_cell().map_err(|_| Error::Shape)?;
+    let name_noun = after_tag.head().noun();
+    let after_name = after_tag.tail().as_cell().map_err(|_| Error::Shape)?;
+    let after_spends = after_name.tail().as_cell().map_err(|_| Error::Shape)?;
+    let display_noun = after_spends.head().noun();
+    let witness_noun = after_spends.tail();
+
+    let new_spends = spends.to_noun(slab);
+
+    // witness-data is [tag map]; keep the tag, rebuild the map in place.
+    let wcell = witness_noun.as_cell().map_err(|_| Error::Shape)?;
+    let wtag = wcell.head().noun();
+    let map = rebuild_witness_map(wcell.tail(), slab, witness_for)?;
+    let new_witness = nockvm::noun::T(slab, &[wtag, map]);
+
+    let root = nockvm::noun::T(
+        slab,
+        &[tag, name_noun, new_spends, display_noun, new_witness],
+    );
+    slab.set_root(root);
+    Ok(slab.jam())
+}
+
+/// Walks a Hoon map node `[[key value] left right]` (`~` when empty) and
+/// substitutes each value, preserving the tree's shape.
+fn rebuild_witness_map(
+    noun: NounHandle<'_>,
+    slab: &mut NounSlab<NockJammer>,
+    witness_for: &dyn Fn(&Name) -> Option<Witness>,
+) -> Result<Noun, Error> {
+    if noun.is_atom() {
+        return Ok(nockvm::noun::D(0));
+    }
+    let cell = noun.as_cell().map_err(|_| Error::Shape)?;
+    let entry = cell.head().as_cell().map_err(|_| Error::Shape)?;
+    let key_noun = entry.head().noun();
+    let name = Name::from_noun_handle(&entry.head()).map_err(|_| Error::Shape)?;
+
+    let value = match witness_for(&name) {
+        Some(witness) => witness.to_noun(slab),
+        None => entry.tail().noun(),
+    };
+
+    let branches = cell.tail().as_cell().map_err(|_| Error::Shape)?;
+    let left = rebuild_witness_map(branches.head(), slab, witness_for)?;
+    let right = rebuild_witness_map(branches.tail(), slab, witness_for)?;
+
+    let new_entry = nockvm::noun::T(slab, &[key_noun, value]);
+    Ok(nockvm::noun::T(slab, &[new_entry, left, right]))
 }
