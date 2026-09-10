@@ -122,6 +122,39 @@ snapshot read that must match the first, and each mined transaction's height
 must not exceed the snapshot's. The page loop and the fold are pure functions
 tested without a node, including a repeated token and a runaway pager.
 
+### A10. Independent verification, and the two bugs it found
+
+A third party rebuilt the package inside the pinned workspace with zero
+modifications to the 27 uploaded crate files, ran every supplied test (81
+passed, 0 failed; 9 shell checks passed), and then wrote two checks of their
+own. Both found bugs. Their package is retained verbatim in
+[`independent-verification/`](./independent-verification/).
+
+**Fee undercount for Merkle proofs.** `required_fee` passed
+`spend_condition_count: None` to the estimator, which means a one-condition
+lock with no sibling path — while the witness in the same transaction carried
+a path. One sibling was 5 words short: 160 nicks at fakenet rates, enough to
+clear local enforcement and still be rejected by the node. Fixed: the count is
+now derived from the path actually present in the witness (`1 << path.len()`,
+the exact inverse of the estimator's `count.ilog2()`), and a path deeper than
+the deepest lock the protocol defines is refused rather than estimated. Their
+regression is retained as `independent_fee_path.rs` and passes; six further
+expected-value tests pin every depth 0–4, the 5-words-per-sibling slope, and
+the 160-nick figure.
+
+**Mining timeout ignored the required height.** After the wait loop, the
+script only checked that *some* height had parsed, not that it reached
+`MIN_HEIGHT`; their mocked run proceeded at height 1 with a minimum of 3.
+Fixed: the wait is now a function in `lib-mine.sh` that fails closed, with a
+six-case self-test that the demo runs before mining. Their reproduction now
+refuses.
+
+**What they also reported.** The default dev/test profile failed to link for
+them and needed `CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false`;
+that failure did not occur here and its cause is not established
+(`docs/DEVELOP.md`). And, in their words: no live node, mined creation, signed
+transfer, or on-chain balance rebuild was executed in that verification either.
+
 ### A7. Environment limits, measured
 
 | `RAYON_NUM_THREADS` | Peak RSS | Outcome |

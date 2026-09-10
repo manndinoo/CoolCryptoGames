@@ -1,0 +1,203 @@
+   Compiling nockchain-types v0.1.15 (/workspace/scratch/f94d58e27f83/native-verification/crates/nockchain-types)
+   Compiling nmeme-core v0.1.0 (/workspace/scratch/f94d58e27f83/native-verification/crates/nmeme-core)
+   Compiling wallet-tx-builder v0.1.15 (/workspace/scratch/f94d58e27f83/native-verification/crates/wallet-tx-builder)
+   Compiling nmeme-tx v0.1.0 (/workspace/scratch/f94d58e27f83/native-verification/crates/nmeme-tx)
+   Compiling nockapp-grpc-proto v0.1.15 (/workspace/scratch/f94d58e27f83/native-verification/crates/nockapp-grpc-proto)
+   Compiling nmeme-index v0.1.0 (/workspace/scratch/f94d58e27f83/native-verification/crates/nmeme-index)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 09s
+     Running unittests src/lib.rs (target/debug/deps/nmeme_core-640e063c1c274e8e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/standard.rs (target/debug/deps/standard-726aab8b1ee57c1f)
+
+running 26 tests
+test amounts_above_the_supply_cap_are_rejected_at_the_codec ... ok
+test every_ticker_limb_is_a_field_element ... ok
+test claiming_a_token_never_consumed_mints_nothing ... ok
+test claim_rejects_zero_and_oversized_values ... ok
+test many_capped_claims_cannot_overflow_the_indexer ... ok
+test genesis_claim_round_trips ... ok
+test genesis_creates_fixed_supply ... ok
+test genesis_cannot_consume_existing_token_weight ... ok
+test non_conserving_transfer_burns_everything ... ok
+test mixed_token_inputs_are_rejected_in_v0 ... ok
+test ticker_rejects_bad_input ... ok
+test reorg_rebuilds_from_replacement_history ... ok
+test one_claim_per_lock_root_after_merging ... ok
+test ticker_round_trips_through_limbs ... ok
+test replay_is_deterministic ... ok
+test token_id_noun_round_trips ... ok
+test token_id_separates_same_ticker_from_different_anchors ... ok
+test token_id_binds_ticker_and_decimals ... ok
+test token_id_is_independent_of_input_ordering ... ok
+test transfer_claim_round_trips ... ok
+test spending_with_a_token_unaware_wallet_burns ... ok
+test two_capped_amounts_cannot_overflow_a_u64 ... ok
+test transfer_splits_and_conserves ... ok
+test wrapped_claim_sum_cannot_mint ... ok
+test wrapped_genesis_supply_cannot_understate_holdings ... ok
+test supply_is_conserved_across_a_long_chain_of_transfers ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/nmeme_index-4a7941f9557370af)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/nmeme_index-2ae40960cc6afec5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/binding.rs (target/debug/deps/binding-08cfc5e184c3807c)
+
+running 6 tests
+test a_note_cannot_be_claimed_by_two_steps ... ok
+test a_missing_output_fails_rather_than_binding_partially ... ok
+test successive_change_outputs_to_alice_share_a_first_name ... ok
+test a_note_with_the_right_recipient_but_wrong_identity_is_refused ... ok
+test each_step_binds_to_its_own_note_and_only_that_note ... ok
+test equal_gifts_across_steps_never_collide_in_binding ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/decode.rs (target/debug/deps/decode-856736cc7cce6a79)
+
+running 8 tests
+test garbage_is_rejected ... ok
+test a_genesis_claim_survives_the_blob_encoding ... ok
+test a_foreign_payload_under_the_meme_key_is_rejected ... ok
+test a_transfer_claim_survives_the_blob_encoding ... ok
+test a_future_version_is_rejected_rather_than_guessed ... ok
+test a_truncated_blob_is_rejected_not_misread ... ok
+test the_supply_cap_survives_the_round_trip ... ok
+test every_ticker_width_survives ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/snapshot.rs (target/debug/deps/snapshot-8f5dc929f4f20550)
+
+running 8 tests
+test a_page_without_a_block_id_cannot_anchor_a_snapshot ... ok
+test a_repeated_token_is_an_error_not_an_infinite_loop ... ok
+test a_single_page_read_is_the_degenerate_case_not_a_shortcut ... ok
+test bracketing_detects_a_tip_that_moved_during_transaction_reads ... ok
+test pages_at_different_blocks_are_refused ... ok
+test same_height_different_block_is_still_refused ... ok
+test the_loop_follows_tokens_until_the_node_returns_an_empty_one ... ok
+test a_runaway_pager_is_bounded ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/nmeme_tx-ab0bb92ace30b546)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/nmeme_tx-d4e2d62c7e058b2a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/attach.rs (target/debug/deps/attach-8280b698de1ab0a5)
+
+running 13 tests
+test attaches_to_the_seed_paying_the_named_lock_root ... ok
+test different_claims_give_different_note_data_digests ... ok
+test a_pinned_output_source_is_refused_rather_than_guessed ... ok
+test empty_note_data_digests_as_the_null_leaf ... ok
+test preserves_note_data_that_is_already_present ... ok
+test note_data_digest_is_not_a_plain_noun_hash ... ok
+test genesis_and_transfer_claims_are_distinguishable_in_the_digest ... ok
+test attaching_a_claim_changes_the_signing_hash ... ok
+test refuses_to_overwrite_an_existing_meme_entry ... ok
+test refuses_an_unknown_lock_root ... ok
+test refuses_two_seeds_sharing_one_lock_root ... ok
+test the_signing_hash_is_deterministic_and_order_independent ... ok
+test the_signing_hash_covers_the_fee ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fee.rs (target/debug/deps/fee-cbc6dd7151ced81f)
+
+running 5 tests
+test mainnet_charges_more_per_word_than_fakenet ... ok
+test the_minimum_is_never_below_the_network_floor ... ok
+test a_fee_below_the_post_attach_minimum_is_refused_with_the_shortfall ... ok
+test attaching_a_claim_raises_the_required_fee ... ok
+test a_fee_at_the_minimum_is_accepted_and_one_below_is_not ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/independent_fee_path.rs (target/debug/deps/independent_fee_path-c8024d985e83308d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/names.rs (target/debug/deps/names-3a15cfd831ae1b47)
+
+running 8 tests
+test a_seed_for_another_lock_is_rejected ... ok
+test last_name_depends_on_the_seeds_hash ... ok
+test first_name_matches_the_repository_implementation ... ok
+test equal_gifts_to_the_same_recipient_still_differ_by_parent ... ok
+test output_source_is_stripped_before_hashing ... ok
+test merged_seeds_name_one_note ... ok
+test successive_outputs_to_the_same_recipient_have_distinct_identities ... ok
+test the_name_is_a_pure_function_of_the_seed_set ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/roundtrip.rs (target/debug/deps/roundtrip-3be37c29ad1cb7d5)
+
+running 6 tests
+test dump_synthetic_transaction_when_asked ... ok
+test attaching_a_claim_survives_the_round_trip ... ok
+test a_substituted_witness_replaces_only_its_own_entry ... ok
+test a_synthetic_transaction_file_round_trips_unchanged ... ok
+test other_seeds_and_the_fee_are_untouched_by_attachment ... ok
+test rewrite_without_changes_preserves_the_spends ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/sighash_fixtures.rs (target/debug/deps/sighash_fixtures-a38c2ea33837911d)
+
+running 1 test
+INFO	withdrawal-basic	v1 spend: 1 seed(s), 0 signature(s), pinned_source=0
+INFO	withdrawal-with-change	v1 spend: 2 seed(s), 0 signature(s), pinned_source=0
+INFO	bridge-multisig-withdrawal-basic	v1 spend: 1 seed(s), 0 signature(s), pinned_source=0
+INFO	bridge-multisig-withdrawal-with-change	v1 spend: 2 seed(s), 0 signature(s), pinned_source=0
+INFO	bridge-multisig-withdrawal-pre-bythos-stub-with-change	v1 spend: 2 seed(s), 0 signature(s), pinned_source=0
+reported 0 sig-hash(es) from 5 fixture(s)
+test report_fixture_sig_hashes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests nmeme_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests nmeme_index
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests nmeme_tx
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+

@@ -45,6 +45,8 @@ pub enum Error {
     Claim(#[from] nmeme_core::Error),
     #[error("fee {current} is below the minimum {required} for this transaction (short by {shortfall})")]
     FeeTooLow { current: u64, required: u64, shortfall: u64 },
+    #[error("lock merkle path of {path_len} siblings exceeds the deepest lock the protocol defines ({max}); refusing to estimate a fee for a witness the chain would reject")]
+    UnsupportedLockShape { path_len: usize, max: usize },
     #[error("unsupported transaction tag {0}")]
     UnsupportedTxTag(u64),
     #[error("unsupported witness-data tag {0}")]

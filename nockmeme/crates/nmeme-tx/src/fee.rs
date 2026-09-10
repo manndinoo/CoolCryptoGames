@@ -87,9 +87,9 @@ pub fn required_fee(spends: &Spends, params: FeeParams) -> Result<FeeReport, Err
                     .collect(),
             });
         }
-        let spend_condition = match &spend1.witness.lock_merkle_proof {
-            LockMerkleProof::Full(full) => full.spend_condition.clone(),
-            LockMerkleProof::Stub(stub) => stub.spend_condition.clone(),
+        let (spend_condition, path_len) = match &spend1.witness.lock_merkle_proof {
+            LockMerkleProof::Full(full) => (full.spend_condition.clone(), full.proof.path.len()),
+            LockMerkleProof::Stub(stub) => (stub.spend_condition.clone(), stub.proof.path.len()),
         };
         witnesses.push(WitnessWordInput {
             spend_condition,
@@ -98,7 +98,15 @@ pub fn required_fee(spends: &Spends, params: FeeParams) -> Result<FeeReport, Err
             // — an over-estimate here costs a few nicks, an under-estimate costs
             // a rejected transaction.
             input_origin_page: height(params.height.max(params.bythos_phase)),
-            spend_condition_count: None,
+            // The estimator charges the Merkle path as `count.ilog2()` siblings
+            // (`word_count.rs`, estimate_merkle_proof_words). `None` means a
+            // one-condition lock with no path — but the witness carries its
+            // real path, and that is what the chain will charge for. So the
+            // count is derived from the path actually present, `1 << len`,
+            // which the estimator's normalization maps back to `len` exactly.
+            // Passing `None` here undercounted a one-sibling proof by five
+            // words; independently found and reproduced.
+            spend_condition_count: Some(spend_condition_count_for_path(path_len)?),
         });
     }
 
@@ -114,6 +122,23 @@ pub fn required_fee(spends: &Spends, params: FeeParams) -> Result<FeeReport, Err
         bythos_phase: height(params.bythos_phase),
     });
     Ok(FeeReport { seed_words, witness_words, required: breakdown.minimum_fee, current })
+}
+
+/// The deepest lock the protocol defines is 16-way (`Lock::V16`,
+/// `tx.rs:628`), a path of four siblings.
+pub const MAX_LOCK_PATH_LEN: usize = 4;
+
+/// Number of spend conditions implied by a Merkle path of `path_len`
+/// siblings: a lock with `2^n` alternatives has a path of `n`.
+///
+/// A path deeper than any lock the protocol defines is not estimated: the
+/// chain would not accept the witness, so a fee for it is meaningless, and
+/// guessing would hide a malformed transaction behind a plausible number.
+pub fn spend_condition_count_for_path(path_len: usize) -> Result<u64, Error> {
+    if path_len > MAX_LOCK_PATH_LEN {
+        return Err(Error::UnsupportedLockShape { path_len, max: MAX_LOCK_PATH_LEN });
+    }
+    Ok(1u64 << path_len)
 }
 
 /// Refuses a transaction whose fee is below the minimum for its current

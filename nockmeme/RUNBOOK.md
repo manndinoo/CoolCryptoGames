@@ -53,7 +53,9 @@ cargo build --release -p nockchain --bin nockchain \
 # 4. This package's crates, built inside the workspace
 /path/to/nockmeme/scripts/link-into-workspace.sh "$PWD"
 cargo build -p nmeme-tx -p nmeme-index --bins
-cargo test  -p nmeme-core -p nmeme-tx -p nmeme-index     # 53 tests
+cargo test  -p nmeme-core -p nmeme-tx -p nmeme-index
+# if that fails at LINK time (seen once, cause unknown), retry with:
+#   CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false cargo test ...
 bash /path/to/nockmeme/scripts/gate-selftest.sh          # 9 checks
 
 # 5. Node. On 32 GB use default parallelism; the 1-thread setting only

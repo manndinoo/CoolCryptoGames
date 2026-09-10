@@ -28,6 +28,7 @@ W="$RUN/wallets"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 . "$HERE/lib-verify.sh"
+. "$HERE/lib-mine.sh"
 
 # Progress goes to stderr; only transaction results go to stdout and to
 # result files. An earlier version returned the txid through stdout while also
@@ -130,16 +131,11 @@ MINER_PID=$!
 trap 'kill "$MINER_PID" 2>/dev/null || true' EXIT
 echo "miner pid=$MINER_PID"
 
-HEIGHT=""
-DEADLINE=$((SECONDS + ${MINE_TIMEOUT:-1800}))
-while (( SECONDS < DEADLINE )); do
-  HEIGHT=$(grep -ao "added to validated blocks at [0-9]*" "$RUN/node.log" 2>/dev/null \
-           | tail -1 | grep -oE '[0-9]+$' || true)
-  [ -n "$HEIGHT" ] && [ "$HEIGHT" -ge "${MIN_HEIGHT:-3}" ] && break
-  sleep 10
-done
-[ -n "$HEIGHT" ] || die "no block mined within ${MINE_TIMEOUT:-1800}s"
-echo "height=$HEIGHT"
+# The wait is a tested function (lib-mine.sh); its self-test runs first.
+bash "$HERE/height-gate-selftest.sh" >&2 || die "the height gate's own logic is broken"
+HEIGHT=$(wait_for_height "$RUN/node.log" "${MIN_HEIGHT:-3}" "${MINE_TIMEOUT:-1800}") \
+  || die "mining did not reach height ${MIN_HEIGHT:-3} within ${MINE_TIMEOUT:-1800}s"
+log "height=$HEIGHT"
 
 # broadcast_and_confirm <tx.jam> <label> <result-file>
 # Writes TXID= and HEIGHT= to the result file. Nothing is returned through

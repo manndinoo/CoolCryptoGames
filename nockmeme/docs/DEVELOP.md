@@ -116,6 +116,20 @@ The verifier setup is proof-independent and the smoke script caches it
 it has to be paid somewhere with enough memory, and a cache produced elsewhere
 would have to be copied in.
 
+## A link failure seen elsewhere, not here
+
+An independent verifier building the nmeme crates inside the pinned workspace
+hit a link failure in the default dev/test profile (undefined `main` and Rust
+runtime symbols) and succeeded with:
+
+```bash
+CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false cargo test -p nmeme-core -p nmeme-tx -p nmeme-index
+```
+
+That failure was not reproduced on the machine this work was done on, and its
+cause has not been established. If the default profile fails to link, try the
+override; do not report a build that needed it as a default-profile build.
+
 ## Building nmeme-core
 
 `nmeme-core` uses `nockchain-types` and `nockchain-math` as workspace
