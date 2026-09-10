@@ -8,6 +8,9 @@ support.
 
 ## Status
 
+[`results/RESULTS.md`](./results/RESULTS.md) separates what has actually been
+executed from what is only designed. Read that before trusting anything here.
+
 | Stage | State |
 | --- | --- |
 | Consensus facts verified against source | done — [`docs/FINDINGS.md`](./docs/FINDINGS.md) |

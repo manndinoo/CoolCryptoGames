@@ -1,0 +1,135 @@
+# What is proven, and what is not
+
+Two lists. Nothing appears in the first without a command that produced it and
+an artifact in this repository.
+
+---
+
+## A. Executed and verified
+
+### A1. Consensus facts, read from source
+
+Revision `2bcb0b9dfd190f17252205afd1c8a067048a1ad9`. Every claim in
+[`../docs/FINDINGS.md`](../docs/FINDINGS.md) cites `file:line`. These are
+*readings of source*, not runtime observations — strong evidence, but §B1 notes
+which of them a live chain still needs to confirm.
+
+### A2. The native stack builds
+
+`nockchain`, `nockchain-wallet`, `zk-pow-mine`, `honk` all build. Four blockers
+and their fixes are in [`../docs/DEVELOP.md`](../docs/DEVELOP.md).
+
+```bash
+cargo build --release -p nockchain --bin nockchain \
+  -p nockchain-wallet --bin nockchain-wallet -p zk-pow-miner --bin zk-pow-mine
+```
+
+### A3. Encoding and accounting — 26 tests
+
+```bash
+cargo test -p nmeme-core             # 26 passed
+cargo test -p nmeme-core --release   # 26 passed
+```
+
+Both profiles are run deliberately: the overflow bug behaved differently in
+each. Output in [`test-results.txt`](./test-results.txt).
+
+### A4. The overflow bug, fixed and demonstrated
+
+Amounts were bounded only by the field prime, ~4.3e9 below `u64::MAX`, and
+accumulated with unchecked `+`. Holding **1 unit**, claiming outputs of `2^63`
+and `2^63 + 1` wraps the total to `1`, satisfies conservation, and mints
+~1.8e19 units.
+
+Demonstrated by reverting the fix: `wrapped_claim_sum_cannot_mint` fails with
+the transfer **accepted** rather than burned. In debug the same input panics the
+indexer instead — a denial of service as well as an inflation.
+
+Fixed by `MAX_SUPPLY = 2^63 - 1` plus `checked_total()` on every accumulation.
+
+Honest note on test strength: two of the five overflow tests are genuine
+regression tests that fail without the fix.
+`many_capped_claims_cannot_overflow_the_indexer` is robustness only — the
+conservation check rejects it either way.
+
+### A5. Attachment and digest behaviour — 13 tests
+
+```bash
+cargo test -p nmeme-tx --test attach   # 13 passed
+```
+
+Includes `note_data_digest_is_not_a_plain_noun_hash`, which pins a mistake that
+was made and corrected: `hash:note-data` is not `hash_owned_based_noun`.
+
+### A6. The signature gate — 9 checks
+
+```bash
+bash scripts/gate-selftest.sh          # 9 checks passed
+```
+
+The gate previously matched with `grep -i valid`, which also matches
+"**In**valid signature" — it accepted failure as success and could never fail.
+The self-test demonstrates that directly, then shows the replacement rejecting
+the same input. The decision now keys on the wallet's exit code
+(`wallet.hoon:2028-2030`).
+
+### A7. Environment limits, measured
+
+| `RAYON_NUM_THREADS` | Peak RSS | Outcome |
+| --- | --- | --- |
+| 4 (default) | 13.24 GiB | OOM-killed before `%born` |
+| 1 | ~5.7 GiB | fits under the 13.34 GiB ceiling |
+
+Numbers, `dmesg` evidence and the full RSS series:
+[`environment.md`](./environment.md), [`node-memory-1thread.tsv`](./node-memory-1thread.tsv).
+
+---
+
+## B. Designed, implemented, or assumed — but NOT verified
+
+### B1. Two consensus readings a live chain must confirm
+
+- **Note-data merging by lock-root.** `FINDINGS §3` and `SPEC R1` rest on it,
+  and the whole allocation model follows from it.
+- **`output-source` pinning.** The entire swap design rests on it.
+
+Both are read from `tx-engine-1.hoon` and corroborated by the repository's own
+code, but neither has been observed on a running node.
+
+### B2. The `sig-hash` implementation
+
+`nmeme-tx` computes a v1 spend's signing hash by transcribing
+`tx-engine-1.hoon`. **It has never been checked against a signature the wallet
+produced.** The offline route does not exist: the repository's transaction
+fixtures carry zero signatures (`sighash_fixtures` reports this), and Rust has
+no schnorr verifier.
+
+Until the gate in [`../docs/ACCEPTANCE.md`](../docs/ACCEPTANCE.md) passes, every
+digest this crate computes is unproven, and so is everything built on it —
+including B3.
+
+### B3. Claim injection, re-signing, broadcast
+
+Implemented (`nmeme-tx attach`, `set-sig`; `scripts/live-demo.sh`) and **not yet
+executed against a chain**. No transaction has been broadcast. There are no
+transaction IDs, no block heights, and no on-chain balances to report.
+
+### B4. Trading
+
+[`../docs/SWAPS.md`](../docs/SWAPS.md) is a design derived from source. Nothing
+is implemented and nothing is tested. It also depends on B1's `output-source`
+reading.
+
+### B5. Everything else
+
+No AMM (not expressible without a consensus change or a trusted sequencer). No
+partial fills. No platform, wallet integration, or UI. No security review. No
+claim of mainnet suitability.
+
+---
+
+## The single sentence version
+
+The standard is specified against verified consensus rules and its accounting
+layer is tested, including against an inflation bug that was found and fixed.
+Nothing has touched a chain, so the token does not yet work.
