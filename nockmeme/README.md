@@ -17,7 +17,7 @@ executed from what is only designed. Read that before trusting anything here.
 | Standard specified | done — [`docs/SPEC.md`](./docs/SPEC.md) |
 | Encoding + accounting implemented | in progress — [`crates/nmeme-core`](./crates/nmeme-core) |
 | Native stack builds | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
-| Node runs a chain | yes at `RAYON_NUM_THREADS=1` (5.7 GiB); OOM at default parallelism — [`results/environment.md`](./results/environment.md) |
+| Node runs a chain | **no** — OOM-killed at ~13.9 GB in both 4-thread and 1-thread runs; needs ~32 GB — [`results/environment.md`](./results/environment.md) |
 | Transaction tooling | built, **digest not yet verified** — [`crates/nmeme-tx`](./crates/nmeme-tx) |
 | Proven on a live fakenet chain | not done — [`docs/ACCEPTANCE.md`](./docs/ACCEPTANCE.md) |
 | Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |

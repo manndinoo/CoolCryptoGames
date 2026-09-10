@@ -5,7 +5,7 @@ creation and a real transfer, and an indexer rebuilt from that chain reports the
 expected split. This document records what was established about that path, so
 the next session starts from facts rather than from guesses.
 
-## Environment: it does run here, single-threaded
+## Environment: it does not run here
 
 `nockchain`, `nockchain-wallet` and `zk-pow-mine` build from revision `2bcb0b9`
 on a 15 GB / 4-core box. The build blockers and their fixes are in
@@ -20,16 +20,19 @@ Memory cgroup out of memory: Killed process 4372 (nockchain)
 total-vm:27549392kB, anon-rss:13881708kB
 ```
 
-That is not the floor. Peak memory is dominated by per-thread prover buffers, and
-the verifier-setup build is rayon-parallel (`ai-pow` builds it with the
-`parallel` feature; `RAYON_NUM_THREADS` is cited as a tuning knob in
-`crates/ai-pow/src/zk_bridge.rs:3689`). Constraining it changes the picture
-completely:
+The obvious lever was tried and does not work. The verifier-setup build is
+rayon-parallel (`RAYON_NUM_THREADS` is cited as a tuning knob in
+`crates/ai-pow/src/zk_bridge.rs:3689`), and early in a single-threaded run RSS
+sat at 2–6 GiB, which looked like a fit. It was not:
 
 | Configuration | Peak RSS | Result |
 | --- | --- | --- |
-| default (4 threads) | 13.24 GiB | OOM-killed before `%born` |
-| `RAYON_NUM_THREADS=1` | **2.85 GiB** (21% of limit) | fits; slower |
+| default (4 threads) | 13.24 GiB | OOM-killed before `%born`, ~21 min |
+| `RAYON_NUM_THREADS=1` | 13.93 GB at kill | OOM-killed before `%born`, ~89 min |
+
+Memory climbs through the later buckets regardless of thread count. An earlier
+version of this document reported the single-threaded run as fitting; that was
+a mid-run reading and it was wrong.
 
 Both knobs used are documented operator settings, not workarounds:
 
@@ -37,6 +40,9 @@ Both knobs used are documented operator settings, not workarounds:
 - `AI_POW_VERIFIER_CACHE_CAP` — resident-context LRU cap
   (`ai-pow-jets/src/setup.rs:692`; `docs/VERIFIER_SETUP.md` says operators may
   "lower the cap to trade RSS for synchronous page-ins").
+
+**So the gate is blocked on memory.** Budget 32 GB (`DOCKER_MEM ?= 32g` in
+the repository's Makefile); 13.34 GiB is not enough in any configuration found.
 
 **On a cached setup.** `install_or_build_verifier_setup`
 (`ai-pow-jets/src/setup.rs:743`) takes a fast path when a digest-matching seed

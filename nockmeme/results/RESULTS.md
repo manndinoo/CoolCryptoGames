@@ -89,7 +89,10 @@ the same input. The decision now keys on the wallet's exit code
 | `RAYON_NUM_THREADS` | Peak RSS | Outcome |
 | --- | --- | --- |
 | 4 (default) | 13.24 GiB | OOM-killed before `%born` |
-| 1 | ~5.7 GiB | fits under the 13.34 GiB ceiling |
+| 1 | 13.93 GB at kill | OOM-killed before `%born` after 89 min |
+
+Neither configuration completes verifier setup under the 13.34 GiB ceiling. An
+earlier revision of this file said the 1-thread run fit; it did not.
 
 Numbers, `dmesg` evidence and the full RSS series:
 [`environment.md`](./environment.md), [`node-memory-1thread.tsv`](./node-memory-1thread.tsv).

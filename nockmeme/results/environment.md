@@ -24,12 +24,23 @@ per-thread prover buffers.
 | `RAYON_NUM_THREADS` | Peak RSS | % of ceiling | Outcome |
 | --- | --- | --- | --- |
 | 4 (default) | 13.24 GiB | 99% | **OOM-killed** before `%born`, ~21 min wall / ~80 min CPU |
-| 1 | 5.73 GiB* | 43% | fits; ~4x slower (1 core at 100%) |
+| 1 | 13.29 GiB sampled, 13.93 GB at kill | 99% | **OOM-killed** before `%born`, 5371 s (89.5 min) on one core |
 
-\* peak observed so far; the full sample series is in
-`node-memory-1thread.tsv` (`elapsed_s`, `rss_kb`, `pct_of_limit`).
+The full sample series is in `node-memory-1thread.tsv` (`elapsed_s`, `rss_kb`,
+`pct_of_limit`, 350 samples at 15 s). It shows RSS oscillating between ~0.7 and
+~6 GiB for the first hour, then climbing through the later buckets until the
+ceiling. An earlier version of this document reported the 1-thread run as
+fitting at 5.73 GiB. That was a mid-run reading taken before the climb, and it
+was wrong. Single-threading only delayed exhaustion by about an hour.
 
-The 4-thread kill, from `dmesg`:
+The 1-thread kill, from `dmesg`:
+
+```
+Memory cgroup out of memory: Killed process 12641 (nockchain)
+total-vm:27216352kB, anon-rss:13930064kB, file-rss:2408kB
+```
+
+Both kills were at the same place. The 4-thread kill, from `dmesg`:
 
 ```
 Memory cgroup out of memory: Killed process 4372 (nockchain)
@@ -71,5 +82,10 @@ to make the first run cheaper.
 - **Running a node at default parallelism:** needs more than 13.9 GiB, and RSS
   was still climbing when killed, so that is a floor. Nockchain's own `Makefile`
   uses `DOCKER_MEM ?= 32g`. **Budget 32 GB.**
-- **Running a node at `RAYON_NUM_THREADS=1`:** fits in well under 8 GB, at
-  roughly 4x the setup time. Viable for testing; not a production configuration.
+- **Running a node at `RAYON_NUM_THREADS=1`:** does **not** fit either. It
+  reaches the same ~13.9 GB and dies, just an hour later. The setup's working
+  set exceeds the ceiling regardless of parallelism, so thread count is not a
+  lever here.
+- **Conclusion:** the verifier-setup generation cannot complete under a
+  13.34 GiB ceiling in any configuration found. The only shortcut is a
+  seed cache produced on a larger machine and copied in; none is published.
