@@ -5,35 +5,47 @@ creation and a real transfer, and an indexer rebuilt from that chain reports the
 expected split. This document records what was established about that path, so
 the next session starts from facts rather than from guesses.
 
-## Environment: builds here, cannot run a chain here
+## Environment: it does run here, single-threaded
 
 `nockchain`, `nockchain-wallet` and `zk-pow-mine` build from revision `2bcb0b9`
-on a 15 GB / 4-core box. The four blockers and their fixes are in
+on a 15 GB / 4-core box. The build blockers and their fixes are in
 [`DEVELOP.md`](./DEVELOP.md).
 
-**A node will not run to `%born` on that box.** It boots, begins generating its
-recursive-verifier setup, and is OOM-killed at 13.9 GB resident after ~21
-minutes wall / ~80 minutes CPU:
+A first attempt at running a node was OOM-killed at 13.9 GB resident, against a
+**13.34 GiB** cgroup ceiling (`memory.limit_in_bytes = 14327676928`), after ~21
+minutes wall and ~80 minutes CPU, having mined nothing:
 
 ```
 Memory cgroup out of memory: Killed process 4372 (nockchain)
 total-vm:27549392kB, anon-rss:13881708kB
 ```
 
-No block was ever mined. So the gate below is blocked on **memory, not on
-code** — the first requirement is a machine with ~32 GB (the repo's own
-`Makefile` uses `DOCKER_MEM ?= 32g`). Everything after that is the tool work
-described here.
+That is not the floor. Peak memory is dominated by per-thread prover buffers, and
+the verifier-setup build is rayon-parallel (`ai-pow` builds it with the
+`parallel` feature; `RAYON_NUM_THREADS` is cited as a tuning knob in
+`crates/ai-pow/src/zk_bridge.rs:3689`). Constraining it changes the picture
+completely:
 
-Two isolated fakenet wallets exist. Isolation is via `NOCKAPP_HOME`, not the
-working directory — running the wallet from two different directories without
-setting it yields the *same* address from both, which looks like two wallets and
-is not.
+| Configuration | Peak RSS | Result |
+| --- | --- | --- |
+| default (4 threads) | 13.24 GiB | OOM-killed before `%born` |
+| `RAYON_NUM_THREADS=1` | **2.85 GiB** (21% of limit) | fits; slower |
 
-Fork phases are not an obstacle: `--fakenet-v1-phase` and
-`--fakenet-bythos-phase` both default to `1`, so v1 semantics and note-data
-merging are active from the first block. Mainnet's `39.000` and `54.000` do not
-apply on fakenet.
+Both knobs used are documented operator settings, not workarounds:
+
+- `RAYON_NUM_THREADS` — prover parallelism.
+- `AI_POW_VERIFIER_CACHE_CAP` — resident-context LRU cap
+  (`ai-pow-jets/src/setup.rs:692`; `docs/VERIFIER_SETUP.md` says operators may
+  "lower the cap to trade RSS for synchronous page-ins").
+
+**On a cached setup.** `install_or_build_verifier_setup`
+(`ai-pow-jets/src/setup.rs:743`) takes a fast path when a digest-matching seed
+cache is already present, skipping generation entirely. The digest is committed
+in-source (`AI_POW_V0_VERIFIER_SETUP_TABLE_DIGEST`), so a cache built by any
+conforming node would validate. No such cache is published in the repository or
+its docker directory, and none was found — so this run generates its own. A
+cache copied from a machine that has already paid the cost would remove the
+startup wait, and is the right answer for repeated runs.
 
 ## The blocker: the wallet cannot attach arbitrary note-data
 
@@ -126,20 +138,32 @@ One thing to be careful of: the note-data digest is **not** a plain noun hash.
 `hashable` that pairs `leaf+key` with the value's noun-hashable, so
 `hash_owned_based_noun` on the whole map is *not* the right call.
 
-**Verify before trusting it.** The repository ships full signed transactions as
-fixtures — `crates/wallet-tx-builder/tests/fixtures/withdrawal_tx_fixtures.jam`
-decodes to entries carrying a complete `Transaction` with witnesses. That makes
-the check possible entirely offline:
+**Verify before trusting it**, and note that the obvious offline route does not
+work. `crates/wallet-tx-builder/tests/fixtures/withdrawal_tx_fixtures.jam` looked
+like ground truth — it decodes to five entries carrying complete v1
+`Transaction`s with witnesses — but every one of them carries **zero
+signatures**. They are fee-estimation fixtures, not signed transactions.
+`nmeme-tx`'s `sighash_fixtures` test reports this rather than silently passing:
 
-> Compute `sig-hash` for a fixture spend in Rust, then confirm the signature
-> already in that fixture verifies against it, using
+```
+INFO withdrawal-basic  v1 spend: 1 seed(s), 0 signature(s), pinned_source=0
+```
+
+Rust has no schnorr verifier of its own either — `nockchain-math/src/crypto/cheetah.rs`
+exposes only limb conversions, and verification is
+`batch-verify:affine:belt-schnorr` in Hoon.
+
+So the authoritative check needs a signed transaction, which needs a funded
+note, which needs a running node:
+
+> Build a transaction with `create-tx` (the wallet signs it), compute its
+> `sig-hash` in Rust **without modifying anything**, and confirm the signature
+> already in the file verifies against that digest via
 > `nockchain-wallet verify-hash`.
 
-Rust has no schnorr verifier of its own (`nockchain-math/src/crypto/cheetah.rs`
-exposes only limb conversions; verification is `batch-verify:affine:belt-schnorr`
-in Hoon), so the wallet does that half. Do this before touching a live chain: a
-wrong digest produces signatures the node rejects for reasons that read like
-networking or fee problems.
+Only once that passes is it safe to attach a claim and re-sign. Doing it in this
+order means a wrong digest is caught as a failed verification rather than as a
+node rejection that reads like a fee or networking problem.
 
 Signing itself can be delegated to the wallet, which holds the keys:
 `nockchain-wallet sign-hash <base58-tip5-hash>`.

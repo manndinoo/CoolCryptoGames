@@ -1,0 +1,17 @@
+[package]
+name = "nmeme-tx"
+version = "0.1.0"
+edition = "2021"
+description = "Attach NMEME token data to Nockchain transactions and recompute the signing hash"
+
+[dependencies]
+nmeme-core = { path = "../nmeme-core" }
+nockchain-types = { workspace = true }
+nockchain-math = { workspace = true }
+nockapp = { workspace = true }
+nockvm = { workspace = true }
+noun-serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tracing = { workspace = true }
