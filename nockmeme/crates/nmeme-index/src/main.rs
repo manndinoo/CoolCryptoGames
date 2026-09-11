@@ -135,7 +135,7 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
             .await
             .map_err(|e| format!("connect {addr}: {e}"))?;
         let want_first = nmeme_index::first_name_of(&lock);
-        let snapshot = read_snapshot(&mut client, &[lock]).await?;
+        let snapshot = read_snapshot(&mut client, std::slice::from_ref(&lock)).await?;
         println!("# snapshot height {} block {}", snapshot.height, snapshot.block_id);
 
         let mut found = Vec::new();
