@@ -75,7 +75,7 @@ pool_lock() { "$NMEME_TX" pool-lock --token "$1" --fee-bps "$2" | awk -F'\t' '$1
 # open_pool <label> <token> <fee> <nock> <tokens>: alice opens a pool from her token note.
 # Sets OPEN_TXID, OPEN_FILE; prints OPEN line.
 open_pool() {
-  local label="$1" token="$2" fee="$3" nock="$4" tokens="$5" d="$S/$1"; mkdir -p "$d"
+  local label="$1" token="$2" fee="$3" nock="$4" tokens="$5" d="$S/$1"; mkdir -p "$d" "$d/final"
   local tn; tn=$(token_note "$token"); [ -n "$tn" ] || die "$label: alice holds no note of token $token"
   local first="${tn%% *}" rest="${tn#* }" last held; last="${rest%% *}"; held="${rest#* }"
   [ "$held" -gt "$tokens" ] || die "$label: alice holds $held < $tokens"
@@ -245,7 +245,7 @@ expect_rejected "$TRADE_FILE" creator-key "$POOL_NOTE_IN" "$cb"
 # a second note at the lock, taken: alice donates to pool 109 then tries to take the donation with a buy
 open_pool pool-merge "$TOKEN_A" 109 "$POOL_NOCK" "$POOL_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
 donate() { # <label> <token> <fee> <nock> <tokens>: alice sends a second note to the pool lock
-  local label="$1" token="$2" fee="$3" nock="$4" tokens="$5" d="$S/$1"; mkdir -p "$d"
+  local label="$1" token="$2" fee="$3" nock="$4" tokens="$5" d="$S/$1"; mkdir -p "$d" "$d/final"
   local tn; tn=$(token_note "$token"); local first="${tn%% *}" rest="${tn#* }" last held; last="${rest%% *}"; held="${rest#* }"
   local lock; lock=$(pool_lock "$token" "$fee")
   local tx; tx=$(create_tx alice "$d" "[$first $last]" "$BOB" "$nock")
