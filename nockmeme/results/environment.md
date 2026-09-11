@@ -89,3 +89,24 @@ to make the first run cheaper.
 - **Conclusion:** the verifier-setup generation cannot complete under a
   13.34 GiB ceiling in any configuration found. The only shortcut is a
   seed cache produced on a larger machine and copied in; none is published.
+
+## Off-site generation on a GitHub-hosted runner
+
+The seed cache only has to be generated once, anywhere, so the job was moved to
+a public-repository hosted runner (`.github/workflows/nmeme-seed-cache.yml`:
+4 vCPU, 16 GB RAM, plus a 24 GB swapfile on the runner's `/mnt` disk).
+
+| attempt | run | outcome |
+|---|---|---|
+| 1 | `34543165057` | builds fine (honk + kernels 9m44s, node 5m46s); generation started, then **exit 143 after 52 min** with "The runner has received a shutdown signal". No OOM line, no `%born`, nothing uploaded. |
+
+Exit 143 is SIGTERM to the step, not an out-of-memory kill, and the job was at
+68 minutes of a 350-minute budget. On a hosted runner this is the signature of
+a VM starved of RAM: the node's working set exceeded physical memory, the
+machine thrashed against swap, the runner agent stopped answering, and GitHub
+reclaimed it. The 52 minutes (against a documented ~15) is consistent with
+heavy swapping. Attempt 2 confines the node in its own cgroup
+(`memory.max=13G`, swap unlimited) so that its excess goes to swap while the
+runner keeps ~3 GB of real memory, and pushes RSS/swap samples plus the
+node-log tail to a `seed-cache-progress` branch every five minutes so a
+reclaimed VM still leaves evidence.

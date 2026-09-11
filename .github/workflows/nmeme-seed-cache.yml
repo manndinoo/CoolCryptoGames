@@ -9,6 +9,16 @@
 #
 # Output: the tarball as a workflow artifact, and committed to the
 # `seed-cache` branch so it can be fetched with plain git.
+#
+# Run 1 (34543165057) died 52 min into generation with exit 143 and "The
+# runner has received a shutdown signal" — no OOM line, nothing uploaded. That
+# is what a hosted runner looks like when the job starves the VM of RAM: the
+# node thrashed against swap, the runner agent stopped answering, GitHub
+# reclaimed the machine. Two changes follow from it:
+#   * the node runs in its own cgroup with MemoryMax below physical RAM, so its
+#     excess goes to swap while the runner agent keeps ~3 GB of real memory;
+#   * progress (RSS samples, node-log tail, free -m) is pushed to the
+#     `seed-cache-progress` branch every 5 minutes, so a dead VM leaves evidence.
 name: nmeme seed cache
 
 on:
@@ -41,6 +51,7 @@ jobs:
           sudo mkdir -p /mnt && sudo fallocate -l 24G /mnt/swapfile
           sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile
           sudo sysctl -w vm.overcommit_memory=1
+          sudo sysctl -w vm.swappiness=100
           free -g
 
       - name: System deps
@@ -84,7 +95,14 @@ jobs:
         working-directory: /mnt/work/nockchain
         run: cargo build --release -p nockchain --bin nockchain
 
-      - name: Generate the seed cache (with RSS sampling)
+      - name: Generate the seed cache (cgroup-confined, RSS sampled, progress pushed)
+        env:
+          # leave ~3 GB of the runner's 16 GB to the runner agent and the OS;
+          # everything above this goes to the 24 GB swapfile instead of
+          # starving the VM (cgroup v2: memory.max with memory.swap.max=max)
+          NODE_MEMORY_MAX: 13G
+          PROGRESS_BRANCH: seed-cache-progress
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p "$WORK/run"
           # sample the node's RSS every 15s until generation finishes
@@ -92,15 +110,55 @@ jobs:
               P=$(pgrep -x nockchain | head -1) || true
               if [ -n "$P" ]; then
                 R=$(awk '/^VmRSS:/{print $2}' /proc/$P/status 2>/dev/null || echo 0)
-                printf '%s\t%s\n' "$(date +%s)" "$R" >> "$WORK/run/rss.tsv"
+                S=$(awk '/^VmSwap:/{print $2}' /proc/$P/status 2>/dev/null || echo 0)
+                printf '%s\t%s\t%s\n' "$(date +%s)" "$R" "$S" >> "$WORK/run/rss.tsv"
               fi
               sleep 15
             done ) &
           SAMPLER=$!
-          GEN_TIMEOUT=18000 bash nockmeme/scripts/generate-seed-cache.sh "$WORK/nockchain" "$WORK/run"
-          kill $SAMPLER || true
-          echo "peak RSS: $(awk -F'\t' '{if($2>m)m=$2}END{printf "%.2f GiB", m/1048576}' "$WORK/run/rss.tsv")"
+          # push progress every 5 min so a reclaimed VM still leaves evidence
+          PROG="$WORK/progress"
+          git init -q "$PROG" && cd "$PROG"
+          git config user.name  "nmeme-seed-cache[bot]"
+          git config user.email "nmeme-seed-cache@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git checkout -q --orphan "$PROGRESS_BRANCH"
+          cd "$GITHUB_WORKSPACE"
+          ( while true; do
+              sleep 300
+              { echo "run: ${{ github.run_id }}  attempt: ${{ github.run_attempt }}  at: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+                echo; free -m; echo
+                echo "node cgroup:"; cat /sys/fs/cgroup/nmeme-node/memory.current /sys/fs/cgroup/nmeme-node/memory.swap.current 2>/dev/null || true
+              } > "$PROG/status.txt"
+              cp "$WORK/run/rss.tsv" "$PROG/rss.tsv" 2>/dev/null || true
+              tail -n 200 "$WORK/run/node.log" > "$PROG/node.log.tail" 2>/dev/null || true
+              ( cd "$PROG" && git add -A && git commit -qm "progress $(date -u +%H:%M)" && git push -fq origin "$PROGRESS_BRANCH" ) || true
+            done ) &
+          PUBLISHER=$!
+          # the node runs inside its own cgroup so it swaps instead of starving the VM
+          echo +memory | sudo tee /sys/fs/cgroup/cgroup.subtree_control >/dev/null || true
+          sudo mkdir -p /sys/fs/cgroup/nmeme-node
+          echo "$NODE_MEMORY_MAX" | sudo tee /sys/fs/cgroup/nmeme-node/memory.max
+          echo max | sudo tee /sys/fs/cgroup/nmeme-node/memory.swap.max
+          set +e
+          sudo -E env "PATH=$PATH" GEN_TIMEOUT=18000 \
+            bash -c 'echo $$ > /sys/fs/cgroup/nmeme-node/cgroup.procs && exec bash nockmeme/scripts/generate-seed-cache.sh "$0" "$1"' \
+            "$WORK/nockchain" "$WORK/run"
+          RC=$?
+          set -e
+          sudo chown -R "$USER" "$WORK/run"
+          kill $SAMPLER $PUBLISHER 2>/dev/null || true
+          echo "generation exit code: $RC"
+          echo "peak RSS:  $(awk -F'\t' '{if($2>m)m=$2}END{printf "%.2f GiB", m/1048576}' "$WORK/run/rss.tsv")"
+          echo "peak swap: $(awk -F'\t' '{if($3>m)m=$3}END{printf "%.2f GiB", m/1048576}' "$WORK/run/rss.tsv")"
+          echo "cgroup peak: $(cat /sys/fs/cgroup/nmeme-node/memory.peak 2>/dev/null || echo n/a)"
           free -g
+          # final progress push regardless of outcome
+          cp "$WORK/run/rss.tsv" "$PROG/rss.tsv" 2>/dev/null || true
+          tail -n 400 "$WORK/run/node.log" > "$PROG/node.log.tail" 2>/dev/null || true
+          echo "finished with exit code $RC at $(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$PROG/status.txt"
+          ( cd "$PROG" && git add -A && git commit -qm "final: exit $RC" && git push -fq origin "$PROGRESS_BRANCH" ) || true
+          exit $RC
 
       - name: Upload artifact
         if: success()
