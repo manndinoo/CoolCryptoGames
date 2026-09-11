@@ -8,6 +8,14 @@
 # fourteen jobs in parallel, and a merge job concatenates the seeds in bucket
 # order and checks the table against the consensus digest before publishing.
 #
+# Run 1 (34559165447): buckets 0-9 proved in 2-5 min each at 2.6-6.6 GB peak
+# (single thread). Buckets 10-13 were OOM-killed (exit 137) within a minute:
+# they allocate ~10 GB in the first 15 s, faster than the kernel can swap out
+# against a hard memory.max, so the cgroup OOM killer fired even with 70 GB of
+# swap free. The prover is therefore confined with memory.HIGH instead: over
+# the high mark the kernel throttles the allocator and reclaims to swap rather
+# than killing, which keeps the runner agent's RAM safe without an OOM.
+#
 # Output: the tarball as a workflow artifact, and committed to the
 # `seed-cache` branch so it can be fetched with plain git.
 name: nmeme seed cache (per bucket)
@@ -88,7 +96,8 @@ jobs:
         bucket: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
     name: prove bucket ${{ matrix.bucket }}
     env:
-      NODE_MEMORY_MAX: 13G
+      # throttle-and-swap above this, never kill (memory.high; memory.max stays unlimited)
+      PROVER_MEMORY_HIGH: 12G
       RAYON_NUM_THREADS: 1
       PROGRESS_BRANCH: seed-bucket-progress-${{ matrix.bucket }}
       GH_TOKEN: ${{ github.token }}
@@ -137,7 +146,8 @@ jobs:
           PUBLISHER=$!
           echo +memory | sudo tee /sys/fs/cgroup/cgroup.subtree_control >/dev/null || true
           sudo mkdir -p /sys/fs/cgroup/nmeme-prove
-          echo "$NODE_MEMORY_MAX" | sudo tee /sys/fs/cgroup/nmeme-prove/memory.max
+          echo "$PROVER_MEMORY_HIGH" | sudo tee /sys/fs/cgroup/nmeme-prove/memory.high
+          echo max | sudo tee /sys/fs/cgroup/nmeme-prove/memory.max
           echo max | sudo tee /sys/fs/cgroup/nmeme-prove/memory.swap.max
           set +e
           sudo -E env RUST_LOG=info RAYON_NUM_THREADS="$RAYON_NUM_THREADS" \
@@ -152,6 +162,7 @@ jobs:
           echo "peak RSS:  $(awk -F'\t' '{if($2>m)m=$2}END{printf "%.2f GiB", m/1048576}' out/rss.tsv)"
           echo "peak swap: $(awk -F'\t' '{if($3>m)m=$3}END{printf "%.2f GiB", m/1048576}' out/rss.tsv)"
           echo "cgroup peak: $(cat /sys/fs/cgroup/nmeme-prove/memory.peak 2>/dev/null || echo n/a)"
+          echo "cgroup events:"; cat /sys/fs/cgroup/nmeme-prove/memory.events 2>/dev/null || true
           { echo "finished with exit code $RC at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"; grep -a "^bucket" out/seedgen.log || true; free -m; } > "$PROG/status.txt"
           cp out/rss.tsv "$PROG/rss.tsv" 2>/dev/null || true
           tail -n 200 out/seedgen.log > "$PROG/seedgen.log.tail" 2>/dev/null || true
