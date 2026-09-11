@@ -90,7 +90,7 @@ open_pool() {
   "$NMEME_TX" sighash "$d/final.jam" "$d/final" > "$d/final-sighash.txt" || die "$label: final sighash"; verify_all alice "$d/final-sighash.txt" "$label-resigned"
   OPEN_FILE="$d/final.jam"; OPEN_TXID=$(send "$OPEN_FILE" "$label"); [ -n "$OPEN_TXID" ] || die "$label: no txid"
   grep -q "MEMPOOL	admitted" "$S/send-$label.txt" || die "$label: not admitted"
-  confirm "$OPEN_TXID" "$label"
+  confirm "$OPEN_TXID" "$label" "$OPEN_FILE"
   local st; st=$(pool_state "$token" "$fee"); [ "$(wc -l <<<"$st")" -eq 1 ] || die "$label: expected one pool note, got: $st"
   local x y; x=$(cut -d' ' -f4 <<<"$st"); y=$(cut -d' ' -f5 <<<"$st")
   [ "$x" = "$nock" ] && [ "$y" = "$tokens" ] || die "$label: pool state $x/$y != $nock/$tokens"
@@ -124,7 +124,7 @@ confirm_trade() {
   local label="$1" token="$2" fee="$3" d="$S/$1"
   local sent; sent=$(send "$TRADE_FILE" "$label"); [ "$sent" = "$TRADE_TXID" ] || die "$label: send (see $S/send-$label.txt)"
   grep -q "MEMPOOL	admitted" "$S/send-$label.txt" || die "$label: not admitted: $(cat "$S/send-$label.txt")"
-  confirm "$TRADE_TXID" "$label"
+  confirm "$TRADE_TXID" "$label" "$TRADE_FILE"
   local st; st=$(pool_state "$token" "$fee" | head -1)
   local want; want=$(awk -F'\t' '$1=="POOL-AFTER"{print $2" "$3}' "$d/trade.txt")
   [ "$(cut -d' ' -f4,5 <<<"$st")" = "$want" ] || die "$label: pool state after ($(cut -d' ' -f4,5 <<<"$st")) != quoted ($want)"
@@ -134,8 +134,14 @@ confirm_trade() {
 # done_already <label>: on a resumed run, a stage whose transaction was mined is
 # picked up from its files rather than run again (its step is added).
 done_already() {
-  [ "${RESUME:-0}" = 1 ] && [ -f "$S/$1.env" ] || return 1
+  [ "${RESUME:-0}" = 1 ] || return 1
   local f="$S/$1/final.jam"; [ -f "$f" ] || return 1
+  if [ ! -f "$S/$1.env" ]; then
+    # sent but not recorded (the run died after sending): mined if its inputs are spent
+    local ui; ui=$("$NMEME_INDEX" outputs --tx "$f" | awk -F'\t' '$1=="INPUT"{print $2" "$3}' | head -1)
+    unspent "${ui%% *}" "${ui##* }" && return 1
+    echo "HEIGHT=$(node_height)" > "$S/$1.env"
+  fi
   STEPS_B="${STEPS_B:-} --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"
   echo "RESUMED	$1 already mined"
 }
@@ -154,7 +160,7 @@ for i in $(seq 1 "${BOB_NOTES:-4}"); do
   quiet "$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$ftx" > "$S/fund-$i/check-inputs.txt" 2>&1 || die "fund $i gate"
   cp "$ftx" "$S/fund-$i.jam"; ftxid=$(send "$S/fund-$i.jam" "fund-$i"); [ -n "$ftxid" ] || die "fund $i: no txid"
   grep -q "MEMPOOL	admitted" "$S/send-fund-$i.txt" || die "fund $i: not admitted"
-  confirm "$ftxid" "fund-$i"
+  confirm "$ftxid" "fund-$i" "$S/fund-$i.jam"
   echo "FUND	bob	txid=$ftxid	height=$(cut -d= -f2 "$S/fund-$i.env")	+$BOB_FUND_NICKS nicks"
 done
 
@@ -294,7 +300,7 @@ donate() { # <label> <token> <fee> <nock> <tokens>: alice sends a second note to
   "$NMEME_TX" retarget "$tx" "$d/retargeted.jam" "$BOB_LOCK" "$lock" > "$d/retarget.txt" || die "$label: retarget"
   "$NMEME_TX" attach "$d/retargeted.jam" "$d/attached.jam" "$lock=transfer:$token:$tokens" "$ALICE_LOCK=transfer:$token:$((held - tokens))" > "$d/attach.txt" || die "$label: attach"
   resign alice "$d/sighash.txt" "$d/attached.jam" "$d/attach.txt" "$d/final.jam"
-  DON_FILE="$d/final.jam"; DON_TXID=$(send "$DON_FILE" "$label"); confirm "$DON_TXID" "$label"
+  DON_FILE="$d/final.jam"; DON_TXID=$(send "$DON_FILE" "$label"); confirm "$DON_TXID" "$label" "$DON_FILE"
   echo "DONATION	$label	txid=$DON_TXID	nock=$nock	tokens=$tokens	(a second note at the pool lock)"
 }
 donate donate-merge "$TOKEN_A" 109 100000 1000; ATT_STEPS_A="$ATT_STEPS_A --step $DON_TXID:$DON_FILE"
@@ -318,7 +324,7 @@ d="$S/merge-ok"; mkdir -p "$d"
 sed 's/^/  /' "$d/trade.txt" >&2
 resign alice "${r#* }" "$d/assembled.jam" "$d/trade.txt" "$d/final.jam"
 TRADE_FILE="$d/final.jam"; TRADE_TXID=$("$NMEME_INDEX" tx-id --tx "$TRADE_FILE")
-sent=$(send "$TRADE_FILE" merge-ok); confirm "$TRADE_TXID" merge-ok
+sent=$(send "$TRADE_FILE" merge-ok); confirm "$TRADE_TXID" merge-ok "$TRADE_FILE"
 st=$(pool_state "$TOKEN_A" 110); [ "$(wc -l <<<"$st")" -eq 1 ] || die "merge-ok: expected one note after the merge"
 echo "MERGED	merge-ok	txid=$TRADE_TXID	pool_after=$(cut -d' ' -f4,5 <<<"$st" | tr ' ' '/')	(the donation is now reserves; the buy priced against the sum)"
 ATT_STEPS_A="$ATT_STEPS_A --step $TRADE_TXID:$TRADE_FILE"

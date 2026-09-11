@@ -65,8 +65,7 @@ node_height() { wait_for_height "$RUN/node.log" 0 10; }
 # wallet's tx-status would do, but every wallet call grows its arena by
 # hundreds of megabytes (seen live: the disk filled twice on polling alone).
 confirm() {
-  local txid="$1" label="$2" file="${3:-}" deadline=$((SECONDS + ${INCLUDE_TIMEOUT:-900}))
-  [ -n "$file" ] || file="$CONFIRM_FILE"
+  local txid="$1" label="$2" file="${3:?confirm needs the transaction file}" deadline=$((SECONDS + ${INCLUDE_TIMEOUT:-900}))
   local inputs; inputs=$("$NMEME_INDEX" outputs --tx "$file" | awk -F'\t' '$1=="INPUT"{print $2" "$3}')
   [ -n "$inputs" ] || die "$label: no inputs in $file"
   while (( SECONDS < deadline )); do
@@ -81,7 +80,6 @@ confirm() {
   die "$label: $txid not mined within ${INCLUDE_TIMEOUT:-900}s"
 }
 send() { # <file> <label> -> txid
-  CONFIRM_FILE="$1"
   "$NMEME_INDEX" send --addr "$PUB" --tx "$1" >"$S/send-$2.txt" 2>&1 || true
   awk -F'\t' '$1=="TXID"{print $2}' "$S/send-$2.txt" | head -1
 }
