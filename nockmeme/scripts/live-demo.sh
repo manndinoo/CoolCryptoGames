@@ -306,6 +306,16 @@ BOB_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$RUN/probe/seeds.txt" | sort
 [ "$ALICE_LOCK" != "$BOB_LOCK" ] || die "alice and bob resolved to the same lock-root"
 log "alice lock-root=$ALICE_LOCK"
 log "bob   lock-root=$BOB_LOCK"
+# Coinbase notes do NOT sit at Alice's change lock-root: a miner is paid at a
+# lock built from its mining pkh (seen live: 501 rewards at one first-name,
+# the change chain at another). The wallet lists every note it owns by full
+# name, so funding is read at every distinct first-name it reports.
+ALICE_FIRSTS=$(wallet alice list-notes 2>/dev/null | strip | grep -a -A1 "^- Name:" \
+  | grep -aoE "[1-9A-HJ-NP-Za-km-z]{40,60}" | awk 'NR%2==1' | sort -u)
+[ -n "$ALICE_FIRSTS" ] || die "alice's wallet lists no notes"
+FUND_ARGS="--lock $ALICE_LOCK"
+for f in $ALICE_FIRSTS; do FUND_ARGS="$FUND_ARGS --first $f"; done
+log "funding is read at: $FUND_ARGS"
 rm -f "$PROBE"
 
 PUB="${PUBLIC_ADDR:-127.0.0.1:5556}"
@@ -332,7 +342,8 @@ token_cycle() {
   local need=$(( ${SEND_NICKS:-1000} + ${FEE_NICKS:-4096} ))
   local fund="" deadline=$((SECONDS + ${MINE_TIMEOUT:-1800}))
   while (( SECONDS < deadline )); do
-    "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" > "$g/funding.txt" \
+    # shellcheck disable=SC2086
+    "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$g/funding.txt" \
       || die "$tag: funding read failed"
     fund=$(awk -F'\t' -v need="$need" '$1=="FUNDING" && $4=="tokenfree" && $5+0>=need {print "["$2" "$3"]"; exit}' "$g/funding.txt")
     [ -n "$fund" ] && break
@@ -342,7 +353,8 @@ token_cycle() {
   local h; h=$(awk -F'\t' '$1=="HEIGHT"{print $2}' "$g/funding.txt")
   wait_for_height "$RUN/node.log" $((h + 2)) "${MINE_TIMEOUT:-1800}" >/dev/null \
     || die "$tag: coinbase did not mature"
-  "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" > "$g/funding.txt" \
+  # shellcheck disable=SC2086
+  "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$g/funding.txt" \
     || die "$tag: funding read failed"
   grep -q "$(echo "$fund" | tr -d '[]' | cut -d' ' -f2)" "$g/funding.txt" || die "$tag: funding note vanished"
   log "  token-free funding note: $fund"
@@ -363,7 +375,8 @@ token_cycle() {
   gnote=$("$NMEME_INDEX" outputs --tx "$g/final.jam" \
     | awk -F'\t' -v l="$ALICE_LOCK" '$1=="OUTPUT" && $2==l {print "["$3" "$4"]"; exit}')
   [ -n "$gnote" ] || die "$tag: no genesis output at alice's lock"
-  "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" > "$x/funding.txt" \
+  # shellcheck disable=SC2086
+  "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$x/funding.txt" \
     || die "$tag: funding read failed"
   "$NMEME_INDEX" token-note --addr "$PUB" --lock "$ALICE_LOCK" --name "$gnote" > "$x/token-note.txt" \
     || die "$tag: the genesis output $gnote is not an unspent token note on chain"

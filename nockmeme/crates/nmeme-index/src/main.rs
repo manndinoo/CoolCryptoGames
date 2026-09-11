@@ -67,9 +67,9 @@ fn main() -> ExitCode {
 const USAGE: &str = "usage:
   nmeme-index token-id --tx <tx.jam> --ticker <TICKER> --decimals <N>
   nmeme-index token-note --addr <host:port> --lock <lock-root-b58> [--name \"<first> <last>\"]
-  nmeme-index funding  --addr <host:port> --lock <lock-root-b58>
-                       (every unspent note at the lock: FUNDING <first> <last> tokenfree|claim <nicks>)
-  nmeme-index outputs  --tx <tx.jam>      (OUTPUT <lock> <first> <last> <claim>)
+  nmeme-index funding  --addr <host:port> [--lock <lock-root-b58>]... [--first <first-name-b58>]...
+                       (every unspent note there: FUNDING <first> <last> tokenfree|claim <nicks>)
+  nmeme-index outputs  --tx <tx.jam>      (INPUT <first> <last>; OUTPUT <lock> <first> <last> <claim>)
   nmeme-index check-inputs --tx <tx.jam> --funding <funding.txt> [--token-note \"<first> <last>\"]...
                        (every input must be proven token-free, or be a named token note)
   nmeme-index rebuild  --addr <host:port> --token <token-b58>
@@ -402,8 +402,22 @@ fn parse_name(text: &str) -> Result<Name, String> {
 /// it settles the note's weight for any later replay (lib.rs, provenance).
 fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
     let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
-    let lock = Hash::from_base58(flag(args, "--lock").ok_or("missing --lock")?)
-        .map_err(|e| format!("lock: {e}"))?;
+    // Coinbase notes do not sit at the wallet's change lock-root: a miner is
+    // paid at a lock built from its mining pkh, and the wallet's change goes
+    // to its own p2pkh lock-root. So funding may be asked for by lock-root
+    // (`--lock`, first-name derived) or directly by first-name (`--first`,
+    // e.g. taken from the inputs a wallet-built probe transaction chose).
+    let mut firsts: Vec<Hash> = Vec::new();
+    for l in flags(args, "--lock") {
+        let lock = Hash::from_base58(l).map_err(|e| format!("lock {l}: {e}"))?;
+        firsts.push(nmeme_index::first_name_of(&lock));
+    }
+    for f in flags(args, "--first") {
+        firsts.push(Hash::from_base58(f).map_err(|e| format!("first {f}: {e}"))?);
+    }
+    if firsts.is_empty() {
+        return Err("funding: give at least one --lock or --first".to_string());
+    }
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -412,7 +426,7 @@ fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
         let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
             .await
             .map_err(|e| format!("connect {addr}: {e}"))?;
-        let snapshot = read_snapshot(&mut client, std::slice::from_ref(&lock)).await?;
+        let snapshot = read_snapshot_firsts(&mut client, &firsts).await?;
         for line in nmeme_index::funding_lines(&snapshot) {
             println!("{line}");
         }
@@ -426,6 +440,9 @@ fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
 fn cmd_outputs(args: &[String]) -> Result<ExitCode, String> {
     let path = std::path::PathBuf::from(flag(args, "--tx").ok_or("missing --tx")?);
     let plan = nmeme_index::read_tx_plan(&path)?;
+    for input in &plan.inputs {
+        println!("INPUT\t{}\t{}", input.first.to_base58(), input.last.to_base58());
+    }
     for dest in &plan.destinations {
         let claim = match &dest.claim {
             None => "none".to_string(),
@@ -562,9 +579,17 @@ async fn read_snapshot(
     client: &mut NockchainServiceClient<tonic::transport::Channel>,
     locks: &[Hash],
 ) -> Result<nmeme_index::Snapshot, String> {
+    let firsts: Vec<Hash> = locks.iter().map(nmeme_index::first_name_of).collect();
+    read_snapshot_firsts(client, &firsts).await
+}
+
+async fn read_snapshot_firsts(
+    client: &mut NockchainServiceClient<tonic::transport::Channel>,
+    firsts: &[Hash],
+) -> Result<nmeme_index::Snapshot, String> {
     let mut all_pages: Vec<nmeme_index::Page> = Vec::new();
-    for lock in locks {
-        let address = nmeme_index::first_name_of(lock).to_base58();
+    for first in firsts {
+        let address = first.to_base58();
         // collect_pages is synchronous over a closure; fetch each page here.
         let mut token = String::new();
         let mut pages_for_address = Vec::new();
