@@ -89,9 +89,14 @@ create_tx() {
       --recipient "{\"kind\":\"p2pkh\",\"address\":\"$to\",\"amount\":$amount}" \
       --fee-nicks "${FEE_NICKS:-8192}" --allow-low-fee >"$dir/create.txt" 2>&1 || die "create-tx failed for $who (see $dir/create.txt)"
   fi
+  # The wallet names the file by transaction id and prints the path; an
+  # identical transaction (same inputs, outputs, fee) reuses the file, so a
+  # before/after diff of the directory can be empty on a rerun.
+  local saved; saved=$(strip < "$dir/create.txt" | grep -oE 'txs/[0-9A-Za-z]+\.tx' | head -1 || true)
+  if [ -n "$saved" ] && [ -s "$W/$who/$saved" ]; then echo "$W/$who/$saved"; return 0; fi
   list_tx_files "$who" > "$dir/after.txt"
   comm -13 "$dir/before.txt" "$dir/after.txt" > "$dir/new.txt"
-  [ "$(wc -l < "$dir/new.txt")" -eq 1 ] || die "$who: expected exactly one new transaction file"
+  [ "$(wc -l < "$dir/new.txt")" -eq 1 ] || die "$who: expected exactly one new transaction file (see $dir/create.txt)"
   head -1 "$dir/new.txt"
 }
 node_height() { wait_for_height "$RUN/node.log" 0 10; }
