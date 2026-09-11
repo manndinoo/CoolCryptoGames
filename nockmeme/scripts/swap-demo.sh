@@ -113,9 +113,26 @@ confirm() {
   done
   die "$label: $txid not confirmed within ${INCLUDE_TIMEOUT:-900}s"
 }
-send() { # send <file> <label> -> txid on stdout, send-tx output kept
-  wallet_pub alice send-tx "$1" >"$RUN/send-$2.txt" 2>&1 || true
-  grep -oE '[0-9A-Za-z]{40,}' "$RUN/send-$2.txt" | head -1 || true
+# send <file> <label> -> txid on stdout; the node's own answer is kept.
+# The wallet's send-tx fetches the whole balance first and gives up when a
+# block lands mid-fetch (seen live: "snapshot height drifted across pages"),
+# so nothing reached the node. Submitting through the public gRPC directly
+# is deterministic, and the node's accepted/rejected verdict is recorded.
+send() {
+  "$NMEME_INDEX" send --addr "$PUB" --tx "$1" >"$RUN/send-$2.txt" 2>&1 || true
+  awk -F'\t' '$1=="TXID"{print $2}' "$RUN/send-$2.txt" | head -1
+}
+# unspent <first> <last>: is the note in the node's unspent set? (retries a
+# read that failed on a moving tip)
+unspent() {
+  local i out
+  for i in 1 2 3 4; do
+    if out=$("$NMEME_INDEX" funding --addr "$PUB" --first "$1" 2>/dev/null); then
+      grep -qF "$2" <<<"$out" && return 0 || return 1
+    fi
+    sleep 5
+  done
+  die "could not read the unspent set at $1"
 }
 # expect_rejected <file> <label> <input-name-1> <input-name-2>
 # The node must not mine it: wait two blocks, then the inputs must still be
@@ -128,18 +145,20 @@ expect_rejected() {
   "$NMEME_TX" pins "$file" > "$S/$label-pins.txt" 2>&1 || true
   sed 's/^/  /' "$S/$label-pins.txt" >&2
   local sent; sent=$(send "$file" "$label")
-  strip < "$RUN/send-$label.txt" | tail -3 | sed 's/^/  send-tx: /' >&2
+  sed 's/^/  node: /' "$RUN/send-$label.txt" >&2
+  [ "$sent" = "$txid" ] || die "$label: the node was not asked about $txid (see $RUN/send-$label.txt)"
+  local verdict; verdict=$(awk -F'\t' '$1=="VERDICT"{print $2}' "$RUN/send-$label.txt" | head -1)
   local h0; h0=$(node_height)
   wait_for_height "$RUN/node.log" $((h0 + 2)) "${MINE_TIMEOUT:-900}" >/dev/null || die "$label: chain did not advance"
   set +e; wallet_pub alice tx-status "$txid" >"$RUN/status-$label.txt" 2>&1; set -e
   if grep -qi "confirmed" "$RUN/status-$label.txt"; then die "$label: the node MINED an invalid transaction"; fi
   local n
   for n in "$@"; do
-    "$NMEME_INDEX" funding --addr "$PUB" --first "${n%% *}" 2>/dev/null | grep -qF "${n##* }" \
-      || die "$label: input [$n] is no longer unspent after the attack"
+    unspent "${n%% *}" "${n##* }" || die "$label: input [$n] is no longer unspent after the attack"
   done
-  local reason; reason=$(strip < "$RUN/node.log" | grep -a -A3 "$txid" | grep -a -i -m1 "invalid\|reject\|fail\|bad\|error" | cut -c1-200 || true)
-  echo "REJECTED	$label	txid=$txid	inputs still unspent after 2 blocks	${reason:-node log: no line for this txid}"
+  local reason; reason=$(strip < "$RUN/node.log" | grep -a -A3 "$txid" | grep -a -i -m1 "invalid\|reject\|fail\|bad\|error\|refus" | sed 's/^.*slogger: //' | cut -c1-160 || true)
+  [ "$verdict" = "rejected" ] || die "$label: expected the node to reject, but its answer was '${verdict:-none}'"
+  echo "REJECTED	$label	txid=$txid	node verdict: $verdict; not mined in 2 blocks; inputs still unspent	${reason:-}"
   echo "  pins: $(grep '^PINS' "$S/$label-pins.txt" | cut -f2-)"
 }
 
@@ -170,7 +189,8 @@ FTX=$(create_tx alice "$S/fund" "$FUND" "$BOB" "$BOB_FUND_NICKS")
 "$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$FTX" > "$S/fund/check-inputs.txt" 2>&1 || die "fund gate refused"
 sed 's/^/  /' "$S/fund/check-inputs.txt" >&2
 cp "$FTX" "$S/fund.jam"
-FTXID=$(send "$S/fund.jam" fund); [ -n "$FTXID" ] || die "fund: no txid"
+FTXID=$(send "$S/fund.jam" fund); [ -n "$FTXID" ] || die "fund: no txid (see $RUN/send-fund.txt)"
+grep -q "VERDICT	accepted" "$RUN/send-fund.txt" || die "fund: the node did not accept it"
 confirm "$FTXID" fund
 echo "FUND	txid=$FTXID	height=$(cut -d= -f2 "$S/fund.env")	bob+=$BOB_FUND_NICKS nicks"
 
@@ -234,8 +254,9 @@ sign_spend alice "$S/t2-unsigned.jam" "$A_SPEND" "$A_PKH" "$A_PK" "$S/t2-alice-s
 expect_rejected "$S/attack-alice-gives-less.jam" alice-gives-less "$TOKEN_NOTE" "$BOB_NOTE"
 
 echo "== stage 6: the honest trade =="
-SENT=$(send "$S/swap.jam" swap); strip < "$RUN/send-swap.txt" | tail -3 >&2
-[ -n "$SENT" ] || die "swap: send-tx gave no txid"
+SENT=$(send "$S/swap.jam" swap); sed 's/^/  node: /' "$RUN/send-swap.txt" >&2
+[ -n "$SENT" ] || die "swap: the node was not asked (see $RUN/send-swap.txt)"
+grep -q "VERDICT	accepted" "$RUN/send-swap.txt" || die "swap: the node did not accept the honest trade"
 confirm "$SENT" swap
 SWAP_H=$(cut -d= -f2 "$S/swap.env")
 echo "SWAP	txid=$SENT	height=$SWAP_H	alice -$SELL tokens +$PRICE_NICKS nicks	bob +$SELL tokens -$PRICE_NICKS nicks"

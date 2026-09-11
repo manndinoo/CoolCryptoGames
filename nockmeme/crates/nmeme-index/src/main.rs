@@ -40,6 +40,10 @@ use nockapp_grpc_proto::pb::public::v2::{
 use nockapp_grpc_proto::pb::public::v2::{
     wallet_get_balance_request, wallet_get_balance_response, WalletGetBalanceRequest,
 };
+use nockapp_grpc_proto::pb::public::v2::{
+    transaction_accepted_response, wallet_send_transaction_response, TransactionAcceptedRequest,
+    WalletSendTransactionRequest,
+};
 use nockchain_types::tx_engine::common::{Hash, Name};
 use nockvm::noun::NounAllocator;
 
@@ -53,6 +57,7 @@ fn main() -> ExitCode {
         Some("check-inputs") => cmd_check_inputs(&args),
         Some("block") => cmd_block(&args),
         Some("tx-id") => cmd_tx_id(&args),
+        Some("send") => cmd_send(&args),
         Some("rebuild") => cmd_rebuild(&args),
         _ => {
             eprintln!("{USAGE}");
@@ -475,6 +480,83 @@ fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
             "# funding: {} coinbase (verified against block parents), {} plain, {} claim",
             counts[0], counts[1], counts[2]
         );
+        Ok(ExitCode::SUCCESS)
+    })
+}
+
+/// `send --addr <host:port> --tx <file>`: submits the file's transaction
+/// through the node's public `WalletSendTransaction`, then asks
+/// `TransactionAccepted` for the node's verdict. Prints `TXID`, `SEND`
+/// (the node's acknowledgement or error) and `VERDICT accepted|rejected`.
+///
+/// The wallet's own `send-tx` reads the whole balance before submitting and
+/// aborts when a block lands mid-read (seen live), so nothing reaches the
+/// node; this path has no such step, and the verdict comes from the node.
+fn cmd_send(args: &[String]) -> Result<ExitCode, String> {
+    use nmeme_tx::txfile::ParsedTransaction;
+    use nockchain_types::tx_engine::common::Version;
+    use nockchain_types::tx_engine::v1::tx::RawTx;
+
+    let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
+    let path = flag(args, "--tx").ok_or("missing --tx")?.to_string();
+    let bytes = std::fs::read(&path).map_err(|e| format!("read {path}: {e}"))?;
+    let mut slab: NounSlab<NockJammer> = NounSlab::new();
+    let noun = slab.cue_into(bytes.into()).map_err(|e| format!("cue: {e}"))?;
+    let space = slab.noun_space();
+    let parsed = ParsedTransaction::from_noun(noun.in_space(&space)).map_err(|e| format!("decode: {e}"))?;
+    let spends = parsed.spliced().map_err(|e| format!("splice: {e}"))?;
+    let probe = RawTx { version: Version::V1, id: Hash::from_be_bytes(&[0u8; 32]), spends: spends.clone() };
+    let id = probe.compute_id().map_err(|e| format!("compute tx id: {e}"))?;
+    let id_b58 = id.to_base58();
+    let raw = RawTx { version: Version::V1, id: id.clone(), spends };
+    println!("TXID\t{id_b58}");
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("tokio: {e}"))?;
+    runtime.block_on(async move {
+        let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
+            .await
+            .map_err(|e| format!("connect {addr}: {e}"))?;
+        let request = WalletSendTransactionRequest {
+            tx_id: Some(nockapp_grpc_proto::pb::common::v1::Hash::from(id.clone())),
+            raw_tx: Some(nockapp_grpc_proto::pb::common::v2::RawTransaction::from(raw)),
+        };
+        let response = client
+            .wallet_send_transaction(request)
+            .await
+            .map_err(|e| format!("wallet_send_transaction: {e}"))?
+            .into_inner();
+        match response.result {
+            Some(wallet_send_transaction_response::Result::Ack(_)) => println!("SEND\tacknowledged"),
+            Some(wallet_send_transaction_response::Result::Error(err)) => println!("SEND\terror: {}", err.message),
+            None => println!("SEND\tno result"),
+        }
+        // The node validates on receipt; give it a moment, then ask.
+        let mut verdict = "rejected".to_string();
+        let mut detail = String::new();
+        for _ in 0..12 {
+            tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+            let req = TransactionAcceptedRequest {
+                tx_id: Some(nockapp_grpc_proto::pb::common::v1::Base58Hash { hash: id_b58.clone() }),
+            };
+            match client.transaction_accepted(req).await {
+                Ok(resp) => match resp.into_inner().result {
+                    Some(transaction_accepted_response::Result::Accepted(true)) => {
+                        verdict = "accepted".to_string();
+                        break;
+                    }
+                    Some(transaction_accepted_response::Result::Accepted(false)) => {
+                        detail = "not in the node's accepted set".to_string();
+                    }
+                    Some(transaction_accepted_response::Result::Error(err)) => detail = err.message,
+                    None => detail = "no result".to_string(),
+                },
+                Err(e) => detail = format!("{e}"),
+            }
+        }
+        println!("VERDICT\t{verdict}\t{detail}");
         Ok(ExitCode::SUCCESS)
     })
 }
