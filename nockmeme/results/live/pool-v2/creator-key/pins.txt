@@ -1,0 +1,2 @@
+PIN	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	matches the seed set at this lock
+PINS	all 1 match

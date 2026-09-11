@@ -663,10 +663,14 @@ pub fn require_provenance(
     inputs: &[Name],
     known_outputs: &BTreeSet<Vec<u8>>,
     token_free: &BTreeSet<Vec<u8>>,
+    coinbase_lasts: &BTreeSet<Vec<u8>>,
 ) -> Result<(), String> {
     for input in inputs {
         let key = name_key(input);
         if known_outputs.contains(&key) || token_free.contains(&key) {
+            continue;
+        }
+        if coinbase_lasts.contains(&input.last.to_base58().into_bytes()) {
             continue;
         }
         return Err(format!(

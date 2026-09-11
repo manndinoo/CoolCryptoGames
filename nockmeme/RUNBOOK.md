@@ -173,6 +173,11 @@ bash /path/to/nockmeme/scripts/node-lowmem.sh /path/to/nockchain "$RUN"
 REPO=... RUN=... bash /path/to/nockmeme/scripts/live-demo.sh | tee "$RUN/demo-results.txt"
 # from the demo's output: TOKEN[A], TOKEN[B], GENESIS/TRANSFER txids, alice/bob lock-roots
 REPO=... RUN=... ALICE_LOCK=... BOB_LOCK=... TOKEN_A=... TOKEN_B=... GTX_A=... XTX_A=... GTX_B=... XTX_B=... \
-ALICE_FIRSTS="<first-names of alice's coinbase notes>" FEE_BPS=100 \
+ALICE_FIRSTS="<first-names of alice's coinbase notes>" FEE_BPS=100 LORE_BPS=50 FEE_NICKS=16384 \
   bash /path/to/nockmeme/scripts/pool-suite.sh 2>"$RUN/pool-progress.log" | tee "$RUN/pool-results.txt"
+# The suite creates the `lore` wallet (the treasury) and resolves its lock root itself.
+# The main pool is on TOKEN_B; attack pools on TOKEN_A. RESUME=1 picks a run up after a
+# mined stage (each mined trade and each refused attack leaves a marker under $RUN/pool).
+# A trader's network fee of 8192 nicks is too low for a covenant trade (v1-insufficient-fee);
+# the suite uses 16384 and the quote discloses it.
 ```

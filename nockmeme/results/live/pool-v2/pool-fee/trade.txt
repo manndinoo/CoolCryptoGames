@@ -1,0 +1,10 @@
+QUOTE	buy	in=655360	out_net=8943	pool_fee=7422	lore_fee=3281	total_fee_nicks=10703	network_fee=16384	spot_e9=65536000000	exec_e9=73281896455	impact_bps=1181
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7204679	91057
+ATTACK	pool-fee	1
+POOL-SPEND	to_user=1000+8943t	successor=6549318+91057t	lore=3281+0t	fee=1
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	6xbskgMazpiq5woZW2gHgymwXpqBZzqKebYgrurtuej66XaQw7wx7Lv
+FEE	current=16385	required=8384	seed_words=43	witness_words=90
+WROTE	/home/user/nmeme-run/pool/pool-fee/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	9iE73PEcvq7e6cL1YymSYRfpfoPL8wVETzYniCL3JVmbt9Cmw3mPs8P
+NEWSIGHASH	3uQ11LftBQEKnZj9whURQy9zGfbE2Nv9dW1GoBsnN6N32HZLqEckTuW	8eL4JEQcoaL5UK8jBarnA89919tx1cdmzx8KGdzmk5uYWPv8bGQyHrH

@@ -480,18 +480,23 @@ The covenant became `[%amm tid fee lore lore-lock]` (`docs/FEES.md`,
 `docs/ENFORCEMENT.md` §3): 100 bps to the pool, 50 bps to the Lore Wallet,
 in NOCK, in the same transaction, or the spend is invalid. Kernels, node
 and tooling were rebuilt; a fresh chain ran `live-demo.sh` and the suite.
-Evidence in [`live/pool-v2/`](./live/pool-v2/).
+Evidence in [`live/pool-v2/`](./live/pool-v2/): every transaction file,
+every quote, the node's answer to every submission, the treasury's notes,
+the rebuild and the replay.
 
 **The Lore Wallet** is a third wallet's key lock (`lore`), never spent
 from. Its lock root is in every pool's lock; its first name is where its
 notes sit. It started empty.
 
-**The main pool** opened at height 433 with 6,553,600 nicks and 100,000
-tokens. The trader's network fee was 16,384 nicks on every trade (the
-first attempt at 8,192 was refused by the engine as `v1-insufficient-fee`:
+**The main pool** (token A of this chain, `2Cpa7t…`, 100 + 50 bps) opened
+at height 433 with 6,553,600 nicks and 100,000 tokens. The trader's network
+fee was 16,384 nicks on every trade: the first attempt at 8,192 was
+admitted and then refused by the engine as `v1-insufficient-fee`, because
 the treasury seed and the covenant witness make the transaction larger
-than a plain two-spend trade, and the fee check in the tooling now counts
-the witness noun's leaves exactly as the chain does).
+than a plain two-spend trade; the tooling's fee check now counts the
+witness noun's leaves exactly as the chain does. (That refused transaction
+held the first pool note in the mempool, so the main pool was reopened on
+the other token; `live/pool-v2/results-first-attempt.txt`.)
 
 | trade | who | in | out, net | pool share | Lore share | impact | mined at | pool after | Lore Wallet after |
 |---|---|---|---|---|---|---|---|---|---|
@@ -509,7 +514,70 @@ quote's `POOL-AFTER`. The share is 0.5 % of the NOCK side: 3,281 of
 crossing the boundary); 1,682 of the 335,451-nick gross on the sell, of
 which the seller received 333,769. The disclosed total on a buy was 9,791
 nicks (1.49 % of 655,360: the pool's 1 % is charged on what remains after
-the treasury's 0.5 %).
+the treasury's 0.5 %). The quote showed the network fee separately.
+
+**Rounding and minimum size.** A buy whose input, less the treasury's
+share, admits no output is refused by the quote before anything is built
+(`ROUNDING`); one token more than the quote is refused by the chain
+(`over-payout`).
+
+**Simultaneous trades.** Two buys built against the same pool note and
+sent together: the node admitted Bob's and refused Alice's on arrival (its
+input already reserved); Bob's was mined, Alice re-quoted against the new
+note and was mined at 500.
+
+**Attacks**, each on a freshly opened pool (`2Cpa7t…`'s counterpart token,
+fees 101–114 bps so that each has its own lock; the last six with 10,000
+tokens, Alice having spent the rest on earlier pools), each an honest
+quote altered in one way, each sent through the public gRPC:
+
+| attack | what was altered | node's answer |
+|---|---|---|
+| withdraw | successor 100,000 nicks short, the difference to the trader | refused at admission |
+| over-payout | one token more than the quote | refused at admission |
+| pool-fee | the pool spend pays a 1-nick miner fee | refused at admission |
+| third-lock | 1,000 nicks of reserves to a lock no spend of the transaction pays | refused at admission |
+| drop-claim | successor without its token claim | refused at admission |
+| mint | successor claims 1,000 tokens more than went in | refused at admission |
+| lore-short | the treasury paid 1 nick less than its share | refused at admission |
+| lore-tokens | 10 tokens sent to the treasury with its NOCK | refused at admission |
+| creator-key | the pool note spent under a key lock, signed by Alice, the creator | refused at admission |
+| take-donation | a second note at the pool lock spent with the pool note, its NOCK and tokens to the trader | refused at admission |
+| inflate-claim | a 1,000,000-token claim on the trader's own payment to the pool | **mined as an ordinary trade**: consensus unions the note-data landing on a lock, the pool's own claim won, and the pool held exactly the quoted 7,204,679 / 91,051. Had the fabricated claim won instead, the conservation rule would have refused the transaction; either way nothing is minted |
+
+In every refused case the pool note and the trader's note were unspent two
+blocks later and nothing was mined. The refusals come at admission
+because a covenant violation is a lock failure, which the mempool checks
+(§A15); the one mined "attack" was not one.
+
+**The honest donation.** A second note (100,000 nicks, 1,000 tokens) sent
+to a pool's lock outside a trade, then spent together with the pool note
+by a buy whose successor absorbs both: mined; the pool held 7,304,679 /
+10,106 afterwards and the treasury received the buy's 3,281 nicks. The
+`take-donation` row above is the same two notes with the donation's value
+routed to the trader: refused, because the rule sums every input at the
+lock.
+
+**Rebuild with provenance** (`live/pool-v2/balances-B.txt`): genesis,
+transfer, Bob's four funding transactions, the pool opening and the five
+trades replayed through the indexer, with 906 coinbase records re-verified
+against block parents and every other input a step's output — or a
+reward note whose last name recomputes from its block's parent (the new
+`--scan-coinbase`, added because the wallet adds inputs a caller never
+named). Pool 74,557, Alice 913,973, Bob 11,470, total 1,000,000, `ASSERT-OK`.
+
+**Replay of the pool** (`live/pool-v2/replay-B.txt`): every trade's
+invariant holds; the constant product rose from 6.5536 × 10¹¹ to
+6.5785 × 10¹¹; fees retained 26,040 nicks and 44 tokens; the treasury
+paid 14,806 nicks over the five trades, each payment at or above the
+covenant's floor (the sell: 1,682 paid, 1,673 floor). The replayed final
+state equals the live pool note.
+
+**Reorganisations** were not exercised: this fakenet has one node and one
+miner, so no competing chain can be produced. The property is argued in
+`docs/ENFORCEMENT.md` §6: the pool is a note, the covenant is evaluated in
+every block of whatever chain is canonical, and a trade in an orphaned
+block never happened.
 
 ---
 

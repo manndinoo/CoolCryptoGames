@@ -418,9 +418,12 @@ echo "== stage 7: rebuild with provenance, replay the main pool =="
 PROOFS=""; for f in "$S"/funding-*.txt.*; do [ -f "$f" ] && PROOFS="$PROOFS --funding $f"; done
 for f in "$S"/funding-*.txt.lock; do [ -f "$f" ] && PROOFS="$PROOFS --funding $f"; done
 [ -n "${LIVE_PROOFS:-}" ] && PROOFS="$PROOFS $LIVE_PROOFS"
+# bob's plain notes came from alice's funding transactions: steps, so their provenance is a step's output
+FUND_STEPS=""; for f in "$S"/fund-*.jam; do [ -f "$f" ] || continue; i="${f##*/fund-}"; i="${i%.jam}"; FUND_STEPS="$FUND_STEPS --step $(awk -F'\t' '$1=="TXID"{print $2}' "$S/send-fund-$i.txt"):$f"; done
 # shellcheck disable=SC2086
-"$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_B" --step "$GTX_B:$RUN/genesis-B/final.jam" --step "$XTX_B:$RUN/xfer-B/final.jam" \
-  --step "$MAIN_OPEN_TXID:$MAIN_OPEN_FILE" $STEPS_B $PROOFS --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$MAIN_LOCK" \
+"$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_B" --step "$GTX_B:${GFILE_B:-$RUN/genesis-B/final.jam}" --step "$XTX_B:${XFILE_B:-$RUN/xfer-B/final.jam}" \
+  $FUND_STEPS --step "$MAIN_OPEN_TXID:$MAIN_OPEN_FILE" $STEPS_B $PROOFS --scan-coinbase "$(node_height)" \
+  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$MAIN_LOCK" --lock "$LORE_LOCK" \
   --expect-total "$SUPPLY" > "$S/balances-B.txt" || die "rebuild B failed: $(tail -3 "$S/balances-B.txt")"
 grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances-B.txt" | cut -c1-160
 # shellcheck disable=SC2086

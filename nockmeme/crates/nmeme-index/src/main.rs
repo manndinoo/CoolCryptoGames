@@ -88,6 +88,7 @@ const USAGE: &str = "usage:
   nmeme-index rebuild  --addr <host:port> --token <token-b58>
                        --step <txid>:<tx.jam> [--step ...]   (canonical order)
                        --funding <funding.txt> [--funding ...] (provenance of inputs)
+                       [--scan-coinbase <height>]  (also accept inputs whose last name is a reward note's, recomputed from blocks 1..height)
                        --lock <lock-root-b58> [--lock ...]
                        [--expect <lock-root-b58>=<amount>]... [--expect-total <n>]
   nmeme-index pool     --addr <host:port> <pool params>
@@ -252,6 +253,9 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         .map(|l| Hash::from_base58(l).map_err(|e| format!("lock {l}: {e}")))
         .collect::<Result<_, _>>()?;
     let mut records: Vec<nmeme_index::FundingRecord> = Vec::new();
+    let scan_max: Option<u64> = flag(args, "--scan-coinbase")
+        .map(|v| v.parse::<u64>().map_err(|e| format!("--scan-coinbase: {e}")))
+        .transpose()?;
     for path in flags(args, "--funding") {
         let text = std::fs::read_to_string(path).map_err(|e| format!("read {path}: {e}"))?;
         records.extend(nmeme_index::parse_funding(&text)?);
@@ -279,7 +283,7 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         .enable_all()
         .build()
         .map_err(|e| format!("tokio: {e}"))?;
-    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total, records))
+    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total, records, scan_max))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -291,6 +295,7 @@ async fn rebuild(
     expectations: Vec<(String, u64)>,
     expect_total: Option<u64>,
     records: Vec<nmeme_index::FundingRecord>,
+    scan_max: Option<u64>,
 ) -> Result<ExitCode, String> {
     let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
         .await
@@ -315,6 +320,21 @@ async fn rebuild(
     }
     let token_free = nmeme_index::admitted_token_free(&records, |h| parents.get(h))?;
     println!("EVIDENCE\t{} coinbase note(s) re-verified against block parents", token_free.len());
+    // Optionally, every coinbase name the chain could have issued up to a
+    // height: the last name of a block's reward note is recomputed from its
+    // parent id (`coinbase_last_name`), so a spent input whose last name is
+    // among them was a reward note and carried no claim in any history. The
+    // same proof as a FUNDING record, without needing a read taken while the
+    // note was unspent (a wallet may add inputs a caller never listed).
+    let mut coinbase_lasts: BTreeSet<Vec<u8>> = BTreeSet::new();
+    if let Some(max) = scan_max {
+        for h in 1..=max {
+            parents.fill(&mut oracle_client, h).await?;
+            let parent = parents.get(h)?;
+            coinbase_lasts.insert(nmeme_tx::names::coinbase_last_name(&parent).to_base58().into_bytes());
+        }
+        println!("EVIDENCE\t{} coinbase names recomputed from the parents of blocks 1..={max}", coinbase_lasts.len());
+    }
 
     // 1. One canonical snapshot: every address, every page, one block.
     let snapshot = read_snapshot(&mut client, &addresses).await?;
@@ -337,7 +357,7 @@ async fn rebuild(
     // or proven token-free, or the history is incomplete (lib.rs, provenance).
     let mut known_outputs: BTreeSet<Vec<u8>> = BTreeSet::new();
     for (i, (txid, plan)) in plans.iter().enumerate() {
-        nmeme_index::require_provenance(txid, &plan.inputs, &known_outputs, &token_free)?;
+        nmeme_index::require_provenance(txid, &plan.inputs, &known_outputs, &token_free, &coinbase_lasts)?;
         let mut candidates: Vec<Name> = Vec::new();
         for (_, later) in plans.iter().skip(i + 1) {
             candidates.extend(later.inputs.iter().cloned());

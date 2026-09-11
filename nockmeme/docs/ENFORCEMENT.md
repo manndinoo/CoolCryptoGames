@@ -186,10 +186,17 @@ genesis. It needs the maintainers' review, Hoon unit tests in
   the sum. This is `docs/LIQUIDITY.md` §3.4 without the operator's key.
 - **Mempool admission is not validity**, and an admitted transaction keeps
   its inputs reserved while it sits there (seen live, `results/RESULTS.md`
-  §A14). An invalid trade against a pool note blocks that note in this
-  node's mempool for as long as the node keeps it. A client should never
-  submit a trade the quote does not admit; the suite therefore gives each
-  attack its own pool.
+  §A14). A *covenant* violation is a lock failure, which the mempool
+  evaluates on admission, so every such trade was refused on arrival and
+  reserved nothing (§A15–A16); a transaction that fails a later check
+  (an insufficient miner fee, a violated pin) is admitted and does hold
+  its inputs. A client should never submit a trade the quote does not
+  admit, and should pay the exact network fee the tooling computes.
+- **A fabricated claim on a payment to the pool is harmless.** Consensus
+  unions the note-data of every seed landing on a lock; if the pool's own
+  claim wins the union the transaction is an ordinary trade, and if the
+  fabricated one wins the conservation rule refuses it (§A16,
+  `inflate-claim`). Nothing is minted either way.
 - **A note at the pool lock holding only one asset** (someone paid NOCK
   alone, or tokens alone, to the lock outside a trade) has product zero
   and can be spent by anyone who leaves both reserves positive. The pool's

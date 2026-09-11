@@ -1,5 +1,18 @@
 # nmeme test results
 
+## 2026-09-11 21:20 UTC: the pool covenant with the treasury share
+
+Unit: nmeme-core pool math (10 tests incl. treasury quotes and the
+covenant's floor), nmeme-tx (fee check with exact witness leaves),
+nmeme-index (provenance with the coinbase scan); all green with
+NOCKCHAIN_REPO set (cargo test --release -p nmeme-core -p nmeme-tx
+-p nmeme-index). Live: scripts/pool-suite.sh on the forked node
+(results/live/pool-v2/): five trades mined with the Lore Wallet paid
+exactly, ten attack cases refused at admission, one neutralized, the
+donation merge mined, rebuild with provenance and pool replay consistent
+with the live state. Phase one (pool share only) in results/live/pool-v1/.
+
+
 ## 2026-09-11 17:30 UTC: swap settlement suite
 
 nmeme-tx tests/swap.rs 8 (construction, pins, half, replace, pinned

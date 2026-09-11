@@ -1,0 +1,10 @@
+QUOTE	buy	in=655360	out_net=8953	pool_fee=6575	lore_fee=3281	total_fee_nicks=9856	network_fee=16384	spot_e9=65536000000	exec_e9=73200044677	impact_bps=1169
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7204679	91047
+ATTACK	withdraw	100000
+POOL-SPEND	to_user=101000+8953t	successor=6449319+91047t	lore=3281+0t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	4oi1qkwAYXjsjPRZCBft2subWT5j6FFAbFGFsKQtgye19arnSj7awKP
+FEE	current=16384	required=8384	seed_words=43	witness_words=90
+WROTE	/home/user/nmeme-run/pool/withdraw/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	2ah1F1KRR1z56eGb5PBPBB1PvtmGJJ2s59VkU9XN3W23fSqJvSSqdB
+NEWSIGHASH	6T7HXzVjxmfJ19zU1doMjSAP7YRJ7cn5eC3CtnosPyhi5LG8ooSyVyb	28NMCpXUwNNNwPt34Yd5MuSa2hXvPDpQNZk274V2goUe6EBb6tATok9

@@ -172,6 +172,7 @@ pub fn enforce_fee(spends: &Spends, params: FeeParams) -> Result<FeeReport, Erro
 /// the chain charges input words for.
 fn exact_witness_leaves(spends: &Spends) -> u64 {
     use nockapp::noun::slab::{NockJammer, NounSlab};
+    use nockvm::noun::NounAllocator;
     use noun_serde::NounEncode;
     let mut total = 0u64;
     for (_, spend) in &spends.0 {

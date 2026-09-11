@@ -23,7 +23,16 @@ per pool at launch and cannot be changed afterwards (§4).
 The network fee — what the trader's own spend pays the miner — is not part
 of the 1.5 %. It is disclosed separately on every quote (`network_fee`),
 because it is paid to the miner from the trader's own note and is set by
-the trader, not the platform.
+the trader, not the platform. A covenant trade is larger than a plain
+transfer (the keyless witness and the treasury seed); on the fakenet it
+needs 16,384 nicks where a transfer needs 8,192 (seen live: the engine's
+`v1-insufficient-fee`, `results/RESULTS.md` §A16). The chain's rule is a
+word count, and the tooling now applies it exactly.
+
+**Verified live** (`results/RESULTS.md` §A16): five trades at these rates,
+the Lore Wallet's balance equal to the sum of the quoted shares after each
+one, every note there plain NOCK; a trade that short-changes the treasury
+by one nick and one that sends it tokens both refused by the chain.
 
 ## 1. What the fee is charged on
 

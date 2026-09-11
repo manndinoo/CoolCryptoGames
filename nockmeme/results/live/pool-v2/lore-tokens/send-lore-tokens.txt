@@ -1,0 +1,3 @@
+TXID	C39JwiMH4RJJvVWpJhqgcMc7SKcGi9fFbg9kbUFJhW3Hni9KPN7KR4B
+SEND	acknowledged
+MEMPOOL	not admitted	not in the node's accepted set

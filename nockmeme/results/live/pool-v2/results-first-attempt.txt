@@ -1,0 +1,22 @@
+== stage 0: the Lore Wallet, and the miner ==
+LORE-WALLET	address=qh5STcPG3z9NDRxrYKkmXC2dxQYiibRhWD4bg4jEq4boTExcxGrSU7	lock=CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq	first=8XiLmcEdqg33KDK4fCyNbFzHsTJVd2uygrH7uCkRZsBWCkhABN9mad6	key=the lore wallet (held, not locked)
+miner pid=25209
+== stage 1: fund bob with 4 plain notes ==
+FUND	bob	txid=2cdhU6YJeaa1EfV8JHjqyUSifsZaRk9BRZ8WEhnLYhGiWcLdYBJ9JEC	height=155	+1310720 nicks
+FUND	bob	txid=4QfbTQtoegcrcmyDEgAvMehj69VwEXABTGHw5iFYgtKcf6JW3fRVhFz	height=160	+1310720 nicks
+FUND	bob	txid=64qzWrx7s4k3nhpeFd7LN8xCB8znYyDp73ejFqNoU7o74gb3f8F31qy	height=166	+1310720 nicks
+FUND	bob	txid=DEspVNPCfeXut9yKP8D2MjBi2crKE9KrATCzpNMYPksTrazWwAJomyv	height=181	+1310720 nicks
+== stage 2: the main pool (token B) ==
+OPEN	main	txid=814oGZvxfkVAXKSaJ6PiB4P2XLB7z93BN41VbMBMyyTbQSZVxqptzzZ	height=191	lock=AYuqpyE88ba6rkm1rWKzWLn68H51V8HWPu45StUDtM2MJk5o9qpS6d8	nock=6553600	tokens=100000	alice_change=899900
+LOCK	main	AYuqpyE88ba6rkm1rWKzWLn68H51V8HWPu45StUDtM2MJk5o9qpS6d8	spend-condition=[%amm 3vBS67t4wQTqUnvVmtGSMiSh9soo8oWLKd9caae9ugkQF6DVJonLSUX 100 50 CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq]	no key
+== stage 3: honest trades ==
+#### run 20:07:36
+== stage 0: the Lore Wallet, and the miner ==
+LORE-WALLET	address=qh5STcPG3z9NDRxrYKkmXC2dxQYiibRhWD4bg4jEq4boTExcxGrSU7	lock=CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq	first=8XiLmcEdqg33KDK4fCyNbFzHsTJVd2uygrH7uCkRZsBWCkhABN9mad6	key=the lore wallet (held, not locked)
+miner pid=26070
+== stage 1: fund bob with 0 plain notes ==
+== stage 2: the main pool (token B) ==
+RESUMED	main pool opened by 814oGZvxfkVAXKSaJ6PiB4P2XLB7z93BN41VbMBMyyTbQSZVxqptzzZ; steps so far:
+LOCK	main	AYuqpyE88ba6rkm1rWKzWLn68H51V8HWPu45StUDtM2MJk5o9qpS6d8	spend-condition=[%amm 3vBS67t4wQTqUnvVmtGSMiSh9soo8oWLKd9caae9ugkQF6DVJonLSUX 100 50 CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq]	no key
+== stage 3: honest trades ==
+QUOTE	buy1	buy in=655360 out_net=8954 pool_fee=6510 lore_fee=3281 total_fee_nicks=9791 network_fee=8192 spot_e9=65536000000 exec_e9=73191869555 impact_bps=1168	pool_before=6553600/100000

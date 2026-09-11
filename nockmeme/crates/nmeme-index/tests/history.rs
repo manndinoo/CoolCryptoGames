@@ -29,7 +29,7 @@ fn set(names: &[Name]) -> BTreeSet<Vec<u8>> {
 fn an_input_from_nowhere_is_refused_and_named() {
     // Genesis B spends note 10, which nothing in the supplied history produced
     // and no funding proof covers. This is exactly the omitted-history case.
-    let err = require_provenance("B", &[name(10)], &set(&[]), &set(&[])).unwrap_err();
+    let err = require_provenance("B", &[name(10)], &set(&[]), &set(&[]), &set(&[])).unwrap_err();
     assert!(err.contains("B:"), "{err}");
     assert!(err.contains(&name(10).first.to_base58()), "names the input: {err}");
     assert!(err.contains("burn"), "explains the consequence: {err}");
@@ -39,17 +39,17 @@ fn an_input_from_nowhere_is_refused_and_named() {
 fn an_output_of_an_earlier_step_is_known() {
     // With genesis A replayed first, its output (note 10) is known and B's
     // spend of it is admissible — the replay will then correctly burn it.
-    require_provenance("B", &[name(10)], &set(&[name(10)]), &set(&[])).unwrap();
+    require_provenance("B", &[name(10)], &set(&[name(10)]), &set(&[]), &set(&[])).unwrap();
 }
 
 #[test]
 fn a_note_proven_token_free_is_known() {
-    require_provenance("B", &[name(10)], &set(&[]), &set(&[name(10)])).unwrap();
+    require_provenance("B", &[name(10)], &set(&[]), &set(&[name(10)]), &set(&[])).unwrap();
 }
 
 #[test]
 fn every_input_must_be_covered_not_just_one() {
-    let err = require_provenance("B", &[name(10), name(11)], &set(&[name(10)]), &set(&[])).unwrap_err();
+    let err = require_provenance("B", &[name(10), name(11)], &set(&[name(10)]), &set(&[]), &set(&[])).unwrap_err();
     assert!(err.contains(&name(11).first.to_base58()), "{err}");
 }
 
@@ -81,8 +81,8 @@ fn a_note_with_a_claim_is_not_token_free() {
     // spent, nothing can re-verify a plain note, and a claim is never free.
     let token_free = admitted_token_free(&parsed, |_| Err("unused".into())).unwrap();
     assert!(token_free.is_empty());
-    assert!(require_provenance("B", &[name(1)], &set(&[]), &token_free).is_err());
-    assert!(require_provenance("B", &[name(2)], &set(&[]), &token_free).is_err());
+    assert!(require_provenance("B", &[name(1)], &set(&[]), &token_free, &set(&[])).is_err());
+    assert!(require_provenance("B", &[name(2)], &set(&[]), &token_free, &set(&[])).is_err());
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn a_coinbase_record_is_admitted_only_when_its_name_recomputes() {
     let ok = admitted_token_free(&recs, |h| if h == 640 { Ok(hash(77)) } else { Err(format!("no block {h}")) })
         .unwrap();
     assert!(ok.contains(&name_key(&cb.name)));
-    require_provenance("B", &[cb.name.clone()], &set(&[]), &ok).unwrap();
+    require_provenance("B", &[cb.name.clone()], &set(&[]), &ok, &set(&[])).unwrap();
 
     // The chain says otherwise: the record is refused loudly, not skipped.
     let err = admitted_token_free(&recs, |_| Ok(hash(78))).unwrap_err();
