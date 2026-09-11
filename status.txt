@@ -1,12 +1,5 @@
-run: 34562677406  bucket: 12  at: 2026-09-11T06:12:26Z
-
+finished with exit code 0 at 2026-09-11T06:12:59Z
+bucket 12	trace_height=524288	verifier_key_digest=7273b9760a44e1f7431f3141183688b40fa4bf2ab539f31b4b82010bd38240ce031f648267a9733c	secs=5757	peak_rss_gib=11.98
                total        used        free      shared  buff/cache   available
-Mem:           15989        4115        9605          49        2640       11874
-Swap:          84991          92       84899
-
-low 0
-high 162225
-max 0
-oom 0
-oom_kill 0
-oom_group_kill 0
+Mem:           15989        1083       12620          49        2655       14906
+Swap:          84991           0       84991
