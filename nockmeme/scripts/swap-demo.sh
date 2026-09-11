@@ -134,7 +134,7 @@ send() {
 unspent() {
   local i out
   for i in 1 2 3 4; do
-    if out=$("$NMEME_INDEX" funding --addr "$PUB" --first "$1" 2>/dev/null); then
+    if out=$(quiet "$NMEME_INDEX" funding --addr "$PUB" --first "$1" 2>/dev/null); then
       grep -qF "$2" <<<"$out" && return 0 || return 1
     fi
     sleep 5
@@ -193,14 +193,26 @@ echo "== stage 0: miner =="
 "$MINER" --node-addr "http://127.0.0.1:$PORT" --mining-pkh "$ALICE" --num-threads 1 >"$RUN/miner.log" 2>&1 &
 MINER_PID=$!; trap 'kill "$MINER_PID" 2>/dev/null || true' EXIT
 echo "miner pid=$MINER_PID"
+# quiet <cmd...>: run a node read with the miner paused. At fakenet
+# difficulty the miner lands a block every second or two, and a read that
+# pages over a thousand notes never sees one block (seen live: page 0 at
+# height 1116, page 2 at 1128, twelve attempts). Pausing the miner is what
+# a real client cannot do; a real chain has 150 s blocks.
+quiet() {
+  kill -STOP "$MINER_PID" 2>/dev/null || true
+  local rc=0
+  "$@" || rc=$?
+  kill -CONT "$MINER_PID" 2>/dev/null || true
+  return $rc
+}
 
 echo "== stage 1: fund bob with NOCK (plain, gated) =="
-"$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$S/funding-0.txt" || die "funding read"
+quiet "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$S/funding-0.txt" || die "funding read"
 FUND=$(awk -F'\t' -v need=$((BOB_FUND_NICKS + 20000)) '$1=="FUNDING" && $4=="coinbase" && $5+0>=need {print "["$2" "$3"]"; exit}' "$S/funding-0.txt")
 [ -n "$FUND" ] || die "no verified coinbase note to fund bob from"
 log "  funding from verified coinbase note $FUND"
 FTX=$(create_tx alice "$S/fund" "$FUND" "$BOB" "$BOB_FUND_NICKS")
-"$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$FTX" > "$S/fund/check-inputs.txt" 2>&1 || die "fund gate refused"
+quiet "$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$FTX" > "$S/fund/check-inputs.txt" 2>&1 || die "fund gate refused"
 sed 's/^/  /' "$S/fund/check-inputs.txt" >&2
 cp "$FTX" "$S/fund.jam"
 FTXID=$(send "$S/fund.jam" fund); [ -n "$FTXID" ] || die "fund: no txid (see $S/send-fund.txt)"
@@ -209,7 +221,7 @@ confirm "$FTXID" fund
 echo "FUND	txid=$FTXID	height=$(cut -d= -f2 "$S/fund.env")	bob+=$BOB_FUND_NICKS nicks"
 
 echo "== stage 2: the halves =="
-"$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding-bob.txt" || die "bob funding read"
+quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding-bob.txt" || die "bob funding read"
 BOB_NOTE=$(awk -F'\t' -v a="$BOB_FUND_NICKS" '$1=="FUNDING" && $4=="plain" && $5==a {print $2" "$3; exit}' "$S/funding-bob.txt")
 [ -n "$BOB_NOTE" ] || die "bob's NOCK note not found"
 log "  bob pays from [$BOB_NOTE] (plain, no claim)"
@@ -245,7 +257,7 @@ sign_spend bob   "$S/swap-a-signed.jam" "$B_SPEND" "$B_PKH" "$B_PK" "$S/swap.jam
 "$NMEME_TX" sighash "$S/swap.jam" "$S/final" > "$S/swap-sighash.txt" || die "swap sighash"
 verify_all "$S/swap-sighash.txt" "swap-both-spends"
 "$NMEME_TX" pins "$S/swap.jam" | sed 's/^/  /' >&2
-"$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$S/swap.jam" --token-note "$TOKEN_NOTE" > "$S/swap-check-inputs.txt" 2>&1 || die "swap gate refused (see $S/swap-check-inputs.txt)"
+quiet "$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$S/swap.jam" --token-note "$TOKEN_NOTE" > "$S/swap-check-inputs.txt" 2>&1 || die "swap gate refused (see $S/swap-check-inputs.txt)"
 sed 's/^/  /' "$S/swap-check-inputs.txt" >&2
 SWAP_ID=$("$NMEME_INDEX" tx-id --tx "$S/swap.jam")
 echo "SWAP-BUILT	txid=$SWAP_ID	$SELL tokens for $PRICE_NICKS nicks	pins=2"
@@ -279,10 +291,10 @@ case "$MODE" in
     SWAP_H=$(cut -d= -f2 "$S/swap.env")
     echo "SWAP	txid=$SENT	height=$SWAP_H	alice -$SELL tokens +$PRICE_NICKS nicks	bob +$SELL tokens -$PRICE_NICKS nicks"
     echo "== rebuild with provenance =="
-    "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" --lock "$BOB_LOCK" > "$S/funding-after.txt" || die "funding after"
+    quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" --lock "$BOB_LOCK" > "$S/funding-after.txt" || die "funding after"
     STEPS="${STEPS:?set STEPS to the earlier --step args of the token}"
     PROOFS="${PROOFS:?set PROOFS to the --funding args covering the earlier steps}"
-    "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN" $STEPS \
+    quiet "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN" $STEPS \
       --step "$FTXID:$S/fund.jam" --step "$SENT:$S/swap.jam" \
       --lock "$ALICE_LOCK" --lock "$BOB_LOCK" $PROOFS --funding "$S/funding-0.txt" \
       --expect "$ALICE_LOCK=$((TOKEN_HELD - SELL))" --expect "$BOB_LOCK=$((EXPECT_BOB_BEFORE + SELL))" \
