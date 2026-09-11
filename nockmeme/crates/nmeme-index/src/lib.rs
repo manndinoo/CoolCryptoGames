@@ -50,7 +50,7 @@ pub fn encode_claim(claim: &Claim) -> Result<Vec<u8>, nmeme_core::Error> {
 // Reading claims back out of a signed transaction file.
 // ---------------------------------------------------------------------------
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use nmeme_core::claim::NOTE_DATA_KEY;
 use nockchain_types::tx_engine::common::{Hash, Name};
@@ -241,8 +241,8 @@ pub fn name_key(name: &Name) -> Vec<u8> {
 pub struct Page {
     pub height: Option<u64>,
     pub block_id: Option<String>,
-    /// (note name, owning address, raw note-data entries as (key, blob)).
-    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>)>,
+    /// (note name, owning address, raw note-data entries as (key, blob), assets in nicks).
+    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>, u64)>,
     pub next_page_token: String,
 }
 
@@ -251,7 +251,7 @@ pub struct Page {
 pub struct Snapshot {
     pub height: u64,
     pub block_id: String,
-    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>)>,
+    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>, u64)>,
 }
 
 /// Upper bound on pages per address. A node that never returns an empty
@@ -341,6 +341,102 @@ pub fn require_same_snapshot(before: &Snapshot, after: &Snapshot) -> Result<(), 
             "chain advanced during the read: began at height {} block {}, ended at height {} \
              block {}. Rebuild discarded; re-run to read a single snapshot.",
             before.height, before.block_id, after.height, after.block_id
+        ));
+    }
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Provenance: a replay is only as good as the history it was given.
+// ---------------------------------------------------------------------------
+//
+// `Indexer` learns which notes carry token weight only from transactions it
+// has replayed. A genesis that spends a token-bearing note is a burn under
+// SPEC G1 — but replayed WITHOUT the transaction that put the weight there,
+// the same genesis looks like a valid creation (seen live: the height-44
+// genesis on the fakenet chain, reported Created by a two-transaction rebuild
+// and Burned by the full one). So a rebuild must prove, for every input of
+// every step, that its token status is known:
+//
+//   * it is an output of an earlier supplied step — the replay computed its
+//     weight; or
+//   * a FUNDING proof, read from the chain while the note was unspent, shows
+//     it carried no `meme` entry at all. Weight only ever comes from a claim
+//     under that key, so a note without one has zero weight in every history;
+//     no transaction list is needed to know that.
+//
+// Anything else — in particular a note that carries a claim but whose creating
+// transaction was not supplied — is refused rather than guessed.
+
+/// Does raw note-data carry a `meme` entry?
+pub fn has_claim(data: &[(String, Vec<u8>)]) -> bool {
+    data.iter().any(|(key, _)| key == NOTE_DATA_KEY)
+}
+
+/// The `FUNDING` lines for a snapshot: one per unspent note, with its token
+/// status as the chain reports it. `nmeme-index funding` prints these; the
+/// demo picks genesis inputs from the `tokenfree` ones and hands the file to
+/// `check-inputs` and `rebuild`.
+pub fn funding_lines(snapshot: &Snapshot) -> Vec<String> {
+    let mut out = vec![format!("HEIGHT\t{}", snapshot.height), format!("BLOCK\t{}", snapshot.block_id)];
+    for (name, _owner, data, assets) in &snapshot.notes {
+        let status = if has_claim(data) { "claim" } else { "tokenfree" };
+        out.push(format!(
+            "FUNDING\t{}\t{}\t{}\t{}",
+            name.first.to_base58(),
+            name.last.to_base58(),
+            status,
+            assets
+        ));
+    }
+    out
+}
+
+/// Parses `FUNDING` lines back into (name, token_free). Lines of other kinds
+/// are ignored; a malformed `FUNDING` line is an error, never skipped.
+pub fn parse_funding(text: &str) -> Result<Vec<(Name, bool)>, String> {
+    let mut out = Vec::new();
+    for (i, line) in text.lines().enumerate() {
+        let fields: Vec<&str> = line.split('\t').collect();
+        if fields.first() != Some(&"FUNDING") {
+            continue;
+        }
+        if fields.len() < 4 {
+            return Err(format!("funding line {}: expected 4+ fields, got {}", i + 1, fields.len()));
+        }
+        let first = Hash::from_base58(fields[1]).map_err(|e| format!("funding line {}: first: {e}", i + 1))?;
+        let last = Hash::from_base58(fields[2]).map_err(|e| format!("funding line {}: last: {e}", i + 1))?;
+        let token_free = match fields[3] {
+            "tokenfree" => true,
+            "claim" => false,
+            other => return Err(format!("funding line {}: unknown status {other:?}", i + 1)),
+        };
+        out.push((Name::new(first, last), token_free));
+    }
+    Ok(out)
+}
+
+/// Refuses a step unless every input's token status is known: an output of
+/// an earlier supplied step, or proven token-free. The error names the first
+/// input that is neither, so the operator knows which history is missing.
+pub fn require_provenance(
+    txid: &str,
+    inputs: &[Name],
+    known_outputs: &BTreeSet<Vec<u8>>,
+    token_free: &BTreeSet<Vec<u8>>,
+) -> Result<(), String> {
+    for input in inputs {
+        let key = name_key(input);
+        if known_outputs.contains(&key) || token_free.contains(&key) {
+            continue;
+        }
+        return Err(format!(
+            "{txid}: input [{} {}] is neither an output of an earlier supplied step nor \
+             proven token-free by a FUNDING file. If it carries a claim, the transaction \
+             that created it must be replayed too; a genesis that consumed it would \
+             otherwise be reported as a valid creation instead of a burn (SPEC G1).",
+            input.first.to_base58(),
+            input.last.to_base58()
         ));
     }
     Ok(())

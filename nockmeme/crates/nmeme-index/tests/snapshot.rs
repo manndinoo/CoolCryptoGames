@@ -6,8 +6,8 @@ use nockchain_types::tx_engine::common::{Hash, Name};
 fn hash(n: u64) -> Hash {
     Hash::from_limbs(&[n, n + 1, n + 2, n + 3, n + 4])
 }
-fn note(n: u64) -> (Name, String, Vec<(String, Vec<u8>)>) {
-    (Name::new(hash(n), hash(n + 100)), "alice".to_string(), vec![])
+fn note(n: u64) -> (Name, String, Vec<(String, Vec<u8>)>, u64) {
+    (Name::new(hash(n), hash(n + 100)), "alice".to_string(), vec![], 0)
 }
 fn page(h: u64, b: &str, notes: Vec<u64>, next: &str) -> Page {
     Page {

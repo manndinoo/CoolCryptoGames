@@ -259,6 +259,35 @@ fn genesis_cannot_consume_existing_token_weight() {
 }
 
 #[test]
+fn omitting_history_turns_a_burn_into_a_creation() {
+    // The same genesis, judged with and without the history that coloured
+    // its input. Seen live on the fakenet chain (height 44): the two-step
+    // rebuild said Created, the full replay said Burned. The indexer cannot
+    // know what it was not shown, so the rebuild tool proves each input's
+    // provenance first (nmeme-index `require_provenance`).
+    let (genesis, _token) = genesis_tx();
+    let regenesis = TxView {
+        id: hash(801),
+        inputs: vec![name(10)],
+        outputs: vec![NoteView {
+            name: name(51),
+            lock_root: bob(),
+            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: SUPPLY }),
+        }],
+    };
+
+    let mut full = Indexer::new();
+    full.apply(&genesis);
+    assert!(matches!(full.apply(&regenesis), Outcome::Burned { .. }), "with history: a burn");
+
+    let mut partial = Indexer::new();
+    assert!(
+        matches!(partial.apply(&regenesis), Outcome::Created(_)),
+        "without history: the same transaction looks like a valid creation"
+    );
+}
+
+#[test]
 fn claiming_a_token_never_consumed_mints_nothing() {
     let mut indexer = Indexer::new();
     let forged = TxView {

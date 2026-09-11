@@ -23,9 +23,10 @@
 //! name is derived from its lock-root, so outputs pair with destinations
 //! exactly. Ambiguity is an error.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::process::ExitCode;
 
+use nmeme_core::Claim;
 use nmeme_core::indexer::{NoteView, TxView};
 use nmeme_core::{Indexer, Ticker, TokenId};
 use nmeme_tx::txfile::ParsedTransaction;
@@ -45,6 +46,9 @@ fn main() -> ExitCode {
     let result = match args.get(1).map(String::as_str) {
         Some("token-id") => cmd_token_id(&args),
         Some("token-note") => cmd_token_note(&args),
+        Some("funding") => cmd_funding(&args),
+        Some("outputs") => cmd_outputs(&args),
+        Some("check-inputs") => cmd_check_inputs(&args),
         Some("rebuild") => cmd_rebuild(&args),
         _ => {
             eprintln!("{USAGE}");
@@ -62,9 +66,15 @@ fn main() -> ExitCode {
 
 const USAGE: &str = "usage:
   nmeme-index token-id --tx <tx.jam> --ticker <TICKER> --decimals <N>
-  nmeme-index token-note --addr <host:port> --lock <lock-root-b58>
+  nmeme-index token-note --addr <host:port> --lock <lock-root-b58> [--name \"<first> <last>\"]
+  nmeme-index funding  --addr <host:port> --lock <lock-root-b58>
+                       (every unspent note at the lock: FUNDING <first> <last> tokenfree|claim <nicks>)
+  nmeme-index outputs  --tx <tx.jam>      (OUTPUT <lock> <first> <last> <claim>)
+  nmeme-index check-inputs --tx <tx.jam> --funding <funding.txt> [--token-note \"<first> <last>\"]...
+                       (every input must be proven token-free, or be a named token note)
   nmeme-index rebuild  --addr <host:port> --token <token-b58>
                        --step <txid>:<tx.jam> [--step ...]   (canonical order)
+                       --funding <funding.txt> [--funding ...] (provenance of inputs)
                        --lock <lock-root-b58> [--lock ...]
                        [--expect <lock-root-b58>=<amount>]... [--expect-total <n>]";
 
@@ -125,6 +135,9 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
     let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
     let lock = Hash::from_base58(flag(args, "--lock").ok_or("missing --lock")?)
         .map_err(|e| format!("lock: {e}"))?;
+    // With two tokens at one lock there are two token-bearing notes; the
+    // caller names the one it means (the genesis output, by full name).
+    let want_name = flag(args, "--name").map(parse_name).transpose()?;
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -139,9 +152,14 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
         println!("# snapshot height {} block {}", snapshot.height, snapshot.block_id);
 
         let mut found = Vec::new();
-        for (name, _owner, data) in &snapshot.notes {
+        for (name, _owner, data, _assets) in &snapshot.notes {
             if name.first != want_first {
                 continue;
+            }
+            if let Some(w) = &want_name {
+                if nmeme_index::name_key(w) != nmeme_index::name_key(name) {
+                    continue;
+                }
             }
             for (key, blob) in data {
                 if key != nmeme_core::NOTE_DATA_KEY {
@@ -192,6 +210,15 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         .into_iter()
         .map(|l| Hash::from_base58(l).map_err(|e| format!("lock {l}: {e}")))
         .collect::<Result<_, _>>()?;
+    let mut token_free: BTreeSet<Vec<u8>> = BTreeSet::new();
+    for path in flags(args, "--funding") {
+        let text = std::fs::read_to_string(path).map_err(|e| format!("read {path}: {e}"))?;
+        for (name, free) in nmeme_index::parse_funding(&text)? {
+            if free {
+                token_free.insert(nmeme_index::name_key(&name));
+            }
+        }
+    }
     if addresses.is_empty() {
         return Err("at least one --lock is required".to_string());
     }
@@ -215,7 +242,7 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         .enable_all()
         .build()
         .map_err(|e| format!("tokio: {e}"))?;
-    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total))
+    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total, token_free))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -226,6 +253,7 @@ async fn rebuild(
     addresses: Vec<Hash>,
     expectations: Vec<(String, u64)>,
     expect_total: Option<u64>,
+    token_free: BTreeSet<Vec<u8>>,
 ) -> Result<ExitCode, String> {
     let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
         .await
@@ -233,7 +261,7 @@ async fn rebuild(
 
     // 1. One canonical snapshot: every address, every page, one block.
     let snapshot = read_snapshot(&mut client, &addresses).await?;
-    let unspent: Vec<(Name, String)> = snapshot.notes.iter().map(|(n, a, _)| (n.clone(), a.clone())).collect();
+    let unspent: Vec<(Name, String)> = snapshot.notes.iter().map(|(n, a, _, _)| (n.clone(), a.clone())).collect();
     println!("# canonical snapshot: {} unspent note(s) at height {} block {}", unspent.len(), snapshot.height, snapshot.block_id);
     println!("HEIGHT\t{}", snapshot.height);
     println!("BLOCK\t{}", snapshot.block_id);
@@ -248,7 +276,11 @@ async fn rebuild(
     // 3. Replay through the real Indexer.
     let mut indexer = Indexer::new();
     let mut taken: Vec<Vec<u8>> = Vec::new();
+    // Outputs the replay has assigned so far; an input must be one of these
+    // or proven token-free, or the history is incomplete (lib.rs, provenance).
+    let mut known_outputs: BTreeSet<Vec<u8>> = BTreeSet::new();
     for (i, (txid, plan)) in plans.iter().enumerate() {
+        nmeme_index::require_provenance(txid, &plan.inputs, &known_outputs, &token_free)?;
         let mut candidates: Vec<Name> = Vec::new();
         for (_, later) in plans.iter().skip(i + 1) {
             candidates.extend(later.inputs.iter().cloned());
@@ -265,8 +297,12 @@ async fn rebuild(
             ));
         }
         println!("CANONICAL\t{txid}\theight={height}\tblock={block}");
+        println!("PROVENANCE\t{txid}\t{} input(s) known", plan.inputs.len());
 
         let paired = nmeme_index::bind_outputs(&plan.destinations, &candidates, &mut taken)?;
+        for (name, _) in &paired {
+            known_outputs.insert(nmeme_index::name_key(name));
+        }
         let outputs: Vec<NoteView> = paired
             .into_iter()
             .map(|(name, dest)| NoteView {
@@ -345,6 +381,112 @@ async fn rebuild(
     if failures > 0 {
         return Err(format!("{failures} assertion(s) failed"));
     }
+    Ok(ExitCode::SUCCESS)
+}
+
+
+fn parse_name(text: &str) -> Result<Name, String> {
+    let t = text.trim().trim_start_matches('[').trim_end_matches(']');
+    let mut parts = t.split_whitespace();
+    let (Some(f), Some(l), None) = (parts.next(), parts.next(), parts.next()) else {
+        return Err(format!("name {text:?}: expected \"<first> <last>\""));
+    };
+    Ok(Name::new(
+        Hash::from_base58(f).map_err(|e| format!("name first: {e}"))?,
+        Hash::from_base58(l).map_err(|e| format!("name last: {e}"))?,
+    ))
+}
+
+/// Every unspent note at a lock, with its token status as the chain reports
+/// it. This is the funding proof: read BEFORE a transaction spends the note,
+/// it settles the note's weight for any later replay (lib.rs, provenance).
+fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
+    let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
+    let lock = Hash::from_base58(flag(args, "--lock").ok_or("missing --lock")?)
+        .map_err(|e| format!("lock: {e}"))?;
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("tokio: {e}"))?;
+    runtime.block_on(async move {
+        let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
+            .await
+            .map_err(|e| format!("connect {addr}: {e}"))?;
+        let snapshot = read_snapshot(&mut client, std::slice::from_ref(&lock)).await?;
+        for line in nmeme_index::funding_lines(&snapshot) {
+            println!("{line}");
+        }
+        Ok(ExitCode::SUCCESS)
+    })
+}
+
+/// The outputs a transaction file will produce: lock-root, complete computed
+/// note name, and claim. Lets a caller name the genesis output it means to
+/// spend later, rather than picking "a token note at that lock".
+fn cmd_outputs(args: &[String]) -> Result<ExitCode, String> {
+    let path = std::path::PathBuf::from(flag(args, "--tx").ok_or("missing --tx")?);
+    let plan = nmeme_index::read_tx_plan(&path)?;
+    for dest in &plan.destinations {
+        let claim = match &dest.claim {
+            None => "none".to_string(),
+            Some(Claim::Genesis { amount, .. }) => format!("genesis:{amount}"),
+            Some(Claim::Transfer { token, amount }) => format!("transfer:{}:{amount}", token.to_base58()),
+        };
+        println!(
+            "OUTPUT\t{}\t{}\t{}\t{}",
+            dest.lock_root.to_base58(),
+            dest.name.first.to_base58(),
+            dest.name.last.to_base58(),
+            claim
+        );
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+/// Pre-broadcast gate: every input of the transaction must be proven
+/// token-free by a FUNDING file, or be one of the token notes the caller
+/// explicitly means to move. Anything else is the wallet spending a token
+/// note as ordinary funds, which burns it (SPEC §7) — refuse before sending.
+fn cmd_check_inputs(args: &[String]) -> Result<ExitCode, String> {
+    let path = std::path::PathBuf::from(flag(args, "--tx").ok_or("missing --tx")?);
+    let plan = nmeme_index::read_tx_plan(&path)?;
+    let mut token_free: BTreeSet<Vec<u8>> = BTreeSet::new();
+    let mut claimed: BTreeSet<Vec<u8>> = BTreeSet::new();
+    let funding = flags(args, "--funding");
+    if funding.is_empty() {
+        return Err("at least one --funding file is required".to_string());
+    }
+    for f in funding {
+        let text = std::fs::read_to_string(f).map_err(|e| format!("read {f}: {e}"))?;
+        for (name, free) in nmeme_index::parse_funding(&text)? {
+            let key = nmeme_index::name_key(&name);
+            if free { token_free.insert(key); } else { claimed.insert(key); }
+        }
+    }
+    let allowed_token_notes: Vec<Name> = flags(args, "--token-note")
+        .into_iter()
+        .map(parse_name)
+        .collect::<Result<_, _>>()?;
+    let mut failures = 0usize;
+    for input in &plan.inputs {
+        let key = nmeme_index::name_key(input);
+        let label = format!("[{} {}]", input.first.to_base58(), input.last.to_base58());
+        if token_free.contains(&key) {
+            println!("INPUT-OK\t{label}\ttokenfree");
+        } else if allowed_token_notes.iter().any(|n| nmeme_index::name_key(n) == key) {
+            println!("INPUT-OK\t{label}\tnamed token note");
+        } else if claimed.contains(&key) {
+            println!("INPUT-REFUSED\t{label}\tcarries a claim and was not named: spending it here would burn it");
+            failures += 1;
+        } else {
+            println!("INPUT-REFUSED\t{label}\tnot in any FUNDING file: token status unknown");
+            failures += 1;
+        }
+    }
+    if failures > 0 {
+        return Err(format!("{failures} input(s) refused"));
+    }
+    println!("INPUTS\t{} verified", plan.inputs.len());
     Ok(ExitCode::SUCCESS)
 }
 
@@ -463,7 +605,15 @@ async fn read_snapshot(
                         }
                     }
                 }
-                notes.push((name, address.clone(), data));
+                let assets = entry
+                    .note
+                    .as_ref()
+                    .and_then(|n| match n.note_version.as_ref() {
+                        Some(NoteVersion::V1(v1)) => v1.assets.as_ref().map(|a| a.value),
+                        _ => None,
+                    })
+                    .unwrap_or(0);
+                notes.push((name, address.clone(), data, assets));
             }
             let next = balance.page.as_ref().map(|p| p.next_page_token.clone()).unwrap_or_default();
             pages_for_address.push(nmeme_index::Page {

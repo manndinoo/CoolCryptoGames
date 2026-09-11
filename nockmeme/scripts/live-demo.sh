@@ -194,8 +194,15 @@ broadcast_and_confirm() {
 # Called directly, never in $( ), so die() actually stops the script.
 build_sign_send() {
   local label="$1" to="$2" amount="$3" result="$4"; shift 4
-  local names=""
-  if [ "${1:-}" = "--names" ]; then names="$2"; shift 2; fi
+  local names="" funding="" token_note=""
+  while :; do
+    case "${1:-}" in
+      --names) names="$2"; shift 2 ;;
+      --funding) funding="$2"; shift 2 ;;
+      --token-note) token_note="$2"; shift 2 ;;
+      *) break ;;
+    esac
+  done
   local dir="$RUN/$label"; mkdir -p "$dir" "$dir/final"
 
   local tx
@@ -219,6 +226,21 @@ build_sign_send() {
   tx=$(head -1 "$dir/tx-new.txt")
   [ -s "$tx" ] || die "$label: transaction file $tx missing or empty"
   log "  tx=$tx"
+
+  # The input gate. The wallet chose the inputs (even with --names it may add
+  # more); every one must be a note the chain showed carrying no claim, or the
+  # single token note this transaction means to move. Otherwise a token note
+  # is about to be spent as ordinary funds, which burns it (SPEC §7) — refuse.
+  if [ -n "$funding" ]; then
+    if [ -n "$token_note" ]; then
+      "$NMEME_INDEX" check-inputs --tx "$tx" --funding "$funding" --token-note "$token_note" \
+        >"$dir/check-inputs.txt" 2>&1 || die "$label: input gate refused (see $dir/check-inputs.txt)"
+    else
+      "$NMEME_INDEX" check-inputs --tx "$tx" --funding "$funding" \
+        >"$dir/check-inputs.txt" 2>&1 || die "$label: input gate refused (see $dir/check-inputs.txt)"
+    fi
+    sed 's/^/  /' "$dir/check-inputs.txt" >&2
+  fi
 
   "$NMEME_TX" sighash "$tx" "$dir" >"$dir/sighash.txt" \
     || die "$label: sighash failed (unsigned transaction?)"
@@ -264,74 +286,138 @@ build_sign_send() {
   broadcast_and_confirm "$dir/final.jam" "$label" "$result"
 }
 
-log "== stage 5: genesis =="
-# The genesis transaction pays Bob a little NOCK; Alice's change seed carries
-# the whole token supply.
+log "== stage 5: resolve lock-roots =="
+# A throwaway create-tx (never broadcast) tells us the two lock-roots.
 "$NMEME_TX" seeds /dev/null >/dev/null 2>&1 || true
-mkdir -p "$RUN/genesis"
-list_tx_files alice > "$RUN/genesis/probe-before.txt"
+mkdir -p "$RUN/probe"
+list_tx_files alice > "$RUN/probe/before.txt"
 wallet alice create-tx \
   --recipient "{\"kind\":\"p2pkh\",\"address\":\"$BOB\",\"amount\":${SEND_NICKS:-1000}}" \
-  --fee-nicks "${FEE_NICKS:-4096}" --allow-low-fee >"$RUN/genesis/probe.txt" 2>&1 \
+  --fee-nicks "${FEE_NICKS:-4096}" --allow-low-fee >"$RUN/probe/create.txt" 2>&1 \
   || die "probe create-tx failed"
-list_tx_files alice > "$RUN/genesis/probe-after.txt"
-comm -13 "$RUN/genesis/probe-before.txt" "$RUN/genesis/probe-after.txt" > "$RUN/genesis/probe-new.txt"
-PROBE=$(head -1 "$RUN/genesis/probe-new.txt")
+list_tx_files alice > "$RUN/probe/after.txt"
+comm -13 "$RUN/probe/before.txt" "$RUN/probe/after.txt" > "$RUN/probe/new.txt"
+PROBE=$(head -1 "$RUN/probe/new.txt")
 [ -s "$PROBE" ] || die "probe produced no transaction"
-"$NMEME_TX" seeds "$PROBE" > "$RUN/genesis/probe-seeds.txt" || die "probe seeds failed"
-ALICE_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$RUN/genesis/probe-seeds.txt" | sort -rn | head -1 | cut -f2)
-BOB_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$RUN/genesis/probe-seeds.txt" | sort -n | head -1 | cut -f2)
+"$NMEME_TX" seeds "$PROBE" > "$RUN/probe/seeds.txt" || die "probe seeds failed"
+ALICE_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$RUN/probe/seeds.txt" | sort -rn | head -1 | cut -f2)
+BOB_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$RUN/probe/seeds.txt" | sort -n | head -1 | cut -f2)
 [ -n "$ALICE_LOCK" ] && [ -n "$BOB_LOCK" ] || die "could not resolve lock-roots"
 [ "$ALICE_LOCK" != "$BOB_LOCK" ] || die "alice and bob resolved to the same lock-root"
 log "alice lock-root=$ALICE_LOCK"
 log "bob   lock-root=$BOB_LOCK"
 rm -f "$PROBE"
 
-build_sign_send genesis "$BOB" "${SEND_NICKS:-1000}" "$RUN/genesis.env" \
-  "$ALICE_LOCK=genesis:${TICKER:-DOGE}:6:${SUPPLY:-1000000}"
-. "$RUN/genesis.env"
-GENESIS_TXID="$TXID"; GENESIS_HEIGHT="$HEIGHT"
-echo "GENESIS txid=$GENESIS_TXID height=$GENESIS_HEIGHT"
+PUB="${PUBLIC_ADDR:-127.0.0.1:5556}"
 
-TOKEN=$("$NMEME_INDEX" token-id --tx "$RUN/genesis/final.jam" \
-  --ticker "${TICKER:-DOGE}" --decimals 6) || die "could not derive token id"
-echo "TOKEN $TOKEN"
+# token_cycle <tag> <ticker>: create a token, then transfer some of it.
+#
+# Every input is chosen by name and checked against the chain BEFORE
+# broadcast. A genesis may spend only notes the chain shows carrying no claim
+# (`nmeme-index funding` -> tokenfree); a transfer may spend only such notes
+# plus the one token note it moves, named by the full identity computed from
+# the genesis file (`nmeme-index outputs`). A stock wallet left to choose its
+# own inputs spends token notes as ordinary funds and burns them — seen live,
+# twice, on this chain.
+token_cycle() {
+  local tag="$1" ticker="$2"
+  local g="$RUN/genesis-$tag" x="$RUN/xfer-$tag"
+  mkdir -p "$g" "$x"
 
-log "== stage 6: transfer 100 to bob, 999900 back to alice =="
-# Spend the token-bearing note EXPLICITLY. Auto-selection would either miss it
-# or spend it with no claim attached, which burns the supply (SPEC §7).
-"$NMEME_INDEX" token-note --addr "${PUBLIC_ADDR:-127.0.0.1:5556}" \
-  --lock "$ALICE_LOCK" > "$RUN/token-note.txt" \
-  || die "could not find alice's token-bearing note"
-cat "$RUN/token-note.txt" >&2
-TOKEN_NOTE=$(awk -F'\t' '$1=="NOTE"{print $2}' "$RUN/token-note.txt")
-[ -n "$TOKEN_NOTE" ] || die "no token note name"
+  log "== $tag: genesis ($ticker) =="
+  # Alice may own nothing but token notes at this point (after a cycle, her
+  # change IS the token note). Wait for the miner to pay her a fresh coinbase,
+  # then two more blocks for the fakenet coinbase timelock. The funding file
+  # that is kept is the last read, taken once the note is spendable.
+  local need=$(( ${SEND_NICKS:-1000} + ${FEE_NICKS:-4096} ))
+  local fund="" deadline=$((SECONDS + ${MINE_TIMEOUT:-1800}))
+  while (( SECONDS < deadline )); do
+    "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" > "$g/funding.txt" \
+      || die "$tag: funding read failed"
+    fund=$(awk -F'\t' -v need="$need" '$1=="FUNDING" && $4=="tokenfree" && $5+0>=need {print "["$2" "$3"]"; exit}' "$g/funding.txt")
+    [ -n "$fund" ] && break
+    sleep 15
+  done
+  [ -n "$fund" ] || die "$tag: no token-free note worth >= $need nicks reached alice within ${MINE_TIMEOUT:-1800}s (see $g/funding.txt)"
+  local h; h=$(awk -F'\t' '$1=="HEIGHT"{print $2}' "$g/funding.txt")
+  wait_for_height "$RUN/node.log" $((h + 2)) "${MINE_TIMEOUT:-1800}" >/dev/null \
+    || die "$tag: coinbase did not mature"
+  "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" > "$g/funding.txt" \
+    || die "$tag: funding read failed"
+  grep -q "$(echo "$fund" | tr -d '[]' | cut -d' ' -f2)" "$g/funding.txt" || die "$tag: funding note vanished"
+  log "  token-free funding note: $fund"
 
-XFER_TO_BOB="${XFER_AMOUNT:-100}"
-XFER_CHANGE=$(( ${SUPPLY:-1000000} - XFER_TO_BOB ))
-log "  allocating $XFER_TO_BOB to bob, $XFER_CHANGE back to alice"
+  build_sign_send "genesis-$tag" "$BOB" "${SEND_NICKS:-1000}" "$g.env" \
+    --names "$fund" --funding "$g/funding.txt" \
+    "$ALICE_LOCK=genesis:$ticker:6:${SUPPLY:-1000000}"
+  . "$g.env"
+  local gtxid="$TXID" gheight="$HEIGHT"
+  echo "GENESIS[$tag] txid=$gtxid height=$gheight"
+  local token
+  token=$("$NMEME_INDEX" token-id --tx "$g/final.jam" --ticker "$ticker" --decimals 6) \
+    || die "$tag: could not derive token id"
+  echo "TOKEN[$tag] $token"
 
-build_sign_send xfer "$BOB" "${SEND_NICKS:-1000}" "$RUN/xfer.env" \
-  --names "$TOKEN_NOTE" \
-  "$BOB_LOCK=transfer:$TOKEN:$XFER_TO_BOB" \
-  "$ALICE_LOCK=transfer:$TOKEN:$XFER_CHANGE"
-. "$RUN/xfer.env"
-XFER_TXID="$TXID"; XFER_HEIGHT="$HEIGHT"
-echo "TRANSFER txid=$XFER_TXID height=$XFER_HEIGHT"
+  log "== $tag: transfer ${XFER_AMOUNT:-100} to bob, rest back to alice =="
+  local gnote
+  gnote=$("$NMEME_INDEX" outputs --tx "$g/final.jam" \
+    | awk -F'\t' -v l="$ALICE_LOCK" '$1=="OUTPUT" && $2==l {print "["$3" "$4"]"; exit}')
+  [ -n "$gnote" ] || die "$tag: no genesis output at alice's lock"
+  "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" > "$x/funding.txt" \
+    || die "$tag: funding read failed"
+  "$NMEME_INDEX" token-note --addr "$PUB" --lock "$ALICE_LOCK" --name "$gnote" > "$x/token-note.txt" \
+    || die "$tag: the genesis output $gnote is not an unspent token note on chain"
+  sed 's/^/  /' "$x/token-note.txt" >&2
+  local to=${XFER_AMOUNT:-100} change=$(( ${SUPPLY:-1000000} - ${XFER_AMOUNT:-100} ))
+  build_sign_send "xfer-$tag" "$BOB" "${SEND_NICKS:-1000}" "$x.env" \
+    --names "$gnote" --funding "$x/funding.txt" --token-note "$gnote" \
+    "$BOB_LOCK=transfer:$token:$to" \
+    "$ALICE_LOCK=transfer:$token:$change"
+  . "$x.env"
+  echo "TRANSFER[$tag] txid=$TXID height=$HEIGHT"
+  printf -v "TOKEN_$tag" '%s' "$token"
+  printf -v "GTX_$tag" '%s' "$gtxid"
+  printf -v "XTX_$tag" '%s' "$TXID"
+}
 
-log "== stage 7: replay the mined transactions and assert balances =="
-"$NMEME_INDEX" rebuild --addr "${PUBLIC_ADDR:-127.0.0.1:5556}" --token "$TOKEN" \
-  --step "$GENESIS_TXID:$RUN/genesis/final.jam" \
-  --step "$XFER_TXID:$RUN/xfer/final.jam" \
-  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" \
-  --expect "$ALICE_LOCK=$XFER_CHANGE" \
-  --expect "$BOB_LOCK=$XFER_TO_BOB" \
-  --expect-total "${SUPPLY:-1000000}" \
-  > "$RUN/balances.txt" || die "balance rebuild or assertions failed"
-cat "$RUN/balances.txt"
+token_cycle A "${TICKER:-DOGE}"
+token_cycle B "${TICKER2:-PEPE}"
+
+log "== stage 9: replay the complete history and assert both tokens =="
+STEPS="--step $GTX_A:$RUN/genesis-A/final.jam --step $XTX_A:$RUN/xfer-A/final.jam \
+       --step $GTX_B:$RUN/genesis-B/final.jam --step $XTX_B:$RUN/xfer-B/final.jam"
+PROOFS="--funding $RUN/genesis-A/funding.txt --funding $RUN/xfer-A/funding.txt \
+        --funding $RUN/genesis-B/funding.txt --funding $RUN/xfer-B/funding.txt"
+XFER_TO="${XFER_AMOUNT:-100}"; XFER_CHANGE=$(( ${SUPPLY:-1000000} - XFER_TO ))
+for tag in A B; do
+  tok="TOKEN_$tag"
+  # shellcheck disable=SC2086
+  "$NMEME_INDEX" rebuild --addr "$PUB" --token "${!tok}" $STEPS $PROOFS \
+    --lock "$ALICE_LOCK" --lock "$BOB_LOCK" \
+    --expect "$ALICE_LOCK=$XFER_CHANGE" --expect "$BOB_LOCK=$XFER_TO" \
+    --expect-total "${SUPPLY:-1000000}" \
+    > "$RUN/balances-$tag.txt" || die "token $tag: rebuild over the complete history failed"
+  echo "== balances[$tag] over all four transactions =="
+  grep -E "^(HEIGHT|BALANCE|TOTAL|SUPPLY|TICKER|ASSERT)" "$RUN/balances-$tag.txt"
+done
+
+log "== stage 10: the omitted-history guard, live =="
+# Token B's two transactions alone, with no funding proofs: the genesis input's
+# token status is unknown to that replay, so the rebuild must refuse. Before
+# this guard, the same call reported a creation (RESULTS.md, height 44).
+set +e
+"$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_B" \
+  --step "$GTX_B:$RUN/genesis-B/final.jam" --step "$XTX_B:$RUN/xfer-B/final.jam" \
+  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" > "$RUN/omitted-history.txt" 2>&1
+rc=$?
+set -e
+if [ "$rc" -eq 0 ]; then die "omitted-history replay was NOT refused (see $RUN/omitted-history.txt)"; fi
+grep -q "neither an output of an earlier supplied step nor" "$RUN/omitted-history.txt" \
+  || die "omitted-history replay failed for the wrong reason (see $RUN/omitted-history.txt)"
+echo "OMITTED-HISTORY refused: $(grep -o 'input \[[^]]*\]' "$RUN/omitted-history.txt" | head -1)"
 
 echo
 echo "== summary =="
-echo "genesis  txid=$GENESIS_TXID height=$GENESIS_HEIGHT"
-echo "transfer txid=$XFER_TXID height=$XFER_HEIGHT"
-echo "token    $TOKEN"
+echo "token A  $TOKEN_A  genesis=$GTX_A  transfer=$XTX_A"
+echo "token B  $TOKEN_B  genesis=$GTX_B  transfer=$XTX_B"
+echo "A's balances are unchanged by B's creation; both rebuilt from the chain with input provenance proven."
