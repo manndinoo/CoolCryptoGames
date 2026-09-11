@@ -157,3 +157,49 @@ larger label. `macos-*-large` and `*-xlarge` are refused instantly for this
 repository; `macos-latest` and `ubuntu-24.04-arm` are dispensed but are no
 larger than the 16 GB standard runner. There is no bigger free machine, so
 the four large buckets have to fit 16 GB of RAM plus swap.
+
+## The cache, and the node booting on it
+
+Run `34562677406` of `nmeme-seed-buckets.yml` proved all fourteen buckets.
+Every job was a standard 16 GB hosted runner with 85 GB of swap, the prover
+confined to `memory.high=12G` (throttle, never kill), one rayon thread.
+
+| bucket | trace height | wall time | working set (resident + swapped) |
+|---|---|---|---|
+| 0, 1 | 2^13 | 2.3 min | 3.5 GB |
+| 2, 3 | 2^14 | 3.5 min | 5.7 GB |
+| 4, 5 | 2^15 | 3.3 min | 4.0 GB |
+| 6, 7 | 2^16 | 4–5 min | 6.6 GB |
+| 8, 9 | 2^17 | 8 min | 12 GB + 1 GB |
+| 10, 11 | 2^18 | 31–40 min | 12 GB + 13 GB |
+| 12, 13 | 2^19 | 96 min / 310 min | 12 GB + 40 GB (≈50 GB) |
+
+The two 2^19 buckets ran on runners with visibly different disks: same
+memory profile, three times the wall time. A hedge dispatch of bucket 13
+alone (the workflow can prove a subset and take the rest from an earlier
+run's artifacts) reached the same plateau but the original finished first.
+
+Merge: fourteen seeds in bucket order, table digest
+`57fb173ad5c70c6382aab7dd84dd0bf0f66912e8472ba429b2d3243981ce46d7` =
+`AI_POW_V0_VERIFIER_SETUP_TABLE_DIGEST` (`ai-pow-jets/src/table_digest.rs`).
+Published as the `seed-cache` branch: `nmeme-seed-cache.tar.gz`, sha256 of
+the extracted `ai-pow/verifier-setup-seeds-v1.bin` =
+`1dec7dfe51deb549c5a3dab9ddafdcee71f349dfc0c1179a25ec51c6ea74aca9`,
+85,195,241 bytes.
+
+**Node boot here, with the cache** (`node-lowmem.sh`, one rayon thread,
+`AI_POW_VERIFIER_CACHE_CAP=1`):
+
+- First boot: the node loaded the cache without a regeneration warning and
+  built the fourteen verifier contexts to disk: **14.4 GB on disk, ~1.03 GB
+  and ~2 minutes each, 2.9 GB peak RSS, 40 minutes.** Then it died at
+  `set-genesis-seal` with `event-log append failed`: the disk was full. The
+  PMA arena had opened at its automatic 32 GiB and the first epoch persist
+  copied it densely (7 GB written in 30 s until ENOSPC).
+- `--pma-initial-size 1GiB` (a documented flag, now the script's default):
+  second boot reused the fourteen context files and reached
+  **`handle-command: born` in 10 seconds at 197 MB peak RSS**, arena 1.1 GB.
+
+So the 13.34 GiB ceiling was never the obstacle to *running* a node here.
+It was the obstacle to *generating* the cache, and that is a one-time job
+that fourteen free runners did in parallel.
