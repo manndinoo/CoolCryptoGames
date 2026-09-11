@@ -52,6 +52,7 @@ fn main() -> ExitCode {
         Some("outputs") => cmd_outputs(&args),
         Some("check-inputs") => cmd_check_inputs(&args),
         Some("block") => cmd_block(&args),
+        Some("tx-id") => cmd_tx_id(&args),
         Some("rebuild") => cmd_rebuild(&args),
         _ => {
             eprintln!("{USAGE}");
@@ -476,6 +477,13 @@ fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
         );
         Ok(ExitCode::SUCCESS)
     })
+}
+
+/// `tx-id --tx <file>`: the id consensus assigns to the file's transaction.
+fn cmd_tx_id(args: &[String]) -> Result<ExitCode, String> {
+    let path = std::path::PathBuf::from(flag(args, "--tx").ok_or("missing --tx")?);
+    println!("{}", nmeme_index::read_tx_id(&path)?);
+    Ok(ExitCode::SUCCESS)
 }
 
 /// `block --addr <host:port> --height <h>`: the block's id and parent id, as

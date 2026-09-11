@@ -138,13 +138,22 @@ fn the_signing_hash_is_deterministic_and_order_independent() {
 }
 
 #[test]
-fn a_pinned_output_source_is_refused_rather_than_guessed() {
-    let mut seeds = two_seeds();
-    seeds.0[0].output_source = Some(Source { hash: hash(5), is_coinbase: false });
-    assert!(matches!(
-        spend_sig_hash(&seeds, 256),
-        Err(Error::PinnedOutputSource)
-    ));
+fn a_pinned_output_source_is_signed_over_not_stripped() {
+    // `hashable-unit:source` puts a pin inside the seed's sig-hashable
+    // (tx-engine-0.hoon:338-343), so a pinned seed's digest differs from the
+    // unpinned one, and two different pins differ from each other. A relayer
+    // cannot remove or alter a pin without invalidating the signature.
+    let plain = two_seeds();
+    let mut pinned = two_seeds();
+    pinned.0[0].output_source = Some(Source { hash: hash(5), is_coinbase: false });
+    let mut other = two_seeds();
+    other.0[0].output_source = Some(Source { hash: hash(6), is_coinbase: false });
+    let d_plain = spend_sig_hash(&plain, 256).expect("digest");
+    let d_pinned = spend_sig_hash(&pinned, 256).expect("digest");
+    let d_other = spend_sig_hash(&other, 256).expect("digest");
+    assert_ne!(d_plain, d_pinned);
+    assert_ne!(d_pinned, d_other);
+    assert_eq!(d_pinned, spend_sig_hash(&pinned, 256).expect("deterministic"));
 }
 
 #[test]

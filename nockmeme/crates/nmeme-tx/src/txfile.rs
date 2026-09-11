@@ -11,7 +11,7 @@ use bytes::Bytes;
 use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockchain_math::structs::HoonMapIter;
 use nockchain_types::tx_engine::common::{Name, Signature};
-use nockchain_types::tx_engine::v1::tx::{Spend, Spends, Witness};
+use nockchain_types::tx_engine::v1::tx::{Spend, Spends, Witness, WitnessMap};
 use nockvm::noun::{Noun, NounHandle};
 use noun_serde::{NounDecode, NounEncode};
 
@@ -189,4 +189,37 @@ fn rebuild_witness_map(
 
     let new_entry = nockvm::noun::T(slab, &[key_noun, value]);
     Ok(nockvm::noun::T(slab, &[new_entry, left, right]))
+}
+
+/// Writes a transaction file for `spends` that may come from several wallets:
+/// `[1 name spends display [1 witness-map]]`, with `name` and `display`
+/// carried from `original` and the witness map built from the spends' own
+/// witnesses. Unlike [`rewrite`], which substitutes values in the original
+/// file's map, this builds the map from scratch — the canonical z-map the
+/// repository's own `WitnessMap` encoder produces, which is what a map with a
+/// different entry count has to be.
+pub fn assemble(
+    original: NounHandle<'_>,
+    slab: &mut NounSlab<NockJammer>,
+    spends: &Spends,
+) -> Result<Bytes, Error> {
+    let cell = original.as_cell().map_err(|_| Error::Shape)?;
+    let tag = cell.head().noun();
+    let after_tag = cell.tail().as_cell().map_err(|_| Error::Shape)?;
+    let name_noun = after_tag.head().noun();
+    let after_name = after_tag.tail().as_cell().map_err(|_| Error::Shape)?;
+    let after_spends = after_name.tail().as_cell().map_err(|_| Error::Shape)?;
+    let display_noun = after_spends.head().noun();
+
+    let mut entries: Vec<(Name, Witness)> = Vec::with_capacity(spends.0.len());
+    for (name, spend) in &spends.0 {
+        let Spend::Witness(spend1) = spend else { return Err(Error::Shape) };
+        entries.push((name.clone(), spend1.witness.clone()));
+    }
+    let new_spends = spends.to_noun(slab);
+    let map = WitnessMap(entries).to_noun(slab);
+    let new_witness = nockvm::noun::T(slab, &[nockvm::noun::D(1), map]);
+    let root = nockvm::noun::T(slab, &[tag, name_noun, new_spends, display_noun, new_witness]);
+    slab.set_root(root);
+    Ok(slab.jam())
 }

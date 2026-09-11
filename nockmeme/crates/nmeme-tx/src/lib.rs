@@ -7,8 +7,9 @@
 //! transaction has to be built by taking a wallet-built transaction, adding the
 //! `meme` note-data entry, and re-signing.
 //!
-//! This crate owns the two parts the wallet cannot do: computing the new
-//! signing hash ([`sighash`]) and attaching a claim to a seed ([`attach`]).
+//! This crate owns the parts the wallet cannot do: computing the new
+//! signing hash ([`sighash`]), attaching a claim to a seed ([`attach`]), and
+//! assembling a two-party trade with output-source pins ([`swap`]).
 //! Signing itself stays with the wallet, which holds the keys
 //! (`nockchain-wallet sign-hash`).
 
@@ -17,6 +18,7 @@ pub mod cli;
 pub mod fee;
 pub mod names;
 pub mod sighash;
+pub mod swap;
 pub mod txfile;
 
 pub use attach::attach_claim;
@@ -32,11 +34,12 @@ pub enum Error {
     NotBased(u64),
     #[error("seeds did not form a canonical z-set")]
     SeedSet,
-    #[error(
-        "seed pins output-source; its hashable is only needed by the swap \
-         construction, which is not implemented"
-    )]
-    PinnedOutputSource,
+    #[error("input note {0} appears in both transactions: the same note cannot be spent twice")]
+    DuplicateInput(String),
+    #[error("no spend keyed by input note {0}")]
+    NoSpend(String),
+    #[error("only one seed pays lock-root {0}; a pin there commits to nothing another party does")]
+    NothingToPin(String),
     #[error("no seed pays lock-root {0}")]
     NoSeedForLockRoot(String),
     #[error("seed already carries a {0:?} note-data entry")]

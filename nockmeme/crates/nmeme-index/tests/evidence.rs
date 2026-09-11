@@ -177,3 +177,51 @@ fn check_inputs_verdicts_come_from_the_live_note_not_a_label() {
     };
     assert!(why.contains("not an unspent note"), "{why}");
 }
+
+// --- conflicts across files ------------------------------------------------
+
+#[test]
+fn conflicting_records_across_files_are_rejected_in_either_order() {
+    // File 1 says the note carries a claim; file 2 says it is a coinbase note
+    // and the chain even agrees with file 2's recomputation. Combined, the
+    // records disagree about one note, and the combination must be refused
+    // whichever file came first — a coinbase line must never win over a
+    // claim line by being parsed from a later file.
+    use nmeme_tx::names::coinbase_last_name;
+    let parent = hash(77);
+    let n = Name::new(hash(1), coinbase_last_name(&parent));
+    let claim_file = format!("FUNDING\t{}\t{}\tclaim\t5\t640\n", n.first.to_base58(), n.last.to_base58());
+    let coinbase_file = format!("FUNDING\t{}\t{}\tcoinbase\t5\t640\n", n.first.to_base58(), n.last.to_base58());
+    let oracle = |h: u64| if h == 640 { Ok(hash(77)) } else { Err(format!("no block {h}")) };
+
+    let mut combined = parse_funding(&claim_file).unwrap();
+    combined.extend(parse_funding(&coinbase_file).unwrap());
+    let err = admitted_token_free(&combined, oracle).expect_err("claim then coinbase: conflict");
+    assert!(err.contains("conflict"), "{err}");
+
+    let mut combined = parse_funding(&coinbase_file).unwrap();
+    combined.extend(parse_funding(&claim_file).unwrap());
+    let err = admitted_token_free(&combined, oracle).expect_err("coinbase then claim: conflict");
+    assert!(err.contains("conflict"), "{err}");
+
+    // Identical records from two files are the same fact twice: fine.
+    let mut combined = parse_funding(&coinbase_file).unwrap();
+    combined.extend(parse_funding(&coinbase_file).unwrap());
+    let admitted = admitted_token_free(&combined, oracle).unwrap();
+    assert!(admitted.contains(&name_key(&n)));
+    assert_eq!(admitted.len(), 1);
+}
+
+#[test]
+fn records_that_differ_only_in_assets_or_origin_are_still_a_conflict() {
+    // Full note identity is the key; everything said about it must agree.
+    let n = name(4);
+    let a = format!("FUNDING\t{}\t{}\tclaim\t5\t640\n", n.first.to_base58(), n.last.to_base58());
+    let b = format!("FUNDING\t{}\t{}\tclaim\t6\t640\n", n.first.to_base58(), n.last.to_base58());
+    let c = format!("FUNDING\t{}\t{}\tclaim\t5\t641\n", n.first.to_base58(), n.last.to_base58());
+    for (x, y) in [(&a, &b), (&a, &c)] {
+        let mut combined = parse_funding(x).unwrap();
+        combined.extend(parse_funding(y).unwrap());
+        assert!(admitted_token_free(&combined, |_| Err("unused".into())).is_err());
+    }
+}

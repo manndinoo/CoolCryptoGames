@@ -491,6 +491,38 @@ pub fn parse_funding(text: &str) -> Result<Vec<FundingRecord>, String> {
     Ok(out)
 }
 
+/// Refuses a set of records — from any number of files — in which two records
+/// say different things about one note (full identity, first and last).
+/// Identical duplicates are the same fact twice and pass. `parse_funding`
+/// applies this within a file; every consumer that combines files must apply
+/// it to the combination, which `admitted_token_free` does.
+pub fn check_funding_consistency(records: &[FundingRecord]) -> Result<(), String> {
+    let mut seen: BTreeMap<Vec<u8>, &FundingRecord> = BTreeMap::new();
+    for rec in records {
+        match seen.get(&name_key(&rec.name)) {
+            None => {
+                seen.insert(name_key(&rec.name), rec);
+            }
+            Some(earlier) if *earlier == rec => {}
+            Some(earlier) => {
+                return Err(format!(
+                    "funding records conflict about note [{} {}]: {} {} nicks origin {:?} vs {} {} nicks origin {:?}. \
+                     The combined evidence is refused; no record overrides another, in any order.",
+                    rec.name.first.to_base58(),
+                    rec.name.last.to_base58(),
+                    earlier.status.label(),
+                    earlier.assets,
+                    earlier.origin_page,
+                    rec.status.label(),
+                    rec.assets,
+                    rec.origin_page
+                ))
+            }
+        }
+    }
+    Ok(())
+}
+
 /// The notes a rebuild may treat as token-free: exactly the records that say
 /// `coinbase` **and** recompute as such from the chain. The label is a hint
 /// about which check to run, never evidence: a `coinbase` record whose name
@@ -501,6 +533,7 @@ pub fn admitted_token_free<F>(records: &[FundingRecord], mut parent_of: F) -> Re
 where
     F: FnMut(u64) -> Result<Hash, String>,
 {
+    check_funding_consistency(records)?;
     let mut out = BTreeSet::new();
     for rec in records {
         if rec.status != FundingStatus::Coinbase {

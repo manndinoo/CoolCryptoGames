@@ -74,13 +74,18 @@ pub fn seeds_sig_digest(seeds: &Seeds) -> Result<Hash, Error> {
 
 /// `sig-hashable:seed` — four nested pairs.
 pub fn seed_sig_digest(seed: &Seed) -> Result<Hash, Error> {
-    // `hashable-unit`: `~` digests as `leaf+~` (tx-engine-0.hoon:341).
-    // A pinned `output-source` is only produced by the swap construction, which
-    // is not implemented; refusing here is better than guessing its hashable.
-    if seed.output_source.is_some() {
-        return Err(Error::PinnedOutputSource);
-    }
-    let source = hash_leaf_null();
+    // `hashable-unit:source` (tx-engine-0.hoon:338-343): `~` digests as
+    // `leaf+~`; a pinned source as `[leaf+~ (hashable source)]`, where
+    // `hashable:source` is `[hash+p leaf+is-coinbase]` (330-336), `%.y` = 0
+    // and `%.n` = 1. A pin is what a swap party signs over: it commits the
+    // signer to the complete seed set that must land on the pinned lock.
+    let source = match &seed.output_source {
+        None => hash_leaf_null(),
+        Some(src) => hash_pair(
+            &hash_leaf_null(),
+            &hash_pair(&src.hash, &hash_leaf_belt(Belt(if src.is_coinbase { 0 } else { 1 }))),
+        ),
+    };
     let note_data = note_data_digest(&seed.note_data)?;
     let gift = hash_leaf_belt(belt(seed.gift.0 as u64)?);
 

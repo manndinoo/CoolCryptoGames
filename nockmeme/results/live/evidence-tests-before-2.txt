@@ -1,0 +1,17 @@
+test a_missing_note_body_is_not_token_free ... ok
+test a_legacy_v0_note_is_refused_explicitly_not_read_as_empty ... ok
+test a_missing_note_data_field_is_refused ... ok
+test a_tokenfree_label_alone_admits_nothing ... ok
+test a_verified_empty_claim_list_is_token_free_and_carries_its_origin ... ok
+test an_unsupported_version_value_is_refused ... ok
+test a_missing_note_version_is_refused ... ok
+test check_inputs_verdicts_come_from_the_live_note_not_a_label ... ok
+test missing_assets_or_origin_are_refused ... ok
+test identical_duplicate_records_are_not_a_conflict ... ok
+test conflicting_funding_records_are_rejected ... ok
+test the_body_name_must_match_the_entry_name ... ok
+test conflicting_records_across_files_are_rejected_in_either_order ... FAILED
+test records_that_differ_only_in_assets_or_origin_are_still_a_conflict ... FAILED
+thread 'conflicting_records_across_files_are_rejected_in_either_order' (11703) panicked at crates/nmeme-index/tests/evidence.rs:199:54:
+thread 'records_that_differ_only_in_assets_or_origin_are_still_a_conflict' (11706) panicked at crates/nmeme-index/tests/evidence.rs:225:9:
+test result: FAILED. 12 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
