@@ -131,6 +131,14 @@ confirm_trade() {
   echo "MINED	$label	txid=$TRADE_TXID	height=$(cut -d= -f2 "$S/$label.env")	pool_after=$(tr ' ' '/' <<<"$want")	$(grep '^POOL-SPEND' "$d/trade.txt" | cut -f2- | tr '\t' ' ')"
   STEPS_B="${STEPS_B:-} --step $TRADE_TXID:$TRADE_FILE"
 }
+# done_already <label>: on a resumed run, a stage whose transaction was mined is
+# picked up from its files rather than run again (its step is added).
+done_already() {
+  [ "${RESUME:-0}" = 1 ] && [ -f "$S/$1.env" ] || return 1
+  local f="$S/$1/final.jam"; [ -f "$f" ] || return 1
+  STEPS_B="${STEPS_B:-} --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"
+  echo "RESUMED	$1 already mined"
+}
 bob_note() { # a plain unspent note of bob not yet used
   quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding-bob.txt" || die "bob funding"
   awk -F'\t' '$1=="FUNDING" && $4=="plain" {print $2" "$3}' "$S/funding-bob.txt" | while read -r n; do grep -qF "$n" "$USED" || { echo "$n"; break; }; done
@@ -180,21 +188,31 @@ set +e; "$NMEME_TX" pool-trade "${r%% *}" /dev/null --pool "$(pool_state "$TOKEN
 [ $rc -ne 0 ] && grep -q "trade too small\|NoOutput\|no output" "$S/tiny.txt" && echo "ROUNDING	a trade the covenant admits no output for is refused by the quote: $(tail -1 "$S/tiny.txt")" || echo "ROUNDING	unexpected: rc=$rc $(tail -1 "$S/tiny.txt")"
 
 # bob sells half of what he bought
+if ! done_already sell1; then
 btn=$(bob_token_note "$TOKEN_B"); [ -n "$btn" ] || die "bob holds no token note"
 b_first="${btn%% *}"; b_rest="${btn#* }"; b_last="${b_rest%% *}"; b_held="${b_rest#* }"
 sell_amt=$((b_held / 2))
 r=$(user_tx bob "$S/sell1-user" "[$b_first $b_last]" "$ALICE" "$DUST" "$b_first $b_last")
 trade sell1 bob "$TOKEN_B" "$FEE_BPS" sell "${r%% *}" "${r#* }" "$ALICE_LOCK" --tokens-in "$sell_amt" --claim "$BOB_LOCK=transfer:$TOKEN_B:$((b_held - sell_amt))"
 confirm_trade sell1 "$TOKEN_B" "$FEE_BPS"
+fi
 
 # alice buys from a coinbase note (she is the creator; the pool treats her like anyone)
 funding_alice "$S/funding-1.txt"
+if ! done_already buy2; then
 cb=$(coinbase_note "$S/funding-1.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
 r=$(user_tx alice "$S/buy2-user" "[$cb]" "$BOB" "$BUY_NICKS")
 trade buy2 alice "$TOKEN_B" "$FEE_BPS" buy "${r%% *}" "${r#* }" "$BOB_LOCK"
 confirm_trade buy2 "$TOKEN_B" "$FEE_BPS"
+fi
 
 echo "== stage 4: simultaneous trades against one pool note =="
+if done_already requote; then
+  for lbl in sim-bob sim-alice; do
+    f="$S/$lbl/final.jam"; ui=$("$NMEME_INDEX" outputs --tx "$f" | awk -F'\t' '$1=="INPUT"{print $2" "$3}' | head -1)
+    unspent "${ui%% *}" "${ui##* }" || STEPS_B="$STEPS_B --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"
+  done
+else
 bn=$(bob_note); echo "$bn" >> "$USED"
 r1=$(user_tx bob "$S/sim-bob-user" "[$bn]" "$ALICE" "$BUY_NICKS")
 cb=$(coinbase_note "$S/funding-1.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
@@ -207,8 +225,12 @@ h0=$(node_height); wait_for_height "$RUN/node.log" $((h0 + 3)) "${MINE_TIMEOUT:-
 winner=""; loser=""
 for t in "$T1:sim-bob:$F1" "$T2:sim-alice:$F2"; do
   id="${t%%:*}"; rest="${t#*:}"; lbl="${rest%%:*}"; f="${rest#*:}"
-  set +e; wallet_pub alice tx-status "$id" > "$S/status-$lbl.txt" 2>&1; set -e
-  if grep -qi confirmed "$S/status-$lbl.txt"; then winner="$lbl"; STEPS_B="$STEPS_B --step $id:$f"; else loser="$lbl"; fi
+  pn=$(cut -d' ' -f1,2 <<<"$POOL_NOTE_IN")
+  if unspent "${pn%% *}" "${pn##* }"; then loser="$lbl"; else
+    # the pool note is spent: which transaction spent it is the one whose own user input is spent too
+    ui=$("$NMEME_INDEX" outputs --tx "$f" | awk -F'\t' '$1=="INPUT"{print $2" "$3}' | grep -v "^${pn%% *} " | head -1)
+    if unspent "${ui%% *}" "${ui##* }"; then loser="$lbl"; else winner="$lbl"; STEPS_B="$STEPS_B --step $id:$f"; fi
+  fi
 done
 [ -n "$winner" ] && [ -n "$loser" ] || die "simultaneous: winner=$winner loser=$loser"
 echo "SIMULTANEOUS	mined=$winner	not_mined=$loser	(the second spend of the same pool note cannot be valid once the first is)"
@@ -221,12 +243,18 @@ else
   trade requote alice "$TOKEN_B" "$FEE_BPS" buy "${r%% *}" "${r#* }" "$BOB_LOCK"
 fi
 confirm_trade requote "$TOKEN_B" "$FEE_BPS"
+fi
 
 echo "== stage 5: attacks, each on its own pool (token A) =="
 # attack <label> <fee> <pool-trade options...>: alice (the creator) attacks her own fresh pool from a coinbase note
 ATT_STEPS_A=""
 attack() {
   local label="$1" fee="$2"; shift 2
+  if [ "${RESUME:-0}" = 1 ] && [ -f "$S/$label.rejected" ]; then
+    echo "RESUMED	$label already refused: $(cat "$S/$label.rejected")"
+    ATT_STEPS_A="$ATT_STEPS_A --step $(awk -F'\t' '$1=="TXID"{print $2}' "$S/send-pool-$label.txt"):$S/pool-$label/final.jam"
+    return 0
+  fi
   open_pool "pool-$label" "$TOKEN_A" "$fee" "$POOL_NOCK" "$POOL_TOKENS"
   ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
   funding_alice "$S/funding-$label.txt"

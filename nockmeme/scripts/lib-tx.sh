@@ -59,19 +59,29 @@ create_tx() {
   head -1 "$dir/new.txt"
 }
 node_height() { wait_for_height "$RUN/node.log" 0 10; }
-confirm() { # <txid> <label> -> HEIGHT in $S/<label>.env
-  local txid="$1" label="$2" deadline=$((SECONDS + ${INCLUDE_TIMEOUT:-900}))
+# confirm <txid> <label> [file] -> HEIGHT in $S/<label>.env
+# Confirmation is read from the node, not the wallet: a transaction the
+# mempool admitted is mined when its inputs have left the unspent set. The
+# wallet's tx-status would do, but every wallet call grows its arena by
+# hundreds of megabytes (seen live: the disk filled twice on polling alone).
+confirm() {
+  local txid="$1" label="$2" file="${3:-}" deadline=$((SECONDS + ${INCLUDE_TIMEOUT:-900}))
+  [ -n "$file" ] || file="$CONFIRM_FILE"
+  local inputs; inputs=$("$NMEME_INDEX" outputs --tx "$file" | awk -F'\t' '$1=="INPUT"{print $2" "$3}')
+  [ -n "$inputs" ] || die "$label: no inputs in $file"
   while (( SECONDS < deadline )); do
-    set +e; wallet_pub alice tx-status "$txid" >"$S/status-$label.txt" 2>&1; set -e
-    if grep -qi "confirmed" "$S/status-$label.txt"; then
-      local h; h=$(grep -oiE 'height[^0-9]*([0-9]+)' "$S/status-$label.txt" | grep -oE '[0-9]+' | head -1 || true)
-      echo "HEIGHT=${h:-unknown}" > "$S/$label.env"; log "  $label confirmed at height ${h:-unknown}"; return 0
+    local pending=0 n
+    while read -r n; do unspent "${n%% *}" "${n##* }" && pending=1; done <<<"$inputs"
+    if [ "$pending" = 0 ]; then
+      local h; h=$(node_height)
+      echo "HEIGHT=$h" > "$S/$label.env"; log "  $label mined (inputs spent) by height $h"; return 0
     fi
-    sleep 15
+    sleep 10
   done
-  die "$label: $txid not confirmed within ${INCLUDE_TIMEOUT:-900}s"
+  die "$label: $txid not mined within ${INCLUDE_TIMEOUT:-900}s"
 }
 send() { # <file> <label> -> txid
+  CONFIRM_FILE="$1"
   "$NMEME_INDEX" send --addr "$PUB" --tx "$1" >"$S/send-$2.txt" 2>&1 || true
   awk -F'\t' '$1=="TXID"{print $2}' "$S/send-$2.txt" | head -1
 }
@@ -101,17 +111,15 @@ expect_rejected() {
   [ "$sent" = "$txid" ] || die "$label: the node was not asked about $txid (see $S/send-$label.txt)"
   local h0; h0=$(node_height)
   wait_for_height "$RUN/node.log" $((h0 + 2)) "${MINE_TIMEOUT:-900}" >/dev/null || die "$label: chain did not advance"
-  set +e; wallet_pub alice tx-status "$txid" >"$S/status-$label.txt" 2>&1; set -e
-  if grep -qi "confirmed" "$S/status-$label.txt"; then die "$label: the node MINED an invalid transaction"; fi
   local n
   for n in "$@"; do
-    unspent "${n%% *}" "${n##* }" || die "$label: input [$n] is no longer unspent after the attack"
+    unspent "${n%% *}" "${n##* }" || die "$label: input [$n] is no longer unspent after the attack (was it MINED?)"
   done
   local engine
   engine=$(strip < "$RUN/node.log" | grep -a -A2 "heard-new-tx: Miner received new transaction: $txid" | grep -a -o -m1 "tx-acc: process failed: [a-z0-9-]*" || true)
   if [ -z "$engine" ] && grep -q "MEMPOOL	not admitted" "$S/send-$label.txt"; then engine="tx-acc: process failed: (refused at admission)"; fi
   [ -n "$engine" ] || die "$label: the node log shows no transaction-engine verdict for $txid; inconclusive"
-  echo "REJECTED	$label	txid=$txid	engine: ${engine#tx-acc: process failed: }	not mined in 2 blocks	inputs still unspent"
+  echo "REJECTED	$label	txid=$txid	engine: ${engine#tx-acc: process failed: }	not mined in 2 blocks	inputs still unspent" | tee "$S/$label.rejected"
   echo "  mempool: $(awk -F'\t' '$1=="MEMPOOL"{print $2}' "$S/send-$label.txt")"
 }
 # resign <who> <orig-sighash.txt> <assembled.jam> <newsighash-source.txt> <out.jam>
