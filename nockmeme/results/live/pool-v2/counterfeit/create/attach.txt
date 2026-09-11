@@ -1,0 +1,4 @@
+FEE	current=16384	required=6336	seed_words=34	witness_words=62
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	500000
+WROTE	/home/user/nmeme-run/counterfeit/create/attached.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	6CWWefdiw4yHDCw1mwbtdrutNchxVaoDQuhtVASFMA3PXbWrdEXwjWE

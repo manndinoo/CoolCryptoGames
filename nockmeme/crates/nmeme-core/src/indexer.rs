@@ -222,6 +222,17 @@ impl Indexer {
         let Ok(token) = TokenId::derive(&tx.inputs, &ticker, decimals) else {
             return Outcome::Untouched;
         };
+        // G6: every genesis claim names the id it creates, and it must be
+        // the derived one. Consensus (the forked engine) checks the same
+        // equality and refuses the transaction otherwise; an indexer that
+        // reads a chain without that rule treats a mismatch as no genesis.
+        let named = claimed.iter().all(|(_, claim)| match claim {
+            Claim::Genesis { token: t, .. } => *t == token,
+            Claim::Transfer { .. } => false,
+        });
+        if !named {
+            return Outcome::Untouched;
+        }
         // G5: first creation in canonical order wins the identity.
         if self.tokens.contains_key(&token) {
             return Outcome::Untouched;

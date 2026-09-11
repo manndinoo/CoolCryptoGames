@@ -1,0 +1,15 @@
+  (rebuilding alice's wallet arena: 719 MB)
+# funding: 917 coinbase (verified against block parents), 0 plain, 0 claim
+  create-wallet: 1/1 verified
+  node: TXID	92uTQVrStfGcc7UdgfVf5pDfnffXoYKQU1NMiEHZtFq2qumXdG5jTpo
+  node: SEND	acknowledged
+  node: MEMPOOL	admitted	
+  sell-wallet: 1/1 verified
+  QUOTE	sell	in=400000	out_net=7389301	pool_fee=4000	lore_fee=37137	total_fee_nicks=37137	network_fee=16384	spot_e9=118345225800	exec_e9=18473252500	impact_bps=54063
+  POOL-BEFORE	8823465	74557
+  POOL-AFTER	1398027	474557
+  POOL-SPEND	to_user=7389301+0t	successor=1397027+474557t	lore=37137+0t	fee=0
+  node: TXID	Briy8MP8WiTRsJn4faDzuX7dxyNNfyigYoJSVroBPNJ2bxMSiYgjmP6
+  node: SEND	acknowledged
+  node: MEMPOOL	admitted	
+counterfeit exit: 0

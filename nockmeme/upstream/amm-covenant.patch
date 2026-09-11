@@ -217,10 +217,18 @@ index b9b588a..fa5856a 100644
              %brn
            '\0a  - Unspendable (burn) condition'
 diff --git a/hoon/common/tx-engine-1.hoon b/hoon/common/tx-engine-1.hoon
-index a687f27..a9c96ab 100644
+index a687f27..3b5b395 100644
 --- a/hoon/common/tx-engine-1.hoon
 +++ b/hoon/common/tx-engine-1.hoon
-@@ -1267,6 +1267,7 @@
+@@ -1235,6 +1235,7 @@
+     ^-  (reason ~)
+     ?:  (note-data-exceeds-max sps max-size)
+       [%.n %v1-note-data-exceeds-max-size]
++    =/  per-spend=(reason ~)
+     %+  roll  ~(tap z-by sps)
+     |=  [[nam=nname sp=spend] acc=(reason ~)]
+     ?.  ?=(%.y -.acc)  acc
+@@ -1267,6 +1268,7 @@
              (sig-hash:spend-1 +.sp)
              witness.+.sp
              bythos-phase
@@ -228,7 +236,20 @@ index a687f27..a9c96ab 100644
          ==
        ?.  %+  check:check-context  ctx
            (lock-hash:nnote-1 note)
-@@ -1521,6 +1522,7 @@
+@@ -1275,6 +1277,12 @@
+         [%.n %v1-spend-1-gifts-failed]
+       [%.y ~]
+     ==
++    ?.  ?=(%.y -.per-spend)  per-spend
++    ::  token claims: a transfer claim on an output is backed by the inputs,
++    ::  a genesis claim names the id it derives from (+meme)
++    ?.  (conserved:meme sps balance page-num)
++      [%.n %v1-token-claims]
++    [%.y ~]
+   ++  validate
+     |=  =form
+     ^-  ?
+@@ -1521,6 +1529,7 @@
      $%  [%pkh pkh]
          [%tim tim]
          [%hax hax]
@@ -236,7 +257,7 @@ index a687f27..a9c96ab 100644
      ::  it's important that this be the default to break a type loop in the compiler
          [%brn ~]
      ==
-@@ -1530,6 +1532,7 @@
+@@ -1530,6 +1539,7 @@
          %tim  (based:tim +.form)
          %hax  (based:hax +.form)
          %pkh  (based:pkh +.form)
@@ -244,7 +265,7 @@ index a687f27..a9c96ab 100644
          %brn  %&
      ==
    ++  hashable
-@@ -1539,6 +1542,7 @@
+@@ -1539,6 +1549,7 @@
          %tim  [leaf+%tim (hashable:tim +.form)]
          %hax  [leaf+%hax (hashable:hax +.form)]
          %pkh  [leaf+%pkh (hashable:pkh +.form)]
@@ -252,10 +273,142 @@ index a687f27..a9c96ab 100644
          %brn  [leaf+%brn leaf+~]
      ==
    ++  hash
-@@ -2211,6 +2215,205 @@
+@@ -2211,6 +2222,337 @@
      [pk sig-hash sig]
    --
  ::
++::  $meme: the note-data token standard, as consensus checks it
++::
++::    A `meme` entry is [%0 %t tid amount] (a transfer claim of the token
++::    .tid) or [%0 %c ticker decimals amount tid] (a genesis claim: it
++::    creates .tid, which must equal the id derived from the transaction's
++::    anchor input, the ticker and the decimals, and is valid only when no
++::    input carries a `meme` entry). Per transaction, for every token id,
++::    the transfer claims on the outputs may not exceed the transfer and
++::    genesis claims of that id on the inputs. A malformed entry counts for
++::    nothing. So a claim on a mined note is backed by an unbroken history
++::    to a genesis, and the %amm covenant can count it.
++++  meme
++  |%
++  ++  prime  18.446.744.069.414.584.321
++  ++  entry
++    |=  nd=note-data
++    ^-  (unit *)
++    (~(get z-by nd) %meme)
++  ++  transfer
++    |=  nd=note-data
++    ^-  (unit [tid=^hash amt=@])
++    =/  v=(unit *)  (entry nd)
++    ?~  v  ~
++    ?.  ?=([%0 %t [@ @ @ @ @] @] u.v)  ~
++    `[+>-.u.v +>+.u.v]
++  ++  genesis
++    |=  nd=note-data
++    ^-  (unit [ticker=* decimals=@ amt=@ tid=^hash])
++    =/  v=(unit *)  (entry nd)
++    ?~  v  ~
++    ?.  ?=([%0 %c * @ @ [@ @ @ @ @]] u.v)  ~
++    `[+>-.u.v +>+<.u.v +>+>-.u.v +>+>+.u.v]
++  ::  the atom a hash is, as the Rust side orders them (little-endian in
++  ::  the field prime), and lexicographic order on its big-endian bytes
++  ++  atom-of
++    |=  h=^hash
++    ^-  @
++    =/  limbs=(list @)  ~[-.h +<.h +>-.h +>+<.h +>+>.h]
++    %+  roll  (flop limbs)
++    |=([b=@ acc=@] (add b (mul acc prime)))
++  ++  bytes-lth
++    |=  [a=@ b=@]
++    ^-  ?
++    =/  x=(list @)  (flop (rip 3 a))
++    =/  y=(list @)  (flop (rip 3 b))
++    |-
++    ?~  x  ?~(y %.n %.y)
++    ?~  y  %.n
++    ?:  (lth i.x i.y)  %.y
++    ?:  (gth i.x i.y)  %.n
++    $(x t.x, y t.y)
++  ++  name-lth
++    |=  [a=nname b=nname]
++    ^-  ?
++    =/  fa=@  (atom-of -.a)
++    =/  fb=@  (atom-of -.b)
++    ?:  (bytes-lth fa fb)  %.y
++    ?:  (bytes-lth fb fa)  %.n
++    (bytes-lth (atom-of +<.a) (atom-of +<.b))
++  ::  the anchor: the smallest input name
++  ++  anchor
++    |=  sps=spends
++    ^-  (unit nname)
++    =/  names=(list nname)  (turn ~(tap z-by sps) |=([n=nname *] n))
++    ?~  names  ~
++    =/  best=nname  i.names
++    =/  rest=(list nname)  t.names
++    |-
++    ?~  rest  `best
++    $(best ?:((name-lth i.rest best) i.rest best), rest t.rest)
++  ::  the id a genesis creates: hash-noun-varlen of [[first last] [ticker decimals]]
++  ++  derive
++    |=  [anc=nname ticker=* decimals=@]
++    ^-  ^hash
++    (hash-noun-varlen:tip5 [[-.anc +<.anc] [ticker decimals]])
++  ++  conserved
++    |=  [sps=spends balance=(h-map nname nnote) page=page-number]
++    ^-  ?
++    =/  ins=(list nnote-1)
++      %+  murn  ~(tap z-by sps)
++      |=  [nam=nname sp=spend]
++      ^-  (unit nnote-1)
++      =/  mn=(unit nnote)  (~(get h-by balance) nam)
++      ?~  mn  ~
++      ?^  -.u.mn  ~
++      `u.mn
++    =/  outs=(list nnote-1)
++      %+  murn  ~(tap z-in (build-outputs:tx sps page))
++      |=  o=output
++      ^-  (unit nnote-1)
++      ?^  -.note.o  ~
++      `note.o
++    =/  in-claims=(list [tid=^hash amt=@])
++      %+  murn  ins
++      |=  n=nnote-1
++      ^-  (unit [tid=^hash amt=@])
++      =/  t=(unit [tid=^hash amt=@])  (transfer note-data.n)
++      ?^  t  `[tid.u.t amt.u.t]
++      =/  g=(unit [ticker=* decimals=@ amt=@ tid=^hash])  (genesis note-data.n)
++      ?~  g  ~
++      `[tid.u.g amt.u.g]
++    =/  out-t=(list [tid=^hash amt=@])
++      %+  murn  outs
++      |=  n=nnote-1
++      ^-  (unit [tid=^hash amt=@])
++      =/  t=(unit [tid=^hash amt=@])  (transfer note-data.n)
++      ?~  t  ~
++      `[tid.u.t amt.u.t]
++    =/  out-g=(list [ticker=* decimals=@ amt=@ tid=^hash])
++      (murn outs |=(n=nnote-1 (genesis note-data.n)))
++    ::  a genesis: no input carries an entry, and every claim names the derived id
++    =/  gen-ok=?
++      ?~  out-g  %.y
++      ?:  (lien ins |=(n=nnote-1 ?=(^ (entry note-data.n))))  %.n
++      =/  anc=(unit nname)  (anchor sps)
++      ?~  anc  %.n
++      %+  levy  out-g
++      |=  [ticker=* decimals=@ amt=@ tid=^hash]
++      =(tid (derive u.anc ticker decimals))
++    ::  transfers: per id, the outputs never exceed the inputs
++    =/  sum
++      |=  [tid=^hash l=(list [tid=^hash amt=@])]
++      ^-  @
++      %+  roll  l
++      |=([[t=^hash a=@] acc=@] ?:(=(t tid) (add acc a) acc))
++    =/  xfer-ok=?
++      %+  levy  out-t
++      |=  [tid=^hash amt=@]
++      (lte (sum tid out-t) (sum tid in-claims))
++    &(gen-ok xfer-ok)
++  --
++::
 +::  $amm: constant-product pool covenant over one token, with a treasury
 +::
 +::    A note under a lock whose only spend-condition is
@@ -458,7 +611,7 @@ index a687f27..a9c96ab 100644
  ::  $check-context: Context provided for validating locks
  ::
  ::    .now: current page height
-@@ -2218,15 +2421,23 @@
+@@ -2218,15 +2560,23 @@
  ::    .sig-hash: signature to be hashed for a spend
  ::    .witness: witness to spend conditions
  ::    .bythos-phase: height at which bythos activates (for full LMP gating)
@@ -482,7 +635,7 @@ index a687f27..a9c96ab 100644
      ==
    ::
    ++  check
-@@ -2264,6 +2475,7 @@
+@@ -2264,6 +2614,7 @@
          %tim  (check:tim +.p form)
          %hax  (check:hax +.p form)
          %pkh  (check:pkh +.p form)
@@ -490,7 +643,7 @@ index a687f27..a9c96ab 100644
          %brn  %|
        ==
      ==
-@@ -2299,6 +2511,7 @@
+@@ -2299,6 +2650,7 @@
          %pkh  (check:pkh +.p form)
          %tim  (check:tim +.p form)
          %hax  (check:hax +.p form)
@@ -498,7 +651,7 @@ index a687f27..a9c96ab 100644
          %brn  %|
        ==
      ==
-@@ -2334,19 +2547,19 @@
+@@ -2334,19 +2686,19 @@
    ++  new
      |=  [=raw-tx =page-number]
      ^-  form
@@ -531,7 +684,7 @@ index a687f27..a9c96ab 100644
        =|  children=(z-map hash output)
        |-  ^-  outputs
        ?~  spends-list
-@@ -2403,7 +2616,6 @@
+@@ -2403,7 +2755,6 @@
          =/  out=output  [note1 single]
          (~(put z-by acc) key out)
        $(spends-list t.spends-list)

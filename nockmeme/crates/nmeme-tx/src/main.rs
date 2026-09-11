@@ -541,7 +541,10 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
     let mut spends = parsed.spliced().map_err(|e| format!("splice: {e}"))?;
 
     let mut touched: Vec<Name> = Vec::new();
+    // a genesis claim names the id it creates, derived from these inputs
+    let input_names: Vec<Name> = spends.0.iter().map(|(n, _)| n.clone()).collect();
     for (lock, claim) in &wanted {
+        let claim = &nmeme_tx::cli::with_genesis_id(claim.clone(), &input_names)?;
         let mut found = false;
         for (name, spend) in spends.0.iter_mut() {
             let Spend::Witness(spend1) = spend else { continue };

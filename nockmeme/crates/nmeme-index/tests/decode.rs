@@ -26,6 +26,7 @@ fn genesis() -> Claim {
         ticker: Ticker::new("DOGE").expect("valid"),
         decimals: 6,
         amount: 1_000_000,
+        token: TokenId(Hash::from_limbs(&[1, 2, 3, 4, 5])),
     }
 }
 
@@ -50,6 +51,7 @@ fn every_ticker_width_survives() {
             ticker: Ticker::new(raw).expect("valid"),
             decimals: 0,
             amount: 1,
+            token: TokenId(Hash::from_limbs(&[9, 8, 7, 6, 5])),
         };
         let blob = encode_claim(&claim).expect("encodes");
         assert_eq!(decode_claim(&blob).expect("decodes"), claim, "{raw}");

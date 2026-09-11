@@ -62,6 +62,7 @@ fn genesis_claim_round_trips() {
         ticker: ticker(),
         decimals: 6,
         amount: 1_000_000,
+        token: TokenId(hash(7)),
     };
     let noun = claim.to_noun().expect("encodes");
     assert_eq!(Claim::from_noun(&noun).expect("decodes"), claim);
@@ -86,7 +87,7 @@ fn transfer_claim_round_trips() {
 #[test]
 fn claim_rejects_zero_and_oversized_values() {
     assert!(Claim::Transfer { token: TokenId(hash(1)), amount: 0 }.to_noun().is_err());
-    assert!(Claim::Genesis { ticker: ticker(), decimals: MAX_DECIMALS + 1, amount: 1 }
+    assert!(Claim::Genesis { ticker: ticker(), decimals: MAX_DECIMALS + 1, amount: 1, token: TokenId(hash(1)) }
         .to_noun()
         .is_err());
     // Not a field element.
@@ -155,6 +156,7 @@ fn genesis_tx() -> (TxView, TokenId) {
                 ticker: ticker(),
                 decimals: 6,
                 amount: SUPPLY,
+                token: token.clone(),
             }),
         }],
     };
@@ -251,7 +253,7 @@ fn genesis_cannot_consume_existing_token_weight() {
         outputs: vec![NoteView {
             name: name(50),
             lock_root: bob(),
-            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: SUPPLY * 2 }),
+            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: SUPPLY * 2, token: TokenId::derive(&[name(10)], &ticker(), 6).expect("derives") }),
         }],
     };
     assert!(matches!(indexer.apply(&regenesis), Outcome::Burned { .. }));
@@ -272,7 +274,7 @@ fn omitting_history_turns_a_burn_into_a_creation() {
         outputs: vec![NoteView {
             name: name(51),
             lock_root: bob(),
-            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: SUPPLY }),
+            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: SUPPLY, token: TokenId::derive(&[name(10)], &ticker(), 6).expect("derives") }),
         }],
     };
 
@@ -355,6 +357,7 @@ fn mixed_token_inputs_are_rejected_in_v0() {
                 ticker: Ticker::new("SHIB").expect("valid"),
                 decimals: 6,
                 amount: 500,
+                token: token_b.clone(),
             }),
         }],
     });
@@ -463,7 +466,7 @@ fn wrapped_claim_sum_cannot_mint() {
         outputs: vec![NoteView {
             name: name(10),
             lock_root: alice(),
-            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1 }),
+            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1, token: token.clone() }),
         }],
     });
     assert_eq!(indexer.circulating(&token), 1);
@@ -504,12 +507,12 @@ fn wrapped_genesis_supply_cannot_understate_holdings() {
             NoteView {
                 name: name(30),
                 lock_root: alice(),
-                claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1u64 << 63 }),
+                claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1u64 << 63, token: token.clone() }),
             },
             NoteView {
                 name: name(31),
                 lock_root: bob(),
-                claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1u64 << 63 }),
+                claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1u64 << 63, token: token.clone() }),
             },
         ],
     });
@@ -551,7 +554,7 @@ fn many_capped_claims_cannot_overflow_the_indexer() {
         outputs: vec![NoteView {
             name: name(40),
             lock_root: alice(),
-            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1_000 }),
+            claim: Some(Claim::Genesis { ticker: ticker(), decimals: 6, amount: 1_000, token: token.clone() }),
         }],
     });
 

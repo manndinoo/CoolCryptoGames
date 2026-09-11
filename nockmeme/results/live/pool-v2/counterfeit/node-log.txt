@@ -1,0 +1,4 @@
+2026-09-11T21:33:26.854188Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 92uTQVrStfGcc7UdgfVf5pDfnffXoYKQU1NMiEHZtFq2qumXdG5jTpo
+2026-09-11T21:33:28.228271Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 92uTQVrStfGcc7UdgfVf5pDfnffXoYKQU1NMiEHZtFq2qumXdG5jTpo
+2026-09-11T21:34:25.750667Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: Briy8MP8WiTRsJn4faDzuX7dxyNNfyigYoJSVroBPNJ2bxMSiYgjmP6
+2026-09-11T21:34:28.171940Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: Briy8MP8WiTRsJn4faDzuX7dxyNNfyigYoJSVroBPNJ2bxMSiYgjmP6

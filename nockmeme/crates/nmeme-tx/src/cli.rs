@@ -35,10 +35,13 @@ pub fn parse_claim(spec: &str) -> Result<Claim, String> {
                 amount,
             })
         }
+        // The id a genesis creates is derived from the transaction's inputs;
+        // `with_genesis_id` fills it once the spends are known.
         ["genesis", ticker, decimals, amount] => Ok(Claim::Genesis {
             ticker: Ticker::new(ticker).map_err(|e| format!("ticker: {e}"))?,
             decimals: decimals.parse::<u64>().map_err(|e| format!("decimals: {e}"))?,
             amount: amount.parse::<u64>().map_err(|e| format!("amount: {e}"))?,
+            token: TokenId(Hash::from_limbs(&[0; 5])),
         }),
         _ => Err(
             "expected transfer:<token-b58>:<amount> or genesis:<TICKER>:<decimals>:<amount>"
@@ -80,4 +83,17 @@ pub fn find_spend<'a>(
         .iter()
         .find(|(name, _)| name.first.to_base58() == first_name_b58)
         .ok_or_else(|| Error::NoSeedForLockRoot(first_name_b58.to_string()))
+}
+
+/// A genesis claim's id is a function of the transaction that creates it:
+/// the smallest input name, the ticker and the decimals (`TokenId::derive`,
+/// which the forked engine recomputes and enforces). Fills it in.
+pub fn with_genesis_id(claim: Claim, inputs: &[Name]) -> Result<Claim, String> {
+    match claim {
+        Claim::Genesis { ticker, decimals, amount, .. } => {
+            let token = TokenId::derive(inputs, &ticker, decimals).map_err(|e| format!("token id: {e}"))?;
+            Ok(Claim::Genesis { ticker, decimals, amount, token })
+        }
+        other => Ok(other),
+    }
 }

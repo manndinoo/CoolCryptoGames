@@ -44,10 +44,15 @@ pub const MAX_SUPPLY: u64 = (1 << 63) - 1;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Claim {
     /// This note holds `amount` of a token being created by this transaction.
+    /// `token` is the id the genesis creates: consensus (the fork) recomputes
+    /// it from the transaction's anchor input, the ticker and the decimals,
+    /// and refuses a genesis that names any other id. A later transfer of
+    /// this note counts as `amount` of `token` going in.
     Genesis {
         ticker: Ticker,
         decimals: u64,
         amount: u64,
+        token: TokenId,
     },
     /// This note holds `amount` of the already-existing token `token`.
     Transfer { token: TokenId, amount: u64 },
@@ -88,13 +93,14 @@ impl Claim {
                 ticker,
                 decimals,
                 amount,
+                token,
             } => OwnedBasedNoun::cell(
                 OwnedBasedNoun::try_atom(TAG_CREATE)?,
                 OwnedBasedNoun::cell(
                     ticker.to_noun()?,
                     OwnedBasedNoun::cell(
                         OwnedBasedNoun::try_atom(*decimals)?,
-                        OwnedBasedNoun::try_atom(*amount)?,
+                        OwnedBasedNoun::cell(OwnedBasedNoun::try_atom(*amount)?, token.to_noun()),
                     ),
                 ),
             ),
@@ -124,11 +130,13 @@ impl Claim {
             TAG_CREATE => {
                 let (ticker_noun, rest) = cell(rest)?;
                 let limbs = list_atoms(ticker_noun)?;
-                let (decimals, amount) = cell(rest)?;
+                let (decimals, rest) = cell(rest)?;
+                let (amount, token) = cell(rest)?;
                 Self::Genesis {
                     ticker: Ticker::from_limbs(&limbs)?,
                     decimals: atom(decimals)?,
                     amount: atom(amount)?,
+                    token: TokenId::from_noun(token)?,
                 }
             }
             TAG_TRANSFER => {

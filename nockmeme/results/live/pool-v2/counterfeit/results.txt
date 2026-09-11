@@ -1,0 +1,7 @@
+== 1. a note with a fabricated claim of 500000 of token 2Cpa7t5W4geJnAoZGQWqy19wfKJJV1Zz1TqY9TWs5o2R5m4E59111GL, from a coinbase note ==
+COUNTERFEIT-CREATE	MINED	txid=92uTQVrStfGcc7UdgfVf5pDfnffXoYKQU1NMiEHZtFq2qumXdG5jTpo	height=940	note=[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK KDZmrxWL8ZJS9v72hnTVWBpdESnMYheVwENw74iCqcX31m7awS7HEi]	claim=500000 of 2Cpa7t5W4geJnAoZGQWqy19wfKJJV1Zz1TqY9TWs5o2R5m4E59111GL, consuming no tokens (consensus accepted a claim it never validated)
+== 2. sell 400000 of the fabricated tokens into the real pool ==
+POOL-BEFORE	8823465 74557
+COUNTERFEIT-SELL	MINED	txid=Briy8MP8WiTRsJn4faDzuX7dxyNNfyigYoJSVroBPNJ2bxMSiYgjmP6	height=953	pool_after=1398027/474557	bob_nock_before=4321777	bob_nock_after=11693694	(the covenant paid real NOCK for tokens that never existed)
+== 3. the indexer on the same history ==
+INDEXER	rc=2	error: no chain note has the identity computed for lock-root 6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw: first 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f last 9EtfueePYHXSaee

@@ -207,6 +207,7 @@ fn genesis_and_transfer_claims_are_distinguishable_in_the_digest() {
         ticker: Ticker::new("DOGE").expect("valid"),
         decimals: 6,
         amount: 1_000,
+        token: TokenId(Hash::from_limbs(&[1, 2, 3, 4, 5])),
     };
     let mk = |claim: &Claim| {
         NoteData::new(vec![NoteDataEntry::new(
