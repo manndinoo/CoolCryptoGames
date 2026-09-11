@@ -1,0 +1,6 @@
+file:     ai-pow/verifier-setup-seeds-v1.bin
+sha256:   1dec7dfe51deb549c5a3dab9ddafdcee71f349dfc0c1179a25ec51c6ea74aca9
+bytes:    85195241
+revision: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
+made:     2026-09-11 09:47 UTC
+how:      one bucket per GitHub-hosted runner job (nmeme-seed-buckets.yml run 34562677406), merged, digest-checked
