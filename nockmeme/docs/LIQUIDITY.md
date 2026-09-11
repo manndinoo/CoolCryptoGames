@@ -26,6 +26,8 @@ Everything in §1 is read from the node's source at revision `2bcb0b9`.
 | note-data | arbitrary signed key/value on each note; merged by union when outputs merge; consensus does not interpret it. This is what the token standard uses. | FINDINGS §1–§3 |
 | multi-party transactions | a signature covers only its own spend; `output-source` lets a seed pin the exact seed set that must land on a lock. Two parties can settle a trade in one transaction with nothing held by anyone in between. | `sig-hash` 1116; `validate` 1409-1419; SWAPS.md; `nmeme-tx swap` |
 | spending unconfirmed outputs | not allowed: every input must be in the confirmed balance. | `inputs-in-balance`, `consensus.hoon` 324-338 |
+| mempool admission vs validity | the mempool admits a transaction before the engine validates it; a pin-violating half was admitted, then failed `v1-tx-invalid` on every candidate block and was never mined. | seen live, `results/live/swap/` |
+| mempool input reservation | an admitted transaction's inputs are reserved ("Inputs present in spent-by, discarding transaction") and stay reserved while it sits in the mempool, invalid or not — the invalid half was retried on fifty candidate blocks without being dropped. A signed half that leaks can therefore block the honest trade on the same notes until the mempool forgets it. | seen live |
 | block cadence | mainnet ideal 150 s. | `blockchain_constants.rs` |
 | bridge | an official NOCK bridge to **Base** (EVM) with multisig governance ships in this repository. | `crates/bridge/docs/` |
 

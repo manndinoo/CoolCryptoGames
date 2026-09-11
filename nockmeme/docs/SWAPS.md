@@ -114,7 +114,28 @@ neither can inflate the other's cost.
 - **Offer expiry.** `Tim` gives absolute and relative timelocks, so a maker's
   refund path can be time-bounded; the design is not written.
 
-## 6. Status
+## 6. What the live test taught
+
+- **Pins hold at consensus.** A half sent alone, and a trade with one
+  party's payment altered, each fail in the transaction engine
+  (`v1-tx-invalid`) on every candidate block and are never mined; the
+  inputs stay unspent. `nmeme-tx pins` predicts exactly which pin is
+  violated.
+- **Mempool admission is not a verdict.** The node admits a transaction
+  before validating it. The verdict is the engine's line in the node log
+  and inclusion in a block; the wallet's `tx-status` reports "pending" for
+  a transaction that will never be mined.
+- **An admitted transaction reserves its inputs.** "Inputs present in
+  spent-by, discarding transaction": while the invalid half sat in the
+  mempool, every transaction spending the same notes was discarded on
+  arrival, honest or not. Whoever holds a signed half can block the trade's
+  notes by broadcasting it; the party that assembles and submits should
+  therefore be the only one to hold both halves.
+- **The wallet's `send-tx` is not a submission path under load.** It reads
+  the whole balance first and aborts when a block lands mid-read.
+  `nmeme-index send` submits through the public gRPC directly.
+
+## 7. Status
 
 Implemented as a settlement primitive (`nmeme-tx swap`, `pins`, `half`,
 `replace-spend`; `crates/nmeme-tx/src/swap.rs`), with the pinned
