@@ -1,0 +1,6 @@
+FEE	current=8192	required=7296	seed_words=43	witness_words=56
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999900
+WROTE	/home/user/nmeme-run/xfer-A/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	7Awyp4HjbVoYPedcr1cjMVtLgB7JZ5BF3gexmFC4F8yKK3SLBcykTge
+SIGNED	/home/user/nmeme-run/xfer-A/final.jam	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f

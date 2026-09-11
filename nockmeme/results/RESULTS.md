@@ -191,52 +191,87 @@ opened at 32 GiB and its first persist filled the disk; `--pma-initial-size
 [`live/node-boot-rss-first.tsv`](./live/node-boot-rss-first.tsv),
 [`live/node-boot-rss-second.tsv`](./live/node-boot-rss-second.tsv).
 
-### A11. The live chain: token created, transferred, and rebuilt from blocks
+### A11. The live chain: two tokens created, transferred, and rebuilt from blocks
 
-`scripts/live-demo.sh`, unmodified, ran to completion (exit 0) against the
-fakenet node in this environment. Its complete output is
-[`live/attempt5/results.txt`](./live/attempt5/results.txt) and
-[`live/attempt5/progress.log`](./live/attempt5/progress.log); the node's own
-log lines for every transaction and block below are in
-[`live/node-log-excerpt.txt`](./live/node-log-excerpt.txt).
+`scripts/live-demo.sh`, unmodified, ran to exit 0 against the fakenet node in
+this environment (run "attempt 6", 2026-09-11 ~14:00 UTC; complete output in
+[`live/attempt6/`](./live/attempt6/), node-log lines for every transaction
+and block in [`live/node-log-excerpt.txt`](./live/node-log-excerpt.txt),
+every signed transaction file in [`live/txs/`](./live/txs/)).
 
 | stage | evidence |
 |---|---|
-| signature gate | `PASS genesis-gate` and `PASS xfer-gate`: the wallet's own signature verified against the **Rust** `sig-hash` of a real transaction, both before and after the claim was attached and the transaction re-signed. `B2` below is closed. |
-| genesis (create DOGE, supply 1,000,000) | txid `CxfcXk3W3dAHAhZXGJjKKZ2FnZBW4JhgfU61Y2ju2RGB4duWipZfhBh`, mined at **height 75**, block `4UKGZ9qCi682QbaPd1kaTVRLSJydPgzz82BmJvJhWQvZ8yAieAbPy39`; fee paid 8192 nicks against a consensus minimum of 6016 (the wallet's own `tx-status` report, [`live/attempt5/genesis-tx-status.txt`](./live/attempt5/genesis-tx-status.txt)) |
-| token id | `4Fkt8tEVF5AfozYrCdF5F48vd7VNVektAwz5jLHkdq5eTY4XNzubkRU` |
-| transfer (100 to Bob, 999,900 back to Alice) | spends the token-bearing note **by name**; txid `Z8tvhDFP4SkuxcfCzkLpjorxryUF7jocdZB3HCPEeqjmokVqsC5Gi`, mined at **height 91**, block `5SbYyzHdJzPDXs5awSAnfJ1FNWfXPBdHYuTWJFwaNwPR3HCkBvaRYVW`; fee 8192 against a minimum of 7424 |
-| canonical rebuild | one snapshot at **height 104**, block `A6311czcSLJJapgfa843WA1ApCXFM681XFeh8U35FZbC2ks672rs2fS`, stable across the read; each step bound to its mined transaction by recomputing the file's id the way consensus does; replayed through the real `Indexer` → `Created`, `Transferred` |
-| balances | Alice's lock `6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw` **999,900**; Bob's lock `CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV` **100**; total 1,000,000 = supply; `ASSERT-OK` ×3 |
+| signature gate | `PASS` on all four transactions, before and after claim attachment: the Rust `sig-hash` matches the wallet's own signatures |
+| funding, proven token-free | each genesis spent one coinbase note that a `FUNDING` proof (read from the chain while unspent) showed carrying no claim; `check-inputs` verified every input **before** broadcast (`INPUT-OK … tokenfree` / `named token note`, [`live/attempt6/*-check-inputs.txt`](./live/attempt6/)) |
+| token A, DOGE, supply 1,000,000 | genesis `AzC1fW8Y…` mined at **height 640**; transfer `2XeMY77j…` at **650** (100 to Bob, 999,900 to Alice), spending the genesis output named by its computed identity |
+| token B, PEPE, supply 1,000,000 | genesis `BojtQp3X…` at **685**; transfer `sQkkabab…` at **712** |
+| rebuild of A over all four transactions | snapshot at height 737, stable; provenance of every input proven; `Created`, `Transferred`; A: 999,900 / 100, total 1,000,000, `ASSERT-OK` ×3 — **unchanged by B's creation** |
+| rebuild of B over all four | same snapshot; B: 999,900 / 100, total 1,000,000, `ASSERT-OK` ×3 |
+| omitted-history guard, live | B's two transactions alone, no proofs: **refused**, naming the genesis input whose status the replay could not know ([`live/attempt6/omitted-history.txt`](./live/attempt6/omitted-history.txt)) |
 
-The run before it ([`live/attempt4/`](./live/attempt4/)) had mined the same
-sequence (genesis `CqnUQ22o…` at height 44, transfer `7dFCSs6E…` at height
-55) and failed only in the rebuild tool; the rebuild over those two mined
-transactions, run by hand after the fix, produced the same balances
-([`live/attempt4/balances.txt`](./live/attempt4/balances.txt)).
+Before this run, the same script (without the guards) had mined three earlier
+tokens on this chain — heights 21, 44/55, 75/91 — and a partial gated run
+mined two more (541/571, 600). All of them are in `live/txs/`; §A12 says
+what the complete history shows about them.
 
-**Three things the chain taught that the code did not know:**
+### A12. The omitted-history finding, and what closed it
 
-1. **The node's explorer cannot decode a note-data transaction.**
-   `GetTransactionDetails` fails with a `NounDecode` error in
-   `extract_transactions_from_map` on a transaction consensus had just mined.
-   The rebuild no longer depends on it: it recomputes each file's transaction
-   id (`RawTx::compute_id`, the consensus hash of version and spends) and
-   requires equality with the mined id, then takes inclusion from
-   `GetTransactionBlock`. That binding covers every field at once.
-2. **`WalletGetBalance` takes a cheetah pubkey or a note first-name, not the
-   wallet's printed address** (a pubkey hash; "improperly formatted"). The
-   tools now read by first-name, which is a function of the lock-root alone.
-3. **Burn-on-unclaimed-spend is real, and wallets will trigger it.** Each run
-   reused Alice's wallet on the same chain. Run 4's genesis picked run 3's
-   token note as an ordinary input (it was the largest NOCK note), and run 5's
-   genesis did the same to run 4's — spending the note with no claim on any
-   output, which under `SPEC §7` burns that token's supply. The rebuild over
-   run 4's transactions now refuses, correctly: its 999,900 output note no
-   longer exists unspent. Only the last token, `4Fkt8tEV…`, still holds. A
-   platform must pin token notes out of the wallet's input selection (the
-   transfer does this with `--names`; the genesis did not need to, until a
-   second token existed).
+An outside review of commit d6cfd78 asked: `interpret_genesis` rejects a
+creation that consumes existing token weight, but the demo rebuilt each
+token from a fresh indexer given only that token's transactions — could
+leaving out earlier history hide consumed weight and report a creation the
+rules reject? **Yes.** Replaying all five pre-guard token transactions
+through one indexer ([`live/full-history-replay-h104.txt`](./live/full-history-replay-h104.txt)):
+
+| height | transaction | short rebuild said | full history says |
+|---|---|---|---|
+| 21 | genesis, token `Bto3…` | Created | Created |
+| 44 | genesis, token `3rVL…`, spent the `Bto3…` note | **Created** | **Burned: "genesis consumed existing token weight"**; `3rVL…` never existed |
+| 55 | transfer of `3rVL…` | Transferred | Untouched (nothing valid to move) |
+| 75 | genesis, token `4Fkt…`, spent the 999,900 `3rVL…` note | Created | Created — that note carried no validly created weight |
+| 91 | transfer of `4Fkt…` | Transferred | Transferred; 999,900 / 100 stand |
+
+So the height-44 result reported earlier in this file was wrong under the
+standard's own rules, and the height-75 token stood only by the accident of
+its input having been born invalid. The indexer cannot know what it was not
+shown. Three changes close this, all verified live in §A11:
+
+1. **Provenance, or refusal** (`nmeme-index` `require_provenance`, six tests
+   in `tests/history.rs`; `omitting_history_turns_a_burn_into_a_creation` in
+   nmeme-core pins the hazard itself). Every input of every replayed step
+   must be an output of an earlier supplied step, or proven token-free by a
+   `FUNDING` line read from the chain while the note was unspent. Weight only
+   ever comes from a claim under the `meme` key, so a note with no such entry
+   has zero weight in every possible history — no transaction list needed.
+   A note that carries a claim but whose creating transaction was not
+   supplied is refused and named. The pre-guard rebuilds of this chain now
+   refuse, correctly: their inputs' provenance cannot be proven after the
+   fact.
+2. **Token notes are kept out of ordinary spending** (`funding`,
+   `outputs`, `check-inputs`). The demo picks genesis funding only from
+   notes the chain shows as `tokenfree`, names the token note it moves by the
+   identity computed from the genesis file, and refuses to broadcast a
+   transaction with any other input. That is the platform rule: a stock
+   wallet must never be allowed to choose inputs for a token-aware
+   transaction.
+3. **Two tokens, one chain** (§A11): B's creation left A's balances exactly
+   as rebuilt before it.
+
+Two more facts the chain supplied on the way:
+
+- **Coinbase notes do not sit at the wallet's change lock-root.** Alice's 501
+  block rewards share one first-name; her change chain has another. A
+  funding read at the change lock alone finds no token-free note. `funding`
+  now takes `--first` as well as `--lock`, and the demo reads at every
+  first-name the wallet lists.
+- **A multi-address read can straddle blocks.** With a block every few
+  seconds the node answered three first-name queries from two tips; the
+  snapshot fold refused the mix, and the read now retries until every page
+  agrees.
+
+The saved state: chain at height 737 (`node-state-h737.tar.gz`, restorable
+into `data/` with the seed cache), both wallets' key exports, and all twelve
+signed transaction files, handed over as a bundle alongside this branch.
 
 ---
 
@@ -274,9 +309,10 @@ here has touched mainnet.
 
 ## The single sentence version
 
-A token was created and transferred on a live Nockchain fakenet node running
-in this environment, and its balances were rebuilt from the mined blocks:
-genesis at height 75, transfer at height 91, 999,900 / 100 of 1,000,000 at a
-stable snapshot at height 104. The seed cache that made the node bootable was
-produced on free hosted runners, one bucket per job. Trading is designed, not
-built.
+Two tokens were created and transferred on a live Nockchain fakenet node in
+this environment with every input proven token-free or named before
+broadcast, and both were rebuilt from the mined blocks with input provenance
+proven: 999,900 / 100 of 1,000,000 each, the first unchanged by the second's
+creation. A replay given incomplete history now refuses instead of reporting
+a creation the rules reject, a hazard an outside review found and the full
+replay confirmed. Trading is designed, not built.

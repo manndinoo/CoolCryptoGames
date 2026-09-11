@@ -1,0 +1,5 @@
+FEE	current=8192	required=5696	seed_words=29	witness_words=62
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	1000000
+WROTE	/home/user/nmeme-run/genesis-B/attached.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	227A2e3iiSQm1Rpv3mb6ZFUhVjqUxUAsNoW2ResVAyX5Y99BUA5LvLb
+SIGNED	/home/user/nmeme-run/genesis-B/final.jam	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax

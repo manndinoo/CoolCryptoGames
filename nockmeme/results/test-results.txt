@@ -1,5 +1,16 @@
 # nmeme test results
 
+## 2026-09-11 later: provenance guard (commit 8b0a7d8 and after)
+
+Hosted runner, run 34602399043 (nmeme-tests.yml), success. Locally in
+this container (cargo test -p nmeme-core -p nmeme-index, before the disk
+allowance forced deleting the test build): nmeme-core standard.rs 27
+passed (adds omitting_history_turns_a_burn_into_a_creation); nmeme-index
+binding 6, decode 8, history 6 (new), snapshot 8 passed. nmeme-tx's 40 are
+unchanged and ran on the runner.
+
+## 2026-09-11 11:20 UTC: the first live-proof state
+
 Run on a GitHub-hosted runner (ubuntu-latest) inside the pinned Nockchain
 workspace (rev 2bcb0b9dfd190f17252205afd1c8a067048a1ad9), by
 .github/workflows/nmeme-tests.yml, run 34593341963, commit ddabd880,

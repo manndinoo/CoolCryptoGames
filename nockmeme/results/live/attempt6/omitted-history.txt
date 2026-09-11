@@ -1,0 +1,4 @@
+# canonical snapshot: 17 unspent note(s) at height 737 block 7Pf7LWXFrB6gBoT57s6XLTZ4X8K64AJFPaSAh32xZHNQVkQQ1HW9yr
+HEIGHT	737
+BLOCK	7Pf7LWXFrB6gBoT57s6XLTZ4X8K64AJFPaSAh32xZHNQVkQQ1HW9yr
+error: BojtQp3XEqAxXcb3vL7ZKBoX2xd4mSWjGT5MMjabnxLHE8CWHPYkCua: input [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9WrJgpjZX9zAhdsHmmB8vCvDFh9yaBJoLsrpuG9HKmcJWnBjm44kvq6] is neither an output of an earlier supplied step nor proven token-free by a FUNDING file. If it carries a claim, the transaction that created it must be replayed too; a genesis that consumed it would otherwise be reported as a valid creation instead of a burn (SPEC G1).

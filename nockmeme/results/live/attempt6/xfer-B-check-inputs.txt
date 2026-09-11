@@ -1,0 +1,2 @@
+INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f PoijAA2ZhmaCVYFhc5crfYNBxQDjJ5HdDHvRQpN2gBRNDPodBa5iSE]	named token note
+INPUTS	1 verified

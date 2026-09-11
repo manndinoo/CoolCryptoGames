@@ -1,0 +1,85 @@
+ok    no blocks at all -> fail (rc=1 out=)
+ok    height 1 below minimum 3 -> fail (the reproduced bug) (rc=1 out=)
+ok    height 2, one short -> fail (rc=1 out=)
+ok    height 3 meets minimum 3 -> pass (rc=0 out=3)
+ok    height 7 exceeds minimum -> pass (rc=0 out=7)
+ok    latest line wins -> pass (rc=0 out=5)
+
+height-gate self-test: all checks passed
+height=624
+alice has a note at height<=625; chain at 627, coinbase mature
+== stage 5: resolve lock-roots ==
+alice lock-root=6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw
+bob   lock-root=CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV
+funding is read at: --lock 6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw --first 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f --first 4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax
+== A: genesis (DOGE) ==
+  token-free funding note: [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9vp6aeWc9zzab8a34kZKSrzHYrgbfNTaesGbX25cFUkWWk6iWbb9yi2]
+  spending note(s): [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9vp6aeWc9zzab8a34kZKSrzHYrgbfNTaesGbX25cFUkWWk6iWbb9yi2]
+  tx=/home/user/nmeme-run/wallets/alice/txs/9Rh82rUt1JWz4VEC68DYaTu8ehJgihoYmShNtvm4gzfd86WbFgXawx5.tx
+  INPUT-OK	[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9vp6aeWc9zzab8a34kZKSrzHYrgbfNTaesGbX25cFUkWWk6iWbb9yi2]	tokenfree
+  INPUTS	1 verified
+  verified output lock-root 6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw
+FEE	current=8192	required=5696	seed_words=29	witness_words=62
+  new sig-hash=CfvX4KHd77NC2AuLFz9zFkyXgY6NmWw9Kyy6W2A2DjTKwNCTXS7Z6j9
+nockchain-wallet tx-status AzC1fW8YDgcd2J4w18RCKs1De83R5Ecj9WH4mk3LqAmK9Sq5wgv8E
+GC.
+- Fee: paid 8192 nicks, consensus minimum 6208 nicks.
+――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+  txid=AzC1fW8YDgcd2J4w18RCKs1De83R5Ecj9WH4mk3LqAmK9Sq5wgv8EGC
+  confirmed at height 640
+== A: transfer 100 to bob, rest back to alice ==
+  # snapshot height 642 block uitLSdkVuWSER4NeXrDEaEv1z1Mu71MevT5s92krCNC6gAHiu9yFcQ
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5]	0	1000000
+  spending note(s): [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5]
+  tx=/home/user/nmeme-run/wallets/alice/txs/BBpEDm7h5wr8sKSK1DYdRJx58roHXfPN97ti6qcSqqgxipowkTB2mAk.tx
+  INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5]	named token note
+  INPUTS	1 verified
+  verified output lock-root CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV
+  verified output lock-root 6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw
+FEE	current=8192	required=7296	seed_words=43	witness_words=56
+  new sig-hash=7Awyp4HjbVoYPedcr1cjMVtLgB7JZ5BF3gexmFC4F8yKK3SLBcykTge
+nockchain-wallet tx-status 2XeMY77jqRUdWrt9ivRrmuAvm3UvCJ53hbNL5cpXRUSZocpG71Lb5
+mw.
+- Fee: paid 8192 nicks, consensus minimum 7424 nicks.
+――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+  txid=2XeMY77jqRUdWrt9ivRrmuAvm3UvCJ53hbNL5cpXRUSZocpG71Lb5mw
+  confirmed at height 650
+== B: genesis (PEPE) ==
+  token-free funding note: [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9WrJgpjZX9zAhdsHmmB8vCvDFh9yaBJoLsrpuG9HKmcJWnBjm44kvq6]
+  spending note(s): [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9WrJgpjZX9zAhdsHmmB8vCvDFh9yaBJoLsrpuG9HKmcJWnBjm44kvq6]
+  tx=/home/user/nmeme-run/wallets/alice/txs/4vNz6mUAVR9Aen3cwj2RFuiHBR1QEgW8zAk34qeCRCbzdnFDNzaxCcs.tx
+  INPUT-OK	[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9WrJgpjZX9zAhdsHmmB8vCvDFh9yaBJoLsrpuG9HKmcJWnBjm44kvq6]	tokenfree
+  INPUTS	1 verified
+  verified output lock-root 6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw
+FEE	current=8192	required=5696	seed_words=29	witness_words=62
+  new sig-hash=227A2e3iiSQm1Rpv3mb6ZFUhVjqUxUAsNoW2ResVAyX5Y99BUA5LvLb
+nockchain-wallet tx-status BojtQp3XEqAxXcb3vL7ZKBoX2xd4mSWjGT5MMjabnxLHE8CWHPYkC
+ua.
+- Fee: paid 8192 nicks, consensus minimum 6208 nicks.
+――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+  txid=BojtQp3XEqAxXcb3vL7ZKBoX2xd4mSWjGT5MMjabnxLHE8CWHPYkCua
+  confirmed at height 685
+== B: transfer 100 to bob, rest back to alice ==
+  # snapshot height 702 block 9rrPAkz6ZJpKAftheWQugHiJtC5dXLW7rD815NDJJYvgXc82K6BWQ6m
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f PoijAA2ZhmaCVYFhc5crfYNBxQDjJ5HdDHvRQpN2gBRNDPodBa5iSE]	0	1000000
+  spending note(s): [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f PoijAA2ZhmaCVYFhc5crfYNBxQDjJ5HdDHvRQpN2gBRNDPodBa5iSE]
+  tx=/home/user/nmeme-run/wallets/alice/txs/3wBSdbZPGQedvLv4dB78z8GG5dZWtRtVo2Z86Aqfp7Fb3hGomVJkBTd.tx
+  INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f PoijAA2ZhmaCVYFhc5crfYNBxQDjJ5HdDHvRQpN2gBRNDPodBa5iSE]	named token note
+  INPUTS	1 verified
+  verified output lock-root CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV
+  verified output lock-root 6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw
+FEE	current=8192	required=7168	seed_words=42	witness_words=56
+  new sig-hash=APqYLcGgGpfWpFWa1YatzogDaEmGFjRKfYbPFLBV1G3ta3CsFAKUeqJ
+nockchain-wallet tx-status sQkkababRKDj3TuMbPJUraDVCYTpLy7iySstw5XQ8TLCPkZtTGH5d
+S.
+- Fee: paid 8192 nicks, consensus minimum 7424 nicks.
+――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+  txid=sQkkababRKDj3TuMbPJUraDVCYTpLy7iySstw5XQ8TLCPkZtTGH5dS
+  confirmed at height 712
+== stage 9: replay the complete history and assert both tokens ==
+== stage 10: the omitted-history guard, live ==
+live-demo exit: 0

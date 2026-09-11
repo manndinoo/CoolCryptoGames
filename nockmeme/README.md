@@ -24,7 +24,7 @@ executed from what is only designed. Read that before trusting anything here.
 | Native stack builds | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
 | Node runs a chain | **done** — boots in 10 s at ~200 MB once the verifier seed cache is installed; the cache was generated on free hosted runners, one bucket per job — [`results/environment.md`](./results/environment.md) |
 | Transaction tooling | done, digest **verified against the wallet's signature on a live chain** — [`crates/nmeme-tx`](./crates/nmeme-tx) |
-| Proven on a live fakenet chain | **done** — genesis mined at height 75, transfer at height 91, balances rebuilt from the chain: 999,900 / 100 of 1,000,000 — [`results/RESULTS.md`](./results/RESULTS.md) §A11 |
+| Proven on a live fakenet chain | **done, twice over** — two tokens created and transferred with every input proven token-free or named before broadcast; both rebuilt from the chain with input provenance proven, the first unchanged by the second — [`results/RESULTS.md`](./results/RESULTS.md) §A11–A12 |
 | Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |
 | Platform UI | not started |
 
@@ -32,10 +32,13 @@ executed from what is only designed. Read that before trusting anything here.
 environment**: a node accepted and mined a real creation and a real transfer,
 and an indexer rebuilt from those blocks reported the expected split. Nothing
 has touched mainnet, trading is a design, and there is no platform UI. The
-run also surfaced three facts source reading had missed — the node's explorer
+runs also surfaced facts source reading had missed — the node's explorer
 cannot decode note-data transactions, balance queries take first-names not
-addresses, and a stock wallet will burn a token by spending its note as
-ordinary funds — all recorded in [`results/RESULTS.md`](./results/RESULTS.md).
+addresses, coinbase notes sit at their own lock, and a stock wallet will burn
+a token by spending its note as ordinary funds — and an outside review found
+that a rebuild given incomplete history could report a creation the rules
+reject; it now refuses instead. All recorded in
+[`results/RESULTS.md`](./results/RESULTS.md).
 
 ## Why note-data
 
