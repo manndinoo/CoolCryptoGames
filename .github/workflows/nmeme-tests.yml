@@ -51,6 +51,9 @@ jobs:
         env:
           CARGO_PROFILE_DEV_LTO: "false"
           CARGO_PROFILE_TEST_LTO: "false"
+          # sighash_fixtures reads wallet-tx-builder's fixture relative to the
+          # crate dir, which the workspace symlink resolves elsewhere
+          NOCKCHAIN_REPO: /mnt/work/nockchain
         run: |
           cargo test -p nmeme-core -p nmeme-tx -p nmeme-index 2>&1 | tee "$GITHUB_WORKSPACE/test-output.txt"
           test "${PIPESTATUS[0]}" -eq 0
