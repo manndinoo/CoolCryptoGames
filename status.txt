@@ -1,9 +1,1 @@
-run: 34549887736  attempt: 1  at: 2026-09-11T02:39:48Z
-
-               total        used        free      shared  buff/cache   available
-Mem:           15989       14320         304          50        1761        1668
-Swap:          27647       26464        1183
-
-node cgroup:
-13952393216
-27726962688
+finished with exit code 1 at 2026-09-11T02:44:05Z
