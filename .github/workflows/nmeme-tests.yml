@@ -1,0 +1,77 @@
+# Run the nmeme crate test suites inside the pinned Nockchain workspace on a
+# hosted runner. The crates build against the real nockchain-types and
+# nockchain-math, so the workspace is cloned and the crates are linked into
+# it exactly as RUNBOOK.md step 4 does.
+name: nmeme tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/new-session-wehujv]
+    paths:
+      - .github/workflows/nmeme-tests.yml
+      - nockmeme/crates/**
+      - nockmeme/scripts/link-into-workspace.sh
+
+env:
+  NOCKCHAIN_REV: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
+  WORK: /mnt/work
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Overcommit (the kernel jams reserve 16 GB of address space)
+        run: sudo sysctl -w vm.overcommit_memory=1
+      - name: System deps
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q protobuf-compiler clang cmake make pkg-config
+      - name: Clone Nockchain at the pinned revision
+        run: |
+          sudo mkdir -p "$WORK" && sudo chown "$USER" "$WORK"
+          git init -q "$WORK/nockchain" && cd "$WORK/nockchain"
+          git remote add origin https://github.com/nockchain/nockchain.git
+          git fetch -q --depth 1 origin "$NOCKCHAIN_REV"
+          git checkout -q FETCH_HEAD
+      - name: Restore the cargo cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /mnt/work/nockchain/target
+          key: nmeme-tests-${{ env.NOCKCHAIN_REV }}-${{ runner.os }}-v1
+      - name: Link the nmeme crates into the workspace
+        run: bash nockmeme/scripts/link-into-workspace.sh "$WORK/nockchain"
+      - name: cargo test
+        working-directory: /mnt/work/nockchain
+        env:
+          CARGO_PROFILE_DEV_LTO: "false"
+          CARGO_PROFILE_TEST_LTO: "false"
+        run: |
+          cargo test -p nmeme-core -p nmeme-tx -p nmeme-index 2>&1 | tee "$GITHUB_WORKSPACE/test-output.txt"
+          test "${PIPESTATUS[0]}" -eq 0
+          grep -E "^test result" "$GITHUB_WORKSPACE/test-output.txt"
+      - name: Shell self-tests (no chain needed)
+        run: |
+          cd nockmeme/scripts
+          bash gate-selftest.sh
+          bash height-gate-selftest.sh
+      - name: Save the cargo cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /mnt/work/nockchain/target
+          key: nmeme-tests-${{ env.NOCKCHAIN_REV }}-${{ runner.os }}-v1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nmeme-test-output
+          path: test-output.txt
+          if-no-files-found: ignore
