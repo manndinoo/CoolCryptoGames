@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=8954 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=65536000000	exec_e9=73191869555	impact_bps=1168
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7204679	91046
+POOL-SPEND	to_user=1000+8954t	successor=6549319+91046t	lore=3281+0t	fee=0
+PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	5W7qX2GoDkiFnukw2uzBaru4kK4bUPcDZ96bz9WTNzegnt5o3HQXRwT
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/pool/buy1/assembled.jam
+NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	CrWf9opSPXkcYtj9Xe7q1XkLxXjnvR2V8AkV9nXWHQxXPqi6F2vyXEK
+NEWSIGHASH	BMHXWvF3zSrLzmXy5D51UqqPrGjU2g3mhqogBbYVEANKC3DKwMwoYd1	3awyQR1hnbZMUKtpBy4ycMAdwWzCoLDjd4gyTLJjW3WSMzRckECxu54

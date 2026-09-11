@@ -1,0 +1,5 @@
+FEE	current=16384	required=7296	seed_words=43	witness_words=56
+ATTACHED	2SuLWtqfD5BcFA2zQo3yMwzHmjsFazkq4TVteUeA9QLfmxFYGTnq74P	100000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	599900
+WROTE	/home/user/nmeme-run/pool/pool-third-lock/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	CG4Ep3ak3pqAdkmwJ158Ts79LkfwQu5YMN2QRZY7GHhTfVMWH1HKVbt

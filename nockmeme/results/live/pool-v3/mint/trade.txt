@@ -1,0 +1,10 @@
+QUOTE	buy	in=655360 nicks	out_net=8948 tokens	pool_fee=6966 nicks	lore_fee=3281 nicks	nock_fees=10247 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=65536000000	exec_e9=73240947697	impact_bps=1175
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7204679	91052
+ATTACK	successor-tokens	101000
+POOL-SPEND	to_user=1000+8948t	successor=6549319+101000t	lore=3281+0t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	7P85gPo8xP2gZSB6D4cfEiiQAXH5Fv8rju3huxviQQeLQuXnY2z1tGL
+FEE	current=16384	required=8384	seed_words=43	witness_words=90
+WROTE	/home/user/nmeme-run/pool/mint/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	2QnaFk66gYGTGGTbZfS4nDUzkiWZCKxeiuZBYsPDuEQtST8xc9LkZJg
+NEWSIGHASH	6aRbYRDduz5TqpZ7U7VStXreVrm5AhnYr7zM9r9eNHYU7CWQRs5HZ38	6G6i9wnbrxX1ZK9VFWpNA1Jw6813sQRe5WqJrjQ7PcT1BYwnyEmQ5Qg

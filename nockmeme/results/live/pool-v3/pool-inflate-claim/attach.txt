@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	ANyPsNLSLugUY3XHgWTBFzw8N3kpodhyq3es3jWwYWy4mGkDw3SCsGM	100000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	399900
+WROTE	/home/user/nmeme-run/pool/pool-inflate-claim/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	AKmx7QFDxRB2UHJwoXZtYpAW8J5sCcxRtR7XKBQeRLYAVM2PLeoW7Ej

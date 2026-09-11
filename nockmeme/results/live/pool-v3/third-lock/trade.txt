@@ -1,0 +1,10 @@
+QUOTE	buy	in=655360 nicks	out_net=8951 tokens	pool_fee=6771 nicks	lore_fee=3281 nicks	nock_fees=10052 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=65536000000	exec_e9=73216400402	impact_bps=1171
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7204679	91049
+ATTACK	extra-seed	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	1000
+POOL-SPEND	to_user=1000+8951t	successor=6548319+91049t	lore=3281+0t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	7XKanzWWUtk2dMHj5EJwrZXgGDKBB8dN5AtZkfNpcBTezV2f5jZptjw
+FEE	current=16384	required=8384	seed_words=43	witness_words=90
+WROTE	/home/user/nmeme-run/pool/third-lock/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	2Zk4arNTUJGX1yPjA9nZ5GHFTMFKdqMELM22T1yLLP8wyqybEku4gGr
+NEWSIGHASH	4Yj42EcAcmwrNq5JrPx5Yn6f48amrHzCDQKb7jtZjEeuWL2B1xZBV3L	73hBT7vdLchCc4xfCwFeG2Vt87bwyfACJRMBTwFbcmMDt2mghecCGV9

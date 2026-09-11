@@ -1,0 +1,3 @@
+RETARGETED	1	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	XSVuwYm1PAdYxwrd79NMHyNUKVZu8i9hQajDdD6V7tMKude4jSGRTz
+WROTE	/home/user/nmeme-run/pool/pool-creator-key/retargeted.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	5MyATGYCUY8VQ5o4z1UxaL69DTwHe4smWkMc6mysPr4XhNdPpwJPcTA

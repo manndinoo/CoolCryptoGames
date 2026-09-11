@@ -1,0 +1,177 @@
+== stage 0: the Lore Wallet, and the miner ==
+#### run 22:19:44
+== stage 0: the Lore Wallet, and the miner ==
+#### run 22:24:42
+== stage 0: the Lore Wallet, and the miner ==
+LORE-WALLET	address=qh5STcPG3z9NDRxrYKkmXC2dxQYiibRhWD4bg4jEq4boTExcxGrSU7	lock=CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq	first=8XiLmcEdqg33KDK4fCyNbFzHsTJVd2uygrH7uCkRZsBWCkhABN9mad6	key=the lore wallet (held, not locked)
+miner pid=2600
+== stage 1: fund bob with 4 plain notes ==
+FUND	bob	txid=7dSrJwufGcvprqpqAvaR7ib4Lzn99WnHoPZMiaeKhviaPD4igDns2L1	height=182	+1310720 nicks
+FUND	bob	txid=CePJSJaEAVTFDV9SCP7JduZn8qgdQHyLsPAswWRaZ2Pv19HfTuxJQFD	height=191	+1310720 nicks
+FUND	bob	txid=CJ18HHCyKbBQtnRcWEkcy4sW6gpy2eo5UdtKqmYgo32oZSofGAShJnC	height=212	+1310720 nicks
+FUND	bob	txid=7iugqd6gf63zq9wGRV8NYLXygAhq4vhzVfFScEedy2DSLY8vSNLrcWp	height=227	+1310720 nicks
+== stage 2: the main pool (token B) ==
+OPEN	main	txid=BfQMCmPAfNnw2QPCgw3Bfbs8rShevnBUgq9YdebPGwbYKrSQbYC7FK6	height=255	lock=59UJ1TxDXJ5jbWXu9LAQ2GSi4JwMEnbyPundZ1o9aoosUEBgnjs2DE1	nock=6553600	tokens=100000	alice_change=899900
+LOCK	main	59UJ1TxDXJ5jbWXu9LAQ2GSi4JwMEnbyPundZ1o9aoosUEBgnjs2DE1	spend-condition=[%amm 5ewPZLXkPk1NVyQxBxS2jLjq2DsQdk3ZN12jJfaNdCqaL446oP6XY1u 100 50 CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq]	no key
+== stage 3: honest trades ==
+QUOTE	buy1	buy in=655360 nicks out_net=8954 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73191869555 impact_bps=1168	pool_before=6553600/100000
+MINED	buy1	txid=9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn	height=273	pool_after=7204679/91046	to_user=1000+8954t successor=6549319+91046t lore=3281+0t fee=0
+LORE	buy1	+3281 nicks	balance=3281	notes=1	all_plain=yes
+ROUNDING	a trade the covenant admits no output for is refused by the quote: error: quote: trade too small: the covenant admits no output for it
+QUOTE	sell1	sell in=4477 tokens out_net=333769 nicks pool_fee=44 tokens lore_fee=1682 nicks nock_fees=1682 nicks token_fees=44 tokens network_fee=16384 nicks spot_e9=79132295762 exec_e9=74551932097 impact_bps=614	pool_before=7204679/91046
+MINED	sell1	txid=22pAfUgxdS9teSvyGvkM25u7jnHWHV3jNEWntXY42qXReykL8bo4qKe	height=290	pool_after=6870228/95523	to_user=333769+0t successor=6869228+95523t lore=1682+0t fee=0
+LORE	sell1	+1682 nicks	balance=4963	notes=2	all_plain=yes
+QUOTE	buy2	buy in=655360 nicks out_net=8193 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=71922238623 exec_e9=79990235566 impact_bps=1121	pool_before=6870228/95523
+MINED	buy2	txid=317fGwsSac5mx5cDDGNdTHivWedbHUSkkFTg2gQ1GC9ThqjmoDyyqwH	height=302	pool_after=7521307/87330	to_user=1000+8193t successor=6865947+87330t lore=3281+0t fee=0
+LORE	buy2	+3281 nicks	balance=8244	notes=3	all_plain=yes
+== stage 4: simultaneous trades against one pool note ==
+QUOTE	sim-bob	buy in=655360 nicks out_net=6893 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=86125123096 exec_e9=95076164224 impact_bps=1039	pool_before=7521307/87330
+QUOTE	sim-alice	buy in=655360 nicks out_net=6893 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=86125123096 exec_e9=95076164224 impact_bps=1039	pool_before=7521307/87330
+SIMULTANEOUS	sent	bob=8FVUMFc7n4ygpQQyTZLyDqr581qWUecsDrdGD65Auibc7iAJf1TBaNL (admitted)	alice=5mLnaU8sQgo4k81rcnRbCcUhp4dFfFgS4Jt3XEJJcjTpjEJ3fbQbYhN (not admitted)
+LORE	sim-bob	+3281 nicks	balance=11525	notes=4	all_plain=yes
+SIMULTANEOUS	mined=sim-bob	not_mined=sim-alice	(the second spend of the same pool note cannot be valid once the first is)
+QUOTE	requote	buy in=655360 nicks out_net=5880 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=101599835896 exec_e9=111455782312 impact_bps=970	pool_before=8172386/80437
+MINED	requote	txid=9c8mccgc7PVsApoLV3Cg3q7CxWms3u6LsXvdvLyJuWTVQt8QKEj177x	height=346	pool_after=8823465/74557	to_user=1000+5880t successor=8168105+74557t lore=3281+0t fee=0
+LORE	requote	+3281 nicks	balance=14806	notes=5	all_plain=yes
+== stage 5: attacks, each on its own pool (token A) ==
+OPEN	pool-withdraw	txid=39MDmCsQs6y9LzCiwh5Yj2m8nRutGuaHz3VjU1Dw3zmVutYf2ywxMhp	height=358	lock=DWfFcBo5z4ZCDuze4dshh6L1FxFUzeiHL1adnST8we6tibk5sD1GDDe	nock=6553600	tokens=100000	alice_change=899900
+QUOTE	withdraw	buy in=655360 nicks out_net=8953 tokens pool_fee=6575 nicks lore_fee=3281 nicks nock_fees=9856 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73200044677 impact_bps=1169	pool_before=6553600/100000
+REJECTED	withdraw	txid=2zGE2m4pRCYAxdnoMiccEcpHExmn7nQUoWqkQsHAUVY12DNbCTyyrTP	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-over-payout	txid=DNzffUzSsgeeCvJuK2ThMZEdRKAXJ4FdzmRUwvqy93cTwXFNkQiSXKA	height=387	lock=j6YfhWmg7LQDxkNCAGGA1zbVTFWBrRAkQmVgwoRbXeNckuZkidJBQF	nock=6553600	tokens=100000	alice_change=799900
+QUOTE	over-payout	buy in=655360 nicks out_net=8943 tokens pool_fee=7357 nicks lore_fee=3281 nicks nock_fees=10638 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73281896455 impact_bps=1181	pool_before=6553600/100000
+REJECTED	over-payout	txid=2oKsDkN1EnSDnoF4c4kcqVGToS7mybrvXFrhUyo6fGLFmPD3QLCDwhF	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-pool-fee	txid=5WyQpfjaZcxdbn2nppjoXLLZCgnBdLoRXM4pTTYZGeydPw3q2BPznPF	height=425	lock=3BnnmZUaFAJirkazSHqsgX7WQTAcPXoEfmpNv7RpSRHeVwGCnBuCm4S	nock=6553600	tokens=100000	alice_change=699900
+QUOTE	pool-fee	buy in=655360 nicks out_net=8943 tokens pool_fee=7422 nicks lore_fee=3281 nicks nock_fees=10703 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73281896455 impact_bps=1181	pool_before=6553600/100000
+REJECTED	pool-fee	txid=2kpPUJrXYKnKJMDMMdLDfT1orGTqAqeJsWoeQwXuRh2wd1535wwVhmq	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-third-lock	txid=6HDJpLifYr13RgrWC1T6mXdBoPFs1XjwPBH71KQSRBcwiVahXWKGnxH	height=448	lock=2SuLWtqfD5BcFA2zQo3yMwzHmjsFazkq4TVteUeA9QLfmxFYGTnq74P	nock=6553600	tokens=100000	alice_change=599900
+QUOTE	third-lock	buy in=655360 nicks out_net=8951 tokens pool_fee=6771 nicks lore_fee=3281 nicks nock_fees=10052 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73216400402 impact_bps=1171	pool_before=6553600/100000
+REJECTED	third-lock	txid=9hehQFU4eNnfp2ZxiEjPxzXRQZNRS8VEexc3dboS8hGeaBN6Cw9XiTZ	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-drop-claim	txid=26dnHhmSND9pFCL99bCrNEKXAE1Fw3RvsvrUk9mdbRw4nt5MuwLYLR7	height=476	lock=4gVBVP7ReszQUwWaXE8XbCBCNnwQJQRHmos9xF2U37BSMUF4MZFm6Xf	nock=6553600	tokens=100000	alice_change=499900
+QUOTE	drop-claim	buy in=655360 nicks out_net=8950 tokens pool_fee=6836 nicks lore_fee=3281 nicks nock_fees=10117 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73224581005 impact_bps=1173	pool_before=6553600/100000
+REJECTED	drop-claim	txid=4K89r2BFY1qd9LrfXr3rZhWyXE35mWqJ8KPM3wMENQnwym8uF7LNuTo	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-inflate-claim	txid=9LoSJ1Q6HS7fC5bUQyiQKXHmg9cW1Y6gpXVTwBF7GMrreRXJ6aHfr7F	height=506	lock=ANyPsNLSLugUY3XHgWTBFzw8N3kpodhyq3es3jWwYWy4mGkDw3SCsGM	nock=6553600	tokens=100000	alice_change=399900
+QUOTE	inflate-claim	buy in=655360 nicks out_net=8949 tokens pool_fee=6901 nicks lore_fee=3281 nicks nock_fees=10182 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73232763437 impact_bps=1174	pool_before=6553600/100000
+REJECTED	inflate-claim	txid=BRmRAHS6tdasHfuVdzF9gCq2RbgL5Y7xn7CvMnTLwJoXc2w8Ny8GZLX	mempool: not admitted	not mined in 2 blocks	inputs still unspent
+OPEN	pool-mint	txid=6Fbe97skM45L63i58o9GhtbFH1Qh5Aj3uJv1CVNpeHBW9LevQf7zbTT	height=533	lock=5SvU3dxK68z3t5xaJ6hmYNCfeRMDK7PhNCpa4zo5Ez1J3hJ3sUzL63G	nock=6553600	tokens=100000	alice_change=299900
+QUOTE	mint	buy in=655360 nicks out_net=8948 tokens pool_fee=6966 nicks lore_fee=3281 nicks nock_fees=10247 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73240947697 impact_bps=1175	pool_before=6553600/100000
+REJECTED	mint	txid=4ZzhwhWeC868Yq3M2cfzDyHdUUpK8CbLdXfRe7mVdDgKw9ESfijoBmh	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-lore-short	txid=8ahLvKQfkKn11kTMLJc23koDtLhrdVjSSSefBWwsSmYiTfna7WMcpAQ	height=560	lock=AUp6QAvHty7vWQjk4HFG9wj5JeHs1zNeT2jDvYJwfNERMHtNFJEaaiG	nock=6553600	tokens=100000	alice_change=199900
+QUOTE	lore-short	buy in=655360 nicks out_net=8945 tokens pool_fee=7226 nicks lore_fee=3281 nicks nock_fees=10507 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73265511458 impact_bps=1179	pool_before=6553600/100000
+REJECTED	lore-short	txid=ynQdcLFNXiVjigV5Xh286mM2bf8vwcxEKNBgBe56AszwgEKjpZsD8V	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-lore-tokens	txid=2po8TGAUUDNkZt4BVLV5Z3mHkkB9o37mXPbCwLy8p2RSyj21QeBFUUx	height=584	lock=CKXGm3mCuwjzLfqScRgvhkats35pKJiUvq2Ww2YNQZtNJGRAyfvQgwR	nock=6553600	tokens=100000	alice_change=99900
+QUOTE	lore-tokens	buy in=655360 nicks out_net=8944 tokens pool_fee=7292 nicks lore_fee=3281 nicks nock_fees=10573 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=65536000000 exec_e9=73273703041 impact_bps=1180	pool_before=6553600/100000
+REJECTED	lore-tokens	txid=2MPfAosMRXRvWuMmwUqQdHuTT8T5Lx1sA9npPt5f6uUisRAWvavqt8r	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+#### run 22:55:29
+== stage 0: the Lore Wallet, and the miner ==
+LORE-WALLET	address=qh5STcPG3z9NDRxrYKkmXC2dxQYiibRhWD4bg4jEq4boTExcxGrSU7	lock=CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq	first=8XiLmcEdqg33KDK4fCyNbFzHsTJVd2uygrH7uCkRZsBWCkhABN9mad6	key=the lore wallet (held, not locked)
+miner pid=9242
+RESUMED	the Lore Wallet holds 14806 nicks
+== stage 1: fund bob with 0 plain notes ==
+== stage 2: the main pool (token B) ==
+RESUMED	main pool opened by BfQMCmPAfNnw2QPCgw3Bfbs8rShevnBUgq9YdebPGwbYKrSQbYC7FK6; steps so far: --step 9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn:/home/user/nmeme-run/pool/buy1/final.jam
+LOCK	main	59UJ1TxDXJ5jbWXu9LAQ2GSi4JwMEnbyPundZ1o9aoosUEBgnjs2DE1	spend-condition=[%amm 5ewPZLXkPk1NVyQxBxS2jLjq2DsQdk3ZN12jJfaNdCqaL446oP6XY1u 100 50 CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq]	no key
+== stage 3: honest trades ==
+RESUMED	buy1 already mined
+ROUNDING	a trade the covenant admits no output for is refused by the quote: error: quote: trade too small: the covenant admits no output for it
+RESUMED	sell1 already mined
+RESUMED	buy2 already mined
+== stage 4: simultaneous trades against one pool note ==
+RESUMED	requote already mined
+== stage 5: attacks, each on its own pool (token A) ==
+RESUMED	withdraw already tested: REJECTED	withdraw	txid=2zGE2m4pRCYAxdnoMiccEcpHExmn7nQUoWqkQsHAUVY12DNbCTyyrTP	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	over-payout already tested: REJECTED	over-payout	txid=2oKsDkN1EnSDnoF4c4kcqVGToS7mybrvXFrhUyo6fGLFmPD3QLCDwhF	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	pool-fee already tested: REJECTED	pool-fee	txid=2kpPUJrXYKnKJMDMMdLDfT1orGTqAqeJsWoeQwXuRh2wd1535wwVhmq	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	third-lock already tested: REJECTED	third-lock	txid=9hehQFU4eNnfp2ZxiEjPxzXRQZNRS8VEexc3dboS8hGeaBN6Cw9XiTZ	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	drop-claim already tested: REJECTED	drop-claim	txid=4K89r2BFY1qd9LrfXr3rZhWyXE35mWqJ8KPM3wMENQnwym8uF7LNuTo	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	inflate-claim already tested: REJECTED	inflate-claim	txid=BRmRAHS6tdasHfuVdzF9gCq2RbgL5Y7xn7CvMnTLwJoXc2w8Ny8GZLX	mempool: not admitted	not mined in 2 blocks	inputs still unspent
+RESUMED	mint already tested: REJECTED	mint	txid=4ZzhwhWeC868Yq3M2cfzDyHdUUpK8CbLdXfRe7mVdDgKw9ESfijoBmh	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	lore-short already tested: REJECTED	lore-short	txid=ynQdcLFNXiVjigV5Xh286mM2bf8vwcxEKNBgBe56AszwgEKjpZsD8V	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	lore-tokens already tested: REJECTED	lore-tokens	txid=2MPfAosMRXRvWuMmwUqQdHuTT8T5Lx1sA9npPt5f6uUisRAWvavqt8r	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+OPEN	pool-creator-key	txid=2S8Dp4ptkqGd8cq2ZqmnjHXyUPi9QvMw62qSYoBwUmPJQnVHx9w5GM1	height=608	lock=XSVuwYm1PAdYxwrd79NMHyNUKVZu8i9hQajDdD6V7tMKude4jSGRTz	nock=6553600	tokens=10000	alice_change=89900
+QUOTE	creator-key	buy in=655360 nicks out_net=894 tokens pool_fee=7031 nicks lore_fee=3281 nicks nock_fees=10312 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=655360000000 exec_e9=733064876957 impact_bps=1185	pool_before=6553600/10000
+REJECTED	creator-key	txid=4SiCP84JoUmmXNwX9DedCzoSMNZGZZaRELbqZ3NYvyDfcSK1tbWWY6x	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-merge	txid=D91RXJp7nocGA3dZoVmQNW2RpbgiuhViSfXFbqxQkF1hZvFx6GJSBW2	height=641	lock=9M89kZUpaHxVnePWNGNvNeS8WJnfauknjsXoXZSXeMF8PQRKGAhejye	nock=6553600	tokens=10000	alice_change=79900
+DONATION	donate-merge	txid=6KiTbskf3U7xJj8KfWTiTT1eknhdqpyr98Ej7UXQDRdnAEtK9CiBN8G	nock=100000	tokens=1000	(a second note at the pool lock)
+REJECTED	take-donation	txid=6dUS9d8aopoDa9kNuTQevBNd7zRATRT1HSxcKwhojbmFP6EsZjMGPfB	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+== stage 6: a donation merged honestly (token A, pool 110) ==
+OPEN	pool-merge-ok	txid=7G48WTVHgZvHC11NEktG2UnM22wre4RXXLAeB65wLC27opAeYSrE9ED	height=679	lock=4gHRsWHToHnVyJuvsZnoFVXm83hCCGxDiNpL4CcMELUWy8pBoTMWUbB	nock=6553600	tokens=10000	alice_change=68900
+DONATION	donate-ok	txid=Ats6EqqW7bbnBknsBmAAAGyQgXkh5jseMDWqbAoXiGSdF9ypRjGeTtD	nock=100000	tokens=1000	(a second note at the pool lock)
+MERGED	merge-ok	txid=D3kLibfifVe9t6ruzgc4Zo3vvDVeC7Q51YBimuh5AtoHXf5WkERAYuH	pool_after=7304679/10106	(the donation is now reserves; the buy priced against the sum)
+LORE	merge-ok	+3281 nicks	balance=18087	notes=6	all_plain=yes
+== stage 7: rebuild with provenance, replay the main pool ==
+#### run 23:04:34
+== stage 0: the Lore Wallet, and the miner ==
+LORE-WALLET	address=qh5STcPG3z9NDRxrYKkmXC2dxQYiibRhWD4bg4jEq4boTExcxGrSU7	lock=CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq	first=8XiLmcEdqg33KDK4fCyNbFzHsTJVd2uygrH7uCkRZsBWCkhABN9mad6	key=the lore wallet (held, not locked)
+miner pid=11282
+RESUMED	the Lore Wallet holds 18087 nicks
+== stage 1: fund bob with 0 plain notes ==
+== stage 2: the main pool (token B) ==
+RESUMED	main pool opened by BfQMCmPAfNnw2QPCgw3Bfbs8rShevnBUgq9YdebPGwbYKrSQbYC7FK6; steps so far: --step 9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn:/home/user/nmeme-run/pool/buy1/final.jam
+LOCK	main	59UJ1TxDXJ5jbWXu9LAQ2GSi4JwMEnbyPundZ1o9aoosUEBgnjs2DE1	spend-condition=[%amm 5ewPZLXkPk1NVyQxBxS2jLjq2DsQdk3ZN12jJfaNdCqaL446oP6XY1u 100 50 CqLidSVWBE8NnaL9xko8Dt6Mft6wWgd4Ro71yGZninJpZbLcpZMCiwq]	no key
+== stage 3: honest trades ==
+RESUMED	buy1 already mined
+ROUNDING	a trade the covenant admits no output for is refused by the quote: error: quote: trade too small: the covenant admits no output for it
+RESUMED	sell1 already mined
+RESUMED	buy2 already mined
+== stage 4: simultaneous trades against one pool note ==
+RESUMED	sim-bob already mined (the simultaneous winner)
+RESUMED	requote already mined
+== stage 5: attacks, each on its own pool (token A) ==
+RESUMED	withdraw already tested: REJECTED	withdraw	txid=2zGE2m4pRCYAxdnoMiccEcpHExmn7nQUoWqkQsHAUVY12DNbCTyyrTP	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	over-payout already tested: REJECTED	over-payout	txid=2oKsDkN1EnSDnoF4c4kcqVGToS7mybrvXFrhUyo6fGLFmPD3QLCDwhF	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	pool-fee already tested: REJECTED	pool-fee	txid=2kpPUJrXYKnKJMDMMdLDfT1orGTqAqeJsWoeQwXuRh2wd1535wwVhmq	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	third-lock already tested: REJECTED	third-lock	txid=9hehQFU4eNnfp2ZxiEjPxzXRQZNRS8VEexc3dboS8hGeaBN6Cw9XiTZ	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	drop-claim already tested: REJECTED	drop-claim	txid=4K89r2BFY1qd9LrfXr3rZhWyXE35mWqJ8KPM3wMENQnwym8uF7LNuTo	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	inflate-claim already tested: REJECTED	inflate-claim	txid=BRmRAHS6tdasHfuVdzF9gCq2RbgL5Y7xn7CvMnTLwJoXc2w8Ny8GZLX	mempool: not admitted	not mined in 2 blocks	inputs still unspent
+RESUMED	mint already tested: REJECTED	mint	txid=4ZzhwhWeC868Yq3M2cfzDyHdUUpK8CbLdXfRe7mVdDgKw9ESfijoBmh	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	lore-short already tested: REJECTED	lore-short	txid=ynQdcLFNXiVjigV5Xh286mM2bf8vwcxEKNBgBe56AszwgEKjpZsD8V	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	lore-tokens already tested: REJECTED	lore-tokens	txid=2MPfAosMRXRvWuMmwUqQdHuTT8T5Lx1sA9npPt5f6uUisRAWvavqt8r	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	creator-key already tested: REJECTED	creator-key	txid=4SiCP84JoUmmXNwX9DedCzoSMNZGZZaRELbqZ3NYvyDfcSK1tbWWY6x	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+RESUMED	take-donation already tested: REJECTED	take-donation	txid=6dUS9d8aopoDa9kNuTQevBNd7zRATRT1HSxcKwhojbmFP6EsZjMGPfB	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+== stage 6: a donation merged honestly (token A, pool 110) ==
+RESUMED	merge-ok already mined: MERGED	merge-ok	txid=D3kLibfifVe9t6ruzgc4Zo3vvDVeC7Q51YBimuh5AtoHXf5WkERAYuH	pool_after=7304679/10106	(the donation is now reserves; the buy priced against the sum)
+== stage 7: rebuild with provenance, replay the main pool ==
+EVIDENCE	692 coinbase note(s) re-verified against block parents
+EVIDENCE	697 coinbase names recomputed from the parents of blocks 1..=697
+STEP	BxUQ28Ddx2rvjPoFtF6ymJMa8wyT2h71jwDdVqk8tQrYnyWZUYsiEx5	Created(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(150882362813608327
+STEP	YG1MqmasBGVc3LH1VZFoJvsR782HYX2kZSJS5BBXbgVT1mgmcWjtwP	Transferred(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(150882362813608
+STEP	7dSrJwufGcvprqpqAvaR7ib4Lzn99WnHoPZMiaeKhviaPD4igDns2L1	Untouched
+STEP	CePJSJaEAVTFDV9SCP7JduZn8qgdQHyLsPAswWRaZ2Pv19HfTuxJQFD	Untouched
+STEP	CJ18HHCyKbBQtnRcWEkcy4sW6gpy2eo5UdtKqmYgo32oZSofGAShJnC	Untouched
+STEP	7iugqd6gf63zq9wGRV8NYLXygAhq4vhzVfFScEedy2DSLY8vSNLrcWp	Untouched
+STEP	BfQMCmPAfNnw2QPCgw3Bfbs8rShevnBUgq9YdebPGwbYKrSQbYC7FK6	Transferred(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(15088236281360
+STEP	9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn	Transferred(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(15088236281360
+STEP	22pAfUgxdS9teSvyGvkM25u7jnHWHV3jNEWntXY42qXReykL8bo4qKe	Transferred(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(15088236281360
+STEP	317fGwsSac5mx5cDDGNdTHivWedbHUSkkFTg2gQ1GC9ThqjmoDyyqwH	Transferred(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(15088236281360
+STEP	8FVUMFc7n4ygpQQyTZLyDqr581qWUecsDrdGD65Auibc7iAJf1TBaNL	Transferred(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(15088236281360
+STEP	9c8mccgc7PVsApoLV3Cg3q7CxWms3u6LsXvdvLyJuWTVQt8QKEj177x	Transferred(TokenId(Hash([Belt(4083612103537192419), Belt(7448170545204878071), Belt(15088236281360
+BALANCE	59UJ1TxDXJ5jbWXu9LAQ2GSi4JwMEnbyPundZ1o9aoosUEBgnjs2DE1	74557
+BALANCE	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	913973
+BALANCE	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	11470
+TOTAL	1000000
+ASSERT-OK	total	1000000
+OPEN	BfQMCmPAfNnw2QPCgw3Bfbs8rShevnBUgq9YdebPGwbYKrSQbYC7FK6	6553600	100000
+LORE	9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn	buy	nock_delta=+651079	token_delta=-8954	fee_retained=6510	k_before=0:655360000000	k_after=0:655957204234	invariant=holds
+LORE	22pAfUgxdS9teSvyGvkM25u7jnHWHV3jNEWntXY42qXReykL8bo4qKe	nock_in=1000	nock_out=333769	due_floor=1673	paid=1682	tokens_to_lore=0	ok
+TRADE	22pAfUgxdS9teSvyGvkM25u7jnHWHV3jNEWntXY42qXReykL8bo4qKe	sell	nock_delta=-334451	token_delta=+4477	fee_retained=44	k_before=0:655957204234	k_after=0:656264789244	invariant=holds
+LORE	317fGwsSac5mx5cDDGNdTHivWedbHUSkkFTg2gQ1GC9ThqjmoDyyqwH	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	317fGwsSac5mx5cDDGNdTHivWedbHUSkkFTg2gQ1GC9ThqjmoDyyqwH	buy	nock_delta=+651079	token_delta=-8193	fee_retained=6510	k_before=0:656264789244	k_after=0:656835740310	invariant=holds
+LORE	8FVUMFc7n4ygpQQyTZLyDqr581qWUecsDrdGD65Auibc7iAJf1TBaNL	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	8FVUMFc7n4ygpQQyTZLyDqr581qWUecsDrdGD65Auibc7iAJf1TBaNL	buy	nock_delta=+651079	token_delta=-6893	fee_retained=6510	k_before=0:656835740310	k_after=0:657362212682	invariant=holds
+LORE	9c8mccgc7PVsApoLV3Cg3q7CxWms3u6LsXvdvLyJuWTVQt8QKEj177x	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	9c8mccgc7PVsApoLV3Cg3q7CxWms3u6LsXvdvLyJuWTVQt8QKEj177x	buy	nock_delta=+651079	token_delta=-5880	fee_retained=6510	k_before=0:657362212682	k_after=0:657851080005	invariant=holds
+STATE	8823465	74557	K	0:657851080005	fees_retained_nock=26040	fees_retained_tokens=44	lore_paid_total=14806
+REPLAY-OK	live pool state 8823465 74557 equals the replayed state
+LORE-FINAL	balance=18087 nicks	notes=6	non_plain=0	replay_total_main_pool=14806	(attack pools paid nothing: no attack was mined)
+#### pool suite complete

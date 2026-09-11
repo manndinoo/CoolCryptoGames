@@ -623,19 +623,117 @@ did not admit it; the note never existed and there was nothing to sell.
 The phase-three pool suite that follows (§A19) ran the whole trade and
 attack set again under the claim rule.
 
+### A19. Phase three: the whole suite under the claim rule, live
+
+The node rebuilt with `++  meme` (§A17) ran a fresh chain: `live-demo.sh`
+(both genesis transactions carrying their derived ids, mined at 28 and
+103), the counterfeit regression (refused on arrival), then
+`pool-suite.sh`. Evidence in [`live/pool-v3/`](./live/pool-v3/): every
+transaction file, quote, node answer and log verdict, the treasury's
+notes, the rebuild and the replay. Nothing in the tooling's trade path
+changed between phases two and three; what changed is the consensus rule
+the transactions were checked against.
+
+**The main pool** (token B of this chain, `5ewPZL…`, 100 + 50 bps) opened
+in block 241 with 6,553,600 nicks and 100,000 tokens. Heights below are
+the blocks the rebuild found the transactions in.
+
+| trade | who | in | out, net | pool share | Lore share | impact | block | pool after | Lore Wallet after |
+|---|---|---|---|---|---|---|---|---|---|
+| buy | Bob | 655,360 nicks | 8,954 tokens | 6,510 nicks | 3,281 nicks | 11.68 % | 265 | 7,204,679 / 91,046 | 3,281 (1 note) |
+| sell | Bob | 4,477 tokens | 333,769 nicks | 44 tokens | 1,682 nicks | 6.14 % | 282 | 6,870,228 / 95,523 | 4,963 (2) |
+| buy | Alice | 655,360 nicks | 8,193 tokens | 6,510 nicks | 3,281 nicks | 11.21 % | 302 | 7,521,307 / 87,330 | 8,244 (3) |
+| buy (of two sent together) | Bob | 655,360 nicks | 6,893 tokens | 6,510 nicks | 3,281 nicks | 10.39 % | 317 | 8,172,386 / 80,437 | 11,525 (4) |
+| buy (re-quoted) | Alice | 655,360 nicks | 5,880 tokens | 6,510 nicks | 3,281 nicks | 9.70 % | 331 | 8,823,465 / 74,557 | 14,806 (5) |
+
+Every figure equals phase two's (§A16): same inputs, same curve, same
+shares, same rounding. After every mined trade the Lore Wallet's balance
+read from the node equalled the running sum of the quoted shares, every
+note there was `plain`, and the pool note was exactly the quote's
+`POOL-AFTER`. The network fee (16,384 nicks per trade) was shown
+separately by every quote and paid by the trader's spend. The
+rounding case (`ROUNDING`, refused by the quote) and the simultaneous
+pair (Bob's admitted and mined, Alice's not admitted, re-quoted, mined)
+repeated.
+
+**Attacks**, each on its own fresh pool of token A (`9XKxzC…`, fees
+101–112 bps with 100,000 tokens; 108–110 with 10,000 tokens, because
+twelve pools at 100,000 outrun the 999,900 Alice holds after the demo —
+the suite stopped at the ninth and was resumed with smaller pools, which
+is why `results.txt` carries three runs):
+
+| attack | what was altered | node's answer |
+|---|---|---|
+| withdraw | successor 100,000 nicks short, the difference to the trader | refused at admission |
+| over-payout | one token more than the quote | refused at admission |
+| pool-fee | the pool spend pays a 1-nick miner fee | refused at admission |
+| third-lock | 1,000 nicks of reserves to a lock no spend of the transaction pays | refused at admission |
+| drop-claim | successor without its token claim | refused at admission |
+| inflate-claim | a 1,000,000-token claim on the trader's own payment to the pool | **refused at admission** (phase two had mined it harmlessly; see below) |
+| mint | successor claims 1,000 tokens more than went in | refused at admission |
+| lore-short | the treasury paid 1 nick less than its share | refused at admission |
+| lore-tokens | 10 tokens sent to the treasury with its NOCK | refused at admission |
+| creator-key | the pool note spent under a key lock, signed by Alice, the creator | refused at admission |
+| take-donation | a second note at the pool lock spent with the pool note, its value to the trader | refused at admission |
+
+All eleven: the node's log says `heard-tx: Transaction context invalid:
+v1-spend-1-lock-failed` (the pool spend's covenant), the mempool did not
+admit them, nothing was mined, and the pool note and the trader's note
+were unspent two blocks later (`live/pool-v3/node-log-verdicts.txt`,
+`live/pool-v3/verdicts/`).
+
+**inflate-claim, both ways.** The transaction puts a second `meme` entry
+at the pool's lock, on the trader's payment seed. Consensus unions the
+note-data of the seeds that land at one lock, and which entry survives a
+key collision depends on the order the seeds fold in, which depends on
+their hashes. In phase two the pool's own claim survived: the outputs
+were an honest trade's and it mined as one. In phase three the fabricated
+one survived: the covenant, which sums claims on the outputs exactly as
+consensus builds them, found more tokens leaving than entering and
+refused the spend. Had the covenant not, the claim rule would have
+(outputs' transfer claims of the token exceeding the inputs'). Neither
+outcome mints anything; the difference is whether the trader gets an
+honest fill or nothing.
+
+**The honest donation** (pool 110): a second note (100,000 nicks, 1,000
+tokens) at the pool's lock, spent together with the pool note by a buy
+whose successor absorbs both — mined in block 696; the pool held
+7,304,679 / 10,106 afterwards and the treasury received the buy's 3,281
+nicks (balance 18,087 in 6 plain notes).
+
+**Rebuild with provenance** (`live/pool-v3/balances-B.txt`): genesis,
+transfer, the four funding transactions, the pool opening and the five
+trades, 692 coinbase records re-verified against block parents, 697
+coinbase names recomputed from the parents of blocks 1..=697. Pool
+74,557, Alice 913,973, Bob 11,470, total 1,000,000, `ASSERT-OK`. A first
+attempt at this rebuild failed because the resumed suite listed the
+re-quote before the simultaneous winner whose output it spends; the
+resume logic was fixed to add the winner's step first (and to identify
+the winner by all of its inputs being spent, since both contenders share
+the pool note), and the rebuild re-run without re-mining anything.
+
+**Replay of the pool** (`live/pool-v3/replay-B.txt`): every trade's
+invariant holds; the constant product rose from 6.5536 × 10¹¹ to
+6.5785 × 10¹¹; fees retained 26,040 nicks and 44 tokens; the treasury
+paid 14,806 nicks over the five trades, each at or above the covenant's
+floor. The replayed final state equals the live pool note (`REPLAY-OK`).
+
+**Reorganisations** were again not exercised (one node, one miner);
+§A16 has the argument.
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |
 |---|---|---|---|
 | note-data token standard: genesis, transfer, indexer verification, provenance | yes | yes (§A1–A13) | no: works on the shipped node |
 | two-party atomic settlement by output-source pins | yes | yes (§A14) | no |
-| `%amm` pool covenant: keyless reserves, constant product, pool share retained | yes (fork) | yes (§A15–A16) | **yes**: the primitive is not in the shipped engine |
-| treasury share to the Lore Wallet, NOCK only, in the same transaction | yes (fork) | yes (§A16) | **yes** |
-| consensus validation of token claims (genesis id, per-token conservation) | yes (fork) | regression in §A17 | **yes** |
-| exact quotes: net amount, both shares with units, impact, network fee | yes | yes | no |
-| Lore Wallet: held by a key, receipts verifiable on chain | yes | yes | no |
+| `%amm` pool covenant: keyless reserves, constant product, pool share retained | yes (fork) | yes (§A15–A16, again under the claim rule §A19) | **yes**: the primitive is not in the shipped engine |
+| treasury share to the Lore Wallet, NOCK only, in the same transaction | yes (fork) | yes (§A16, §A19) | **yes** |
+| consensus validation of token claims (genesis id, per-token conservation) | yes (fork) | yes: the counterfeit regression (§A17) and the full suite (§A19) on a node carrying the rule | **yes** |
+| exact quotes: net amount, both shares with units, impact, network fee | yes | yes (§A16, §A19: quotes equal to the nick across two chains) | no |
+| Lore Wallet: held by a key, receipts verifiable on chain | yes | yes (18,087 nicks in 6 plain notes on the phase-three chain, read from the node and from the replay) | no |
 | batching many trades per block | no | — | no |
-| reorganisations | argued (§A16) | not exercised: one node | — |
+| reorganisations | argued (§A16) | not exercised: one node, one miner | — |
 | Hoon unit tests, activation height, wallet support for the keyless spend | no | — | part of the upstream path (`docs/ENFORCEMENT.md` §8) |
 
 ---
@@ -658,17 +756,20 @@ The `sig-hash` gate passed on a live chain (A11). Nothing remains here.
 Claim injection, re-signing, broadcast and canonical rebuild all executed
 (A11).
 
-### B4. Trading
+### B4. Trading on the shipped node
 
-[`../docs/SWAPS.md`](../docs/SWAPS.md) is a design derived from source. Nothing
-is implemented and nothing is tested. It depends on B1.
+[`../docs/SWAPS.md`](../docs/SWAPS.md) (two-party settlement) is verified
+live (§A14). Pooled trading exists only on the fork (§A15–A19); on the
+shipped node it is not expressible (`../docs/ENFORCEMENT.md` §1–2).
 
 ### B5. Everything else
 
-No AMM (not expressible without a consensus change or a trusted sequencer). No
-partial fills. No platform, wallet integration, or UI. No security review. No
-claim of mainnet suitability. The chain used is a single-node fakenet; nothing
-here has touched mainnet.
+No batching of trades within a block. No partial fills. No platform,
+wallet integration, or UI. No security review. No Hoon unit tests for the
+fork's two rules, no activation height, no upstream review. No claim of
+mainnet suitability: the fork is a prototype, not a deployment
+(`../docs/ENFORCEMENT.md`, status banner). The chain used is a single-node
+fakenet; nothing here has touched mainnet.
 
 ---
 
@@ -677,7 +778,13 @@ here has touched mainnet.
 Two tokens were created and transferred on a live Nockchain fakenet node in
 this environment with every input read live from the node before broadcast,
 and both were rebuilt from the mined blocks with every genesis input's
-token-free status re-derived from consensus data (its coinbase name): 999,900 / 100 of 1,000,000 each, the first unchanged by the second's
-creation. A replay given incomplete history now refuses instead of reporting
-a creation the rules reject, a hazard an outside review found and the full
-replay confirmed. Trading is designed, not built.
+token-free status re-derived from consensus data: 999,900 / 100 of
+1,000,000 each. On a fork of the node carrying two consensus rules (the
+`%amm` covenant and token-claim validation), a pool per token traded at
+automatic prices with 1 % retained by the pool and 0.5 % paid to the Lore
+Wallet in NOCK, every one of eleven attack cases was refused before it
+reached a block, a counterfeit input an outside review asked about drained
+a pool on the first prototype and is refused on arrival by the second, and
+the whole suite ran again under the fixed rule with figures equal to the
+nick. None of this runs on the shipped node: the fork is a prototype for an
+upstream proposal, not a deployment.

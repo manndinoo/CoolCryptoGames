@@ -1,0 +1,10 @@
+QUOTE	buy	in=655360 nicks	out_net=8949 tokens	pool_fee=6901 nicks	lore_fee=3281 nicks	nock_fees=10182 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=65536000000	exec_e9=73232763437	impact_bps=1174
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7204679	91051
+ATTACK	inflate-claim	1000000
+POOL-SPEND	to_user=1000+8949t	successor=6549319+91051t	lore=3281+0t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	BEgE2uivDcBGyndJBTp2JK66Cdp6nX3Hu8CzcPpdebcENbGV2tqkqqq
+FEE	current=16384	required=8384	seed_words=43	witness_words=90
+WROTE	/home/user/nmeme-run/pool/inflate-claim/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	5W2FU4QTTMfAApTXe5xRPkLKb32PoSS2Zs6tLdKLRLuGcSC5vybtzd3
+NEWSIGHASH	BxMiaodZdXighHnVUv26J7GPTyepz721pi5rSwvYhZDTGQpuyb2mft7	8tyMAgfuuUtLkB4MposaodhxJivEMow7KckmrotsVvP8BiWJ3NBdgHZ

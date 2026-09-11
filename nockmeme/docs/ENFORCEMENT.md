@@ -226,8 +226,11 @@ genesis. It needs the maintainers' review, Hoon unit tests in
 - **A fabricated claim on a payment to the pool is harmless.** Consensus
   unions the note-data of every seed landing on a lock; if the pool's own
   claim wins the union the transaction is an ordinary trade, and if the
-  fabricated one wins the conservation rule refuses it (§A16,
-  `inflate-claim`). Nothing is minted either way.
+  fabricated one wins the covenant's conservation check refuses it. Both
+  were observed: mined as an honest trade in phase two, refused at
+  admission in phase three (`results/RESULTS.md` §A16, §A19,
+  `inflate-claim`); which one happens depends on the seeds' fold order.
+  Nothing is minted either way.
 - **A note at the pool lock holding only one asset** (someone paid NOCK
   alone, or tokens alone, to the lock outside a trade) has product zero
   and can be spent by anyone who leaves both reserves positive. The pool's

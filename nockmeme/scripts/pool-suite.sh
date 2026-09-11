@@ -28,6 +28,9 @@ FEE_BPS="${FEE_BPS:-100}"          # the pool's share
 LORE_BPS="${LORE_BPS:-50}"         # the treasury's share (docs/FEES.md)
 POOL_NOCK="${POOL_NOCK:-6553600}"        # 100 NOCK
 POOL_TOKENS="${POOL_TOKENS:-100000}"
+# the attack pools: twelve of them come out of alice's token A (999,900 after
+# the demo), so they are smaller than the main pool
+ATTACK_TOKENS="${ATTACK_TOKENS:-10000}"
 BUY_NICKS="${BUY_NICKS:-655360}"          # 10 NOCK
 BOB_FUND_NICKS="${BOB_FUND_NICKS:-1310720}" # 20 NOCK per bob note
 DUST="${DUST:-1000}"
@@ -264,11 +267,16 @@ confirm_trade buy2 "$TOKEN_B" "$FEE_BPS"
 fi
 
 echo "== stage 4: simultaneous trades against one pool note =="
-if done_already requote; then
+if [ "${RESUME:-0}" = 1 ] && [ -f "$S/requote.env" ]; then
+  # the winner's step must precede the re-quote's (which spends its output); a
+  # transaction was mined only if every one of its inputs is spent (the loser
+  # shares the pool note with the winner, so one spent input proves nothing)
   for lbl in sim-bob sim-alice; do
-    f="$S/$lbl/final.jam"; ui=$("$NMEME_INDEX" outputs --tx "$f" | awk -F'\t' '$1=="INPUT"{print $2" "$3}' | head -1)
-    unspent "${ui%% *}" "${ui##* }" || STEPS_B="$STEPS_B --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"
+    f="$S/$lbl/final.jam"; [ -f "$f" ] || continue; mined=1
+    while read -r fn ln; do unspent "$fn" "$ln" </dev/null && mined=0; done < <("$NMEME_INDEX" outputs --tx "$f" | awk -F'\t' '$1=="INPUT"{print $2" "$3}')
+    [ "$mined" = 1 ] && { STEPS_B="$STEPS_B --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; echo "RESUMED	$lbl already mined (the simultaneous winner)"; }
   done
+  done_already requote || die "requote: recorded but not mined"
 else
 bn=$(bob_note); echo "$bn" >> "$USED"
 r1=$(user_tx bob "$S/sim-bob-user" "[$bn]" "$ALICE" "$BUY_NICKS")
@@ -317,7 +325,7 @@ attack() {
     ATT_STEPS_A="$ATT_STEPS_A --step $(awk -F'\t' '$1=="TXID"{print $2}' "$S/send-pool-$label.txt"):$S/pool-$label/final.jam"
     return 0
   fi
-  open_pool "pool-$label" "$TOKEN_A" "$fee" "$POOL_NOCK" "$POOL_TOKENS"
+  open_pool "pool-$label" "$TOKEN_A" "$fee" "$POOL_NOCK" "$ATTACK_TOKENS"
   ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
   funding_alice "$S/funding-$label.txt"
   local cb; cb=$(coinbase_note "$S/funding-$label.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
@@ -342,7 +350,7 @@ attack_neutral() {
   if [ "${RESUME:-0}" = 1 ] && { [ -f "$S/$label.rejected" ] || [ -f "$S/$label.neutralized" ]; }; then
     echo "RESUMED	$label already tested: $(cat "$S/$label.rejected" "$S/$label.neutralized" 2>/dev/null | head -1)"; return 0
   fi
-  open_pool "pool-$label" "$TOKEN_A" "$fee" "$POOL_NOCK" "$POOL_TOKENS"
+  open_pool "pool-$label" "$TOKEN_A" "$fee" "$POOL_NOCK" "$ATTACK_TOKENS"
   ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
   funding_alice "$S/funding-$label.txt"
   local cb; cb=$(coinbase_note "$S/funding-$label.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
@@ -360,11 +368,14 @@ attack_neutral() {
   fi
 }
 attack_neutral inflate-claim 106 --inflate-claim 1000000
-attack mint 107 --successor-tokens "$((POOL_TOKENS + 1000))"
+attack mint 107 --successor-tokens "$((ATTACK_TOKENS + 1000))"
 attack lore-short 111 --lore-short 1
 attack lore-tokens 112 --lore-tokens 10
 # the creator's key: alice signs the pool spend with her own key under a key lock
-open_pool pool-creator-key "$TOKEN_A" 108 "$POOL_NOCK" "$POOL_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
+if [ "${RESUME:-0}" = 1 ] && [ -f "$S/creator-key.rejected" ]; then
+  echo "RESUMED	creator-key already tested: $(head -1 "$S/creator-key.rejected")"
+else
+open_pool pool-creator-key "$TOKEN_A" 108 "$POOL_NOCK" "$ATTACK_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
 funding_alice "$S/funding-ck.txt"; cb=$(coinbase_note "$S/funding-ck.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
 r=$(user_tx alice "$S/creator-key-user" "[$cb]" "$BOB" "$BUY_NICKS")
 APKH=$(awk -F'\t' '$1=="SIGHASH"{print $5; exit}' "${r#* }"); APUB=$(awk -F'\t' '$1=="SIGHASH"{print $4; exit}' "${r#* }")
@@ -375,8 +386,7 @@ sign_hash alice "$PD" "$S/creator-key/pool.sig"
 "$NMEME_TX" set-sig "$S/creator-key/final.jam" "$PSN" "$APKH" "$APUB" "$S/creator-key/pool.sig" "$S/creator-key/final-signed.jam" >/dev/null || die "creator-key: set-sig"
 TRADE_FILE="$S/creator-key/final-signed.jam"; TRADE_TXID=$("$NMEME_INDEX" tx-id --tx "$TRADE_FILE")
 expect_rejected "$TRADE_FILE" creator-key "$POOL_NOTE_IN" "$cb"
-# a second note at the lock, taken: alice donates to pool 109 then tries to take the donation with a buy
-open_pool pool-merge "$TOKEN_A" 109 "$POOL_NOCK" "$POOL_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
+fi
 donate() { # <label> <token> <fee> <nock> <tokens>: alice sends a second note to the pool lock
   local label="$1" token="$2" fee="$3" nock="$4" tokens="$5" d="$S/$1"; mkdir -p "$d" "$d/final"
   local tn; tn=$(token_note "$token"); local first="${tn%% *}" rest="${tn#* }" last held; last="${rest%% *}"; held="${rest#* }"
@@ -389,20 +399,29 @@ donate() { # <label> <token> <fee> <nock> <tokens>: alice sends a second note to
   DON_FILE="$d/final.jam"; DON_TXID=$(send "$DON_FILE" "$label"); confirm "$DON_TXID" "$label" "$DON_FILE"
   echo "DONATION	$label	txid=$DON_TXID	nock=$nock	tokens=$tokens	(a second note at the pool lock)"
 }
+# a second note at the lock, taken: alice donates to pool 109 then tries to take the donation with a buy
+if [ "${RESUME:-0}" = 1 ] && [ -f "$S/take-donation.rejected" ]; then
+  echo "RESUMED	take-donation already tested: $(head -1 "$S/take-donation.rejected")"
+else
+open_pool pool-merge "$TOKEN_A" 109 "$POOL_NOCK" "$ATTACK_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
 donate donate-merge "$TOKEN_A" 109 100000 1000; ATT_STEPS_A="$ATT_STEPS_A --step $DON_TXID:$DON_FILE"
 st=$(pool_state "$TOKEN_A" 109); [ "$(wc -l <<<"$st")" -eq 2 ] || die "merge: expected two notes at the lock, got: $st"
-POOL_MAIN_NOTE=$(grep " $POOL_NOCK $POOL_TOKENS$" <<<"$st"); DON_NOTE=$(grep " 100000 1000$" <<<"$st")
+POOL_MAIN_NOTE=$(grep " $POOL_NOCK $ATTACK_TOKENS$" <<<"$st"); DON_NOTE=$(grep " 100000 1000$" <<<"$st")
 funding_alice "$S/funding-merge.txt"; cb=$(coinbase_note "$S/funding-merge.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
 r=$(user_tx alice "$S/take-donation-user" "[$cb]" "$BOB" "$BUY_NICKS")
 d="$S/take-donation"; mkdir -p "$d"
 "$NMEME_TX" pool-trade "${r%% *}" "$d/assembled.jam" --pool "$POOL_MAIN_NOTE" --token "$TOKEN_A" --fee-bps 109 $PP --side buy --placeholder "$BOB_LOCK" --dust "$DUST" --also-spend "$DON_NOTE" --also-take > "$d/trade.txt" 2>&1 || die "take-donation: $(tail -1 "$d/trade.txt")"
 resign alice "${r#* }" "$d/assembled.jam" "$d/trade.txt" "$d/final.jam"
 expect_rejected "$d/final.jam" take-donation "$(cut -d' ' -f1,2 <<<"$POOL_MAIN_NOTE")" "$(cut -d' ' -f1,2 <<<"$DON_NOTE")" "$cb"
+fi
 
 echo "== stage 6: a donation merged honestly (token A, pool 110) =="
-open_pool pool-merge-ok "$TOKEN_A" 110 "$POOL_NOCK" "$POOL_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
+if [ "${RESUME:-0}" = 1 ] && [ -f "$S/merge-ok.env" ]; then
+  echo "RESUMED	merge-ok already mined: $(grep -h '^MERGED' "$RUN/pool-results.txt" 2>/dev/null | tail -1)"
+else
+open_pool pool-merge-ok "$TOKEN_A" 110 "$POOL_NOCK" "$ATTACK_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
 donate donate-ok "$TOKEN_A" 110 100000 1000; ATT_STEPS_A="$ATT_STEPS_A --step $DON_TXID:$DON_FILE"
-st=$(pool_state "$TOKEN_A" 110); POOL_MAIN_NOTE=$(grep " $POOL_NOCK $POOL_TOKENS$" <<<"$st"); DON_NOTE=$(grep " 100000 1000$" <<<"$st")
+st=$(pool_state "$TOKEN_A" 110); POOL_MAIN_NOTE=$(grep " $POOL_NOCK $ATTACK_TOKENS$" <<<"$st"); DON_NOTE=$(grep " 100000 1000$" <<<"$st")
 funding_alice "$S/funding-merge-ok.txt"; cb=$(coinbase_note "$S/funding-merge-ok.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
 r=$(user_tx alice "$S/merge-ok-user" "[$cb]" "$BOB" "$BUY_NICKS")
 d="$S/merge-ok"; mkdir -p "$d"
@@ -417,6 +436,7 @@ wl=$(grep '^QUOTE' "$d/trade.txt" | grep -oE 'lore_fee=[0-9]+' | cut -d= -f2); L
 lb=$(lore_balance); [ "${lb%% *}" = "$LORE_EXPECTED" ] || die "merge-ok: the Lore Wallet holds ${lb%% *} nicks, expected $LORE_EXPECTED"
 echo "LORE	merge-ok	+$wl nicks	balance=$LORE_EXPECTED	notes=$(cut -d' ' -f2 <<<"$lb")	all_plain=$([ "${lb##* }" = 0 ] && echo yes || echo NO)"
 ATT_STEPS_A="$ATT_STEPS_A --step $TRADE_TXID:$TRADE_FILE"
+fi
 
 echo "== stage 7: rebuild with provenance, replay the main pool =="
 PROOFS=""; for f in "$S"/funding-*.txt.*; do [ -f "$f" ] && PROOFS="$PROOFS --funding $f"; done

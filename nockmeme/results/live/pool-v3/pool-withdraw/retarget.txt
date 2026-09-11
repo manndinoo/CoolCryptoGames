@@ -1,0 +1,3 @@
+RETARGETED	1	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	DWfFcBo5z4ZCDuze4dshh6L1FxFUzeiHL1adnST8we6tibk5sD1GDDe
+WROTE	/home/user/nmeme-run/pool/pool-withdraw/retargeted.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	8NP9nfwwsQeiTV3Ty3yYegX7cJH946BFoznYbGMWRVxpEcCsLy9qzpd

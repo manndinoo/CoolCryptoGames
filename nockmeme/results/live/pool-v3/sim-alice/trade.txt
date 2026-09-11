@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=6893 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=86125123096	exec_e9=95076164224	impact_bps=1039
+POOL-BEFORE	7521307	87330
+POOL-AFTER	8172386	80437
+POOL-SPEND	to_user=1000+6893t	successor=7517026+80437t	lore=3281+0t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	59gHTutT9MpkXdAvvY9gAYcsQWenLai1uRPanx1XThe3TNvMW7ayvyK
+FEE	current=16384	required=8384	seed_words=43	witness_words=90
+WROTE	/home/user/nmeme-run/pool/sim-alice/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	6cAQtFjvJjFfsydTTc6bzPNxT2eiKsbTq9uZVvkbEJBsQZiboHTUSva
+NEWSIGHASH	BMHXWvF3zSrLzmXy5D51UqqPrGjU2g3mhqogBbYVEANKC3DKwMwoYd1	6nGurv7MevBskU398Bu9AVT1rQugH23Ei73Mh8XpVgPYUoNMh698CeV

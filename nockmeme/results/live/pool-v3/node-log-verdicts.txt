@@ -1,0 +1,151 @@
+2026-09-11T22:32:23.886036Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 22pAfUgxdS9teSvyGvkM25u7jnHWHV3jNEWntXY42qXReykL8bo4qKe
+2026-09-11T22:32:26.194714Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 22pAfUgxdS9teSvyGvkM25u7jnHWHV3jNEWntXY42qXReykL8bo4qKe
+2026-09-11T22:45:18.856700Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 26dnHhmSND9pFCL99bCrNEKXAE1Fw3RvsvrUk9mdbRw4nt5MuwLYLR7
+2026-09-11T22:45:21.247592Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 26dnHhmSND9pFCL99bCrNEKXAE1Fw3RvsvrUk9mdbRw4nt5MuwLYLR7
+2026-09-11T22:53:58.774954Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2MPfAosMRXRvWuMmwUqQdHuTT8T5Lx1sA9npPt5f6uUisRAWvavqt8r
+2026-09-11T22:56:41.084863Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2S8Dp4ptkqGd8cq2ZqmnjHXyUPi9QvMw62qSYoBwUmPJQnVHx9w5GM1
+2026-09-11T22:56:42.927705Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 2S8Dp4ptkqGd8cq2ZqmnjHXyUPi9QvMw62qSYoBwUmPJQnVHx9w5GM1
+2026-09-11T22:42:28.584398Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2kpPUJrXYKnKJMDMMdLDfT1orGTqAqeJsWoeQwXuRh2wd1535wwVhmq
+2026-09-11T22:40:07.997926Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2oKsDkN1EnSDnoF4c4kcqVGToS7mybrvXFrhUyo6fGLFmPD3QLCDwhF
+2026-09-11T22:53:13.522253Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2po8TGAUUDNkZt4BVLV5Z3mHkkB9o37mXPbCwLy8p2RSyj21QeBFUUx
+2026-09-11T22:53:18.876094Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 2po8TGAUUDNkZt4BVLV5Z3mHkkB9o37mXPbCwLy8p2RSyj21QeBFUUx
+2026-09-11T22:38:22.324336Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2zGE2m4pRCYAxdnoMiccEcpHExmn7nQUoWqkQsHAUVY12DNbCTyyrTP
+2026-09-11T22:33:27.695226Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 317fGwsSac5mx5cDDGNdTHivWedbHUSkkFTg2gQ1GC9ThqjmoDyyqwH
+2026-09-11T22:33:35.741744Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 317fGwsSac5mx5cDDGNdTHivWedbHUSkkFTg2gQ1GC9ThqjmoDyyqwH
+2026-09-11T22:37:38.720575Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 39MDmCsQs6y9LzCiwh5Yj2m8nRutGuaHz3VjU1Dw3zmVutYf2ywxMhp
+2026-09-11T22:37:42.993159Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 39MDmCsQs6y9LzCiwh5Yj2m8nRutGuaHz3VjU1Dw3zmVutYf2ywxMhp
+2026-09-11T22:46:24.244347Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4K89r2BFY1qd9LrfXr3rZhWyXE35mWqJ8KPM3wMENQnwym8uF7LNuTo
+2026-09-11T22:57:32.415159Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4SiCP84JoUmmXNwX9DedCzoSMNZGZZaRELbqZ3NYvyDfcSK1tbWWY6x
+2026-09-11T22:50:08.439207Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4ZzhwhWeC868Yq3M2cfzDyHdUUpK8CbLdXfRe7mVdDgKw9ESfijoBmh
+2026-09-11T22:41:23.428472Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 5WyQpfjaZcxdbn2nppjoXLLZCgnBdLoRXM4pTTYZGeydPw3q2BPznPF
+2026-09-11T22:41:24.736572Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 5WyQpfjaZcxdbn2nppjoXLLZCgnBdLoRXM4pTTYZGeydPw3q2BPznPF
+2026-09-11T22:49:23.342558Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6Fbe97skM45L63i58o9GhtbFH1Qh5Aj3uJv1CVNpeHBW9LevQf7zbTT
+2026-09-11T22:49:29.670520Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 6Fbe97skM45L63i58o9GhtbFH1Qh5Aj3uJv1CVNpeHBW9LevQf7zbTT
+2026-09-11T22:43:30.100023Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6HDJpLifYr13RgrWC1T6mXdBoPFs1XjwPBH71KQSRBcwiVahXWKGnxH
+2026-09-11T22:43:35.212996Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 6HDJpLifYr13RgrWC1T6mXdBoPFs1XjwPBH71KQSRBcwiVahXWKGnxH
+2026-09-11T22:59:15.696565Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6KiTbskf3U7xJj8KfWTiTT1eknhdqpyr98Ej7UXQDRdnAEtK9CiBN8G
+2026-09-11T22:59:19.615393Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 6KiTbskf3U7xJj8KfWTiTT1eknhdqpyr98Ej7UXQDRdnAEtK9CiBN8G
+2026-09-11T23:00:01.819072Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6dUS9d8aopoDa9kNuTQevBNd7zRATRT1HSxcKwhojbmFP6EsZjMGPfB
+2026-09-11T23:01:19.697697Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 7G48WTVHgZvHC11NEktG2UnM22wre4RXXLAeB65wLC27opAeYSrE9ED
+2026-09-11T23:01:23.866308Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 7G48WTVHgZvHC11NEktG2UnM22wre4RXXLAeB65wLC27opAeYSrE9ED
+2026-09-11T22:25:26.036052Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 7dSrJwufGcvprqpqAvaR7ib4Lzn99WnHoPZMiaeKhviaPD4igDns2L1
+2026-09-11T22:25:31.173263Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 7dSrJwufGcvprqpqAvaR7ib4Lzn99WnHoPZMiaeKhviaPD4igDns2L1
+2026-09-11T22:28:02.889829Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 7iugqd6gf63zq9wGRV8NYLXygAhq4vhzVfFScEedy2DSLY8vSNLrcWp
+2026-09-11T22:28:06.241986Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 7iugqd6gf63zq9wGRV8NYLXygAhq4vhzVfFScEedy2DSLY8vSNLrcWp
+2026-09-11T22:51:12.042905Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 8ahLvKQfkKn11kTMLJc23koDtLhrdVjSSSefBWwsSmYiTfna7WMcpAQ
+2026-09-11T22:51:15.762905Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 8ahLvKQfkKn11kTMLJc23koDtLhrdVjSSSefBWwsSmYiTfna7WMcpAQ
+2026-09-11T22:31:21.437268Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn
+2026-09-11T22:31:23.188271Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 9Ljz4AFf9iNLDjQGJnEowQ1U3jVNTpQt6nNJesJ7KXtbjErki7ocGWn
+2026-09-11T22:47:39.700228Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9LoSJ1Q6HS7fC5bUQyiQKXHmg9cW1Y6gpXVTwBF7GMrreRXJ6aHfr7F
+2026-09-11T22:47:42.050284Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 9LoSJ1Q6HS7fC5bUQyiQKXHmg9cW1Y6gpXVTwBF7GMrreRXJ6aHfr7F
+2026-09-11T22:35:50.813362Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9c8mccgc7PVsApoLV3Cg3q7CxWms3u6LsXvdvLyJuWTVQt8QKEj177x
+2026-09-11T22:35:54.002573Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 9c8mccgc7PVsApoLV3Cg3q7CxWms3u6LsXvdvLyJuWTVQt8QKEj177x
+2026-09-11T22:44:15.963639Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9hehQFU4eNnfp2ZxiEjPxzXRQZNRS8VEexc3dboS8hGeaBN6Cw9XiTZ
+2026-09-11T23:01:43.163972Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: Ats6EqqW7bbnBknsBmAAAGyQgXkh5jseMDWqbAoXiGSdF9ypRjGeTtD
+2026-09-11T23:01:48.832591Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: Ats6EqqW7bbnBknsBmAAAGyQgXkh5jseMDWqbAoXiGSdF9ypRjGeTtD
+2026-09-11T22:48:24.282112Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: BRmRAHS6tdasHfuVdzF9gCq2RbgL5Y7xn7CvMnTLwJoXc2w8Ny8GZLX
+2026-09-11T22:29:49.005478Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: BfQMCmPAfNnw2QPCgw3Bfbs8rShevnBUgq9YdebPGwbYKrSQbYC7FK6
+2026-09-11T22:29:51.134819Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: BfQMCmPAfNnw2QPCgw3Bfbs8rShevnBUgq9YdebPGwbYKrSQbYC7FK6
+2026-09-11T22:26:39.141008Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CJ18HHCyKbBQtnRcWEkcy4sW6gpy2eo5UdtKqmYgo32oZSofGAShJnC
+2026-09-11T22:26:44.750898Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: CJ18HHCyKbBQtnRcWEkcy4sW6gpy2eo5UdtKqmYgo32oZSofGAShJnC
+2026-09-11T22:26:20.404296Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CePJSJaEAVTFDV9SCP7JduZn8qgdQHyLsPAswWRaZ2Pv19HfTuxJQFD
+2026-09-11T22:26:23.176305Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: CePJSJaEAVTFDV9SCP7JduZn8qgdQHyLsPAswWRaZ2Pv19HfTuxJQFD
+2026-09-11T23:02:29.614247Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: D3kLibfifVe9t6ruzgc4Zo3vvDVeC7Q51YBimuh5AtoHXf5WkERAYuH
+2026-09-11T23:02:30.443177Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: D3kLibfifVe9t6ruzgc4Zo3vvDVeC7Q51YBimuh5AtoHXf5WkERAYuH
+2026-09-11T22:58:50.756120Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: D91RXJp7nocGA3dZoVmQNW2RpbgiuhViSfXFbqxQkF1hZvFx6GJSBW2
+2026-09-11T22:58:54.444893Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: D91RXJp7nocGA3dZoVmQNW2RpbgiuhViSfXFbqxQkF1hZvFx6GJSBW2
+2026-09-11T22:39:23.722850Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: DNzffUzSsgeeCvJuK2ThMZEdRKAXJ4FdzmRUwvqy93cTwXFNkQiSXKA
+2026-09-11T22:39:23.738602Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: DNzffUzSsgeeCvJuK2ThMZEdRKAXJ4FdzmRUwvqy93cTwXFNkQiSXKA
+2026-09-11T22:51:57.150759Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: ynQdcLFNXiVjigV5Xh286mM2bf8vwcxEKNBgBe56AszwgEKjpZsD8V
+== withdraw 2zGE2m4pRCYAxdnoMiccEcpHExmn7nQUoWqkQsHAUVY12DNbCTyyrTP
+2026-09-11T22:38:22.324336Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2zGE2m4pRCYAxdnoMiccEcpHExmn7nQUoWqkQsHAUVY12DNbCTyyrTP
+2026-09-11T22:38:22.339706Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:38:23.452585Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: 6Ah6bWwgYXRiRcwbmtnKvLikonVeWsXj34PngWyarqbQMhaWJC7HJux
+2026-09-11T22:38:23.466051Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 6Ah6bWwgYXRiRcwbmtnKvLikonVeWsXj34PngWyarqbQMhaWJC7HJux added to validated blocks at 368 with proof version 0
+2026-09-11T22:38:23.466408Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:38:23.469731Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: 6Ah6bWwgYXRiRcwbmtnKvLikonVeWsXj34PngWyarqbQMhaWJC7HJux
+2026-09-11T22:38:23.481989Z  INFO new_heaviest_chain{block_height=368 block_height=368 heaviest_block_digest="6Ah6bWwgYXRiRcwbmtnKvLikonVeWsXj34PngWyarqbQMhaWJC7HJux" heaviest_block_digest="6Ah6bWwgYXRiRcwbmtnKvLikonVeWsXj34PngWyarqbQMhaWJC7HJux" block_target="0x7fff.fffd.8000.0007.7fff.fff1.0000.00
+2026-09-11T22:38:23.482846Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+== over-payout 2oKsDkN1EnSDnoF4c4kcqVGToS7mybrvXFrhUyo6fGLFmPD3QLCDwhF
+2026-09-11T22:40:07.997926Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2oKsDkN1EnSDnoF4c4kcqVGToS7mybrvXFrhUyo6fGLFmPD3QLCDwhF
+2026-09-11T22:40:08.015362Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:40:09.876583Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+2026-09-11T22:40:11.931317Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: BwS2JMTk6pQeZdodpAbgYn214qsuYEZCVQWvetSVwAMVCcE55DFaFas
+2026-09-11T22:40:11.943470Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block BwS2JMTk6pQeZdodpAbgYn214qsuYEZCVQWvetSVwAMVCcE55DFaFas added to validated blocks at 397 with proof version 0
+2026-09-11T22:40:11.943819Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+== pool-fee 2kpPUJrXYKnKJMDMMdLDfT1orGTqAqeJsWoeQwXuRh2wd1535wwVhmq
+2026-09-11T22:42:28.584398Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2kpPUJrXYKnKJMDMMdLDfT1orGTqAqeJsWoeQwXuRh2wd1535wwVhmq
+2026-09-11T22:42:28.594546Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:42:29.901783Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: BLswRYMRfbUykNhBVTwzhhHY1pzG1dxzbMtJDgUfmuJf52E36kdC7Lb
+2026-09-11T22:42:29.913695Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block BLswRYMRfbUykNhBVTwzhhHY1pzG1dxzbMtJDgUfmuJf52E36kdC7Lb added to validated blocks at 433 with proof version 0
+2026-09-11T22:42:29.914040Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:42:29.916907Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: BLswRYMRfbUykNhBVTwzhhHY1pzG1dxzbMtJDgUfmuJf52E36kdC7Lb
+2026-09-11T22:42:29.927985Z  INFO new_heaviest_chain{block_height=433 block_height=433 heaviest_block_digest="BLswRYMRfbUykNhBVTwzhhHY1pzG1dxzbMtJDgUfmuJf52E36kdC7Lb" heaviest_block_digest="BLswRYMRfbUykNhBVTwzhhHY1pzG1dxzbMtJDgUfmuJf52E36kdC7Lb" block_target="0x7fff.fffd.8000.0007.7fff.fff1.0000.00
+2026-09-11T22:42:29.928120Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+== third-lock 9hehQFU4eNnfp2ZxiEjPxzXRQZNRS8VEexc3dboS8hGeaBN6Cw9XiTZ
+2026-09-11T22:44:15.963639Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9hehQFU4eNnfp2ZxiEjPxzXRQZNRS8VEexc3dboS8hGeaBN6Cw9XiTZ
+2026-09-11T22:44:15.964208Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+2026-09-11T22:44:15.964662Z  INFO new_heaviest_chain{block_height=457 block_height=457 heaviest_block_digest="2SJf9cLbvkVWV8jvrgR52BVvUu8dVtvdBALGbr1qdBWA9psfWtv8sVq" heaviest_block_digest="2SJf9cLbvkVWV8jvrgR52BVvUu8dVtvdBALGbr1qdBWA9psfWtv8sVq" block_target="0x7fff.fffd.8000.0007.7fff.fff1.0000.00
+2026-09-11T22:44:15.974471Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:44:20.565372Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: K5qDG7sw2b4baBChNyTzZKMY4G84k3aVmqY9XEoGgANQuJAkrLuquT
+2026-09-11T22:44:20.578793Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block K5qDG7sw2b4baBChNyTzZKMY4G84k3aVmqY9XEoGgANQuJAkrLuquT added to validated blocks at 458 with proof version 0
+2026-09-11T22:44:20.579180Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+== drop-claim 4K89r2BFY1qd9LrfXr3rZhWyXE35mWqJ8KPM3wMENQnwym8uF7LNuTo
+2026-09-11T22:46:24.244347Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4K89r2BFY1qd9LrfXr3rZhWyXE35mWqJ8KPM3wMENQnwym8uF7LNuTo
+2026-09-11T22:46:24.244460Z  INFO new_heaviest_chain{block_height=484 block_height=484 heaviest_block_digest="8uqGFtCM8fStGVnRt2FWpnHSMisja5jg6xfhxHiiXiZ3rf6qMqg1C6E" heaviest_block_digest="8uqGFtCM8fStGVnRt2FWpnHSMisja5jg6xfhxHiiXiZ3rf6qMqg1C6E" block_target="0x7fff.fffd.8000.0007.7fff.fff1.0000.00
+2026-09-11T22:46:24.244866Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+2026-09-11T22:46:24.257345Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:46:27.616401Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: D6Nh8gasXGjih54rVWEbfQ3qjGMgUzBrgRCWbrreXDgKfVYDaKm47c
+2026-09-11T22:46:27.626998Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block D6Nh8gasXGjih54rVWEbfQ3qjGMgUzBrgRCWbrreXDgKfVYDaKm47c added to validated blocks at 485 with proof version 0
+2026-09-11T22:46:27.627307Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:46:27.630236Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: D6Nh8gasXGjih54rVWEbfQ3qjGMgUzBrgRCWbrreXDgKfVYDaKm47c
+== inflate-claim BRmRAHS6tdasHfuVdzF9gCq2RbgL5Y7xn7CvMnTLwJoXc2w8Ny8GZLX
+2026-09-11T22:48:24.282112Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: BRmRAHS6tdasHfuVdzF9gCq2RbgL5Y7xn7CvMnTLwJoXc2w8Ny8GZLX
+2026-09-11T22:48:24.295799Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:48:29.314740Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: BzFxm8Pwk1MmGZ6qoqZZyXPsAvXrfkkRpSogMCrrEHf9sJ6oJwJJHaL
+2026-09-11T22:48:29.327953Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block BzFxm8Pwk1MmGZ6qoqZZyXPsAvXrfkkRpSogMCrrEHf9sJ6oJwJJHaL added to validated blocks at 516 with proof version 0
+2026-09-11T22:48:29.328326Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:48:29.331729Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: BzFxm8Pwk1MmGZ6qoqZZyXPsAvXrfkkRpSogMCrrEHf9sJ6oJwJJHaL
+== mint 4ZzhwhWeC868Yq3M2cfzDyHdUUpK8CbLdXfRe7mVdDgKw9ESfijoBmh
+2026-09-11T22:50:08.439207Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4ZzhwhWeC868Yq3M2cfzDyHdUUpK8CbLdXfRe7mVdDgKw9ESfijoBmh
+2026-09-11T22:50:08.452275Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:50:10.098047Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: 5kVCVqqBSBeJ47bpY9UKmAJ78T1mXez5QfnhoeSk7kTwBuu1r7bxRoH
+2026-09-11T22:50:10.110613Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 5kVCVqqBSBeJ47bpY9UKmAJ78T1mXez5QfnhoeSk7kTwBuu1r7bxRoH added to validated blocks at 543 with proof version 0
+2026-09-11T22:50:10.110941Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:50:10.114110Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: 5kVCVqqBSBeJ47bpY9UKmAJ78T1mXez5QfnhoeSk7kTwBuu1r7bxRoH
+2026-09-11T22:50:10.125896Z  INFO new_heaviest_chain{block_height=543 block_height=543 heaviest_block_digest="5kVCVqqBSBeJ47bpY9UKmAJ78T1mXez5QfnhoeSk7kTwBuu1r7bxRoH" heaviest_block_digest="5kVCVqqBSBeJ47bpY9UKmAJ78T1mXez5QfnhoeSk7kTwBuu1r7bxRoH" block_target="0x7fff.fffd.8000.0007.7fff.fff1.0000.00
+2026-09-11T22:50:10.126739Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+== lore-short ynQdcLFNXiVjigV5Xh286mM2bf8vwcxEKNBgBe56AszwgEKjpZsD8V
+2026-09-11T22:51:57.150759Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: ynQdcLFNXiVjigV5Xh286mM2bf8vwcxEKNBgBe56AszwgEKjpZsD8V
+2026-09-11T22:51:57.168422Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:52:01.527735Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: 63tEVAfvqjcNPHqKBU6HjW7VLi2oafpxBYx5JZtC1XBtR9pP6nDp8db
+2026-09-11T22:52:01.538364Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 63tEVAfvqjcNPHqKBU6HjW7VLi2oafpxBYx5JZtC1XBtR9pP6nDp8db added to validated blocks at 568 with proof version 0
+2026-09-11T22:52:01.538648Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:52:01.541260Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: 63tEVAfvqjcNPHqKBU6HjW7VLi2oafpxBYx5JZtC1XBtR9pP6nDp8db
+== lore-tokens 2MPfAosMRXRvWuMmwUqQdHuTT8T5Lx1sA9npPt5f6uUisRAWvavqt8r
+2026-09-11T22:53:58.774954Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2MPfAosMRXRvWuMmwUqQdHuTT8T5Lx1sA9npPt5f6uUisRAWvavqt8r
+2026-09-11T22:53:58.788781Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:53:58.789075Z  INFO poke{src="grpc"}:do_poke:slam: slogger: update-candidate-block: Candidate block timestamp updated: 0x8000000d39429406
+2026-09-11T22:54:02.496302Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: 5HKBKnF2k1TLZwkD7y1THqjwSB1znYHQgFuKtrSnyLQdwNPpnSKU5qk
+2026-09-11T22:54:02.509622Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 5HKBKnF2k1TLZwkD7y1THqjwSB1znYHQgFuKtrSnyLQdwNPpnSKU5qk added to validated blocks at 592 with proof version 0
+2026-09-11T22:54:02.509978Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:54:02.513394Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: 5HKBKnF2k1TLZwkD7y1THqjwSB1znYHQgFuKtrSnyLQdwNPpnSKU5qk
+== creator-key 4SiCP84JoUmmXNwX9DedCzoSMNZGZZaRELbqZ3NYvyDfcSK1tbWWY6x
+2026-09-11T22:57:32.415159Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4SiCP84JoUmmXNwX9DedCzoSMNZGZZaRELbqZ3NYvyDfcSK1tbWWY6x
+2026-09-11T22:57:32.428911Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T22:57:34.477897Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: CyT8zF7V9qZ8GMJs2j5mZ78e3HevBa2TF8Coe95QAn376VN51WFKtA8
+2026-09-11T22:57:34.491414Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block CyT8zF7V9qZ8GMJs2j5mZ78e3HevBa2TF8Coe95QAn376VN51WFKtA8 added to validated blocks at 619 with proof version 0
+2026-09-11T22:57:34.491819Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T22:57:34.495189Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: CyT8zF7V9qZ8GMJs2j5mZ78e3HevBa2TF8Coe95QAn376VN51WFKtA8
+2026-09-11T22:57:34.508948Z  INFO new_heaviest_chain{block_height=619 block_height=619 heaviest_block_digest="CyT8zF7V9qZ8GMJs2j5mZ78e3HevBa2TF8Coe95QAn376VN51WFKtA8" heaviest_block_digest="CyT8zF7V9qZ8GMJs2j5mZ78e3HevBa2TF8Coe95QAn376VN51WFKtA8" block_target="0x7fff.fffd.8000.0007.7fff.fff1.0000.00
+2026-09-11T22:57:34.509207Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+== take-donation 6dUS9d8aopoDa9kNuTQevBNd7zRATRT1HSxcKwhojbmFP6EsZjMGPfB
+2026-09-11T23:00:01.819072Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6dUS9d8aopoDa9kNuTQevBNd7zRATRT1HSxcKwhojbmFP6EsZjMGPfB
+2026-09-11T23:00:01.819382Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []
+2026-09-11T23:00:01.822402Z  INFO new_heaviest_chain{block_height=658 block_height=658 heaviest_block_digest="6T2tvmjVgVCpvKXMGSvFCdg4HwVTSYRM5ZW1YEJovG4Pb3Ra8pVHUit" heaviest_block_digest="6T2tvmjVgVCpvKXMGSvFCdg4HwVTSYRM5ZW1YEJovG4Pb3Ra8pVHUit" block_target="0x7fff.fffd.8000.0007.7fff.fff1.0000.00
+2026-09-11T23:00:01.835289Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+2026-09-11T23:00:04.158248Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: validate-page-with-txs: Block validated: b6cpTx1nCm2ug7mH6N7TpsbFFAFPVi4riXEFTMMkPoeRdU4N2ypGhU
+2026-09-11T23:00:04.173718Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block b6cpTx1nCm2ug7mH6N7TpsbFFAFPVi4riXEFTMMkPoeRdU4N2ypGhU added to validated blocks at 659 with proof version 0
+2026-09-11T23:00:04.174166Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: New heaviest block!
+2026-09-11T23:00:04.177527Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-block: Generating new candidate block with parent: b6cpTx1nCm2ug7mH6N7TpsbFFAFPVi4riXEFTMMkPoeRdU4N2ypGhU
+2026-09-11T23:00:04.191849Z  INFO nockchain_libp2p_io::driver: Sending block/by-height request to 0 peer(s): []

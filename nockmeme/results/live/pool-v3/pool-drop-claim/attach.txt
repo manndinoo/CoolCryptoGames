@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	4gVBVP7ReszQUwWaXE8XbCBCNnwQJQRHmos9xF2U37BSMUF4MZFm6Xf	100000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	499900
+WROTE	/home/user/nmeme-run/pool/pool-drop-claim/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	DJN1vA7EKA2Se9RTLbrzAdD1nx8otUpXxyz9tX6NcyNKV5rKgar5xrA

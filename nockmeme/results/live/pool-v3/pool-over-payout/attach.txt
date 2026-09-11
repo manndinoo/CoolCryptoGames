@@ -1,0 +1,5 @@
+FEE	current=16384	required=7296	seed_words=43	witness_words=56
+ATTACHED	j6YfhWmg7LQDxkNCAGGA1zbVTFWBrRAkQmVgwoRbXeNckuZkidJBQF	100000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	799900
+WROTE	/home/user/nmeme-run/pool/pool-over-payout/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	Ez5sX3BDNY3qEjHrvPgDWwrH4xPmLiRo7ttkfirx2FdPgzh3NYg3jt

@@ -1,5 +1,26 @@
 # nmeme test results
 
+## 2026-09-11 23:10 UTC: phase three, the suite under the claim rule
+
+Unit: unchanged since the previous entry (the Rust crates did not change
+for this run; the suite script's resume logic did). Live: on a fresh
+chain with the node carrying `++  meme` (results/live/pool-v3/):
+live-demo.sh with both genesis transactions carrying their derived ids
+(mined at 28 and 103); scripts/counterfeit-test.sh refused on arrival
+(v1-token-claims, mempool not admitted, results/live/pool-v3/counterfeit/);
+scripts/pool-suite.sh: five trades mined with figures equal to phase
+two's to the nick, the Lore Wallet paid exactly (14,806 nicks over the
+main pool's five trades, 18,087 after the honest merge, six plain notes),
+eleven attack cases refused at admission (v1-spend-1-lock-failed in the
+node's log, including inflate-claim, which phase two had only
+neutralized), the donation merge mined, rebuild with provenance
+ASSERT-OK (1,000,000), pool replay equal to the live state. The suite
+stopped once (Alice's token A ran out at the ninth 100,000-token attack
+pool) and once at the rebuild (resume ordered the re-quote before the
+simultaneous winner); both fixed in the script, the run resumed without
+re-mining anything, and results.txt in the evidence directory carries all
+three runs.
+
 ## 2026-09-11 21:20 UTC: the pool covenant with the treasury share
 
 Unit: nmeme-core pool math (10 tests incl. treasury quotes and the

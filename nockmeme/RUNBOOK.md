@@ -180,4 +180,10 @@ ALICE_FIRSTS="<first-names of alice's coinbase notes>" FEE_BPS=100 LORE_BPS=50 F
 # mined stage (each mined trade and each refused attack leaves a marker under $RUN/pool).
 # A trader's network fee of 8192 nicks is too low for a covenant trade (v1-insufficient-fee);
 # the suite uses 16384 and the quote discloses it.
+# The attack pools take ATTACK_TOKENS (default 10000) of TOKEN_A each: twelve of them at the
+# main pool's 100000 would outrun the 999900 alice holds after the demo (seen live, phase three).
+# A wallet rebuilt from exported keys lists no active child addresses; the suite reads the
+# treasury's address from `list-master-addresses`.
+# The counterfeit regression, before the suite on the same chain:
+REPO=... RUN=... TOKEN=<TOKEN_A> ... bash /path/to/nockmeme/scripts/counterfeit-test.sh
 ```
