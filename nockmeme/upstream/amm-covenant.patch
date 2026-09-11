@@ -217,7 +217,7 @@ index b9b588a..fa5856a 100644
              %brn
            '\0a  - Unspendable (burn) condition'
 diff --git a/hoon/common/tx-engine-1.hoon b/hoon/common/tx-engine-1.hoon
-index a687f27..3b5b395 100644
+index a687f27..d6c5e6d 100644
 --- a/hoon/common/tx-engine-1.hoon
 +++ b/hoon/common/tx-engine-1.hoon
 @@ -1235,6 +1235,7 @@
@@ -297,14 +297,14 @@ index a687f27..3b5b395 100644
 +    (~(get z-by nd) %meme)
 +  ++  transfer
 +    |=  nd=note-data
-+    ^-  (unit [tid=^hash amt=@])
++    ^-  (unit [tid=hash amt=@])
 +    =/  v=(unit *)  (entry nd)
 +    ?~  v  ~
 +    ?.  ?=([%0 %t [@ @ @ @ @] @] u.v)  ~
 +    `[+>-.u.v +>+.u.v]
 +  ++  genesis
 +    |=  nd=note-data
-+    ^-  (unit [ticker=* decimals=@ amt=@ tid=^hash])
++    ^-  (unit [ticker=* decimals=@ amt=@ tid=hash])
 +    =/  v=(unit *)  (entry nd)
 +    ?~  v  ~
 +    ?.  ?=([%0 %c * @ @ [@ @ @ @ @]] u.v)  ~
@@ -312,7 +312,7 @@ index a687f27..3b5b395 100644
 +  ::  the atom a hash is, as the Rust side orders them (little-endian in
 +  ::  the field prime), and lexicographic order on its big-endian bytes
 +  ++  atom-of
-+    |=  h=^hash
++    |=  h=hash
 +    ^-  @
 +    =/  limbs=(list @)  ~[-.h +<.h +>-.h +>+<.h +>+>.h]
 +    %+  roll  (flop limbs)
@@ -350,7 +350,7 @@ index a687f27..3b5b395 100644
 +  ::  the id a genesis creates: hash-noun-varlen of [[first last] [ticker decimals]]
 +  ++  derive
 +    |=  [anc=nname ticker=* decimals=@]
-+    ^-  ^hash
++    ^-  hash
 +    (hash-noun-varlen:tip5 [[-.anc +<.anc] [ticker decimals]])
 +  ++  conserved
 +    |=  [sps=spends balance=(h-map nname nnote) page=page-number]
@@ -369,23 +369,23 @@ index a687f27..3b5b395 100644
 +      ^-  (unit nnote-1)
 +      ?^  -.note.o  ~
 +      `note.o
-+    =/  in-claims=(list [tid=^hash amt=@])
++    =/  in-claims=(list [tid=hash amt=@])
 +      %+  murn  ins
 +      |=  n=nnote-1
-+      ^-  (unit [tid=^hash amt=@])
-+      =/  t=(unit [tid=^hash amt=@])  (transfer note-data.n)
++      ^-  (unit [tid=hash amt=@])
++      =/  t=(unit [tid=hash amt=@])  (transfer note-data.n)
 +      ?^  t  `[tid.u.t amt.u.t]
-+      =/  g=(unit [ticker=* decimals=@ amt=@ tid=^hash])  (genesis note-data.n)
++      =/  g=(unit [ticker=* decimals=@ amt=@ tid=hash])  (genesis note-data.n)
 +      ?~  g  ~
 +      `[tid.u.g amt.u.g]
-+    =/  out-t=(list [tid=^hash amt=@])
++    =/  out-t=(list [tid=hash amt=@])
 +      %+  murn  outs
 +      |=  n=nnote-1
-+      ^-  (unit [tid=^hash amt=@])
-+      =/  t=(unit [tid=^hash amt=@])  (transfer note-data.n)
++      ^-  (unit [tid=hash amt=@])
++      =/  t=(unit [tid=hash amt=@])  (transfer note-data.n)
 +      ?~  t  ~
 +      `[tid.u.t amt.u.t]
-+    =/  out-g=(list [ticker=* decimals=@ amt=@ tid=^hash])
++    =/  out-g=(list [ticker=* decimals=@ amt=@ tid=hash])
 +      (murn outs |=(n=nnote-1 (genesis note-data.n)))
 +    ::  a genesis: no input carries an entry, and every claim names the derived id
 +    =/  gen-ok=?
@@ -394,17 +394,17 @@ index a687f27..3b5b395 100644
 +      =/  anc=(unit nname)  (anchor sps)
 +      ?~  anc  %.n
 +      %+  levy  out-g
-+      |=  [ticker=* decimals=@ amt=@ tid=^hash]
++      |=  [ticker=* decimals=@ amt=@ tid=hash]
 +      =(tid (derive u.anc ticker decimals))
 +    ::  transfers: per id, the outputs never exceed the inputs
 +    =/  sum
-+      |=  [tid=^hash l=(list [tid=^hash amt=@])]
++      |=  [tid=hash l=(list [tid=hash amt=@])]
 +      ^-  @
 +      %+  roll  l
-+      |=([[t=^hash a=@] acc=@] ?:(=(t tid) (add acc a) acc))
++      |=([[t=hash a=@] acc=@] ?:(=(t tid) (add acc a) acc))
 +    =/  xfer-ok=?
 +      %+  levy  out-t
-+      |=  [tid=^hash amt=@]
++      |=  [tid=hash amt=@]
 +      (lte (sum tid out-t) (sum tid in-claims))
 +    &(gen-ok xfer-ok)
 +  --
