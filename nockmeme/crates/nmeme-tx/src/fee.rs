@@ -121,7 +121,19 @@ pub fn required_fee(spends: &Spends, params: FeeParams) -> Result<FeeReport, Err
         height: height(params.height),
         bythos_phase: height(params.bythos_phase),
     });
-    Ok(FeeReport { seed_words, witness_words, required: breakdown.minimum_fee, current })
+    // The chain counts witness words as the leaves of the witness noun
+    // (`count-witness-words:spend-v1`, tx-engine.hoon:1125-1131). The
+    // estimator above models that; for a witness shape it models loosely
+    // (seen live: a keyless covenant witness came out under by enough for
+    // the engine to refuse the transaction with v1-insufficient-fee), the
+    // exact leaf count of the encoded witness is taken when it is larger.
+    let exact_witness_words = exact_witness_leaves(spends);
+    let witness_words = witness_words.max(exact_witness_words);
+    let witness_divisor = if params.height >= params.bythos_phase { params.input_fee_divisor } else { 1 };
+    let base = if params.height >= params.bythos_phase { params.base_fee } else { params.base_fee * 2 };
+    let exact_required = (seed_words * base + witness_words * base / witness_divisor).max(params.min_fee);
+    let required = breakdown.minimum_fee.max(exact_required);
+    Ok(FeeReport { seed_words, witness_words, required, current })
 }
 
 /// The deepest lock the protocol defines is 16-way (`Lock::V16`,
@@ -154,4 +166,27 @@ pub fn enforce_fee(spends: &Spends, params: FeeParams) -> Result<FeeReport, Erro
         });
     }
     Ok(report)
+}
+
+/// `num-of-leaves:shape` of each spend's witness noun, summed: exactly what
+/// the chain charges input words for.
+fn exact_witness_leaves(spends: &Spends) -> u64 {
+    use nockapp::noun::slab::{NockJammer, NounSlab};
+    use noun_serde::NounEncode;
+    let mut total = 0u64;
+    for (_, spend) in &spends.0 {
+        let Spend::Witness(spend1) = spend else { continue };
+        let mut slab: NounSlab<NockJammer> = NounSlab::new();
+        let noun = spend1.witness.to_noun(&mut slab);
+        let space = slab.noun_space();
+        total += leaves(noun.in_space(&space));
+    }
+    total
+}
+
+fn leaves(noun: nockvm::noun::NounHandle<'_>) -> u64 {
+    match noun.as_cell() {
+        Ok(cell) => leaves(cell.head()) + leaves(cell.tail()),
+        Err(_) => 1,
+    }
 }
