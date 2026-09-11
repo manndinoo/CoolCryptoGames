@@ -67,6 +67,8 @@ fi
 echo "LORE-WALLET	address=$LORE	lock=$LORE_LOCK	first=$("$NMEME_TX" pool-lock --token "$TOKEN_B" --fee-bps 1 --lore-bps 1 --lore-lock "$LORE_LOCK" | awk -F'\t' '$1=="LORE-FIRST"{print $2}')	key=the lore wallet (held, not locked)"
 echo "LORE_LOCK=$LORE_LOCK" >> "$RUN/pool-env.txt"
 PP="--lore-bps $LORE_BPS --lore-lock $LORE_LOCK"
+# wallets rebuilt from keys know no notes until they have listed them once
+for who in alice bob; do wallet "$who" list-notes >/dev/null 2>&1 || true; done
 # lore_balance -> "<nicks> <notes> <non-plain notes>"
 lore_balance() {
   quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$LORE_LOCK" > "$S/funding-lore.txt" 2>/dev/null || die "lore funding read"
@@ -185,7 +187,7 @@ done_already() {
 }
 bob_note() { # a plain unspent note of bob not yet used
   quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding-bob.txt" || die "bob funding"
-  awk -F'\t' '$1=="FUNDING" && $4=="plain" {print $2" "$3}' "$S/funding-bob.txt" | while read -r n; do grep -qF "$n" "$USED" || { echo "$n"; break; }; done
+  awk -F'\t' -v need=$((BUY_NICKS + 20000)) '$1=="FUNDING" && $4=="plain" && $5+0>=need {print $2" "$3}' "$S/funding-bob.txt" | while read -r n; do grep -qF "$n" "$USED" || { echo "$n"; break; }; done
 }
 bob_token_note() { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$BOB_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'; }
 

@@ -18,6 +18,10 @@ wallet_fresh() {
   ( cd "$W/$who" && NOCKAPP_HOME="$W/$who" RUST_LOG=error "$WALLET" --pma-initial-size 256MiB \
       --client private --private-grpc-server-port "$PORT" --fakenet import-keys --file "$keys" >/dev/null 2>&1 ) \
     || die "import-keys failed for $who"
+  # a fresh wallet knows no notes until it has listed them once (seen live:
+  # "manual mode references unknown note" right after an import)
+  ( cd "$W/$who" && NOCKAPP_HOME="$W/$who" RUST_LOG=error "$WALLET" --pma-initial-size 256MiB \
+      --client private --private-grpc-server-port "$PORT" --fakenet list-notes >/dev/null 2>&1 ) || true
 }
 wallet() {
   local who="$1"; shift
