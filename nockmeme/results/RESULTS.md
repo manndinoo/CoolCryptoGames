@@ -273,6 +273,70 @@ The saved state: chain at height 737 (`node-state-h737.tar.gz`, restorable
 into `data/` with the seed cache), both wallets' key exports, and all twelve
 signed transaction files, handed over as a bundle alongside this branch.
 
+### A13. Evidence is verified, not trusted; missing data is not "no claims"
+
+A second outside review of §A12 found two gaps in the guard itself, both
+real, both closed and shown live (run "attempt 7", output in
+[`live/attempt7/`](./live/attempt7/); before/after records in
+[`live/evidence-before.txt`](./live/evidence-before.txt),
+[`live/evidence-after.txt`](./live/evidence-after.txt),
+[`live/evidence-tests-before.txt`](./live/evidence-tests-before.txt),
+[`live/evidence-tests-after.txt`](./live/evidence-tests-after.txt)).
+
+**Gap 1: a `FUNDING` line was a trusted assertion.** The checker read the
+`tokenfree` label off a text file. On the binary built from commit bb7169f,
+a forged line labelling token A's genesis output `tokenfree` got
+`INPUT-OK … tokenfree`, and a file holding both the honest `claim` line and
+the forged one still got `INPUT-OK`: the `tokenfree` set was consulted first
+(`evidence-before.txt`).
+
+What replaced it is a rule, not a label. Consensus names every v1 coinbase
+note `new-v1:nname [root [parent %.y]]` and builds it with empty note-data
+(`+new:coinbase`, `hoon/common/tx-engine.hoon`; `validate` pins the origin
+page and the source hash). A miner supplies only the coinbase split, never
+a note body. So a note whose last name equals `coinbase_last_name(parent id
+of the block at its origin height)` was a coinbase note and carried no token
+weight in any history — and both inputs to that check are consensus data any
+node serves, **after the note is spent**. That is the verifiable historical
+evidence:
+
+| consumer | what it now does |
+|---|---|
+| `funding` | reads each note's body and its origin height, fetches the origin block's parent id (`GetBlockDetails`), and labels the note `coinbase` only if the name recomputes; `plain` if claim-free but not coinbase; `claim` otherwise. Every line carries the origin height. |
+| `rebuild` | admits as token-free exactly the `coinbase` records, each re-verified against the node at rebuild time. `plain` and legacy `tokenfree` records admit nothing; a `coinbase` record that does not recompute is an error naming it; two records that disagree about one note refuse the whole file. |
+| `check-inputs` | reads no file. It fetches the inputs' notes from the node and refuses any input not shown unspent without a claim, or not named as the token note to move. |
+
+Live, on this chain: all **723** of Alice's reward notes recompute as
+coinbase, **0** fall to `plain`, and her **10** token notes are `claim`
+(`evidence-after.txt`). The vector for block 398 (parent id → last name) is
+pinned in `nmeme-tx` `tests/names.rs`. The §A11 rebuild re-run with its old,
+label-only proofs is now refused, correctly: nothing in those files is
+evidence any more.
+
+**Gap 2: missing data became "token-free".** The balance reader left the
+claim list empty when the entry had no note body, no version, a legacy (v0)
+version, or no note-data field, and read a missing `assets` as 0. The guard
+then saw "no claim". `note_from_entry` now refuses each of those, plus an
+unsupported version value and a body naming a different note — the same
+posture as the node's own decoder, which treats every missing field as an
+error. A verified empty claim list is a complete v1 body with no entries,
+and nothing else.
+
+**Regression tests, run against the unfixed code first.** Commit cf0afbd
+added `tests/evidence.rs` with the reader moved into a pure function and its
+old behaviour intact. Nine tests failed there — forged label admitted,
+conflicting records accepted, missing body / version / note-data / assets,
+v0 note, unsupported version, mismatched body name all read as fine — and
+the two positive controls passed (`evidence-tests-before.txt`; the hosted
+runner's run 6 failed the same way). After the fix all pass:
+
+| suite | tests |
+|---|---|
+| nmeme-core | 27 |
+| nmeme-index binding / decode / evidence / history / snapshot | 6 / 8 / 12 / 7 / 8 |
+| nmeme-tx | 41 (adds the pinned coinbase vector) |
+| **total** | **109**, 0 failed |
+
 ---
 
 ## B. Designed but NOT verified

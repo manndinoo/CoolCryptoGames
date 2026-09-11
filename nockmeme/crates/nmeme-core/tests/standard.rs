@@ -3,7 +3,7 @@
 //! These exercise the encoding against the real `OwnedBasedNoun` and the real
 //! `Hash`/`Name` types from `nockchain-types`, not a stand-in. What they do not
 //! do is prove anything about a live chain — that is the fakenet gate in
-//! SPEC §11.
+//! SPEC §12.
 
 use nmeme_core::claim::MAX_DECIMALS;
 use nmeme_core::indexer::{NoteView, Outcome, TxView};

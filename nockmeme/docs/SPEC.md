@@ -187,9 +187,35 @@ set, so partial fills are out of scope for v0.
 - No metadata beyond ticker and decimals (names, images and links belong
   off-chain, keyed by `token-id`).
 - No claim of security, interoperability or mainnet readiness. The acceptance
-  gate is §11.
+  gate is §12.
 
-## 11. Acceptance gate
+## 11. Provenance and evidence
+
+An indexer learns which notes carry token weight only from the transactions
+it replays. Replayed without the transaction that put weight on a note, a
+genesis that consumes that note looks like a valid creation instead of the
+burn §5 and §7 make it. So a replay must establish, for every input of every
+step, that the input's token status is known:
+
+1. the input is an output of an earlier supplied step (the replay computed
+   its weight, possibly zero); or
+2. the input is proven to have carried no `meme` entry.
+
+Proof under (2) is never a label. The only admissible evidence is one that
+anyone can recompute from consensus data after the note is spent. v0 admits
+exactly one: **the note was a coinbase note.** Consensus names every v1
+coinbase note from its origin block's parent id with the coinbase flag set
+(`+new:coinbase`, `tx-engine.hoon`) and builds it with empty note-data; a
+miner supplies only the coinbase split. A note whose last name equals that
+recomputed value carried no claim in any history. The origin height and the
+parent id are served by every node.
+
+A note that is claim-free at read time but not a coinbase note is admissible
+for a pre-broadcast check made against the node at that moment, and for
+nothing else: once it is spent, supply the step that created it instead.
+Anything not covered by (1) or (2) is refused and named, never guessed.
+
+## 12. Acceptance gate
 
 NMEME v0 is proven when, on a local fakenet node:
 

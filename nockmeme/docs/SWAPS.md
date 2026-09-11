@@ -119,5 +119,5 @@ neither can inflate the other's cost.
 Designed and derived from source. **Not implemented and not tested.** The
 construction rests on `output-source` behaving as read in
 `tx-engine-1.hoon:1413-1418`, and that reading has not yet been confirmed
-against a running node. Confirming it is part of the fakenet gate (SPEC §11)
+against a running node. Confirming it is part of the fakenet gate (SPEC §12)
 and should be done before any of this is built on.

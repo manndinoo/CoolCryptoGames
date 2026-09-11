@@ -81,6 +81,21 @@ until grep -aq "handle-command: born" "$RUN/node.log"; do sleep 30; done
 FEE_NICKS=8192 bash /path/to/nockmeme/scripts/live-demo.sh 2>"$RUN/progress.log" | tee "$RUN/results.txt"
 ```
 
+What `live-demo.sh` runs, and what to run by hand:
+
+```bash
+NI="$REPO/target/debug/nmeme-index"; PUB=127.0.0.1:5556
+# every unspent note at those first-names, with a verified status:
+#   coinbase (last name recomputed from the origin block's parent id) | plain | claim
+$NI funding --addr $PUB --lock <change-lock-root> --first <coinbase-first-name> > funding.txt
+# the pre-broadcast gate, read live from the node (no file is trusted):
+$NI check-inputs --addr $PUB --tx <tx.jam> [--token-note "<first> <last>"]
+# the consensus data a coinbase note's name is recomputed from:
+$NI block --addr $PUB --height <origin>
+# replay with evidence: only `coinbase` records are admitted, each re-verified
+$NI rebuild --addr $PUB --token <id> --step <txid>:<file>... --lock <root>... --funding funding.txt
+```
+
 Fees: `create-tx` is given `--fee-nicks ${FEE_NICKS:-4096}`. `attach` then
 recomputes the minimum for the transaction *with* the claim attached and
 refuses if the fee is below it, printing a `FEE current=… required=…` line to

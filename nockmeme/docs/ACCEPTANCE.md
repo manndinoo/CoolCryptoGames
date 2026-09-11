@@ -1,6 +1,6 @@
 # The acceptance gate, and what it took
 
-SPEC §11 says NMEME is proven only when a live node accepts and mines a real
+SPEC §12 says NMEME is proven only when a live node accepts and mines a real
 creation and a real transfer, and an indexer rebuilt from that chain reports the
 expected split.
 

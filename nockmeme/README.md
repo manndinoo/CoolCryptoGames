@@ -24,11 +24,11 @@ executed from what is only designed. Read that before trusting anything here.
 | Native stack builds | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
 | Node runs a chain | **done** — boots in 10 s at ~200 MB once the verifier seed cache is installed; the cache was generated on free hosted runners, one bucket per job — [`results/environment.md`](./results/environment.md) |
 | Transaction tooling | done, digest **verified against the wallet's signature on a live chain** — [`crates/nmeme-tx`](./crates/nmeme-tx) |
-| Proven on a live fakenet chain | **done, twice over** — two tokens created and transferred with every input proven token-free or named before broadcast; both rebuilt from the chain with input provenance proven, the first unchanged by the second — [`results/RESULTS.md`](./results/RESULTS.md) §A11–A12 |
+| Proven on a live fakenet chain | **done, twice over** — two tokens created and transferred with every input proven token-free or named before broadcast; both rebuilt from the chain with input provenance proven, the first unchanged by the second — [`results/RESULTS.md`](./results/RESULTS.md) §A11–A13 |
 | Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |
 | Platform UI | not started |
 
-**The acceptance gate (SPEC §11) has passed on a single-node fakenet in this
+**The acceptance gate (SPEC §12) has passed on a single-node fakenet in this
 environment**: a node accepted and mined a real creation and a real transfer,
 and an indexer rebuilt from those blocks reported the expected split. Nothing
 has touched mainnet, trading is a design, and there is no platform UI. The
@@ -37,7 +37,9 @@ cannot decode note-data transactions, balance queries take first-names not
 addresses, coinbase notes sit at their own lock, and a stock wallet will burn
 a token by spending its note as ordinary funds — and an outside review found
 that a rebuild given incomplete history could report a creation the rules
-reject; it now refuses instead. All recorded in
+reject; it now refuses instead, and a second review found the guard's own
+evidence was a trusted label; it is now recomputed from consensus data. All
+recorded in
 [`results/RESULTS.md`](./results/RESULTS.md).
 
 ## Why note-data
