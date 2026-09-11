@@ -54,7 +54,9 @@ if [ ! -f "$W/lore/.done" ]; then
 fi
 # a lore wallet whose arena was thrown away (disk) still has its keys
 [ -d "$W/lore/wallet" ] || wallet_fresh lore
-LORE=$(wallet lore list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //' || true)
+# the master address list names the imported key (list-active-addresses shows
+# nothing for a wallet rebuilt from an export: it lists derived children only)
+LORE=$(wallet lore list-master-addresses | strip | grep -oE '^- Address: [A-Za-z0-9]+' | head -1 | sed 's/^- Address: //' || true)
 [ -n "$LORE" ] || die "lore address"
 if [ -z "${LORE_LOCK:-}" ]; then
   mkdir -p "$S/lore-probe"; list_tx_files alice > "$S/lore-probe/before.txt"
