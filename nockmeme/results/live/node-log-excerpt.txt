@@ -25,3 +25,11 @@
 2026-09-11T13:51:23.645889Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 7u2jhGiTvZK9NGJzBAXCHsq56NHzTY3bfrk7PVJZoExdc6kuCJdahzS added to validated blocks at 685 with proof version 0
 2026-09-11T13:53:06.986738Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: sQkkababRKDj3TuMbPJUraDVCYTpLy7iySstw5XQ8TLCPkZtTGH5dS
 2026-09-11T13:53:10.537408Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 3fWQ6RGa7ssuenoahBoiM5o9RTmjpGq8ieEnf2o4MGLVoZVNe4NgBzY added to validated blocks at 712 with proof version 0
+2026-09-11T15:04:44.825907Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2VmMxbfxmY6YwiemQcieXuEsTUtmTR1iFYuiWFQa7PpziqyG8yTLwEW
+2026-09-11T15:04:51.477293Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block AmGHzCgqQkz3q6CuVmRVcB5DvdBz37vuWgXzbrBmoBJNFg2TzTpHJ8S added to validated blocks at 757 with proof version 0
+2026-09-11T15:07:26.047744Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: Bse3vCUrnsnW1FZT6QjGaktdtZKkqVJHLCwTwACxJbWfgEjcKNwc3ZG
+2026-09-11T15:07:30.132002Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 6exoycqobUpGQG5BuFectieJtYkzrRMbQy8CR4cXHDPSqRY6ZqwsrH8 added to validated blocks at 796 with proof version 0
+2026-09-11T15:09:37.858343Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3fTdPwkQbVco9aAiwWSghToJLJ48QVC7v2xtMS3YcDZCJYmH9561N9h
+2026-09-11T15:09:42.893350Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 64mBQbAfXj62TkBDgjeHKmoX1b5vwXvEroYeyvzbwawNeMKYDoQsCWP added to validated blocks at 834 with proof version 0
+2026-09-11T15:11:18.707004Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 7AkA8LFRLfxv5kMEpqS6H1f2anDa2PrQSmEjhZW1PpLrXtHLbMBBPJr
+2026-09-11T15:11:25.262849Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 7HbLsuPYvASXdPatiR2ocDNXK2HayB4hnGtLMoba4CJEgN25MwdtH4T added to validated blocks at 856 with proof version 0

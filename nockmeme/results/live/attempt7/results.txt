@@ -1,0 +1,53 @@
+== stage 1: wallets ==
+alice=8sqwGBr2NqrpGNCATMFDiwJVTmHdjnPRbEez8EuN6QJXHGmXN7pyL9o
+bob=7tk6CeaZC3UvTXrAthf7HpJtS9kiijfEfaebVbHEZHXqJ6sDHFj1kCz
+== stage 2: mine to alice ==
+miner pid=10212
+  PASS genesis-A-gate 4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax
+  genesis-A-gate: 1/1 verified
+  PASS genesis-A-resigned 4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax
+  genesis-A-resigned: 1/1 verified
+GENESIS[A] txid=2VmMxbfxmY6YwiemQcieXuEsTUtmTR1iFYuiWFQa7PpziqyG8yTLwEW height=757
+TOKEN[A] BSdBEvUexL6r7W3tQz3z5bJSn1dtBwET4BrreWQpLKHzJCCf21MT61U
+  PASS xfer-A-gate 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  xfer-A-gate: 1/1 verified
+  PASS xfer-A-resigned 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  xfer-A-resigned: 1/1 verified
+TRANSFER[A] txid=Bse3vCUrnsnW1FZT6QjGaktdtZKkqVJHLCwTwACxJbWfgEjcKNwc3ZG height=796
+  PASS genesis-B-gate 4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax
+  genesis-B-gate: 1/1 verified
+  PASS genesis-B-resigned 4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax
+  genesis-B-resigned: 1/1 verified
+GENESIS[B] txid=3fTdPwkQbVco9aAiwWSghToJLJ48QVC7v2xtMS3YcDZCJYmH9561N9h height=834
+TOKEN[B] Cd1wN6o5fgr66r1wY6ai1LgrrjaPzCAG4RVVPZ2zyN6Gdc1YWEhSPTb
+  PASS xfer-B-gate 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  xfer-B-gate: 1/1 verified
+  PASS xfer-B-resigned 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  xfer-B-resigned: 1/1 verified
+TRANSFER[B] txid=7AkA8LFRLfxv5kMEpqS6H1f2anDa2PrQSmEjhZW1PpLrXtHLbMBBPJr height=856
+== balances[A] over all four transactions ==
+HEIGHT	876
+BALANCE	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999900
+BALANCE	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+TOTAL	1000000
+SUPPLY	1000000
+TICKER	DOGE
+ASSERT-OK	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999900
+ASSERT-OK	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+ASSERT-OK	total	1000000
+== balances[B] over all four transactions ==
+HEIGHT	876
+BALANCE	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999900
+BALANCE	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+TOTAL	1000000
+SUPPLY	1000000
+TICKER	PEPE
+ASSERT-OK	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999900
+ASSERT-OK	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+ASSERT-OK	total	1000000
+OMITTED-HISTORY refused: input [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax BaLxGguyCsb7tuAmp4EaU156GbopuDe8c48qRCcFor1YP7vpjgoJ28D]
+
+== summary ==
+token A  BSdBEvUexL6r7W3tQz3z5bJSn1dtBwET4BrreWQpLKHzJCCf21MT61U  genesis=2VmMxbfxmY6YwiemQcieXuEsTUtmTR1iFYuiWFQa7PpziqyG8yTLwEW  transfer=Bse3vCUrnsnW1FZT6QjGaktdtZKkqVJHLCwTwACxJbWfgEjcKNwc3ZG
+token B  Cd1wN6o5fgr66r1wY6ai1LgrrjaPzCAG4RVVPZ2zyN6Gdc1YWEhSPTb  genesis=3fTdPwkQbVco9aAiwWSghToJLJ48QVC7v2xtMS3YcDZCJYmH9561N9h  transfer=7AkA8LFRLfxv5kMEpqS6H1f2anDa2PrQSmEjhZW1PpLrXtHLbMBBPJr
+A's balances are unchanged by B's creation; both rebuilt from the chain with input provenance proven.

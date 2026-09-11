@@ -1,0 +1,5 @@
+EVIDENCE	0 coinbase note(s) re-verified against block parents
+# canonical snapshot: 23 unspent note(s) at height 876 block 4ZmCPtcCCPEUSZY9ebbYYB9tVFNLT1nBzfUj2TFQotq3jYq6bgPWLS2
+HEIGHT	876
+BLOCK	4ZmCPtcCCPEUSZY9ebbYYB9tVFNLT1nBzfUj2TFQotq3jYq6bgPWLS2
+error: 3fTdPwkQbVco9aAiwWSghToJLJ48QVC7v2xtMS3YcDZCJYmH9561N9h: input [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax BaLxGguyCsb7tuAmp4EaU156GbopuDe8c48qRCcFor1YP7vpjgoJ28D] is neither an output of an earlier supplied step nor proven token-free by a FUNDING file. If it carries a claim, the transaction that created it must be replayed too; a genesis that consumed it would otherwise be reported as a valid creation instead of a burn (SPEC G1).

@@ -337,6 +337,20 @@ runner's run 6 failed the same way). After the fix all pass:
 | nmeme-tx | 41 (adds the pinned coinbase vector) |
 | **total** | **109**, 0 failed |
 
+**The live run with verified evidence** (attempt 7, exit 0, chain at 876):
+
+| | token A, DOGE | token B, PEPE |
+|---|---|---|
+| genesis input | Alice's reward note from block 398, admitted only after its last name recomputed from block 398's parent id | a later reward note, same check |
+| gate | `INPUT-OK … tokenfree (node shows no claim)`, read live at the tip | same |
+| genesis / transfer | **757** `2VmMxbfx…` / **796** `Bse3vCUr…` | **834** `3fTdPwkQ…` / **856** `7AkA8LFR…` |
+| rebuild over all four | `EVIDENCE 833 coinbase note(s) re-verified against block parents` (every coinbase record in the four supplied files, each against its origin block); 999,900 / 100, total 1,000,000, `ASSERT-OK` ×3 — unchanged by B | same for B |
+| omitted history | B alone, no evidence: refused, naming the genesis input | |
+
+Reproduce: `RUNBOOK.md` steps 1–7 (the demo), then the four commands under
+"What `live-demo.sh` runs" by hand against any of the transaction files in
+`live/txs/`.
+
 ---
 
 ## B. Designed but NOT verified
@@ -374,9 +388,9 @@ here has touched mainnet.
 ## The single sentence version
 
 Two tokens were created and transferred on a live Nockchain fakenet node in
-this environment with every input proven token-free or named before
-broadcast, and both were rebuilt from the mined blocks with input provenance
-proven: 999,900 / 100 of 1,000,000 each, the first unchanged by the second's
+this environment with every input read live from the node before broadcast,
+and both were rebuilt from the mined blocks with every genesis input's
+token-free status re-derived from consensus data (its coinbase name): 999,900 / 100 of 1,000,000 each, the first unchanged by the second's
 creation. A replay given incomplete history now refuses instead of reporting
 a creation the rules reject, a hazard an outside review found and the full
 replay confirmed. Trading is designed, not built.

@@ -8,7 +8,8 @@ checkout): 109 passed, 0 failed across 21 test binaries — core 27; index
 binding 6, decode 8, evidence 12 (new), history 7, snapshot 8; tx 41.
 On the previous commit cf0afbd the same evidence suite failed 9 of 11
 (results/live/evidence-tests-before.txt); hosted run 34612984535 failed
-the same way, by design.
+the same way, by design. live-demo.sh (attempt 7) exit 0 with the fixed
+tools: results/live/attempt7/.
 
 
 ## 2026-09-11 later: provenance guard (commit 8b0a7d8 and after)

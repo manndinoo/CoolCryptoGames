@@ -1,7 +1,7 @@
 # Mined token transactions on the fakenet chain (all of them)
 
 Signed transaction files exactly as broadcast, named `h<height>-<kind>-<token
-prefix>-<txid prefix>.jam`. These twelve are the complete token history of the
+prefix>-<txid prefix>.jam`. These sixteen are the complete token history of the
 chain; `nmeme-index rebuild` binds each to its mined transaction by
 recomputing the consensus transaction id.
 
@@ -19,10 +19,17 @@ recomputing the consensus transaction id.
 | 650 | 2XeMY77jqRUdWrt9ivRrmuAvm3UvCJ53hbNL5cpXRUSZocpG71Lb5mw | transfer A (gated) | 8wcg… |
 | 685 | BojtQp3XEqAxXcb3vL7ZKBoX2xd4mSWjGT5MMjabnxLHE8CWHPYkCua | genesis B (gated) | 2vJT5B5jExdnWYhnuNfG7iFStTSLfj3KQkNSdqvaxXHEvgCxT3msShL |
 | 712 | sQkkababRKDj3TuMbPJUraDVCYTpLy7iySstw5XQ8TLCPkZtTGH5dS | transfer B (gated) | 2vJT… |
+| 757 | 2VmMxbfxmY6YwiemQcieXuEsTUtmTR1iFYuiWFQa7PpziqyG8yTLwEW | genesis A, verified evidence | BSdBEvUexL6r7W3tQz3z5bJSn1dtBwET4BrreWQpLKHzJCCf21MT61U |
+| 796 | Bse3vCUrnsnW1FZT6QjGaktdtZKkqVJHLCwTwACxJbWfgEjcKNwc3ZG | transfer A | BSdB… |
+| 834 | 3fTdPwkQbVco9aAiwWSghToJLJ48QVC7v2xtMS3YcDZCJYmH9561N9h | genesis B, verified evidence | Cd1wN6o5fgr66r1wY6ai1LgrrjaPzCAG4RVVPZ2zyN6Gdc1YWEhSPTb |
+| 856 | 7AkA8LFRLfxv5kMEpqS6H1f2anDa2PrQSmEjhZW1PpLrXtHLbMBBPJr | transfer B | Cd1w… |
 
 "(gated)": every input chosen by name from a FUNDING proof and checked by
 `nmeme-index check-inputs` before broadcast; the proofs are in
-`../attempt6/`. The first five transactions predate the gate; their inputs'
+`../attempt6/`. "verified evidence" (heights 757–856): the genesis input is
+a coinbase note whose name recomputes from its origin block's parent id,
+the gate read the inputs live from the node, and the rebuild re-verified
+the evidence (`../attempt7/`). The first five transactions predate the gate; their inputs'
 provenance cannot be proven after the fact, so the guarded rebuild refuses
 them (that refusal is the point).
 
