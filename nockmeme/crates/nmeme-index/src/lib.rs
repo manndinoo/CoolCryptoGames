@@ -82,6 +82,28 @@ pub struct TxPlan {
     pub destinations: Vec<Destination>,
 }
 
+/// Recomputes a transaction file's id exactly as consensus does: the hash of
+/// its version and its spliced spends (`RawTx::compute_id`, nockchain-types
+/// `v1/tx.rs`). A file whose recomputed id equals the id the chain mined IS
+/// the mined transaction, field for field: any change to an input, an output,
+/// an amount, or a note-data claim changes the id.
+pub fn read_tx_id(path: &std::path::Path) -> Result<String, String> {
+    use nmeme_tx::txfile::ParsedTransaction;
+    use nockchain_types::tx_engine::common::Version;
+    use nockchain_types::tx_engine::v1::tx::RawTx;
+
+    let bytes = std::fs::read(path).map_err(|e| format!("read {}: {e}", path.display()))?;
+    let mut slab: NounSlab<NockJammer> = NounSlab::new();
+    let noun = slab.cue_into(bytes.into()).map_err(|e| format!("cue: {e}"))?;
+    let space = slab.noun_space();
+    let parsed =
+        ParsedTransaction::from_noun(noun.in_space(&space)).map_err(|e| format!("decode: {e}"))?;
+    let spends = parsed.spliced().map_err(|e| format!("splice: {e}"))?;
+    // The id field does not enter the hash; a placeholder is fine.
+    let raw = RawTx { version: Version::V1, id: Hash::from_be_bytes(&[0u8; 32]), spends };
+    raw.compute_id_base58().map_err(|e| format!("compute tx id: {e}"))
+}
+
 /// Reads a signed transaction file.
 ///
 /// The spend keys *are* the input note names, so inputs need no lookup. Output
