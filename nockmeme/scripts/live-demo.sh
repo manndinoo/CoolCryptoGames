@@ -198,11 +198,10 @@ broadcast_and_confirm() {
 # Called directly, never in $( ), so die() actually stops the script.
 build_sign_send() {
   local label="$1" to="$2" amount="$3" result="$4"; shift 4
-  local names="" funding="" token_note=""
+  local names="" token_note=""
   while :; do
     case "${1:-}" in
       --names) names="$2"; shift 2 ;;
-      --funding) funding="$2"; shift 2 ;;
       --token-note) token_note="$2"; shift 2 ;;
       *) break ;;
     esac
@@ -232,19 +231,14 @@ build_sign_send() {
   log "  tx=$tx"
 
   # The input gate. The wallet chose the inputs (even with --names it may add
-  # more); every one must be a note the chain showed carrying no claim, or the
-  # single token note this transaction means to move. Otherwise a token note
-  # is about to be spent as ordinary funds, which burns it (SPEC §7) — refuse.
-  if [ -n "$funding" ]; then
-    if [ -n "$token_note" ]; then
-      "$NMEME_INDEX" check-inputs --tx "$tx" --funding "$funding" --token-note "$token_note" \
-        >"$dir/check-inputs.txt" 2>&1 || die "$label: input gate refused (see $dir/check-inputs.txt)"
-    else
-      "$NMEME_INDEX" check-inputs --tx "$tx" --funding "$funding" \
-        >"$dir/check-inputs.txt" 2>&1 || die "$label: input gate refused (see $dir/check-inputs.txt)"
-    fi
-    sed 's/^/  /' "$dir/check-inputs.txt" >&2
-  fi
+  # more); every one must be a note the node shows unspent with no claim right
+  # now, or the single token note this transaction means to move. The verdict
+  # is read from the node, not from a file. Otherwise a token note is about to
+  # be spent as ordinary funds, which burns it (SPEC §7) — refuse.
+  local gate=("$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$tx")
+  [ -n "$token_note" ] && gate+=(--token-note "$token_note")
+  "${gate[@]}" >"$dir/check-inputs.txt" 2>&1 || die "$label: input gate refused (see $dir/check-inputs.txt)"
+  sed 's/^/  /' "$dir/check-inputs.txt" >&2
 
   "$NMEME_TX" sighash "$tx" "$dir" >"$dir/sighash.txt" \
     || die "$label: sighash failed (unsigned transaction?)"
@@ -328,7 +322,9 @@ PUB="${PUBLIC_ADDR:-127.0.0.1:5556}"
 #
 # Every input is chosen by name and checked against the chain BEFORE
 # broadcast. A genesis may spend only notes the chain shows carrying no claim
-# (`nmeme-index funding` -> tokenfree); a transfer may spend only such notes
+# (`nmeme-index funding` -> coinbase, re-verified against the block's parent
+# id, the one status a rebuild can re-check after the note is spent); a
+# transfer may spend only such notes
 # plus the one token note it moves, named by the full identity computed from
 # the genesis file (`nmeme-index outputs`). A stock wallet left to choose its
 # own inputs spends token notes as ordinary funds and burns them — seen live,
@@ -352,11 +348,11 @@ token_cycle() {
     # shellcheck disable=SC2086
     "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$g/funding.txt" \
       || die "$cyc: funding read failed"
-    fund=$(awk -F'\t' -v need="$need" '$1=="FUNDING" && $4=="tokenfree" && $5+0>=need {print "["$2" "$3"]"; exit}' "$g/funding.txt")
+    fund=$(awk -F'\t' -v need="$need" '$1=="FUNDING" && $4=="coinbase" && $5+0>=need {print "["$2" "$3"]"; exit}' "$g/funding.txt")
     [ -n "$fund" ] && break
     sleep 15
   done
-  [ -n "$fund" ] || die "$cyc: no token-free note worth >= $need nicks reached alice within ${MINE_TIMEOUT:-1800}s (see $g/funding.txt)"
+  [ -n "$fund" ] || die "$cyc: no verified coinbase note worth >= $need nicks reached alice within ${MINE_TIMEOUT:-1800}s (see $g/funding.txt)"
   local h; h=$(awk -F'\t' '$1=="HEIGHT"{print $2}' "$g/funding.txt")
   wait_for_height "$RUN/node.log" $((h + 2)) "${MINE_TIMEOUT:-1800}" >/dev/null \
     || die "$cyc: coinbase did not mature"
@@ -364,10 +360,10 @@ token_cycle() {
   "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$g/funding.txt" \
     || die "$cyc: funding read failed"
   grep -q "$(echo "$fund" | tr -d '[]' | cut -d' ' -f2)" "$g/funding.txt" || die "$cyc: funding note vanished"
-  log "  token-free funding note: $fund"
+  log "  coinbase funding note (verified against its block's parent): $fund"
 
   build_sign_send "genesis-$cyc" "$BOB" "${SEND_NICKS:-1000}" "$g.env" \
-    --names "$fund" --funding "$g/funding.txt" \
+    --names "$fund" \
     "$ALICE_LOCK=genesis:$ticker:6:${SUPPLY:-1000000}"
   . "$g.env"
   local gtxid="$TXID" gheight="$HEIGHT"
@@ -390,7 +386,7 @@ token_cycle() {
   sed 's/^/  /' "$x/token-note.txt" >&2
   local to=${XFER_AMOUNT:-100} change=$(( ${SUPPLY:-1000000} - ${XFER_AMOUNT:-100} ))
   build_sign_send "xfer-$cyc" "$BOB" "${SEND_NICKS:-1000}" "$x.env" \
-    --names "$gnote" --funding "$x/funding.txt" --token-note "$gnote" \
+    --names "$gnote" --token-note "$gnote" \
     "$BOB_LOCK=transfer:$token:$to" \
     "$ALICE_LOCK=transfer:$token:$change"
   . "$x.env"

@@ -33,7 +33,10 @@ use nmeme_tx::txfile::ParsedTransaction;
 use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockapp_grpc_proto::pb::public::v2::nockchain_block_service_client::NockchainBlockServiceClient;
 use nockapp_grpc_proto::pb::public::v2::nockchain_service_client::NockchainServiceClient;
-use nockapp_grpc_proto::pb::public::v2::{get_transaction_block_response, GetTransactionBlockRequest};
+use nockapp_grpc_proto::pb::public::v2::{
+    get_block_details_request, get_block_details_response, get_transaction_block_response,
+    GetBlockDetailsRequest, GetTransactionBlockRequest,
+};
 use nockapp_grpc_proto::pb::public::v2::{
     wallet_get_balance_request, wallet_get_balance_response, WalletGetBalanceRequest,
 };
@@ -48,6 +51,7 @@ fn main() -> ExitCode {
         Some("funding") => cmd_funding(&args),
         Some("outputs") => cmd_outputs(&args),
         Some("check-inputs") => cmd_check_inputs(&args),
+        Some("block") => cmd_block(&args),
         Some("rebuild") => cmd_rebuild(&args),
         _ => {
             eprintln!("{USAGE}");
@@ -67,7 +71,8 @@ const USAGE: &str = "usage:
   nmeme-index token-id --tx <tx.jam> --ticker <TICKER> --decimals <N>
   nmeme-index token-note --addr <host:port> --lock <lock-root-b58> [--name \"<first> <last>\"]
   nmeme-index funding  --addr <host:port> [--lock <lock-root-b58>]... [--first <first-name-b58>]...
-                       (every unspent note there: FUNDING <first> <last> tokenfree|claim <nicks>)
+                       (every unspent note there: FUNDING <first> <last> coinbase|plain|claim <nicks> <origin>;
+                        coinbase = last name recomputed from the origin block's parent id)
   nmeme-index outputs  --tx <tx.jam>      (INPUT <first> <last>; OUTPUT <lock> <first> <last> <claim>)
   nmeme-index check-inputs --tx <tx.jam> --funding <funding.txt> [--token-note \"<first> <last>\"]...
                        (every input must be proven token-free, or be a named token note)
@@ -151,7 +156,8 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
         println!("# snapshot height {} block {}", snapshot.height, snapshot.block_id);
 
         let mut found = Vec::new();
-        for (name, _owner, data, _assets) in &snapshot.notes {
+        for row in &snapshot.notes {
+            let (name, data) = (&row.name, &row.data);
             if name.first != want_first {
                 continue;
             }
@@ -209,14 +215,10 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         .into_iter()
         .map(|l| Hash::from_base58(l).map_err(|e| format!("lock {l}: {e}")))
         .collect::<Result<_, _>>()?;
-    let mut token_free: BTreeSet<Vec<u8>> = BTreeSet::new();
+    let mut records: Vec<nmeme_index::FundingRecord> = Vec::new();
     for path in flags(args, "--funding") {
         let text = std::fs::read_to_string(path).map_err(|e| format!("read {path}: {e}"))?;
-        for rec in nmeme_index::parse_funding(&text)? {
-            if rec.status == nmeme_index::FundingStatus::TokenFree {
-                token_free.insert(nmeme_index::name_key(&rec.name));
-            }
-        }
+        records.extend(nmeme_index::parse_funding(&text)?);
     }
     if addresses.is_empty() {
         return Err("at least one --lock is required".to_string());
@@ -241,7 +243,7 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         .enable_all()
         .build()
         .map_err(|e| format!("tokio: {e}"))?;
-    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total, token_free))
+    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total, records))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -252,15 +254,35 @@ async fn rebuild(
     addresses: Vec<Hash>,
     expectations: Vec<(String, u64)>,
     expect_total: Option<u64>,
-    token_free: BTreeSet<Vec<u8>>,
+    records: Vec<nmeme_index::FundingRecord>,
 ) -> Result<ExitCode, String> {
     let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
         .await
         .map_err(|e| format!("connect {addr}: {e}"))?;
 
+    // 0. Funding evidence is re-verified against the chain, never read off the
+    //    file: a record is admitted only if it says coinbase and the note's
+    //    last name recomputes from the parent id of its origin block.
+    let mut parents = ParentCache::default();
+    let mut oracle_client = NockchainBlockServiceClient::connect(format!("http://{addr}"))
+        .await
+        .map_err(|e| format!("connect {addr}: {e}"))?;
+    let mut needed: Vec<u64> = records
+        .iter()
+        .filter(|r| r.status == nmeme_index::FundingStatus::Coinbase)
+        .filter_map(|r| r.origin_page)
+        .collect();
+    needed.sort_unstable();
+    needed.dedup();
+    for h in needed {
+        parents.fill(&mut oracle_client, h).await?;
+    }
+    let token_free = nmeme_index::admitted_token_free(&records, |h| parents.get(h))?;
+    println!("EVIDENCE\t{} coinbase note(s) re-verified against block parents", token_free.len());
+
     // 1. One canonical snapshot: every address, every page, one block.
     let snapshot = read_snapshot(&mut client, &addresses).await?;
-    let unspent: Vec<(Name, String)> = snapshot.notes.iter().map(|(n, a, _, _)| (n.clone(), a.clone())).collect();
+    let unspent: Vec<(Name, String)> = snapshot.notes.iter().map(|r| (r.name.clone(), r.address.clone())).collect();
     println!("# canonical snapshot: {} unspent note(s) at height {} block {}", unspent.len(), snapshot.height, snapshot.block_id);
     println!("HEIGHT\t{}", snapshot.height);
     println!("BLOCK\t{}", snapshot.block_id);
@@ -401,11 +423,6 @@ fn parse_name(text: &str) -> Result<Name, String> {
 /// it settles the note's weight for any later replay (lib.rs, provenance).
 fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
     let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
-    // Coinbase notes do not sit at the wallet's change lock-root: a miner is
-    // paid at a lock built from its mining pkh, and the wallet's change goes
-    // to its own p2pkh lock-root. So funding may be asked for by lock-root
-    // (`--lock`, first-name derived) or directly by first-name (`--first`,
-    // e.g. taken from the inputs a wallet-built probe transaction chose).
     let mut firsts: Vec<Hash> = Vec::new();
     for l in flags(args, "--lock") {
         let lock = Hash::from_base58(l).map_err(|e| format!("lock {l}: {e}"))?;
@@ -415,7 +432,7 @@ fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
         firsts.push(Hash::from_base58(f).map_err(|e| format!("first {f}: {e}"))?);
     }
     if firsts.is_empty() {
-        return Err("funding: give at least one --lock or --first".to_string());
+        return Err("at least one --lock or --first is required".to_string());
     }
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -425,17 +442,119 @@ fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
         let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
             .await
             .map_err(|e| format!("connect {addr}: {e}"))?;
+        let mut blocks = NockchainBlockServiceClient::connect(format!("http://{addr}"))
+            .await
+            .map_err(|e| format!("connect {addr}: {e}"))?;
         let snapshot = read_snapshot_firsts(&mut client, &firsts).await?;
-        for line in nmeme_index::funding_lines(&snapshot) {
+        // Every origin height once; the parent ids are what make `coinbase`
+        // a verified status rather than a label.
+        let mut parents = ParentCache::default();
+        let mut heights: Vec<u64> = snapshot.notes.iter().map(|r| r.origin_page).collect();
+        heights.sort_unstable();
+        heights.dedup();
+        for h in heights {
+            parents.fill(&mut blocks, h).await?;
+        }
+        for line in nmeme_index::funding_header(&snapshot) {
             println!("{line}");
         }
+        let mut counts = [0usize; 3];
+        for row in &snapshot.notes {
+            let status = if nmeme_index::has_claim(&row.data) {
+                nmeme_index::FundingStatus::Claim
+            } else if nmeme_index::is_coinbase_note(&row.name, row.origin_page, &mut |h| parents.get(h))? {
+                nmeme_index::FundingStatus::Coinbase
+            } else {
+                nmeme_index::FundingStatus::Plain
+            };
+            counts[status as usize] += 1;
+            println!("{}", nmeme_index::funding_line(row, status));
+        }
+        eprintln!(
+            "# funding: {} coinbase (verified against block parents), {} plain, {} claim",
+            counts[0], counts[1], counts[2]
+        );
         Ok(ExitCode::SUCCESS)
     })
 }
 
-/// The outputs a transaction file will produce: lock-root, complete computed
-/// note name, and claim. Lets a caller name the genesis output it means to
-/// spend later, rather than picking "a token note at that lock".
+/// `block --addr <host:port> --height <h>`: the block's id and parent id, as
+/// the node serves them. This is the public data a coinbase note's name is
+/// recomputed from.
+fn cmd_block(args: &[String]) -> Result<ExitCode, String> {
+    let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
+    let height: u64 = flag(args, "--height").ok_or("missing --height")?.parse().map_err(|e| format!("height: {e}"))?;
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("tokio: {e}"))?;
+    runtime.block_on(async move {
+        let mut blocks = NockchainBlockServiceClient::connect(format!("http://{addr}"))
+            .await
+            .map_err(|e| format!("connect {addr}: {e}"))?;
+        let request = GetBlockDetailsRequest { selector: Some(get_block_details_request::Selector::Height(height)) };
+        let response = blocks.get_block_details(request).await.map_err(|e| format!("get_block_details({height}): {e}"))?.into_inner();
+        let details = match response.result {
+            Some(get_block_details_response::Result::Details(d)) => d,
+            Some(get_block_details_response::Result::Error(err)) => return Err(err.message),
+            None => return Err("no result".to_string()),
+        };
+        let id = details.block_id.as_ref().ok_or("block has no id")?;
+        let parent = details.parent.as_ref().ok_or("block has no parent")?;
+        println!("BLOCK\t{}\t{}\tparent={}", details.height, decode_hash(id)?.to_base58(), decode_hash(parent)?.to_base58());
+        println!("COINBASE-LAST\t{}", nmeme_tx::names::coinbase_last_name(&decode_hash(parent)?).to_base58());
+        Ok(ExitCode::SUCCESS)
+    })
+}
+
+/// Parent block ids by height, from `GetBlockDetails`. The block at `h` is
+/// consensus data every node serves; its parent id is what a coinbase note
+/// at origin `h` was named from.
+#[derive(Default)]
+struct ParentCache(BTreeMap<u64, Hash>);
+
+impl ParentCache {
+    async fn fill(
+        &mut self,
+        blocks: &mut NockchainBlockServiceClient<tonic::transport::Channel>,
+        height: u64,
+    ) -> Result<(), String> {
+        if self.0.contains_key(&height) {
+            return Ok(());
+        }
+        let request = GetBlockDetailsRequest {
+            selector: Some(get_block_details_request::Selector::Height(height)),
+        };
+        let response = blocks
+            .get_block_details(request)
+            .await
+            .map_err(|e| format!("get_block_details({height}): {e}"))?
+            .into_inner();
+        let details = match response.result {
+            Some(get_block_details_response::Result::Details(d)) => d,
+            Some(get_block_details_response::Result::Error(err)) => {
+                return Err(format!("get_block_details({height}): {}", err.message))
+            }
+            None => return Err(format!("get_block_details({height}): no result")),
+        };
+        if details.height != height {
+            return Err(format!("get_block_details({height}): node answered with height {}", details.height));
+        }
+        let parent = details
+            .parent
+            .as_ref()
+            .ok_or_else(|| format!("get_block_details({height}): block carries no parent id"))?;
+        self.0.insert(height, decode_hash(parent)?);
+        Ok(())
+    }
+    fn get(&self, height: u64) -> Result<Hash, String> {
+        self.0
+            .get(&height)
+            .cloned()
+            .ok_or_else(|| format!("no block parent cached for height {height}"))
+    }
+}
+
 fn cmd_outputs(args: &[String]) -> Result<ExitCode, String> {
     let path = std::path::PathBuf::from(flag(args, "--tx").ok_or("missing --tx")?);
     let plan = nmeme_index::read_tx_plan(&path)?;
@@ -459,51 +578,53 @@ fn cmd_outputs(args: &[String]) -> Result<ExitCode, String> {
     Ok(ExitCode::SUCCESS)
 }
 
-/// Pre-broadcast gate: every input of the transaction must be proven
-/// token-free by a FUNDING file, or be one of the token notes the caller
-/// explicitly means to move. Anything else is the wallet spending a token
-/// note as ordinary funds, which burns it (SPEC §7) — refuse before sending.
+/// Pre-broadcast gate: every input must be a note the node shows unspent
+/// **right now** with no claim, or the token note the caller explicitly
+/// means to move. The verdict comes from the note bodies the node returns
+/// for the inputs' first-names, never from a file: an input the node does
+/// not show, or shows with a claim that was not named, is refused before
+/// anything is broadcast — spending a token note as ordinary funds burns it
+/// (SPEC §7).
 fn cmd_check_inputs(args: &[String]) -> Result<ExitCode, String> {
+    let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
     let path = std::path::PathBuf::from(flag(args, "--tx").ok_or("missing --tx")?);
     let plan = nmeme_index::read_tx_plan(&path)?;
-    let mut token_free: BTreeSet<Vec<u8>> = BTreeSet::new();
-    let mut claimed: BTreeSet<Vec<u8>> = BTreeSet::new();
-    let funding = flags(args, "--funding");
-    if funding.is_empty() {
-        return Err("at least one --funding file is required".to_string());
-    }
-    for f in funding {
-        let text = std::fs::read_to_string(f).map_err(|e| format!("read {f}: {e}"))?;
-        for rec in nmeme_index::parse_funding(&text)? {
-            let key = nmeme_index::name_key(&rec.name);
-            if rec.status == nmeme_index::FundingStatus::TokenFree { token_free.insert(key); } else { claimed.insert(key); }
-        }
-    }
     let allowed_token_notes: Vec<Name> = flags(args, "--token-note")
         .into_iter()
         .map(parse_name)
         .collect::<Result<_, _>>()?;
-    let mut failures = 0usize;
-    for input in &plan.inputs {
-        let key = nmeme_index::name_key(input);
-        let label = format!("[{} {}]", input.first.to_base58(), input.last.to_base58());
-        if token_free.contains(&key) {
-            println!("INPUT-OK\t{label}\ttokenfree");
-        } else if allowed_token_notes.iter().any(|n| nmeme_index::name_key(n) == key) {
-            println!("INPUT-OK\t{label}\tnamed token note");
-        } else if claimed.contains(&key) {
-            println!("INPUT-REFUSED\t{label}\tcarries a claim and was not named: spending it here would burn it");
-            failures += 1;
-        } else {
-            println!("INPUT-REFUSED\t{label}\tnot in any FUNDING file: token status unknown");
-            failures += 1;
+    let mut firsts: Vec<Hash> = plan.inputs.iter().map(|n| n.first.clone()).collect();
+    firsts.sort_by_key(|h| h.to_be_bytes());
+    firsts.dedup();
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("tokio: {e}"))?;
+    runtime.block_on(async move {
+        let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
+            .await
+            .map_err(|e| format!("connect {addr}: {e}"))?;
+        let snapshot = read_snapshot_firsts(&mut client, &firsts).await?;
+        println!("# inputs read live at height {} block {}", snapshot.height, snapshot.block_id);
+        let mut failures = 0usize;
+        for input in &plan.inputs {
+            let label = format!("[{} {}]", input.first.to_base58(), input.last.to_base58());
+            match nmeme_index::classify_input(input, &snapshot.notes, &allowed_token_notes) {
+                nmeme_index::InputVerdict::TokenFree => println!("INPUT-OK\t{label}\ttokenfree (node shows no claim)"),
+                nmeme_index::InputVerdict::NamedTokenNote => println!("INPUT-OK\t{label}\tnamed token note"),
+                nmeme_index::InputVerdict::Refused(why) => {
+                    println!("INPUT-REFUSED\t{label}\t{why}");
+                    failures += 1;
+                }
+            }
         }
-    }
-    if failures > 0 {
-        return Err(format!("{failures} input(s) refused"));
-    }
-    println!("INPUTS\t{} verified", plan.inputs.len());
-    Ok(ExitCode::SUCCESS)
+        if failures > 0 {
+            return Err(format!("{failures} input(s) refused"));
+        }
+        println!("INPUTS\t{} verified live", plan.inputs.len());
+        Ok(ExitCode::SUCCESS)
+    })
 }
 
 /// Binds a transaction file to the transaction the chain mined under `txid`,
@@ -642,8 +763,7 @@ async fn read_snapshot_firsts_once(
             };
             let mut notes = Vec::new();
             for entry in &balance.notes {
-                let row = nmeme_index::note_from_entry(entry, &address)?;
-                notes.push((row.name, row.address, row.data, row.assets));
+                notes.push(nmeme_index::note_from_entry(entry, &address)?);
             }
             let next = balance.page.as_ref().map(|p| p.next_page_token.clone()).unwrap_or_default();
             pages_for_address.push(nmeme_index::Page {

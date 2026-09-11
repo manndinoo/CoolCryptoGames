@@ -76,6 +76,23 @@ pub fn last_name(seeds_hash: &Hash) -> Hash {
     hash_pair(&hash_leaf_null(), &hash_pair(&source, &hash_leaf_null()))
 }
 
+/// `last` for a **coinbase** note. `+new:coinbase` (`hoon/common/tx-engine.hoon`,
+/// the v1 arm) names every reward note `new-v1:nname [root [parent %.y]]`:
+/// the source is the block's *parent id* with `is-coinbase` = `%.y` = 0, and
+/// the note is built with empty note-data (`*(z-map @tas *)`); `validate`
+/// pins `origin-page` to the block height and the source hash to exactly
+/// this. A miner supplies only the coinbase split (lock hashes and amounts),
+/// never a note body, so no coinbase note can carry a claim.
+///
+/// That makes coinbase-ness a fact anyone can re-derive after the note is
+/// spent: fetch the parent id of the block at the note's origin height and
+/// compare. A spent note whose last name equals this value was a coinbase
+/// note, and therefore carried no token weight in any history.
+pub fn coinbase_last_name(parent_block_id: &Hash) -> Hash {
+    let source = hash_pair(parent_block_id, &hash_leaf_null()); // is-coinbase = %.y = 0
+    hash_pair(&hash_leaf_null(), &hash_pair(&source, &hash_leaf_null()))
+}
+
 /// The complete `Name` consensus assigns to the merged output at `lock_root`,
 /// given every seed in the transaction that pays that lock-root.
 pub fn output_name(lock_root: &Hash, seeds_at_lock: &[Seed]) -> Result<Name, Error> {

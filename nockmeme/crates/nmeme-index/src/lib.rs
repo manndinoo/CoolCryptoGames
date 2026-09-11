@@ -244,8 +244,7 @@ pub fn name_key(name: &Name) -> Vec<u8> {
 pub struct Page {
     pub height: Option<u64>,
     pub block_id: Option<String>,
-    /// (note name, owning address, raw note-data entries as (key, blob), assets in nicks).
-    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>, u64)>,
+    pub notes: Vec<NoteRow>,
     pub next_page_token: String,
 }
 
@@ -254,7 +253,7 @@ pub struct Page {
 pub struct Snapshot {
     pub height: u64,
     pub block_id: String,
-    pub notes: Vec<(Name, String, Vec<(String, Vec<u8>)>, u64)>,
+    pub notes: Vec<NoteRow>,
 }
 
 /// Upper bound on pages per address. A node that never returns an empty
@@ -376,48 +375,78 @@ pub fn has_claim(data: &[(String, Vec<u8>)]) -> bool {
     data.iter().any(|(key, _)| key == NOTE_DATA_KEY)
 }
 
-/// The `FUNDING` lines for a snapshot: one per unspent note, with its token
-/// status as the chain reports it. `nmeme-index funding` prints these; the
-/// demo picks genesis inputs from the `tokenfree` ones and hands the file to
-/// `check-inputs` and `rebuild`.
-pub fn funding_lines(snapshot: &Snapshot) -> Vec<String> {
-    let mut out = vec![format!("HEIGHT\t{}", snapshot.height), format!("BLOCK\t{}", snapshot.block_id)];
-    for (name, _owner, data, assets) in &snapshot.notes {
-        let status = if has_claim(data) { "claim" } else { "tokenfree" };
-        out.push(format!(
-            "FUNDING\t{}\t{}\t{}\t{}",
-            name.first.to_base58(),
-            name.last.to_base58(),
-            status,
-            assets
-        ));
-    }
-    out
-}
-
-/// What a `FUNDING` line says about a note.
+/// What the chain shows about an unspent note's token status, and whether
+/// that can be re-checked after the note is spent.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FundingStatus {
-    /// No `meme` entry, per the label.
-    TokenFree,
+    /// A coinbase reward: its last name recomputes from the parent id of its
+    /// origin block (`coinbase_last_name`), and consensus builds coinbase
+    /// notes with empty note-data. Verified at read time and again by every
+    /// consumer; the only status a rebuild admits.
+    Coinbase,
+    /// No `meme` entry in the body the node returned, but not a coinbase
+    /// note: token-free *now*, which a pre-broadcast gate may use live, but
+    /// unverifiable once spent. A rebuild admits it only as the output of a
+    /// supplied step.
+    Plain,
     /// Carries a `meme` entry.
     Claim,
 }
 
-/// One `FUNDING` line.
+impl FundingStatus {
+    pub fn label(self) -> &'static str {
+        match self {
+            FundingStatus::Coinbase => "coinbase",
+            FundingStatus::Plain => "plain",
+            FundingStatus::Claim => "claim",
+        }
+    }
+}
+
+/// One `FUNDING` line: `FUNDING <first> <last> <status> <assets> <origin>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FundingRecord {
     pub name: Name,
     pub status: FundingStatus,
     pub assets: u64,
-    /// The height whose block created the note, when the line carries it.
+    /// The height whose block created the note. Older files lack it.
     pub origin_page: Option<u64>,
 }
 
+/// The header lines of a funding file.
+pub fn funding_header(snapshot: &Snapshot) -> Vec<String> {
+    vec![format!("HEIGHT\t{}", snapshot.height), format!("BLOCK\t{}", snapshot.block_id)]
+}
+
+/// One `FUNDING` line for a note whose status the caller has established.
+pub fn funding_line(row: &NoteRow, status: FundingStatus) -> String {
+    format!(
+        "FUNDING\t{}\t{}\t{}\t{}\t{}",
+        row.name.first.to_base58(),
+        row.name.last.to_base58(),
+        status.label(),
+        row.assets,
+        row.origin_page
+    )
+}
+
+/// Is this note the coinbase note of its origin block? `parent_of(height)`
+/// returns the parent block id of the block at that height, from the node.
+pub fn is_coinbase_note<F>(name: &Name, origin_page: u64, parent_of: &mut F) -> Result<bool, String>
+where
+    F: FnMut(u64) -> Result<Hash, String>,
+{
+    let parent = parent_of(origin_page)?;
+    Ok(name.last == nmeme_tx::names::coinbase_last_name(&parent))
+}
+
 /// Parses `FUNDING` lines. Lines of other kinds are ignored; a malformed
-/// `FUNDING` line is an error, never skipped.
+/// line is an error, never skipped; two lines about the same note that do
+/// not say the same thing are a conflict and the whole file is refused —
+/// a later line never overrides an earlier one, in either direction.
 pub fn parse_funding(text: &str) -> Result<Vec<FundingRecord>, String> {
-    let mut out = Vec::new();
+    let mut out: Vec<FundingRecord> = Vec::new();
+    let mut seen: BTreeMap<Vec<u8>, (usize, FundingRecord)> = BTreeMap::new();
     for (i, line) in text.lines().enumerate() {
         let fields: Vec<&str> = line.split('\t').collect();
         if fields.first() != Some(&"FUNDING") {
@@ -429,7 +458,8 @@ pub fn parse_funding(text: &str) -> Result<Vec<FundingRecord>, String> {
         let first = Hash::from_base58(fields[1]).map_err(|e| format!("funding line {}: first: {e}", i + 1))?;
         let last = Hash::from_base58(fields[2]).map_err(|e| format!("funding line {}: last: {e}", i + 1))?;
         let status = match fields[3] {
-            "tokenfree" => FundingStatus::TokenFree,
+            "coinbase" => FundingStatus::Coinbase,
+            "plain" | "tokenfree" => FundingStatus::Plain,
             "claim" => FundingStatus::Claim,
             other => return Err(format!("funding line {}: unknown status {other:?}", i + 1)),
         };
@@ -438,25 +468,60 @@ pub fn parse_funding(text: &str) -> Result<Vec<FundingRecord>, String> {
             Some(h) => Some(h.parse::<u64>().map_err(|e| format!("funding line {}: origin: {e}", i + 1))?),
             None => None,
         };
-        out.push(FundingRecord { name: Name::new(first, last), status, assets, origin_page });
+        let rec = FundingRecord { name: Name::new(first, last), status, assets, origin_page };
+        let key = name_key(&rec.name);
+        if let Some((j, earlier)) = seen.get(&key) {
+            if *earlier != rec {
+                return Err(format!(
+                    "funding lines {} and {} conflict about note [{} {}]: {} vs {}. The file is \
+                     refused whole; a later line never overrides an earlier one.",
+                    j + 1,
+                    i + 1,
+                    rec.name.first.to_base58(),
+                    rec.name.last.to_base58(),
+                    earlier.status.label(),
+                    rec.status.label()
+                ));
+            }
+        } else {
+            seen.insert(key, (i, rec.clone()));
+        }
+        out.push(rec);
     }
     Ok(out)
 }
 
-/// The set of notes a rebuild may treat as token-free, given the funding
-/// records and a way to ask the chain for the parent block id of a height.
-pub fn admitted_token_free<F>(records: &[FundingRecord], _parent_of: F) -> Result<BTreeSet<Vec<u8>>, String>
+/// The notes a rebuild may treat as token-free: exactly the records that say
+/// `coinbase` **and** recompute as such from the chain. The label is a hint
+/// about which check to run, never evidence: a `coinbase` record whose name
+/// does not recompute is an error (a forged or corrupted file), and `plain`
+/// or legacy `tokenfree` records admit nothing — once spent, nothing can
+/// re-verify them, so the step that created them must be supplied instead.
+pub fn admitted_token_free<F>(records: &[FundingRecord], mut parent_of: F) -> Result<BTreeSet<Vec<u8>>, String>
 where
     F: FnMut(u64) -> Result<Hash, String>,
 {
-    Ok(records
-        .iter()
-        .filter(|r| r.status == FundingStatus::TokenFree)
-        .map(|r| name_key(&r.name))
-        .collect())
+    let mut out = BTreeSet::new();
+    for rec in records {
+        if rec.status != FundingStatus::Coinbase {
+            continue;
+        }
+        let label = format!("[{} {}]", rec.name.first.to_base58(), rec.name.last.to_base58());
+        let origin = rec
+            .origin_page
+            .ok_or_else(|| format!("funding record {label} says coinbase but carries no origin height"))?;
+        if !is_coinbase_note(&rec.name, origin, &mut parent_of)? {
+            return Err(format!(
+                "funding record {label} says coinbase, but its last name is not the coinbase name \
+                 for the block at height {origin}. The record is not evidence; refusing."
+            ));
+        }
+        out.insert(name_key(&rec.name));
+    }
+    Ok(out)
 }
 
-/// One note as the node's balance response describes it.
+/// One note as the node's balance response describes it, read completely.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NoteRow {
     pub name: Name,
@@ -464,34 +529,77 @@ pub struct NoteRow {
     /// Raw note-data entries as (key, blob).
     pub data: Vec<(String, Vec<u8>)>,
     pub assets: u64,
-    pub origin_page: Option<u64>,
+    pub origin_page: u64,
 }
 
-/// Reads one balance entry into a row.
+/// Reads one balance entry into a row, or refuses it.
+///
+/// The node's own decoder (`nockapp-grpc-proto` `TryFrom<PbNote>`) treats a
+/// missing field as an error, and so does this. An entry with no body, no
+/// version, an unsupported version, or no note-data field is **not** a note
+/// with an empty claim list — it is data this reader did not get, and a
+/// guard fed "no claims" for it would call a token note token-free.
 pub fn note_from_entry(entry: &BalanceEntry, address: &str) -> Result<NoteRow, String> {
-    let name = entry.name.as_ref().ok_or("balance entry has no name")?;
-    let name = decode_pb_name(name)?;
-    let mut data = Vec::new();
-    let mut origin_page = None;
-    if let Some(note) = entry.note.as_ref() {
-        if let Some(NoteVersion::V1(v1)) = note.note_version.as_ref() {
-            if let Some(nd) = v1.note_data.as_ref() {
-                for e in &nd.entries {
-                    data.push((e.key.clone(), e.blob.clone()));
-                }
-            }
-            origin_page = v1.origin_page.as_ref().map(|h| h.value);
+    let name = decode_pb_name(entry.name.as_ref().ok_or("balance entry has no name")?)?;
+    let label = format!("[{} {}]", name.first.to_base58(), name.last.to_base58());
+    let note = entry.note.as_ref().ok_or_else(|| format!("{label}: balance entry has no note body"))?;
+    let v1 = match note.note_version.as_ref() {
+        Some(NoteVersion::V1(v1)) => v1,
+        Some(NoteVersion::Legacy(_)) => {
+            return Err(format!(
+                "{label}: v0 (legacy) note. Only v1 notes carry note-data; this reader does not \
+                 read v0 notes and will not call one token-free."
+            ))
         }
+        None => return Err(format!("{label}: note body carries no version")),
+    };
+    match v1.version.as_ref().map(|v| v.value) {
+        Some(1) => {}
+        Some(other) => return Err(format!("{label}: unsupported note version {other}; only version 1 is read")),
+        None => return Err(format!("{label}: note body carries no version field")),
     }
-    let assets = entry
-        .note
-        .as_ref()
-        .and_then(|n| match n.note_version.as_ref() {
-            Some(NoteVersion::V1(v1)) => v1.assets.as_ref().map(|a| a.value),
-            _ => None,
-        })
-        .unwrap_or(0);
+    let origin_page = v1.origin_page.as_ref().ok_or_else(|| format!("{label}: note body has no origin page"))?.value;
+    let body_name = decode_pb_name(v1.name.as_ref().ok_or_else(|| format!("{label}: note body has no name"))?)?;
+    if name_key(&body_name) != name_key(&name) {
+        return Err(format!(
+            "{label}: the note body names a different note [{} {}]",
+            body_name.first.to_base58(),
+            body_name.last.to_base58()
+        ));
+    }
+    let nd = v1.note_data.as_ref().ok_or_else(|| format!("{label}: note body has no note-data field"))?;
+    let data: Vec<(String, Vec<u8>)> = nd.entries.iter().map(|e| (e.key.clone(), e.blob.clone())).collect();
+    let assets = v1.assets.as_ref().ok_or_else(|| format!("{label}: note body has no assets"))?.value;
     Ok(NoteRow { name, address: address.to_string(), data, assets, origin_page })
+}
+
+/// The pre-broadcast verdict on one input, from the notes the node shows
+/// unspent right now — not from any file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InputVerdict {
+    /// The node shows the note unspent with no `meme` entry.
+    TokenFree,
+    /// The node shows a claim, and the caller named this note as the one to move.
+    NamedTokenNote,
+    Refused(String),
+}
+
+pub fn classify_input(input: &Name, live: &[NoteRow], allowed_token_notes: &[Name]) -> InputVerdict {
+    let key = name_key(input);
+    let Some(row) = live.iter().find(|r| name_key(&r.name) == key) else {
+        return InputVerdict::Refused(
+            "not an unspent note at this node: token status unknown".to_string(),
+        );
+    };
+    if !has_claim(&row.data) {
+        return InputVerdict::TokenFree;
+    }
+    if allowed_token_notes.iter().any(|n| name_key(n) == key) {
+        return InputVerdict::NamedTokenNote;
+    }
+    InputVerdict::Refused(
+        "carries a claim and was not named: spending it here would burn it".to_string(),
+    )
 }
 
 pub fn decode_pb_name(name: &nockapp_grpc_proto::pb::common::v1::Name) -> Result<Name, String> {

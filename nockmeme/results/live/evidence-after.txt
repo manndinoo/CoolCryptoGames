@@ -1,0 +1,28 @@
+# After the fix: nmeme-index (debug build), run 2026-09-11T15:00:22Z
+# 1. funding, live: every note's status verified; coinbase = last name recomputed from the origin block's parent id
+# exit 0
+# funding: 723 coinbase (verified against block parents), 0 plain, 10 claim
+HEIGHT	737
+BLOCK	7Pf7LWXFrB6gBoT57s6XLTZ4X8K64AJFPaSAh32xZHNQVkQQ1HW9yr
+#   coinbase: 723
+#   claim: 10
+# a coinbase line and a claim line:
+FUNDING	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	Y6bv9Wvc71jbj6FbddPRswigF6r6vk75xMNn6g2KD5cwytdpHjqY3f	coinbase	4294967296	398
+FUNDING	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	7jbp7N12PnHQ1YxS3MCkVNFs9VgQWpqjYroS8Xj8EdTK7heEkQT9tKC	claim	4294948912	650
+
+# 2. check-inputs, live, on the height-650 transfer (its input is spent by now): the verdict comes from the node
+# inputs read live at height 737 block 7Pf7LWXFrB6gBoT57s6XLTZ4X8K64AJFPaSAh32xZHNQVkQQ1HW9yr
+INPUT-REFUSED	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5]	not an unspent note at this node: token status unknown
+error: 1 input(s) refused
+# exit 2
+
+# 3. the forged funding file from before is no longer an input to check-inputs at all:
+error: missing --addr
+# exit 0
+
+# 4. rebuild of token A with the attempt-6 proofs (written before statuses were verifiable; their label is tokenfree = plain now):
+EVIDENCE	0 coinbase note(s) re-verified against block parents
+HEIGHT	737
+BLOCK	7Pf7LWXFrB6gBoT57s6XLTZ4X8K64AJFPaSAh32xZHNQVkQQ1HW9yr
+error: AzC1fW8YDgcd2J4w18RCKs1De83R5Ecj9WH4mk3LqAmK9Sq5wgv8EGC: input [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 9vp6aeWc9zzab8a34kZKSrzHYrgbfNTaesGbX25cFUkWWk6iWbb9yi2] is neither an output of an earlier supplied step nor proven token-free by a FUNDING file. If it carries a claim, the transaction that created it must be replayed too; a genesis that consumed it would otherwise be reported as a valid creation instead of a burn (SPEC G1).
+# exit 0

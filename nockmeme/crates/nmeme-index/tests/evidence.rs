@@ -14,7 +14,7 @@
 //! fix. See results/RESULTS.md §A13 for the record.
 
 use nmeme_core::claim::NOTE_DATA_KEY;
-use nmeme_index::{admitted_token_free, name_key, note_from_entry, parse_funding};
+use nmeme_index::{admitted_token_free, classify_input, name_key, note_from_entry, parse_funding, InputVerdict, NoteRow};
 use nockapp_grpc_proto::pb::common::v1 as pb1;
 use nockapp_grpc_proto::pb::common::v2 as pb2;
 use nockchain_types::tx_engine::common::{Hash, Name};
@@ -146,9 +146,34 @@ fn a_verified_empty_claim_list_is_token_free_and_carries_its_origin() {
     // reader has actually seen to be claim-free.
     let row = note_from_entry(&entry(&name(1), wrap(v1_note(&name(1), vec![]))), "alice").unwrap();
     assert!(row.data.is_empty());
-    assert_eq!(row.origin_page, Some(640));
+    assert_eq!(row.origin_page, 640);
     assert_eq!(row.assets, 4_294_958_104);
     let with_claim = vec![pb2::NoteDataEntry { key: NOTE_DATA_KEY.to_string(), blob: vec![1, 2] }];
     let row = note_from_entry(&entry(&name(1), wrap(v1_note(&name(1), with_claim))), "alice").unwrap();
     assert!(nmeme_index::has_claim(&row.data));
+}
+
+// --- the gate reads the note, not a label ----------------------------------
+
+#[test]
+fn check_inputs_verdicts_come_from_the_live_note_not_a_label() {
+    let plain = NoteRow { name: name(1), address: "alice".into(), data: vec![], assets: 5, origin_page: 640 };
+    let token = NoteRow {
+        name: name(2),
+        address: "alice".into(),
+        data: vec![(NOTE_DATA_KEY.to_string(), vec![9])],
+        assets: 5,
+        origin_page: 641,
+    };
+    let live = vec![plain, token];
+    assert_eq!(classify_input(&name(1), &live, &[]), InputVerdict::TokenFree);
+    // The claim-bearing note is refused unless it was named as the note to move.
+    assert!(matches!(classify_input(&name(2), &live, &[]), InputVerdict::Refused(_)));
+    assert_eq!(classify_input(&name(2), &live, &[name(2)]), InputVerdict::NamedTokenNote);
+    // A note the node does not show unspent has no verdict but refusal.
+    let why = match classify_input(&name(3), &live, &[name(3)]) {
+        InputVerdict::Refused(w) => w,
+        other => panic!("{other:?}"),
+    };
+    assert!(why.contains("not an unspent note"), "{why}");
 }

@@ -90,3 +90,24 @@ fn a_seed_for_another_lock_is_rejected() {
 fn last_name_depends_on_the_seeds_hash() {
     assert_ne!(last_name(&hash(1)), last_name(&hash(2)));
 }
+
+/// Pinned from the live fakenet (chain at height 737, 2026-09-11): the node
+/// reports Alice's reward note from block 398 as
+/// `[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax Y6bv9Wvc71jbj6FbddPRswigF6r6vk75xMNn6g2KD5cwytdpHjqY3f]`
+/// with origin page 398, and `GetBlockDetails(398)` gives parent id
+/// `BQ8FBXh1WF2nNHB4jefnFRy4XSXnSSkp5momunbDvkqEffY5Ui7hvAi` (block 397's id).
+/// `coinbase_last_name` of that parent must be the note's last name; on the
+/// same chain it matched for all 723 of Alice's reward notes and for none of
+/// her token notes (results/live/evidence-after.txt).
+#[test]
+fn coinbase_last_name_matches_the_chain() {
+    let parent = Hash::from_base58("BQ8FBXh1WF2nNHB4jefnFRy4XSXnSSkp5momunbDvkqEffY5Ui7hvAi").unwrap();
+    let last = nmeme_tx::names::coinbase_last_name(&parent);
+    assert_eq!(last.to_base58(), "Y6bv9Wvc71jbj6FbddPRswigF6r6vk75xMNn6g2KD5cwytdpHjqY3f");
+    // The wrong parent (block 396's id, parent of 397) does not.
+    let other = Hash::from_base58("AxUHNkwMSuzubiayARbbAhB2qQFvzZrwHfNXE39siwVaYPLSf48uqMd").unwrap();
+    assert_ne!(nmeme_tx::names::coinbase_last_name(&other), last);
+    // And a transaction output's last name for the same digest differs: the
+    // is-coinbase flag is part of the source.
+    assert_ne!(nmeme_tx::names::last_name(&parent), last);
+}

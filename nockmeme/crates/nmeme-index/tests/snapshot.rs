@@ -1,13 +1,13 @@
 //! Pagination and snapshot consistency, without a node.
 
-use nmeme_index::{collect_pages, fold_pages, require_same_snapshot, Page, MAX_PAGES};
+use nmeme_index::{collect_pages, fold_pages, require_same_snapshot, NoteRow, Page, MAX_PAGES};
 use nockchain_types::tx_engine::common::{Hash, Name};
 
 fn hash(n: u64) -> Hash {
     Hash::from_limbs(&[n, n + 1, n + 2, n + 3, n + 4])
 }
-fn note(n: u64) -> (Name, String, Vec<(String, Vec<u8>)>, u64) {
-    (Name::new(hash(n), hash(n + 100)), "alice".to_string(), vec![], 0)
+fn note(n: u64) -> NoteRow {
+    NoteRow { name: Name::new(hash(n), hash(n + 100)), address: "alice".to_string(), data: vec![], assets: 0, origin_page: 1 }
 }
 fn page(h: u64, b: &str, notes: Vec<u64>, next: &str) -> Page {
     Page {

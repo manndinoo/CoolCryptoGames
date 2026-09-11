@@ -8,7 +8,11 @@
 use std::collections::BTreeSet;
 
 use nmeme_core::claim::NOTE_DATA_KEY;
-use nmeme_index::{funding_lines, has_claim, name_key, parse_funding, require_provenance, Snapshot};
+use nmeme_index::{
+    admitted_token_free, funding_line, has_claim, name_key, parse_funding, require_provenance, FundingStatus,
+    NoteRow,
+};
+use nmeme_tx::names::coinbase_last_name;
 use nockchain_types::tx_engine::common::{Hash, Name};
 
 fn hash(n: u64) -> Hash {
@@ -52,33 +56,69 @@ fn every_input_must_be_covered_not_just_one() {
 #[test]
 fn a_note_with_a_claim_is_not_token_free() {
     // A FUNDING line marks a note `claim` when its note-data carries the meme
-    // key. parse_funding must not let that note into the token-free set.
-    let snap = Snapshot {
-        height: 7,
-        block_id: "blk".into(),
-        notes: vec![
-            (name(1), "alice".into(), vec![], 5_000),
-            (name(2), "alice".into(), vec![(NOTE_DATA_KEY.to_string(), vec![1, 2, 3])], 9_000),
-        ],
+    // key. Nothing about such a record may reach the token-free set.
+    let plain = NoteRow { name: name(1), address: "alice".into(), data: vec![], assets: 5_000, origin_page: 3 };
+    let claimed = NoteRow {
+        name: name(2),
+        address: "alice".into(),
+        data: vec![(NOTE_DATA_KEY.to_string(), vec![1, 2, 3])],
+        assets: 9_000,
+        origin_page: 3,
     };
-    assert!(!has_claim(&snap.notes[0].2));
-    assert!(has_claim(&snap.notes[1].2));
-    let text = funding_lines(&snap).join("\n");
-    assert!(text.contains("HEIGHT\t7"));
+    assert!(!has_claim(&plain.data));
+    assert!(has_claim(&claimed.data));
+    let text = format!(
+        "HEIGHT\t7\n{}\n{}\n",
+        funding_line(&plain, FundingStatus::Plain),
+        funding_line(&claimed, FundingStatus::Claim)
+    );
     let parsed = parse_funding(&text).unwrap();
     assert_eq!(parsed.len(), 2);
-    assert_eq!(parsed[0], (name(1), true));
-    assert_eq!(parsed[1], (name(2), false));
+    assert_eq!((parsed[0].status, parsed[0].origin_page), (FundingStatus::Plain, Some(3)));
+    assert_eq!(parsed[1].status, FundingStatus::Claim);
 
-    let token_free: BTreeSet<Vec<u8>> =
-        parsed.iter().filter(|(_, free)| *free).map(|(n, _)| name_key(n)).collect();
-    require_provenance("B", &[name(1)], &set(&[]), &token_free).unwrap();
+    // Neither `plain` nor `claim` is admissible evidence for a rebuild: once
+    // spent, nothing can re-verify a plain note, and a claim is never free.
+    let token_free = admitted_token_free(&parsed, |_| Err("unused".into())).unwrap();
+    assert!(token_free.is_empty());
+    assert!(require_provenance("B", &[name(1)], &set(&[]), &token_free).is_err());
     assert!(require_provenance("B", &[name(2)], &set(&[]), &token_free).is_err());
 }
 
 #[test]
+fn a_coinbase_record_is_admitted_only_when_its_name_recomputes() {
+    // The note's last name is the coinbase name for parent block 77.
+    let parent = hash(77);
+    let cb = NoteRow {
+        name: Name::new(hash(1), coinbase_last_name(&parent)),
+        address: "alice".into(),
+        data: vec![],
+        assets: 5_000,
+        origin_page: 640,
+    };
+    let text = funding_line(&cb, FundingStatus::Coinbase);
+    let recs = parse_funding(&text).unwrap();
+
+    // The chain says block 640's parent is 77: admitted.
+    let ok = admitted_token_free(&recs, |h| if h == 640 { Ok(hash(77)) } else { Err(format!("no block {h}")) })
+        .unwrap();
+    assert!(ok.contains(&name_key(&cb.name)));
+    require_provenance("B", &[cb.name.clone()], &set(&[]), &ok).unwrap();
+
+    // The chain says otherwise: the record is refused loudly, not skipped.
+    let err = admitted_token_free(&recs, |_| Ok(hash(78))).unwrap_err();
+    assert!(err.contains("not the coinbase name"), "{err}");
+    // No chain answer at all: refused, not admitted.
+    assert!(admitted_token_free(&recs, |_| Err("offline".into())).is_err());
+    // A coinbase label without an origin height cannot be checked: refused.
+    let mut no_origin = recs.clone();
+    no_origin[0].origin_page = None;
+    assert!(admitted_token_free(&no_origin, |_| Ok(hash(77))).is_err());
+}
+
+#[test]
 fn a_malformed_funding_line_is_an_error_not_a_skip() {
-    assert!(parse_funding("FUNDING\tnot-base58\tx\ttokenfree\t1").is_err());
+    assert!(parse_funding("FUNDING\tnot-base58\tx\ttokenfree\t1\t1").is_err());
     assert!(parse_funding("FUNDING\t1\t2").is_err());
     // Unknown line kinds are fine; they are the HEIGHT/BLOCK headers.
     assert!(parse_funding("HEIGHT\t3\nBLOCK\tabc\n").unwrap().is_empty());
