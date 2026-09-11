@@ -10,6 +10,11 @@
 # Both settings are documented operator knobs:
 #   RAYON_NUM_THREADS         prover parallelism
 #   AI_POW_VERIFIER_CACHE_CAP resident-context LRU cap (ai-pow-jets/src/setup.rs:692)
+#   PMA_INITIAL_SIZE          --pma-initial-size. The default ("auto") opened a
+#                             32 GiB arena here and the first epoch persist
+#                             copied it densely until the disk was full (7 GB
+#                             in 30 s), killing the node at set-genesis-seal.
+#                             1GiB fits; the arena still grows on demand.
 #
 # Usage: node-lowmem.sh <nockchain-repo> <run-dir> [private-grpc-port]
 set -euo pipefail
@@ -34,6 +39,7 @@ RUST_LOG="${RUST_LOG:-info}" \
   --fakenet --data-dir "$RUN/data" \
   --bind-private-grpc-port "$PORT" \
   --bind-public-grpc-addr "$PUBLIC_ADDR" \
+  --pma-initial-size "${PMA_INITIAL_SIZE:-1GiB}" \
   --fakenet-pow-len "${FAKENET_POW_LEN:-2}" \
   --fakenet-log-difficulty "${FAKENET_LOG_DIFF:-1}" \
   --no-default-peers --bind /ip4/127.0.0.1/udp/0/quic-v1 \
