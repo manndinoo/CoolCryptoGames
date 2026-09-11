@@ -78,6 +78,8 @@ LORE_EXPECTED=0
 "$MINER" --node-addr "http://127.0.0.1:$PORT" --mining-pkh "$ALICE" --num-threads 1 >"$RUN/miner.log" 2>&1 &
 MINER_PID=$!; trap 'kill "$MINER_PID" 2>/dev/null || true' EXIT
 echo "miner pid=$MINER_PID"
+# on a resumed run the treasury already holds earlier trades' shares
+if [ "${RESUME:-0}" = 1 ]; then LORE_EXPECTED=$(lore_balance | cut -d' ' -f1); echo "RESUMED	the Lore Wallet holds $LORE_EXPECTED nicks"; fi
 
 # funding_alice <out>: every unspent note of alice, one read per first-name
 # (the node per-address cache lags; a read spanning addresses may never
@@ -275,7 +277,12 @@ for t in "$T1:sim-bob:$F1" "$T2:sim-alice:$F2"; do
   if unspent "${pn%% *}" "${pn##* }"; then loser="$lbl"; else
     # the pool note is spent: which transaction spent it is the one whose own user input is spent too
     ui=$("$NMEME_INDEX" outputs --tx "$f" | awk -F'\t' '$1=="INPUT"{print $2" "$3}' | grep -v "^${pn%% *} " | head -1)
-    if unspent "${ui%% *}" "${ui##* }"; then loser="$lbl"; else winner="$lbl"; STEPS_B="$STEPS_B --step $id:$f"; fi
+    if unspent "${ui%% *}" "${ui##* }"; then loser="$lbl"; else
+      winner="$lbl"; STEPS_B="$STEPS_B --step $id:$f"
+      wl=$(grep '^QUOTE' "$S/$lbl/trade.txt" | grep -oE 'lore_fee=[0-9]+' | cut -d= -f2); LORE_EXPECTED=$((LORE_EXPECTED + wl))
+      lb=$(lore_balance); [ "${lb%% *}" = "$LORE_EXPECTED" ] || die "$lbl: the Lore Wallet holds ${lb%% *} nicks, expected $LORE_EXPECTED"
+      echo "LORE	$lbl	+$wl nicks	balance=$LORE_EXPECTED	notes=$(cut -d' ' -f2 <<<"$lb")	all_plain=$([ "${lb##* }" = 0 ] && echo yes || echo NO)"
+    fi
   fi
 done
 [ -n "$winner" ] && [ -n "$loser" ] || die "simultaneous: winner=$winner loser=$loser"
@@ -369,6 +376,9 @@ TRADE_FILE="$d/final.jam"; TRADE_TXID=$("$NMEME_INDEX" tx-id --tx "$TRADE_FILE")
 sent=$(send "$TRADE_FILE" merge-ok); confirm "$TRADE_TXID" merge-ok "$TRADE_FILE"
 st=$(pool_state "$TOKEN_A" 110); [ "$(wc -l <<<"$st")" -eq 1 ] || die "merge-ok: expected one note after the merge"
 echo "MERGED	merge-ok	txid=$TRADE_TXID	pool_after=$(cut -d' ' -f4,5 <<<"$st" | tr ' ' '/')	(the donation is now reserves; the buy priced against the sum)"
+wl=$(grep '^QUOTE' "$d/trade.txt" | grep -oE 'lore_fee=[0-9]+' | cut -d= -f2); LORE_EXPECTED=$((LORE_EXPECTED + wl))
+lb=$(lore_balance); [ "${lb%% *}" = "$LORE_EXPECTED" ] || die "merge-ok: the Lore Wallet holds ${lb%% *} nicks, expected $LORE_EXPECTED"
+echo "LORE	merge-ok	+$wl nicks	balance=$LORE_EXPECTED	notes=$(cut -d' ' -f2 <<<"$lb")	all_plain=$([ "${lb##* }" = 0 ] && echo yes || echo NO)"
 ATT_STEPS_A="$ATT_STEPS_A --step $TRADE_TXID:$TRADE_FILE"
 
 echo "== stage 7: rebuild with provenance, replay the main pool =="
