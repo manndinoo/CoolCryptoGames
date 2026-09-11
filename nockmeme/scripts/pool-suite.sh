@@ -52,7 +52,9 @@ if [ ! -f "$W/lore/.done" ]; then
   [ -s "$W/lore/keys.export" ] || die "lore: keygen left no keys.export"
   cp "$W/lore/keys.export" "$RUN/keys/lore.export"; touch "$W/lore/.done"
 fi
-LORE=$(wallet lore list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //')
+# a lore wallet whose arena was thrown away (disk) still has its keys
+[ -d "$W/lore/wallet" ] || wallet_fresh lore
+LORE=$(wallet lore list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //' || true)
 [ -n "$LORE" ] || die "lore address"
 if [ -z "${LORE_LOCK:-}" ]; then
   mkdir -p "$S/lore-probe"; list_tx_files alice > "$S/lore-probe/before.txt"

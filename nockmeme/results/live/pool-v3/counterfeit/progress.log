@@ -1,0 +1,6 @@
+  (rebuilding alice's wallet arena: 2559 MB)
+# funding: 155 coinbase (verified against block parents), 0 plain, 0 claim
+  create-wallet: 1/1 verified
+  node: TXID	A8VKC2XHVqZ7GEn6iCZauokS1sELXNvEmK6CzSrR4Sb836czG6E3hZp
+  node: SEND	acknowledged
+  node: MEMPOOL	not admitted	not in the node's accepted set

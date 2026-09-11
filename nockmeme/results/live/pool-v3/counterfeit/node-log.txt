@@ -1,0 +1,4 @@
+2026-09-11T22:18:06.752993Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Received raw transaction
+2026-09-11T22:18:06.753378Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: A8VKC2XHVqZ7GEn6iCZauokS1sELXNvEmK6CzSrR4Sb836czG6E3hZp
+2026-09-11T22:18:06.765971Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-token-claims
+2026-09-11T22:18:07.779010Z  INFO peek:slam: slogger: peek: %tx-accepted

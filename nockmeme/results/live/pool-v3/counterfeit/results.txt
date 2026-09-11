@@ -1,0 +1,3 @@
+== 1. a note with a fabricated claim of 500000 of token 5ewPZLXkPk1NVyQxBxS2jLjq2DsQdk3ZN12jJfaNdCqaL446oP6XY1u, from a coinbase note ==
+COUNTERFEIT-CREATE	refused	txid=A8VKC2XHVqZ7GEn6iCZauokS1sELXNvEmK6CzSrR4Sb836czG6E3hZp	mempool=not admitted	engine=	(the note with the fabricated claim does not exist)
+COUNTERFEIT-SELL	not attempted: there is no counterfeit note to sell
