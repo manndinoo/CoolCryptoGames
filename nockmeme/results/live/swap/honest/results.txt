@@ -1,0 +1,33 @@
+#### instance honest token Cd1wN6o5fgr66r1wY6ai1LgrrjaPzCAG4RVVPZ2zyN6Gdc1YWEhSPTb note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7gZbLAvbyHs6UjE96s14bmBKzTbyQP5YjRXoBhgEoBKZFicUwY28V6k]
+== stage 0: miner ==
+miner pid=24658
+== stage 1: fund bob with NOCK (plain, gated) ==
+FUND	txid=v52XeZq2q1wjQ6XTXczGKFgDpQc22MGf9sqf5PEgLZ7qGeDWr6oyQa	height=1247	bob+=655360 nicks
+== stage 2: the halves ==
+  PASS alice-half-wallet 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  alice-half-wallet: 1/1 verified
+  PASS bob-half-wallet AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  bob-half-wallet: 1/1 verified
+== stage 3: merge, attach claims, pin ==
+== stage 4: both parties sign their own spend; gate live ==
+  PASS swap-both-spends AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  PASS swap-both-spends 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  swap-both-spends: 2/2 verified
+SWAP-BUILT	txid=CvrTEKDq4Li2grDuZsG2HJsShCghVyVwHCpA59FVJ3kH82pjj5eR6RP	100 tokens for 327680 nicks	pins=2
+== stage 5: mode honest ==
+SWAP	txid=CvrTEKDq4Li2grDuZsG2HJsShCghVyVwHCpA59FVJ3kH82pjj5eR6RP	height=1268	alice -100 tokens +327680 nicks	bob +100 tokens -327680 nicks
+== rebuild with provenance ==
+EVIDENCE	1221 coinbase note(s) re-verified against block parents
+STEP	3fTdPwkQbVco9aAiwWSghToJLJ48QVC7v2xtMS3YcDZCJYmH9561N9h	Created(TokenId(Hash([Belt(481142639869542589), Belt(10702214819529518189), Belt(12337021839659779649), Belt(2466272963614230766), Belt(16852916876643573005)])))
+STEP	7AkA8LFRLfxv5kMEpqS6H1f2anDa2PrQSmEjhZW1PpLrXtHLbMBBPJr	Transferred(TokenId(Hash([Belt(481142639869542589), Belt(10702214819529518189), Belt(12337021839659779649), Belt(2466272963614230766), Belt(16852916876643573005)])))
+STEP	v52XeZq2q1wjQ6XTXczGKFgDpQc22MGf9sqf5PEgLZ7qGeDWr6oyQa	Untouched
+STEP	CvrTEKDq4Li2grDuZsG2HJsShCghVyVwHCpA59FVJ3kH82pjj5eR6RP	Transferred(TokenId(Hash([Belt(481142639869542589), Belt(10702214819529518189), Belt(12337021839659779649), Belt(2466272963614230766), Belt(16852916876643573005)])))
+BALANCE	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999800
+BALANCE	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	200
+TOTAL	1000000
+ASSERT-OK	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999800
+ASSERT-OK	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	200
+== NOCK legs (the merged notes the trade created) ==
+NOTE	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	ALB8cMQCVYjuyMMCMwMgu5kAnSxmieK3ZXDKKUCvPxVsMjQG64nbE62	claim	4295267400 nicks	origin 1268
+NOTE	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	62LK8xZU3VkB5cu78koshKE4vN7YkZcqcdjZPYSNGmVak5FtEv6nPK7	claim	320488 nicks	origin 1268
+#### suite complete

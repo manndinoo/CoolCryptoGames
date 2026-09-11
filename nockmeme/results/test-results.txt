@@ -1,5 +1,15 @@
 # nmeme test results
 
+## 2026-09-11 17:30 UTC: swap settlement suite
+
+nmeme-tx tests/swap.rs 8 (construction, pins, half, replace, pinned
+sig-hash) and attach.rs updated; hosted run 34618345129 green on the swap
+commit. Live: scripts/swap-suite.sh, five instances (results/live/swap/):
+four attacks refused by the transaction engine (v1-tx-invalid, never
+mined, inputs unspent), the honest trade mined at height 1268 and rebuilt
+with provenance (Alice 999,800 / Bob 200 of token B).
+
+
 ## 2026-09-11 15:00 UTC: verified evidence (commit 109cdf9)
 
 Local, this container (cargo test -p nmeme-core -p nmeme-tx -p nmeme-index,

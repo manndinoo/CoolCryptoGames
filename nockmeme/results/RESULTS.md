@@ -351,6 +351,60 @@ Reproduce: `RUNBOOK.md` steps 1–7 (the demo), then the four commands under
 "What `live-demo.sh` runs" by hand against any of the transaction files in
 `live/txs/`.
 
+### A14. Two-party atomic settlement, live: the trade, and four attacks refused
+
+The construction in `docs/SWAPS.md` — one transaction, two spends, each
+party's change seed pinned to the complete seed set at its lock — was
+assembled with `nmeme-tx swap`, signed by each wallet for its own spend,
+gated live, and run five times on the fakenet: four attacks, each on its
+own token note and a fresh NOCK note for Bob, and the honest trade
+(evidence in [`live/swap/`](./live/swap/); transaction files in
+[`live/txs/`](./live/txs/)).
+
+| instance | what was sent | node's mempool | transaction engine, at block building | mined? | inputs after |
+|---|---|---|---|---|---|
+| Alice's half alone | her signed spend only | admitted | `v1-tx-invalid` on 26 candidate blocks | no | unspent |
+| Bob's half alone | his signed spend only | admitted | `v1-tx-invalid` on 22 | no | unspent |
+| Bob pays less | his re-built, re-signed 4-NOCK spend spliced into the trade Alice signed | admitted | `v1-tx-invalid` on 21 | no | unspent |
+| Alice gives less | her re-built, re-signed 50-token spend spliced into the trade Bob signed | admitted | `v1-tx-invalid` on 9 | no | unspent |
+| **honest** | both spends, both pins | admitted | — | **height 1268** | spent |
+
+`nmeme-tx pins` named the violated pin before each attack was sent (the
+other party's, in the two tampering cases). The honest trade, token B:
+
+- Alice: −100 tokens, +327,680 nicks. Her merged output note holds
+  4,295,267,400 nicks = 4,294,948,912 in − 1,000 dust to Bob − 8,192 fee
+  + 327,680 from Bob, and the 999,800-token claim.
+- Bob: +100 tokens, −327,680 nicks. His merged note holds 320,488 nicks =
+  655,360 in − 327,680 − 8,192 fee + 1,000 dust, and the 100-token claim.
+- Rebuilt over genesis (834), transfer (856), the plain funding step (1247,
+  `Untouched`) and the swap (1268): Alice 999,800, Bob 200, total
+  1,000,000, `ASSERT-OK`, with 1,221 coinbase records re-verified and every
+  input's provenance known.
+
+**What the node taught, on the way** (all in the logs under `live/swap/`):
+
+1. **Mempool admission is not validity.** Every attack was "admitted"; the
+   verdict came from the engine when the miner built a block. A client that
+   treats the accepted query or the wallet's `tx-status: pending` as
+   success is wrong.
+2. **An admitted transaction reserves its inputs.** "Inputs present in
+   spent-by, discarding transaction": while an invalid half sat in the
+   mempool, any transaction spending the same notes was discarded on
+   arrival, and the half was retried on every candidate block for as long
+   as we watched. A leaked signed half blocks the trade's notes; the
+   assembler must be the only holder of both halves and the only submitter.
+3. **The wallet's `send-tx` fails under load.** It reads the whole balance
+   first and aborts when a block lands mid-read. `nmeme-index send` submits
+   through the public gRPC directly.
+4. **The node's per-address balance cache can lag.** With the miner paused,
+   a read spanning Alice's thousand-note coinbase address and two small
+   ones returned the same disagreeing heights twelve times; reading one
+   address at a time is exact.
+
+This is the settlement layer of the pool design in `docs/LIQUIDITY.md`,
+not a trading product: it needs a named counterparty and an exact fill.
+
 ---
 
 ## B. Designed but NOT verified

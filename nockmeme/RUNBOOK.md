@@ -96,6 +96,21 @@ $NI block --addr $PUB --height <origin>
 $NI rebuild --addr $PUB --token <id> --step <txid>:<file>... --lock <root>... --funding funding.txt
 ```
 
+The swap settlement suite (after live-demo.sh, same chain and wallets):
+
+```bash
+# five instances — four attacks and the honest trade — each on its own token
+# note (from `nmeme-index funding --lock <alice lock>`, status claim) and a
+# fresh NOCK note for Bob; see the INSTANCES format in scripts/swap-suite.sh
+ALICE_LOCK=... BOB_LOCK=... FUND_ARGS="--first <alice coinbase first-name>" \
+INSTANCES="alice-half|<token>|<first> <last>|999900|||100
+bob-half|...
+bob-pays-less|...
+alice-gives-less|...
+honest|<token>|<first> <last>|999900|--step <genesis txid>:<file> --step <transfer txid>:<file>|--funding <proofs>...|100" \
+FEE_NICKS=8192 bash /path/to/nockmeme/scripts/swap-suite.sh 2>"$RUN/swap-progress.log" | tee "$RUN/swap-results.txt"
+```
+
 Fees: `create-tx` is given `--fee-nicks ${FEE_NICKS:-4096}`. `attach` then
 recomputes the minimum for the transaction *with* the claim attached and
 refuses if the fee is below it, printing a `FEE current=… required=…` line to

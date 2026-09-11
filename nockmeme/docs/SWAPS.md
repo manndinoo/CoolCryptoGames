@@ -140,9 +140,11 @@ neither can inflate the other's cost.
 Implemented as a settlement primitive (`nmeme-tx swap`, `pins`, `half`,
 `replace-spend`; `crates/nmeme-tx/src/swap.rs`), with the pinned
 `output-source` hashable in the signing digest and eight unit tests covering
-the construction and the tamper cases. The live fakenet run of
-`scripts/swap-demo.sh` (the honest trade plus four attacks sent first) is
-the confirmation against a running node; see `results/RESULTS.md`.
+the construction and the tamper cases. **Verified live** on the fakenet
+(`scripts/swap-suite.sh`, `results/RESULTS.md` §A14): the honest trade was
+mined at height 1268 and rebuilt with provenance; each half alone and each
+altered payment was refused by the transaction engine (`v1-tx-invalid`),
+never mined, inputs left unspent.
 
 This is a two-party settlement mechanism, **not the trading product**. The
 platform needs pooled, automatically priced liquidity; what the chain can and

@@ -1,7 +1,7 @@
 # Mined token transactions on the fakenet chain (all of them)
 
 Signed transaction files exactly as broadcast, named `h<height>-<kind>-<token
-prefix>-<txid prefix>.jam`. These sixteen are the complete token history of the
+prefix>-<txid prefix>.jam`. These eighteen files are the complete token history of the
 chain; `nmeme-index rebuild` binds each to its mined transaction by
 recomputing the consensus transaction id.
 
@@ -23,6 +23,8 @@ recomputing the consensus transaction id.
 | 796 | Bse3vCUrnsnW1FZT6QjGaktdtZKkqVJHLCwTwACxJbWfgEjcKNwc3ZG | transfer A | BSdB… |
 | 834 | 3fTdPwkQbVco9aAiwWSghToJLJ48QVC7v2xtMS3YcDZCJYmH9561N9h | genesis B, verified evidence | Cd1wN6o5fgr66r1wY6ai1LgrrjaPzCAG4RVVPZ2zyN6Gdc1YWEhSPTb |
 | 856 | 7AkA8LFRLfxv5kMEpqS6H1f2anDa2PrQSmEjhZW1PpLrXtHLbMBBPJr | transfer B | Cd1w… |
+| 1247 | v52XeZq2q1wjQ6XTXczGKFgDpQc22MGf9sqf5PEgLZ7qGeDWr6oyQa | plain NOCK to Bob (no claim; a provenance step for the swap) | — |
+| 1268 | CvrTEKDq4Li2grDuZsG2HJsShCghVyVwHCpA59FVJ3kH82pjj5eR6RP | **swap**: two spends, two pins; 100 B tokens to Bob for 327,680 nicks to Alice | Cd1w… |
 
 "(gated)": every input chosen by name from a FUNDING proof and checked by
 `nmeme-index check-inputs` before broadcast; the proofs are in

@@ -1,0 +1,29 @@
+# funding: 1217 coinbase (verified against block parents), 0 plain, 0 claim
+  funding from verified coinbase note [4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax D91DYmqZZRzxBLc5X7yf5819qrRawuXVGLHHW5D8UxmNwrmR92qYPi]
+  # inputs read live at height 1245 block 41bb83vdSMrdafPgededvuZZtbxkTXtbjKXAC9XKcGhZSuXM1sMBiuE
+  INPUT-OK	[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax D91DYmqZZRzxBLc5X7yf5819qrRawuXVGLHHW5D8UxmNwrmR92qYPi]	tokenfree (node shows no claim)
+  INPUTS	1 verified live
+  fund confirmed at height 1247
+# funding: 0 coinbase (verified against block parents), 22 plain, 7 claim
+  bob pays from [AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 2KJct3dT2vxBRvo2zGFx1LwWfpWo2uPJVhrF9Fm5t9zQH3SLrZeu2B] (plain, no claim)
+  ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+  ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	999800
+  PINNED	a	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	3rTHKYoJyf7oDfPfskGj6TDqTBEwd6gsgVF5MgHJoNWavHCN4TA4r35
+  PINNED	b	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	HkNJWPm8HMCfuoYdWWXk5ZmEThU1bjtt6m9Zozg2G764CiQVuiYhDd
+  FEE	current=16384	required=8960	seed_words=42	witness_words=112
+  WROTE	/home/user/nmeme-run/swap/honest/swap-unsigned.jam
+  NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	A8KEryiGgR5tQjTLexafEusAxSTHpLdChPNLLeMGufwemUSuT5i8MM6
+  NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	4RDvwwvxfuz3Use7PhxXnXB2QUJzdAKMizbPkVqyNcxY6gRfWjWqJvT
+  PIN	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	matches the seed set at this lock
+  PIN	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	matches the seed set at this lock
+  PINS	all 2 match
+  # inputs read live at height 1266 block 2Y1Ri8sDdFzxbBMfAEJWAW8zAFWFnhfbaCAoSkXhiCnU9VYDpVNBXRN
+  INPUT-OK	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 2KJct3dT2vxBRvo2zGFx1LwWfpWo2uPJVhrF9Fm5t9zQH3SLrZeu2B]	tokenfree (node shows no claim)
+  INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7gZbLAvbyHs6UjE96s14bmBKzTbyQP5YjRXoBhgEoBKZFicUwY28V6k]	named token note
+  INPUTS	2 verified live
+  node: TXID	CvrTEKDq4Li2grDuZsG2HJsShCghVyVwHCpA59FVJ3kH82pjj5eR6RP
+  node: SEND	acknowledged
+  node: MEMPOOL	admitted	
+  swap confirmed at height 1268
+# funding: 0 coinbase (verified against block parents), 34 plain, 15 claim
+swap-suite exit: 0

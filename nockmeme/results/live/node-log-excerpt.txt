@@ -33,3 +33,7 @@
 2026-09-11T15:09:42.893350Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 64mBQbAfXj62TkBDgjeHKmoX1b5vwXvEroYeyvzbwawNeMKYDoQsCWP added to validated blocks at 834 with proof version 0
 2026-09-11T15:11:18.707004Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 7AkA8LFRLfxv5kMEpqS6H1f2anDa2PrQSmEjhZW1PpLrXtHLbMBBPJr
 2026-09-11T15:11:25.262849Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 7HbLsuPYvASXdPatiR2ocDNXK2HayB4hnGtLMoba4CJEgN25MwdtH4T added to validated blocks at 856 with proof version 0
+2026-09-11T17:15:28.807876Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: v52XeZq2q1wjQ6XTXczGKFgDpQc22MGf9sqf5PEgLZ7qGeDWr6oyQa
+2026-09-11T17:15:34.618012Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block GDx7LMMWW1VovSLAayCqaFda2CiH8hp5fnD8psHgbhW8NrR7THo3Ny added to validated blocks at 1247 with proof version 0
+2026-09-11T17:16:51.350463Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CvrTEKDq4Li2grDuZsG2HJsShCghVyVwHCpA59FVJ3kH82pjj5eR6RP
+2026-09-11T17:16:57.577957Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 7BnwPMPc3V1gx8e7hQTpaDGvFtFs5zSetJZVLSQJpsonAoQ44HYc5FN added to validated blocks at 1268 with proof version 0
