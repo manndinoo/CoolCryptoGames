@@ -6,6 +6,9 @@ name: nmeme runner probe
 
 on:
   workflow_dispatch:
+  push:
+    branches: [claude/new-session-wehujv]
+    paths: [.github/workflows/nmeme-runner-probe.yml]
 
 jobs:
   probe:
