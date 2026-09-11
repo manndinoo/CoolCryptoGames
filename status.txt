@@ -1,9 +1,9 @@
-run: 34549887736  attempt: 1  at: 2026-09-11T01:44:35Z
+run: 34549887736  attempt: 1  at: 2026-09-11T01:49:36Z
 
                total        used        free      shared  buff/cache   available
-Mem:           15989        2607        5790          49        7987       13382
-Swap:          27647           0       27647
+Mem:           15989       14276         185          49        1923        1713
+Swap:          27647         441       27206
 
 node cgroup:
-1650241536
-0
+13928693760
+440283136
