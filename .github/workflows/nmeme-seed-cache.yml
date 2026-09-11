@@ -19,6 +19,17 @@
 #     excess goes to swap while the runner agent keeps ~3 GB of real memory;
 #   * progress (RSS samples, node-log tail, free -m) is pushed to the
 #     `seed-cache-progress` branch every 5 minutes, so a dead VM leaves evidence.
+# Run 2 (34549887736) proved the cgroup works — the runner stayed up — and
+# measured what the earlier failures could not: at 4 threads the node reached
+# 11.6 GB resident + 26.6 GB swapped (38 GB) and was still climbing when the
+# 27.6 GB of swap ran out, 69 minutes in, 14 buckets into a documented ~15 min
+# job. Two changes follow from it:
+#   * swap is created AFTER the build, from all the disk that is left on /mnt
+#     and / rather than a fixed 24 GB;
+#   * the job runs as a matrix over RAYON_NUM_THREADS (1 and 2): the per-table
+#     proving memory scales with the lane count, so fewer threads should
+#     shrink the peak toward RAM; each variant pushes its own progress branch
+#     (seed-cache-progress-t<N>) and whichever finishes publishes the cache.
 name: nmeme seed cache
 
 on:
@@ -38,6 +49,11 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        threads: [1, 2]
+    name: generate (RAYON_NUM_THREADS=${{ matrix.threads }})
     steps:
       - uses: actions/checkout@v4
 
@@ -46,13 +62,10 @@ jobs:
           nproc; free -g; df -h / /mnt; uname -m
           cat /proc/sys/vm/overcommit_memory
 
-      - name: Swap and overcommit
+      - name: Overcommit (the kernel jams reserve 16 GB of address space)
         run: |
-          sudo mkdir -p /mnt && sudo fallocate -l 24G /mnt/swapfile
-          sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile
           sudo sysctl -w vm.overcommit_memory=1
           sudo sysctl -w vm.swappiness=100
-          free -g
 
       - name: System deps
         run: |
@@ -69,8 +82,8 @@ jobs:
           git checkout -q FETCH_HEAD
           git rev-parse HEAD
 
-      - name: Cache cargo
-        uses: actions/cache@v4
+      - name: Restore the cargo cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.cargo/registry
@@ -95,13 +108,35 @@ jobs:
         working-directory: /mnt/work/nockchain
         run: cargo build --release -p nockchain --bin nockchain
 
+      - name: Save the cargo cache now, before generation can fail
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /mnt/work/nockchain/target
+          key: nmeme-seed-${{ env.NOCKCHAIN_REV }}-${{ runner.os }}-v1
+
+      - name: Swap on every disk that is left (after the build, so it can take it all)
+        run: |
+          for mnt in /mnt /; do
+            avail=$(df -BG --output=avail "$mnt" | tail -1 | tr -dc 0-9)
+            size=$((avail - 6))
+            [ "$size" -ge 4 ] || { echo "skip $mnt: only ${avail}G free"; continue; }
+            f="${mnt%/}/swapfile"
+            sudo fallocate -l "${size}G" "$f" && sudo chmod 600 "$f" && sudo mkswap "$f" >/dev/null && sudo swapon "$f"
+            echo "swap: $f ${size}G"
+          done
+          free -g; df -h / /mnt
+
       - name: Generate the seed cache (cgroup-confined, RSS sampled, progress pushed)
         env:
           # leave ~3 GB of the runner's 16 GB to the runner agent and the OS;
-          # everything above this goes to the 24 GB swapfile instead of
-          # starving the VM (cgroup v2: memory.max with memory.swap.max=max)
+          # everything above this goes to swap instead of starving the VM
+          # (cgroup v2: memory.max with memory.swap.max=max)
           NODE_MEMORY_MAX: 13G
-          PROGRESS_BRANCH: seed-cache-progress
+          RAYON_NUM_THREADS: ${{ matrix.threads }}
+          PROGRESS_BRANCH: seed-cache-progress-t${{ matrix.threads }}
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p "$WORK/run"
@@ -126,8 +161,8 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           ( while true; do
               sleep 300
-              { echo "run: ${{ github.run_id }}  attempt: ${{ github.run_attempt }}  at: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-                echo; free -m; echo
+              { echo "run: ${{ github.run_id }}  attempt: ${{ github.run_attempt }}  threads: $RAYON_NUM_THREADS  at: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+                echo; free -m; echo; df -h / /mnt; echo
                 echo "node cgroup:"; cat /sys/fs/cgroup/nmeme-node/memory.current /sys/fs/cgroup/nmeme-node/memory.swap.current 2>/dev/null || true
               } > "$PROG/status.txt"
               cp "$WORK/run/rss.tsv" "$PROG/rss.tsv" 2>/dev/null || true
@@ -141,7 +176,7 @@ jobs:
           echo "$NODE_MEMORY_MAX" | sudo tee /sys/fs/cgroup/nmeme-node/memory.max
           echo max | sudo tee /sys/fs/cgroup/nmeme-node/memory.swap.max
           set +e
-          sudo -E env "PATH=$PATH" GEN_TIMEOUT=18000 \
+          sudo -E env "PATH=$PATH" GEN_TIMEOUT=18000 RAYON_NUM_THREADS="$RAYON_NUM_THREADS" \
             bash -c 'echo $$ > /sys/fs/cgroup/nmeme-node/cgroup.procs && exec bash nockmeme/scripts/generate-seed-cache.sh "$0" "$1"' \
             "$WORK/nockchain" "$WORK/run"
           RC=$?
@@ -156,7 +191,7 @@ jobs:
           # final progress push regardless of outcome
           cp "$WORK/run/rss.tsv" "$PROG/rss.tsv" 2>/dev/null || true
           tail -n 400 "$WORK/run/node.log" > "$PROG/node.log.tail" 2>/dev/null || true
-          echo "finished with exit code $RC at $(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$PROG/status.txt"
+          { echo "finished with exit code $RC at $(date -u '+%Y-%m-%dT%H:%M:%SZ') (threads: $RAYON_NUM_THREADS)"; free -m; } > "$PROG/status.txt"
           ( cd "$PROG" && git add -A && git commit -qm "final: exit $RC" && git push -fq origin "$PROGRESS_BRANCH" ) || true
           exit $RC
 
@@ -164,7 +199,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: nmeme-seed-cache
+          name: nmeme-seed-cache-t${{ matrix.threads }}
           path: |
             /mnt/work/run/nmeme-seed-cache.tar.gz
             /mnt/work/run/nmeme-seed-cache.sha256
@@ -181,14 +216,14 @@ jobs:
           git rm -rfq . || true
           cp "$WORK/run/nmeme-seed-cache.tar.gz" "$WORK/run/nmeme-seed-cache.sha256" "$WORK/run/rss.tsv" .
           git add nmeme-seed-cache.tar.gz nmeme-seed-cache.sha256 rss.tsv
-          git commit -qm "Verifier-setup seed cache for Nockchain $NOCKCHAIN_REV (run ${{ github.run_id }})"
+          git commit -qm "Verifier-setup seed cache for Nockchain $NOCKCHAIN_REV (run ${{ github.run_id }}, RAYON_NUM_THREADS=${{ matrix.threads }})"
           git push -f origin seed-cache
 
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: nmeme-seed-cache-failure-logs
+          name: nmeme-seed-cache-failure-logs-t${{ matrix.threads }}
           path: |
             /mnt/work/run/node.log
             /mnt/work/run/rss.tsv

@@ -99,6 +99,7 @@ a public-repository hosted runner (`.github/workflows/nmeme-seed-cache.yml`:
 | attempt | run | outcome |
 |---|---|---|
 | 1 | `34543165057` | builds fine (honk + kernels 9m44s, node 5m46s); generation started, then **exit 143 after 52 min** with "The runner has received a shutdown signal". No OOM line, no `%born`, nothing uploaded. |
+| 2 | `34549887736` | node confined to a 13 GB cgroup with 27.6 GB of swap; runner stayed up and pushed progress every 5 min. The node logged "Generating the AI-PoW verifier-setup table (14 buckets)... about 15 minutes", then at 4 threads climbed to **11.6 GB resident + 26.6 GB swapped (38 GB) and was still rising when the swap ran out**, 69 min in. Killed; exit 1; no `%born`. |
 
 Exit 143 is SIGTERM to the step, not an out-of-memory kill, and the job was at
 68 minutes of a 350-minute budget. On a hosted runner this is the signature of
@@ -110,3 +111,11 @@ heavy swapping. Attempt 2 confines the node in its own cgroup
 runner keeps ~3 GB of real memory, and pushes RSS/swap samples plus the
 node-log tail to a `seed-cache-progress` branch every five minutes so a
 reclaimed VM still leaves evidence.
+
+Attempt 2 is the first real measurement of the generation's working set, and
+it is not 32 GB: past 38 GB at four proving threads. Attempt 3 sizes swap from
+all the disk left after the build instead of a fixed 24 GB, and runs two
+variants in parallel, `RAYON_NUM_THREADS=1` and `=2`, on the reasoning that
+per-table proving memory scales with the lane count, so fewer threads should
+pull the peak toward physical RAM (and out of swap, which is what made attempt
+2 take 69 minutes to get as far as it did).
