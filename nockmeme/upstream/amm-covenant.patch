@@ -158,6 +158,21 @@ index e45829b..2e82bbf 100644
  impl HashHashable for Pkh {
      type Error = LockHashError;
  
+diff --git a/crates/wallet-tx-builder/src/word_count.rs b/crates/wallet-tx-builder/src/word_count.rs
+index 1a52ffe..1362f30 100644
+--- a/crates/wallet-tx-builder/src/word_count.rs
++++ b/crates/wallet-tx-builder/src/word_count.rs
+@@ -322,6 +322,10 @@ impl<'a> WordCountEstimator<'a> {
+                 let hash_set_words = Self::estimate_set_words_len(hax.0.len() as u64, 5);
+                 1 + hash_set_words
+             }
++            LockPrimitive::Amm(_) => {
++                // [%amm [tid fee]]: tag, cell, a 5-belt hash, the fee atom
++                1 + 1 + 5 + 1
++            }
+             LockPrimitive::Burn => {
+                 // [%brn ~]
+                 1 + 1
 diff --git a/hoon/apps/wallet/lib/utils.hoon b/hoon/apps/wallet/lib/utils.hoon
 index b9b588a..7425ca3 100644
 --- a/hoon/apps/wallet/lib/utils.hoon
