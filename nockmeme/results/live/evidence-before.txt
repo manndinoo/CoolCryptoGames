@@ -1,0 +1,15 @@
+# Before the fix: nmeme-index built from commit bb7169f, run 2026-09-11T14:50:25Z
+# The input of the height-650 transfer is token A's genesis output, a note that carries a claim.
+# 1. A forged funding file labels it tokenfree:
+FUNDING	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5	tokenfree	0
+# check-inputs, no --token-note:
+INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5]	tokenfree
+INPUTS	1 verified
+# exit 0
+
+# 2. Conflicting records: the honest claim line and the forged tokenfree line together:
+FUNDING	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5	claim	0
+FUNDING	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5	tokenfree	0
+INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f N8pjdF8fFb6fpap4XL3ma6saMYXSUMJXu8fZDRTZho6DRsPN1yZyg5]	tokenfree
+INPUTS	1 verified
+# exit 0

@@ -31,7 +31,6 @@ use nmeme_core::indexer::{NoteView, TxView};
 use nmeme_core::{Indexer, Ticker, TokenId};
 use nmeme_tx::txfile::ParsedTransaction;
 use nockapp::noun::slab::{NockJammer, NounSlab};
-use nockapp_grpc_proto::pb::common::v2::note::NoteVersion;
 use nockapp_grpc_proto::pb::public::v2::nockchain_block_service_client::NockchainBlockServiceClient;
 use nockapp_grpc_proto::pb::public::v2::nockchain_service_client::NockchainServiceClient;
 use nockapp_grpc_proto::pb::public::v2::{get_transaction_block_response, GetTransactionBlockRequest};
@@ -213,9 +212,9 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
     let mut token_free: BTreeSet<Vec<u8>> = BTreeSet::new();
     for path in flags(args, "--funding") {
         let text = std::fs::read_to_string(path).map_err(|e| format!("read {path}: {e}"))?;
-        for (name, free) in nmeme_index::parse_funding(&text)? {
-            if free {
-                token_free.insert(nmeme_index::name_key(&name));
+        for rec in nmeme_index::parse_funding(&text)? {
+            if rec.status == nmeme_index::FundingStatus::TokenFree {
+                token_free.insert(nmeme_index::name_key(&rec.name));
             }
         }
     }
@@ -475,9 +474,9 @@ fn cmd_check_inputs(args: &[String]) -> Result<ExitCode, String> {
     }
     for f in funding {
         let text = std::fs::read_to_string(f).map_err(|e| format!("read {f}: {e}"))?;
-        for (name, free) in nmeme_index::parse_funding(&text)? {
-            let key = nmeme_index::name_key(&name);
-            if free { token_free.insert(key); } else { claimed.insert(key); }
+        for rec in nmeme_index::parse_funding(&text)? {
+            let key = nmeme_index::name_key(&rec.name);
+            if rec.status == nmeme_index::FundingStatus::TokenFree { token_free.insert(key); } else { claimed.insert(key); }
         }
     }
     let allowed_token_notes: Vec<Name> = flags(args, "--token-note")
@@ -643,27 +642,8 @@ async fn read_snapshot_firsts_once(
             };
             let mut notes = Vec::new();
             for entry in &balance.notes {
-                let Some(name) = entry.name.as_ref() else { continue };
-                let name = decode_name(name)?;
-                let mut data = Vec::new();
-                if let Some(note) = entry.note.as_ref() {
-                    if let Some(NoteVersion::V1(v1)) = note.note_version.as_ref() {
-                        if let Some(nd) = v1.note_data.as_ref() {
-                            for e in &nd.entries {
-                                data.push((e.key.clone(), e.blob.clone()));
-                            }
-                        }
-                    }
-                }
-                let assets = entry
-                    .note
-                    .as_ref()
-                    .and_then(|n| match n.note_version.as_ref() {
-                        Some(NoteVersion::V1(v1)) => v1.assets.as_ref().map(|a| a.value),
-                        _ => None,
-                    })
-                    .unwrap_or(0);
-                notes.push((name, address.clone(), data, assets));
+                let row = nmeme_index::note_from_entry(entry, &address)?;
+                notes.push((row.name, row.address, row.data, row.assets));
             }
             let next = balance.page.as_ref().map(|p| p.next_page_token.clone()).unwrap_or_default();
             pages_for_address.push(nmeme_index::Page {
@@ -682,22 +662,6 @@ async fn read_snapshot_firsts_once(
     nmeme_index::fold_pages(&all_pages)
 }
 
-fn decode_name(name: &nockapp_grpc_proto::pb::common::v1::Name) -> Result<Name, String> {
-    let first = name.first.as_ref().ok_or("name has no first")?;
-    let last = name.last.as_ref().ok_or("name has no last")?;
-    Ok(Name::new(decode_hash(first)?, decode_hash(last)?))
-}
-
-/// The proto carries a tip5 hash as five field elements.
 fn decode_hash(hash: &nockapp_grpc_proto::pb::common::v1::Hash) -> Result<Hash, String> {
-    let limb = |b: &Option<nockapp_grpc_proto::pb::common::v1::Belt>, which: &str| -> Result<u64, String> {
-        b.as_ref().map(|b| b.value).ok_or_else(|| format!("hash missing {which}"))
-    };
-    Ok(Hash::from_limbs(&[
-        limb(&hash.belt_1, "belt_1")?,
-        limb(&hash.belt_2, "belt_2")?,
-        limb(&hash.belt_3, "belt_3")?,
-        limb(&hash.belt_4, "belt_4")?,
-        limb(&hash.belt_5, "belt_5")?,
-    ]))
+    nmeme_index::decode_pb_hash(hash)
 }

@@ -52,6 +52,9 @@ pub fn encode_claim(claim: &Claim) -> Result<Vec<u8>, nmeme_core::Error> {
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use nockapp_grpc_proto::pb::common::v2::note::NoteVersion;
+use nockapp_grpc_proto::pb::common::v2::BalanceEntry;
+
 use nmeme_core::claim::NOTE_DATA_KEY;
 use nockchain_types::tx_engine::common::{Hash, Name};
 use nockchain_types::tx_engine::v1::note::NoteDataValue;
@@ -392,28 +395,123 @@ pub fn funding_lines(snapshot: &Snapshot) -> Vec<String> {
     out
 }
 
-/// Parses `FUNDING` lines back into (name, token_free). Lines of other kinds
-/// are ignored; a malformed `FUNDING` line is an error, never skipped.
-pub fn parse_funding(text: &str) -> Result<Vec<(Name, bool)>, String> {
+/// What a `FUNDING` line says about a note.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FundingStatus {
+    /// No `meme` entry, per the label.
+    TokenFree,
+    /// Carries a `meme` entry.
+    Claim,
+}
+
+/// One `FUNDING` line.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FundingRecord {
+    pub name: Name,
+    pub status: FundingStatus,
+    pub assets: u64,
+    /// The height whose block created the note, when the line carries it.
+    pub origin_page: Option<u64>,
+}
+
+/// Parses `FUNDING` lines. Lines of other kinds are ignored; a malformed
+/// `FUNDING` line is an error, never skipped.
+pub fn parse_funding(text: &str) -> Result<Vec<FundingRecord>, String> {
     let mut out = Vec::new();
     for (i, line) in text.lines().enumerate() {
         let fields: Vec<&str> = line.split('\t').collect();
         if fields.first() != Some(&"FUNDING") {
             continue;
         }
-        if fields.len() < 4 {
-            return Err(format!("funding line {}: expected 4+ fields, got {}", i + 1, fields.len()));
+        if fields.len() < 5 {
+            return Err(format!("funding line {}: expected 5+ fields, got {}", i + 1, fields.len()));
         }
         let first = Hash::from_base58(fields[1]).map_err(|e| format!("funding line {}: first: {e}", i + 1))?;
         let last = Hash::from_base58(fields[2]).map_err(|e| format!("funding line {}: last: {e}", i + 1))?;
-        let token_free = match fields[3] {
-            "tokenfree" => true,
-            "claim" => false,
+        let status = match fields[3] {
+            "tokenfree" => FundingStatus::TokenFree,
+            "claim" => FundingStatus::Claim,
             other => return Err(format!("funding line {}: unknown status {other:?}", i + 1)),
         };
-        out.push((Name::new(first, last), token_free));
+        let assets: u64 = fields[4].parse().map_err(|e| format!("funding line {}: assets: {e}", i + 1))?;
+        let origin_page = match fields.get(5) {
+            Some(h) => Some(h.parse::<u64>().map_err(|e| format!("funding line {}: origin: {e}", i + 1))?),
+            None => None,
+        };
+        out.push(FundingRecord { name: Name::new(first, last), status, assets, origin_page });
     }
     Ok(out)
+}
+
+/// The set of notes a rebuild may treat as token-free, given the funding
+/// records and a way to ask the chain for the parent block id of a height.
+pub fn admitted_token_free<F>(records: &[FundingRecord], _parent_of: F) -> Result<BTreeSet<Vec<u8>>, String>
+where
+    F: FnMut(u64) -> Result<Hash, String>,
+{
+    Ok(records
+        .iter()
+        .filter(|r| r.status == FundingStatus::TokenFree)
+        .map(|r| name_key(&r.name))
+        .collect())
+}
+
+/// One note as the node's balance response describes it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NoteRow {
+    pub name: Name,
+    pub address: String,
+    /// Raw note-data entries as (key, blob).
+    pub data: Vec<(String, Vec<u8>)>,
+    pub assets: u64,
+    pub origin_page: Option<u64>,
+}
+
+/// Reads one balance entry into a row.
+pub fn note_from_entry(entry: &BalanceEntry, address: &str) -> Result<NoteRow, String> {
+    let name = entry.name.as_ref().ok_or("balance entry has no name")?;
+    let name = decode_pb_name(name)?;
+    let mut data = Vec::new();
+    let mut origin_page = None;
+    if let Some(note) = entry.note.as_ref() {
+        if let Some(NoteVersion::V1(v1)) = note.note_version.as_ref() {
+            if let Some(nd) = v1.note_data.as_ref() {
+                for e in &nd.entries {
+                    data.push((e.key.clone(), e.blob.clone()));
+                }
+            }
+            origin_page = v1.origin_page.as_ref().map(|h| h.value);
+        }
+    }
+    let assets = entry
+        .note
+        .as_ref()
+        .and_then(|n| match n.note_version.as_ref() {
+            Some(NoteVersion::V1(v1)) => v1.assets.as_ref().map(|a| a.value),
+            _ => None,
+        })
+        .unwrap_or(0);
+    Ok(NoteRow { name, address: address.to_string(), data, assets, origin_page })
+}
+
+pub fn decode_pb_name(name: &nockapp_grpc_proto::pb::common::v1::Name) -> Result<Name, String> {
+    let first = name.first.as_ref().ok_or("name has no first")?;
+    let last = name.last.as_ref().ok_or("name has no last")?;
+    Ok(Name::new(decode_pb_hash(first)?, decode_pb_hash(last)?))
+}
+
+/// The proto carries a tip5 hash as five field elements.
+pub fn decode_pb_hash(hash: &nockapp_grpc_proto::pb::common::v1::Hash) -> Result<Hash, String> {
+    let limb = |b: &Option<nockapp_grpc_proto::pb::common::v1::Belt>, which: &str| -> Result<u64, String> {
+        b.as_ref().map(|b| b.value).ok_or_else(|| format!("hash missing {which}"))
+    };
+    Ok(Hash::from_limbs(&[
+        limb(&hash.belt_1, "belt_1")?,
+        limb(&hash.belt_2, "belt_2")?,
+        limb(&hash.belt_3, "belt_3")?,
+        limb(&hash.belt_4, "belt_4")?,
+        limb(&hash.belt_5, "belt_5")?,
+    ]))
 }
 
 /// Refuses a step unless every input's token status is known: an output of
