@@ -1,0 +1,7 @@
+Transaction Status
+- tx id: CqnUQ22o7oxrKsx8NfcwHBv1GBbAtxbji4EAcvxEkAt6aPL8aLXP4qM
+- status: confirmed (mined into a block)
+- block height: 44
+- block id: kSQDe7Lhs9bkrczSzXBug95Z9bsvSyqu212aswzWHymaRH6XPfPwLs
+- confirmations: 1 (tip at height 44)
+

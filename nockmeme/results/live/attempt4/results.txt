@@ -1,0 +1,16 @@
+== stage 1: wallets ==
+alice=8sqwGBr2NqrpGNCATMFDiwJVTmHdjnPRbEez8EuN6QJXHGmXN7pyL9o
+bob=7tk6CeaZC3UvTXrAthf7HpJtS9kiijfEfaebVbHEZHXqJ6sDHFj1kCz
+== stage 2: mine to alice ==
+miner pid=22805
+  PASS genesis-gate 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  genesis-gate: 1/1 verified
+  PASS genesis-resigned 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  genesis-resigned: 1/1 verified
+GENESIS txid=CqnUQ22o7oxrKsx8NfcwHBv1GBbAtxbji4EAcvxEkAt6aPL8aLXP4qM height=44
+TOKEN 3rVLmJh24HWy7NxusxAxHkHTCETJMCannDzpB7LkrULd4bt8j2qVnrj
+  PASS xfer-gate 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  xfer-gate: 1/1 verified
+  PASS xfer-resigned 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  xfer-resigned: 1/1 verified
+TRANSFER txid=7dFCSs6EmbcK4w8n8Jv44JB1WBa76JBFtAQbD7vt6D72G1degNuvUuG height=55
