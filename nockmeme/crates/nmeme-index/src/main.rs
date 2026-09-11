@@ -583,7 +583,32 @@ async fn read_snapshot(
     read_snapshot_firsts(client, &firsts).await
 }
 
+/// A read spanning several first-names is several RPCs, and on a chain that
+/// mines a block every few seconds the node can answer them from different
+/// tips (seen live: page 0 at height 511, page 2 at 519). The fold refuses
+/// such a mix; this retries the whole read until every page agrees, and
+/// gives up loudly rather than returning a snapshot of two chain states.
 async fn read_snapshot_firsts(
+    client: &mut NockchainServiceClient<tonic::transport::Channel>,
+    firsts: &[Hash],
+) -> Result<nmeme_index::Snapshot, String> {
+    const ATTEMPTS: usize = 12;
+    let mut last_err = String::new();
+    for attempt in 1..=ATTEMPTS {
+        match read_snapshot_firsts_once(client, firsts).await {
+            Ok(snap) => return Ok(snap),
+            Err(e) if e.contains("pages disagree") => {
+                eprintln!("# snapshot attempt {attempt}/{ATTEMPTS}: {e}; retrying");
+                last_err = e;
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            }
+            Err(e) => return Err(e),
+        }
+    }
+    Err(format!("no consistent snapshot in {ATTEMPTS} attempts: {last_err}"))
+}
+
+async fn read_snapshot_firsts_once(
     client: &mut NockchainServiceClient<tonic::transport::Channel>,
     firsts: &[Hash],
 ) -> Result<nmeme_index::Snapshot, String> {
