@@ -113,11 +113,22 @@ jobs:
           nproc; free -g; df -h /
           sudo sysctl -w vm.overcommit_memory=1
           sudo sysctl -w vm.swappiness=100
-          avail=$(df -BG --output=avail / | tail -1 | tr -dc 0-9)
-          size=$((avail - 8))
-          sudo fallocate -l "${size}G" /swapfile && sudo chmod 600 /swapfile
-          sudo mkswap /swapfile >/dev/null && sudo swapon /swapfile
+          # Hosted runners come in two disk layouts: one 145 GB root, or a small
+          # root plus a separate ~70 GB /mnt. Run 2 sized swap from / alone and
+          # got 3 GB on the second layout, which stalled the four largest
+          # buckets. Take what each disk has.
+          df -h / /mnt
+          for mnt in /mnt /; do
+            sudo mkdir -p "$mnt"
+            avail=$(df -BG --output=avail "$mnt" | tail -1 | tr -dc 0-9)
+            size=$((avail - 6))
+            [ "$size" -ge 4 ] || { echo "skip $mnt: only ${avail}G free"; continue; }
+            f="${mnt%/}/swapfile"
+            sudo fallocate -l "${size}G" "$f" && sudo chmod 600 "$f" && sudo mkswap "$f" >/dev/null && sudo swapon "$f"
+            echo "swap: $f ${size}G"
+          done
           free -g
+          [ "$(free -g | awk '/^Swap/{print $2}')" -ge 20 ] || { echo "less than 20 GB of swap; refusing to start a proof that will stall" >&2; exit 1; }
       - name: Prove the bucket (cgroup-confined, RSS sampled, progress pushed)
         run: |
           mkdir -p out
@@ -138,7 +149,7 @@ jobs:
             && git checkout -q --orphan "$PROGRESS_BRANCH" )
           ( while true; do
               sleep 300
-              { echo "run: ${{ github.run_id }}  bucket: ${{ matrix.bucket }}  at: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"; echo; free -m; } > "$PROG/status.txt"
+              { echo "run: ${{ github.run_id }}  bucket: ${{ matrix.bucket }}  at: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"; echo; free -m; echo; cat /sys/fs/cgroup/nmeme-prove/memory.events 2>/dev/null; } > "$PROG/status.txt"
               cp out/rss.tsv "$PROG/rss.tsv" 2>/dev/null || true
               tail -n 100 out/seedgen.log > "$PROG/seedgen.log.tail" 2>/dev/null || true
               ( cd "$PROG" && git add -A && git commit -qm "progress $(date -u +%H:%M)" && git push -fq origin "$PROGRESS_BRANCH" ) || true
