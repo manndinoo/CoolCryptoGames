@@ -38,10 +38,13 @@ die() { echo "FAIL: $*" >&2; exit 1; }
 strip() { sed 's/\x1b\[[0-9;]*m//g'; }
 
 # Wallet runs with cwd = the wallet dir, because sign-hash writes its output to
-# a fixed relative filename (hash.sig, wallet.hoon:1996).
+# a fixed relative filename (hash.sig, wallet.hoon:1996). The wallet is a
+# nockapp with its own persistent arena; without --pma-initial-size its
+# epoch persist grew each wallet dir to ~2 GB here and filled the disk twice.
 wallet() {
   local who="$1"; shift
   ( cd "$W/$who" && NOCKAPP_HOME="$W/$who" RUST_LOG=error "$WALLET" \
+      --pma-initial-size 256MiB \
       --client private --private-grpc-server-port "$PORT" --fakenet "$@" )
 }
 
@@ -53,6 +56,7 @@ wallet() {
 wallet_pub() {
   local who="$1" cmd="$2"; shift 2
   ( cd "$W/$who" && NOCKAPP_HOME="$W/$who" RUST_LOG=error "$WALLET" --fakenet \
+      --pma-initial-size 256MiB \
       "$cmd" --client public --public-grpc-server-addr "${PUBLIC_ADDR:-127.0.0.1:5556}" "$@" )
 }
 
@@ -330,11 +334,14 @@ PUB="${PUBLIC_ADDR:-127.0.0.1:5556}"
 # own inputs spends token notes as ordinary funds and burns them — seen live,
 # twice, on this chain.
 token_cycle() {
-  local tag="$1" ticker="$2"
-  local g="$RUN/genesis-$tag" x="$RUN/xfer-$tag"
+  # `cyc`, not `tag`: bash scopes dynamically, and a helper that loops over a
+  # plain `tag` variable overwrote this function's local (seen live: every
+  # label printed empty).
+  local cyc="$1" ticker="$2"
+  local g="$RUN/genesis-$cyc" x="$RUN/xfer-$cyc"
   mkdir -p "$g" "$x"
 
-  log "== $tag: genesis ($ticker) =="
+  log "== $cyc: genesis ($ticker) =="
   # Alice may own nothing but token notes at this point (after a cycle, her
   # change IS the token note). Wait for the miner to pay her a fresh coinbase,
   # then two more blocks for the fakenet coinbase timelock. The funding file
@@ -344,53 +351,53 @@ token_cycle() {
   while (( SECONDS < deadline )); do
     # shellcheck disable=SC2086
     "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$g/funding.txt" \
-      || die "$tag: funding read failed"
+      || die "$cyc: funding read failed"
     fund=$(awk -F'\t' -v need="$need" '$1=="FUNDING" && $4=="tokenfree" && $5+0>=need {print "["$2" "$3"]"; exit}' "$g/funding.txt")
     [ -n "$fund" ] && break
     sleep 15
   done
-  [ -n "$fund" ] || die "$tag: no token-free note worth >= $need nicks reached alice within ${MINE_TIMEOUT:-1800}s (see $g/funding.txt)"
+  [ -n "$fund" ] || die "$cyc: no token-free note worth >= $need nicks reached alice within ${MINE_TIMEOUT:-1800}s (see $g/funding.txt)"
   local h; h=$(awk -F'\t' '$1=="HEIGHT"{print $2}' "$g/funding.txt")
   wait_for_height "$RUN/node.log" $((h + 2)) "${MINE_TIMEOUT:-1800}" >/dev/null \
-    || die "$tag: coinbase did not mature"
+    || die "$cyc: coinbase did not mature"
   # shellcheck disable=SC2086
   "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$g/funding.txt" \
-    || die "$tag: funding read failed"
-  grep -q "$(echo "$fund" | tr -d '[]' | cut -d' ' -f2)" "$g/funding.txt" || die "$tag: funding note vanished"
+    || die "$cyc: funding read failed"
+  grep -q "$(echo "$fund" | tr -d '[]' | cut -d' ' -f2)" "$g/funding.txt" || die "$cyc: funding note vanished"
   log "  token-free funding note: $fund"
 
-  build_sign_send "genesis-$tag" "$BOB" "${SEND_NICKS:-1000}" "$g.env" \
+  build_sign_send "genesis-$cyc" "$BOB" "${SEND_NICKS:-1000}" "$g.env" \
     --names "$fund" --funding "$g/funding.txt" \
     "$ALICE_LOCK=genesis:$ticker:6:${SUPPLY:-1000000}"
   . "$g.env"
   local gtxid="$TXID" gheight="$HEIGHT"
-  echo "GENESIS[$tag] txid=$gtxid height=$gheight"
+  echo "GENESIS[$cyc] txid=$gtxid height=$gheight"
   local token
   token=$("$NMEME_INDEX" token-id --tx "$g/final.jam" --ticker "$ticker" --decimals 6) \
-    || die "$tag: could not derive token id"
-  echo "TOKEN[$tag] $token"
+    || die "$cyc: could not derive token id"
+  echo "TOKEN[$cyc] $token"
 
-  log "== $tag: transfer ${XFER_AMOUNT:-100} to bob, rest back to alice =="
+  log "== $cyc: transfer ${XFER_AMOUNT:-100} to bob, rest back to alice =="
   local gnote
   gnote=$("$NMEME_INDEX" outputs --tx "$g/final.jam" \
     | awk -F'\t' -v l="$ALICE_LOCK" '$1=="OUTPUT" && $2==l {print "["$3" "$4"]"; exit}')
-  [ -n "$gnote" ] || die "$tag: no genesis output at alice's lock"
+  [ -n "$gnote" ] || die "$cyc: no genesis output at alice's lock"
   # shellcheck disable=SC2086
   "$NMEME_INDEX" funding --addr "$PUB" $FUND_ARGS > "$x/funding.txt" \
-    || die "$tag: funding read failed"
+    || die "$cyc: funding read failed"
   "$NMEME_INDEX" token-note --addr "$PUB" --lock "$ALICE_LOCK" --name "$gnote" > "$x/token-note.txt" \
-    || die "$tag: the genesis output $gnote is not an unspent token note on chain"
+    || die "$cyc: the genesis output $gnote is not an unspent token note on chain"
   sed 's/^/  /' "$x/token-note.txt" >&2
   local to=${XFER_AMOUNT:-100} change=$(( ${SUPPLY:-1000000} - ${XFER_AMOUNT:-100} ))
-  build_sign_send "xfer-$tag" "$BOB" "${SEND_NICKS:-1000}" "$x.env" \
+  build_sign_send "xfer-$cyc" "$BOB" "${SEND_NICKS:-1000}" "$x.env" \
     --names "$gnote" --funding "$x/funding.txt" --token-note "$gnote" \
     "$BOB_LOCK=transfer:$token:$to" \
     "$ALICE_LOCK=transfer:$token:$change"
   . "$x.env"
-  echo "TRANSFER[$tag] txid=$TXID height=$HEIGHT"
-  printf -v "TOKEN_$tag" '%s' "$token"
-  printf -v "GTX_$tag" '%s' "$gtxid"
-  printf -v "XTX_$tag" '%s' "$TXID"
+  echo "TRANSFER[$cyc] txid=$TXID height=$HEIGHT"
+  printf -v "TOKEN_$cyc" '%s' "$token"
+  printf -v "GTX_$cyc" '%s' "$gtxid"
+  printf -v "XTX_$cyc" '%s' "$TXID"
 }
 
 token_cycle A "${TICKER:-DOGE}"
