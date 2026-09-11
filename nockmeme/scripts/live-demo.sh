@@ -137,6 +137,26 @@ HEIGHT=$(wait_for_height "$RUN/node.log" "${MIN_HEIGHT:-3}" "${MINE_TIMEOUT:-180
   || die "mining did not reach height ${MIN_HEIGHT:-3} within ${MINE_TIMEOUT:-1800}s"
 log "height=$HEIGHT"
 
+# Chain height is not enough. Against a node that already has blocks (a second
+# run on the same chain) the height gate passes before a single block has paid
+# THIS wallet, and create-tx then fails with "insufficient funds:
+# selected_total=0" (seen live). So also wait until Alice owns a note, then for
+# two more blocks so the fakenet coinbase timelock (1 block) has passed.
+wait_for_note() {
+  local who="$1" deadline=$((SECONDS + $2)) out
+  while (( SECONDS < deadline )); do
+    out=$(wallet "$who" list-notes 2>/dev/null | strip)
+    if grep -aq "Wallet Notes" <<<"$out" && ! grep -aq "No notes found" <<<"$out"; then return 0; fi
+    sleep 10
+  done
+  return 1
+}
+wait_for_note alice "${MINE_TIMEOUT:-1800}" || die "no mined block paid alice within ${MINE_TIMEOUT:-1800}s"
+NOTE_HEIGHT=$(wait_for_height "$RUN/node.log" 0 10)
+HEIGHT=$(wait_for_height "$RUN/node.log" $((NOTE_HEIGHT + 2)) "${MINE_TIMEOUT:-1800}") \
+  || die "coinbase did not mature (height $((NOTE_HEIGHT + 2)) not reached)"
+log "alice has a note at height<=$NOTE_HEIGHT; chain at $HEIGHT, coinbase mature"
+
 # broadcast_and_confirm <tx.jam> <label> <result-file>
 # Writes TXID= and HEIGHT= to the result file. Nothing is returned through
 # stdout, so no caller has to disentangle results from progress, and no
