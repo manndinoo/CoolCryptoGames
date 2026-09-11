@@ -217,7 +217,7 @@ index b9b588a..fa5856a 100644
              %brn
            '\0a  - Unspendable (burn) condition'
 diff --git a/hoon/common/tx-engine-1.hoon b/hoon/common/tx-engine-1.hoon
-index a687f27..d6c5e6d 100644
+index a687f27..05c0652 100644
 --- a/hoon/common/tx-engine-1.hoon
 +++ b/hoon/common/tx-engine-1.hoon
 @@ -1235,6 +1235,7 @@
@@ -273,7 +273,7 @@ index a687f27..d6c5e6d 100644
          %brn  [leaf+%brn leaf+~]
      ==
    ++  hash
-@@ -2211,6 +2222,337 @@
+@@ -2211,6 +2222,339 @@
      [pk sig-hash sig]
    --
  ::
@@ -393,15 +393,17 @@ index a687f27..d6c5e6d 100644
 +      ?:  (lien ins |=(n=nnote-1 ?=(^ (entry note-data.n))))  %.n
 +      =/  anc=(unit nname)  (anchor sps)
 +      ?~  anc  %.n
-+      %+  levy  out-g
-+      |=  [ticker=* decimals=@ amt=@ tid=hash]
-+      =(tid (derive u.anc ticker decimals))
++      =/  l=(list [ticker=* decimals=@ amt=@ tid=hash])  out-g
++      |-
++      ?~  l  %.y
++      ?.  =(tid.i.l (derive u.anc ticker.i.l decimals.i.l))  %.n
++      $(l t.l)
 +    ::  transfers: per id, the outputs never exceed the inputs
 +    =/  sum
-+      |=  [tid=hash l=(list [tid=hash amt=@])]
++      |=  [want=hash l=(list [tid=hash amt=@])]
 +      ^-  @
 +      %+  roll  l
-+      |=([[t=hash a=@] acc=@] ?:(=(t tid) (add acc a) acc))
++      |=([[tid=hash amt=@] acc=@] ?:(=(tid want) (add acc amt) acc))
 +    =/  xfer-ok=?
 +      %+  levy  out-t
 +      |=  [tid=hash amt=@]
@@ -611,7 +613,7 @@ index a687f27..d6c5e6d 100644
  ::  $check-context: Context provided for validating locks
  ::
  ::    .now: current page height
-@@ -2218,15 +2560,23 @@
+@@ -2218,15 +2562,23 @@
  ::    .sig-hash: signature to be hashed for a spend
  ::    .witness: witness to spend conditions
  ::    .bythos-phase: height at which bythos activates (for full LMP gating)
@@ -635,7 +637,7 @@ index a687f27..d6c5e6d 100644
      ==
    ::
    ++  check
-@@ -2264,6 +2614,7 @@
+@@ -2264,6 +2616,7 @@
          %tim  (check:tim +.p form)
          %hax  (check:hax +.p form)
          %pkh  (check:pkh +.p form)
@@ -643,7 +645,7 @@ index a687f27..d6c5e6d 100644
          %brn  %|
        ==
      ==
-@@ -2299,6 +2650,7 @@
+@@ -2299,6 +2652,7 @@
          %pkh  (check:pkh +.p form)
          %tim  (check:tim +.p form)
          %hax  (check:hax +.p form)
@@ -651,7 +653,7 @@ index a687f27..d6c5e6d 100644
          %brn  %|
        ==
      ==
-@@ -2334,19 +2686,19 @@
+@@ -2334,19 +2688,19 @@
    ++  new
      |=  [=raw-tx =page-number]
      ^-  form
@@ -684,7 +686,7 @@ index a687f27..d6c5e6d 100644
        =|  children=(z-map hash output)
        |-  ^-  outputs
        ?~  spends-list
-@@ -2403,7 +2755,6 @@
+@@ -2403,7 +2757,6 @@
          =/  out=output  [note1 single]
          (~(put z-by acc) key out)
        $(spends-list t.spends-list)
