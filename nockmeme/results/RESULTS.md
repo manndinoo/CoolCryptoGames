@@ -405,6 +405,75 @@ other party's, in the two tampering cases). The honest trade, token B:
 This is the settlement layer of the pool design in `docs/LIQUIDITY.md`,
 not a trading product: it needs a named counterparty and an exact fill.
 
+### A15. A pool under the `%amm` covenant, live: phase one (pool share only)
+
+The forked node (`docs/ENFORCEMENT.md`, `upstream/amm-covenant.patch`) ran
+a fresh fakenet chain; `scripts/live-demo.sh` created tokens A and B on it
+as before, and `scripts/pool-suite.sh` opened pools under the covenant and
+traded against them. This phase ran the rule with the pool's share only
+(100 bps, everything retained); phase two (§A16) adds the treasury share.
+Evidence in [`live/pool-v1/`](./live/pool-v1/).
+
+**The main pool** (token B, 100 bps): opened at height 277 with 6,553,600
+nicks and 100,000 tokens from Alice's own notes, at the lock whose only
+spend-condition is `[%amm <token B> 100]`. No key. The lock root and the
+pool's first name are recomputed from the token and the fee by anyone
+(`nmeme-tx pool-lock`).
+
+| trade | who | in | out (quoted) | fee retained | impact | mined at | pool after |
+|---|---|---|---|---|---|---|---|
+| buy | Bob | 655,360 nicks | 8,995 tokens | 6,553 nicks | 11.17 % | 311 | 7,207,960 / 91,005 |
+| sell | Bob | 4,497 tokens | 337,172 nicks | 44 tokens | 5.63 % | 340 | 6,871,788 / 95,502 |
+| buy | Alice (the creator) | 655,360 nicks | 8,227 tokens | 6,553 nicks | 10.70 % | 377 | 7,526,148 / 87,275 |
+| buy (of two sent together) | Bob | 655,360 nicks | 6,916 tokens | 6,553 nicks | 9.88 % | ~390 | 8,180,508 / 80,359 |
+| buy (re-quoted) | Alice | 655,360 nicks | 5,896 tokens | 6,553 nicks | 9.18 % | 404 | 8,834,868 / 74,463 |
+
+Every mined trade left the pool note exactly as the quote said it would
+(`MINED … pool_after` equals `POOL-AFTER`, checked on the node after each
+block). Each keyless pool spend carried the covenant witness and no
+signature; each user spend pinned the user's own lock, so the fill was the
+quote or nothing. The constant product rose on every trade: from
+6.55 × 10¹¹ at opening to 6.58 × 10¹¹ after the first buy, and so on — the
+fee has nowhere to go but the reserves.
+
+- **Rounding / minimum size.** The quote is the largest output the
+  inequality admits; a buy whose net input admits no output at all is
+  refused before anything is built (`ROUNDING` line), and one token more
+  than the quote is refused by the chain (the `over-payout` attack).
+- **Simultaneous trades.** Bob's and Alice's buys were built against the
+  same pool note and sent together. The node admitted the first and
+  refused the second at once ("not in the node's accepted set": its input
+  was already reserved); the first was mined, Alice re-quoted against the
+  new note with a fresh input and was mined at 404. One trade per pool per
+  block, as designed.
+
+**Attacks**, each against a freshly opened pool of token A (so that no
+refused transaction could hold a note the next test needed), each built
+from an honest quote and altered in one way, each sent through the public
+gRPC:
+
+| attack | what was altered | node's answer |
+|---|---|---|
+| withdraw | successor 100,000 nicks short; the difference to the trader | refused at admission |
+| over-payout | one token more than the quote | refused at admission |
+| pool-fee | the pool spend pays a 1-nick miner fee | refused at admission |
+| third-lock | 1,000 nicks of reserves to a lock no spend of the transaction pays | refused at admission |
+| drop-claim | successor without its token claim | refused at admission |
+
+In every case the pool note and the trader's note were still unspent two
+blocks later and nothing was mined. A detail worth recording: unlike the
+pin violations of §A14, which the mempool admitted and the engine failed at
+block-building time, a covenant violation is a *lock* failure, and the
+mempool evaluates locks on admission — so an invalid trade is refused
+immediately and reserves nothing. The remaining attacks of the suite
+(inflated claim, minted successor, the creator's key, taking a second note
+at the lock) ran in phase two.
+
+**Also learned.** The wallet is a nockapp whose arena grows by hundreds of
+megabytes per call; polling it for confirmations filled the disk twice.
+The suite now reads confirmations from the node's unspent set and rebuilds
+a wallet from its exported keys when its arena passes a size.
+
 ---
 
 ## B. Designed but NOT verified
