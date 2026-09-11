@@ -61,7 +61,7 @@ coinbase_note() {
     grep -qF "$n" "$3" 2>/dev/null || { echo "$n"; break; }
   done
 }
-USED="$S/used-notes.txt"; : > "$USED"
+USED="$S/used-notes.txt"; [ "${RESUME:-0}" = 1 ] && touch "$USED" || : > "$USED"
 # token_note <token> -> "first last amount" of alice note holding the token (at her change lock)
 token_note() {
   quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$ALICE_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'
