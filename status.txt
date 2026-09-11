@@ -1,13 +1,4 @@
-run: 34556716276  attempt: 1  threads: 1  at: 2026-09-11T07:05:49Z
-
+finished with exit code 1 at 2026-09-11T07:06:58Z (threads: 1)
                total        used        free      shared  buff/cache   available
-Mem:           15989        2812        7647          52        5928       13177
-Swap:          76799          46       76753
-
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/root       145G  144G  1.1G 100% /
-/dev/root       145G  144G  1.1G 100% /
-
-node cgroup:
-6353760256
-31428608
+Mem:           15989        1086        8253          52        7048       14903
+Swap:          76799          16       76783

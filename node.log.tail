@@ -168,3 +168,4 @@
 [2m2026-09-11T07:04:01.425278Z[0m [32m INFO[0m [1mprove_all_tables[0m[2m:[0m [2mp3_circuit_prover::batch_stark_prover::packing[0m[2m:[0m AIR shape [3mtable[0m[2m=[0mNpoTypeId(recompose) [3mmain_cols[0m[2m=[0m4 [3mprep_cols[0m[2m=[0m12 [3mrows[0m[2m=[0m6 [3mlanes[0m[2m=[0m2
 [2m2026-09-11T07:04:01.425281Z[0m [32m INFO[0m [1mprove_all_tables[0m[2m:[0m [2mp3_circuit_prover::batch_stark_prover::packing[0m[2m:[0m AIR shape [3mtable[0m[2m=[0mNpoTypeId(recompose/coeff) [3mmain_cols[0m[2m=[0m4 [3mprep_cols[0m[2m=[0m12 [3mrows[0m[2m=[0m802 [3mlanes[0m[2m=[0m2
 [2m2026-09-11T07:04:13.816108Z[0m [32m INFO[0m [2mai_pow_jets::setup[0m[2m:[0m Building the AI-PoW verifier contexts to disk (14 buckets, one-time; ~1–2 minutes). They are paged in from disk afterwards, never rebuilt.
+Error: SetupError("write verifier context file: Os { code: 28, kind: StorageFull, message: \"No space left on device\" }")
