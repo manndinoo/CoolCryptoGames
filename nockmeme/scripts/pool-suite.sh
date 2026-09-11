@@ -317,8 +317,9 @@ attack() {
   expect_rejected "$TRADE_FILE" "$label" "$POOL_NOTE_IN" "$cb"
 }
 attack withdraw 101 --withdraw 100000
-QO=$(awk -F'\t' '$1=="QUOTE"{for(i=1;i<=NF;i++) if ($i ~ /^out=/) print substr($i,5)}' "$S/withdraw/trade.txt")
-attack over-payout 102 --payout "$((QO + 1))"
+QO=$(grep '^QUOTE' "$S/withdraw/trade.txt" | grep -oE 'out_net=[0-9]+' | cut -d= -f2)
+[ -n "$QO" ] || die "no quoted output to exceed"
+attack over-payout 113 --payout "$((QO + 1))"
 attack pool-fee 103 --pool-fee 1
 attack third-lock 104 --extra-seed "$ALICE_LOCK:1000"
 attack drop-claim 105 --drop-claim
