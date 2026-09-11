@@ -1,0 +1,5 @@
+finished with exit code 0 at 2026-09-11T04:41:46Z
+bucket 6	trace_height=65536	verifier_key_digest=7273b9760a44e1f7431f3141183688b40fa4bf2ab539f31b4b82010bd38240ce031f648267a9733c	secs=286	peak_rss_gib=6.64
+               total        used        free      shared  buff/cache   available
+Mem:           15993        1046       12675          47        2638       14947
+Swap:          84991           0       84991
