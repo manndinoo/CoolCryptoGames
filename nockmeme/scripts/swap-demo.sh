@@ -138,6 +138,13 @@ unspent() {
 # The node must not mine it: wait two blocks, then the inputs must still be
 # unspent and tx-status must not say confirmed. The node's log lines about
 # the transaction are recorded as the reason.
+# expect_rejected <file> <label> <input-name>...
+# Mempool admission is not validity (seen live): the node admits a
+# transaction and then the transaction engine fails it with v1-tx-invalid
+# every time the miner builds a block, it is excluded, and never mined. So
+# the verdict is read where consensus decides: the engine's line in the
+# node log, no block containing it after two more blocks, and every input
+# still unspent.
 expect_rejected() {
   local file="$1" label="$2"; shift 2
   local txid; txid=$("$NMEME_INDEX" tx-id --tx "$file")
@@ -147,7 +154,6 @@ expect_rejected() {
   local sent; sent=$(send "$file" "$label")
   sed 's/^/  node: /' "$RUN/send-$label.txt" >&2
   [ "$sent" = "$txid" ] || die "$label: the node was not asked about $txid (see $RUN/send-$label.txt)"
-  local verdict; verdict=$(awk -F'\t' '$1=="VERDICT"{print $2}' "$RUN/send-$label.txt" | head -1)
   local h0; h0=$(node_height)
   wait_for_height "$RUN/node.log" $((h0 + 2)) "${MINE_TIMEOUT:-900}" >/dev/null || die "$label: chain did not advance"
   set +e; wallet_pub alice tx-status "$txid" >"$RUN/status-$label.txt" 2>&1; set -e
@@ -156,10 +162,11 @@ expect_rejected() {
   for n in "$@"; do
     unspent "${n%% *}" "${n##* }" || die "$label: input [$n] is no longer unspent after the attack"
   done
-  local reason; reason=$(strip < "$RUN/node.log" | grep -a -A3 "$txid" | grep -a -i -m1 "invalid\|reject\|fail\|bad\|error\|refus" | sed 's/^.*slogger: //' | cut -c1-160 || true)
-  [ "$verdict" = "rejected" ] || die "$label: expected the node to reject, but its answer was '${verdict:-none}'"
-  echo "REJECTED	$label	txid=$txid	node verdict: $verdict; not mined in 2 blocks; inputs still unspent	${reason:-}"
-  echo "  pins: $(grep '^PINS' "$S/$label-pins.txt" | cut -f2-)"
+  local engine
+  engine=$(strip < "$RUN/node.log" | grep -a -A2 "heard-new-tx: Miner received new transaction: $txid" | grep -a -o -m1 "tx-acc: process failed: [a-z0-9-]*" || true)
+  [ -n "$engine" ] || die "$label: the node log shows no transaction-engine verdict for $txid; inconclusive"
+  echo "REJECTED	$label	txid=$txid	engine: ${engine#tx-acc: process failed: }	not mined in 2 blocks	inputs still unspent"
+  echo "  mempool: $(awk -F'\t' '$1=="MEMPOOL"{print $2}' "$RUN/send-$label.txt"); pins: $(grep '^PINS' "$S/$label-pins.txt" | cut -f2-)"
 }
 
 ALICE=$(wallet alice list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //')
@@ -190,7 +197,7 @@ FTX=$(create_tx alice "$S/fund" "$FUND" "$BOB" "$BOB_FUND_NICKS")
 sed 's/^/  /' "$S/fund/check-inputs.txt" >&2
 cp "$FTX" "$S/fund.jam"
 FTXID=$(send "$S/fund.jam" fund); [ -n "$FTXID" ] || die "fund: no txid (see $RUN/send-fund.txt)"
-grep -q "VERDICT	accepted" "$RUN/send-fund.txt" || die "fund: the node did not accept it"
+grep -q "MEMPOOL	admitted" "$RUN/send-fund.txt" || die "fund: the mempool did not admit it"
 confirm "$FTXID" fund
 echo "FUND	txid=$FTXID	height=$(cut -d= -f2 "$S/fund.env")	bob+=$BOB_FUND_NICKS nicks"
 
@@ -256,7 +263,7 @@ expect_rejected "$S/attack-alice-gives-less.jam" alice-gives-less "$TOKEN_NOTE" 
 echo "== stage 6: the honest trade =="
 SENT=$(send "$S/swap.jam" swap); sed 's/^/  node: /' "$RUN/send-swap.txt" >&2
 [ -n "$SENT" ] || die "swap: the node was not asked (see $RUN/send-swap.txt)"
-grep -q "VERDICT	accepted" "$RUN/send-swap.txt" || die "swap: the node did not accept the honest trade"
+grep -q "MEMPOOL	admitted" "$RUN/send-swap.txt" || die "swap: the mempool did not admit the honest trade"
 confirm "$SENT" swap
 SWAP_H=$(cut -d= -f2 "$S/swap.env")
 echo "SWAP	txid=$SENT	height=$SWAP_H	alice -$SELL tokens +$PRICE_NICKS nicks	bob +$SELL tokens -$PRICE_NICKS nicks"

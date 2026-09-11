@@ -486,8 +486,14 @@ fn cmd_funding(args: &[String]) -> Result<ExitCode, String> {
 
 /// `send --addr <host:port> --tx <file>`: submits the file's transaction
 /// through the node's public `WalletSendTransaction`, then asks
-/// `TransactionAccepted` for the node's verdict. Prints `TXID`, `SEND`
-/// (the node's acknowledgement or error) and `VERDICT accepted|rejected`.
+/// `TransactionAccepted` whether the mempool holds it. Prints `TXID`, `SEND`
+/// (the node's acknowledgement or error) and `MEMPOOL admitted|not admitted`.
+///
+/// Mempool admission is **not** validity. Seen live: a transaction whose
+/// output-source pin was violated was admitted, and then failed with
+/// `v1-tx-invalid` every time the miner tried to build a block with it,
+/// never mined. The consensus verdict is in the node's log
+/// (`tx-acc: process failed: v1-tx-invalid`) and in whether it is mined.
 ///
 /// The wallet's own `send-tx` reads the whole balance before submitting and
 /// aborts when a block lands mid-read (seen live), so nothing reaches the
@@ -534,7 +540,7 @@ fn cmd_send(args: &[String]) -> Result<ExitCode, String> {
             None => println!("SEND\tno result"),
         }
         // The node validates on receipt; give it a moment, then ask.
-        let mut verdict = "rejected".to_string();
+        let mut verdict = "not admitted".to_string();
         let mut detail = String::new();
         for _ in 0..12 {
             tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
@@ -544,7 +550,7 @@ fn cmd_send(args: &[String]) -> Result<ExitCode, String> {
             match client.transaction_accepted(req).await {
                 Ok(resp) => match resp.into_inner().result {
                     Some(transaction_accepted_response::Result::Accepted(true)) => {
-                        verdict = "accepted".to_string();
+                        verdict = "admitted".to_string();
                         break;
                     }
                     Some(transaction_accepted_response::Result::Accepted(false)) => {
@@ -556,7 +562,7 @@ fn cmd_send(args: &[String]) -> Result<ExitCode, String> {
                 Err(e) => detail = format!("{e}"),
             }
         }
-        println!("VERDICT\t{verdict}\t{detail}");
+        println!("MEMPOOL\t{verdict}\t{detail}");
         Ok(ExitCode::SUCCESS)
     })
 }
