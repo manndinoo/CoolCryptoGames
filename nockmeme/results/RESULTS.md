@@ -613,9 +613,15 @@ so step 1 above cannot be mined and step 2 has nothing to sell. The
 standard's genesis payload gained the id (`docs/SPEC.md` §2a); the
 indexer checks it too (rule G6).
 
-**Regression** (`scripts/counterfeit-test.sh`, run on a fresh chain with
-the rebuilt node after the demo's genesis): *(filled in below once the
-rerun completes)*.
+**Regression** (`scripts/counterfeit-test.sh`, on a fresh chain with the
+rebuilt node, right after the demo's two genesis transactions — which now
+carry their derived ids and were mined, at heights 28 and 103 —
+[`live/pool-v3/counterfeit/`](./live/pool-v3/counterfeit/)): the same
+transaction with the fabricated claim was **refused on arrival**. The node's
+log: `heard-tx: Transaction context invalid: v1-token-claims`; the mempool
+did not admit it; the note never existed and there was nothing to sell.
+The phase-three pool suite that follows (§A19) ran the whole trade and
+attack set again under the claim rule.
 
 ### A18. What is implemented, what passed live, what needs a network change
 
