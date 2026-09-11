@@ -420,21 +420,28 @@ fn cmd_swap(args: &[String]) -> Result<ExitCode, String> {
     }
 
     let mut spends = nmeme_tx::swap::merge(a_spends, b_spends).map_err(|e| format!("merge: {e}"))?;
+    // Claims go on the token side's seeds — a's — and on those only. Every
+    // lock in a trade is paid by both spends (the counterparty's payment and
+    // the owner's change land on one lock), and the claim must sit on the
+    // seed the token *sender* signs: the buyer's change seed carries none.
     for (lock, claim) in &claims {
         let mut done = false;
-        for (_, spend) in spends.0.iter_mut() {
+        for (name, spend) in spends.0.iter_mut() {
+            if !a_inputs.contains(name) {
+                continue;
+            }
             let Spend::Witness(spend1) = spend else { continue };
             if !spend1.seeds.0.iter().any(|s| &s.lock_root == lock) {
                 continue;
             }
             if done {
-                return Err(format!("lock-root {} is paid by more than one spend; a claim goes on exactly one seed", lock.to_base58()));
+                return Err(format!("lock-root {} is paid by more than one of a's spends; a claim goes on exactly one seed", lock.to_base58()));
             }
             attach_claim(&mut spend1.seeds, lock, claim).map_err(|e: Error| format!("attach to {}: {e}", lock.to_base58()))?;
             done = true;
         }
         if !done {
-            return Err(format!("no seed pays lock-root {}", lock.to_base58()));
+            return Err(format!("no seed of a.tx pays lock-root {}", lock.to_base58()));
         }
         println!("ATTACHED\t{}\t{}", lock.to_base58(), claim.amount());
     }
