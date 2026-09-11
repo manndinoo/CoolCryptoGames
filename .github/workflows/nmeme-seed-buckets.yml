@@ -22,6 +22,15 @@ name: nmeme seed cache (per bucket)
 
 on:
   workflow_dispatch:
+    inputs:
+      buckets:
+        description: 'JSON list of bucket indices to prove (default: all fourteen)'
+        default: '[0,1,2,3,4,5,6,7,8,9,10,11,12,13]'
+        type: string
+      reuse_run_id:
+        description: 'Run id whose seed-* artifacts fill in the buckets not proved here'
+        default: ''
+        type: string
   push:
     branches: [claude/new-session-wehujv]
     paths:
@@ -30,6 +39,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 env:
   NOCKCHAIN_REV: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
@@ -93,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bucket: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        bucket: ${{ fromJSON(inputs.buckets || '[0,1,2,3,4,5,6,7,8,9,10,11,12,13]') }}
     name: prove bucket ${{ matrix.bucket }}
     env:
       # throttle-and-swap above this, never kill (memory.high; memory.max stays unlimited)
@@ -197,6 +207,15 @@ jobs:
         with:
           name: seedgen-bin
           path: bin
+      - name: Seeds proved by an earlier run (when only some buckets were re-proved here)
+        if: inputs.reuse_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          pattern: seed-*
+          path: seeds
+          merge-multiple: true
+          run-id: ${{ inputs.reuse_run_id }}
+          github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
         with:
           pattern: seed-*
