@@ -30,7 +30,7 @@ WALLET="$REPO/target/release/nockchain-wallet"
 MINER="$REPO/target/release/zk-pow-mine"
 NMEME_TX="$REPO/target/debug/nmeme-tx"
 NMEME_INDEX="$REPO/target/debug/nmeme-index"
-S="$RUN/swap"; mkdir -p "$S"
+S="$RUN/swap"; mkdir -p "$S" "$S/final" "$S/a" "$S/b"
 : > "$RUN/verify.log"
 
 log() { echo "$*" >&2; }
