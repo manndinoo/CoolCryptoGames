@@ -92,9 +92,12 @@ funding_alice() {
 }
 # coinbase_note <funding-file> <min-nicks> <exclude-file>: a verified coinbase note not yet used
 coinbase_note() {
-  awk -F'\t' -v need="$2" '$1=="FUNDING" && $4=="coinbase" && $5+0>=need {print $2" "$3}' "$1" | while read -r n; do
-    grep -qF "$n" "$3" 2>/dev/null || { echo "$n"; break; }
-  done
+  # no pipeline: breaking out of one raises SIGPIPE in awk (seen live, exit 141)
+  local n
+  while read -r n; do
+    grep -qF "$n" "$3" 2>/dev/null || { echo "$n"; return 0; }
+  done < <(awk -F'\t' -v need="$2" '$1=="FUNDING" && $4=="coinbase" && $5+0>=need {print $2" "$3}' "$1")
+  return 0
 }
 USED="$S/used-notes.txt"; [ "${RESUME:-0}" = 1 ] && touch "$USED" || : > "$USED"
 # token_note <token> -> "first last amount" of alice note holding the token (at her change lock)
@@ -189,7 +192,9 @@ done_already() {
 }
 bob_note() { # a plain unspent note of bob not yet used
   quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding-bob.txt" || die "bob funding"
-  awk -F'\t' -v need=$((BUY_NICKS + 20000)) '$1=="FUNDING" && $4=="plain" && $5+0>=need {print $2" "$3}' "$S/funding-bob.txt" | while read -r n; do grep -qF "$n" "$USED" || { echo "$n"; break; }; done
+  local n
+  while read -r n; do grep -qF "$n" "$USED" || { echo "$n"; return 0; }; done < <(awk -F'\t' -v need=$((BUY_NICKS + 20000)) '$1=="FUNDING" && $4=="plain" && $5+0>=need {print $2" "$3}' "$S/funding-bob.txt")
+  return 0
 }
 bob_token_note() { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$BOB_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'; }
 
