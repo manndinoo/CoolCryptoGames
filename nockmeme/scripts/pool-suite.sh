@@ -24,7 +24,8 @@ MINER="$REPO/target/release/zk-pow-mine"
 W="$RUN/wallets"; S="$RUN/pool"; mkdir -p "$S"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HERE/lib-verify.sh"; . "$HERE/lib-mine.sh"; . "$HERE/lib-tx.sh"
-FEE_BPS="${FEE_BPS:-100}"
+FEE_BPS="${FEE_BPS:-100}"          # the pool's share
+LORE_BPS="${LORE_BPS:-50}"         # the treasury's share (docs/FEES.md)
 POOL_NOCK="${POOL_NOCK:-6553600}"        # 100 NOCK
 POOL_TOKENS="${POOL_TOKENS:-100000}"
 BUY_NICKS="${BUY_NICKS:-655360}"          # 10 NOCK
@@ -41,7 +42,37 @@ TOKEN_B="${TOKEN_B:?the token id of token B}"; TOKEN_A="${TOKEN_A:?the token id 
 GTX_B="${GTX_B:?}"; XTX_B="${XTX_B:?}"; GTX_A="${GTX_A:?}"; XTX_A="${XTX_A:?}"
 ALICE_FIRSTS="${ALICE_FIRSTS:?first-names alice coinbase notes sit at}"
 
-echo "== stage 0: miner =="
+echo "== stage 0: the Lore Wallet, and the miner =="
+# The treasury: a third wallet whose key is never used to spend. Its lock
+# root is what every pool's covenant names; it is read from a throwaway
+# transaction paying its address, like alice's and bob's.
+if [ ! -f "$W/lore/.done" ]; then
+  mkdir -p "$W/lore" "$RUN/keys"; wallet lore keygen >/dev/null 2>&1 || die "keygen failed for lore"
+  ( cd "$W/lore" && wallet lore export-keys >/dev/null 2>&1 ) || true
+  [ -s "$W/lore/keys.export" ] || die "lore: keygen left no keys.export"
+  cp "$W/lore/keys.export" "$RUN/keys/lore.export"; touch "$W/lore/.done"
+fi
+LORE=$(wallet lore list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //')
+[ -n "$LORE" ] || die "lore address"
+if [ -z "${LORE_LOCK:-}" ]; then
+  mkdir -p "$S/lore-probe"; list_tx_files alice > "$S/lore-probe/before.txt"
+  wallet alice create-tx --recipient "{\"kind\":\"p2pkh\",\"address\":\"$LORE\",\"amount\":1000}" --fee-nicks "${FEE_NICKS:-8192}" --allow-low-fee >"$S/lore-probe/create.txt" 2>&1 || die "lore probe create-tx"
+  list_tx_files alice > "$S/lore-probe/after.txt"; comm -13 "$S/lore-probe/before.txt" "$S/lore-probe/after.txt" > "$S/lore-probe/new.txt"
+  PROBE=$(head -1 "$S/lore-probe/new.txt"); [ -s "$PROBE" ] || die "lore probe produced no transaction"
+  "$NMEME_TX" seeds "$PROBE" > "$S/lore-probe/seeds.txt" || die "lore probe seeds"
+  LORE_LOCK=$(awk -F'\t' '$1=="SEED"{print $4"\t"$3}' "$S/lore-probe/seeds.txt" | sort -n | head -1 | cut -f2)
+  rm -f "$PROBE"
+fi
+[ -n "$LORE_LOCK" ] && [ "$LORE_LOCK" != "$ALICE_LOCK" ] || die "could not resolve the Lore Wallet's lock root"
+echo "LORE-WALLET	address=$LORE	lock=$LORE_LOCK	first=$("$NMEME_TX" pool-lock --token "$TOKEN_B" --fee-bps 1 --lore-bps 1 --lore-lock "$LORE_LOCK" | awk -F'\t' '$1=="LORE-FIRST"{print $2}')	key=the lore wallet (held, not locked)"
+echo "LORE_LOCK=$LORE_LOCK" >> "$RUN/pool-env.txt"
+PP="--lore-bps $LORE_BPS --lore-lock $LORE_LOCK"
+# lore_balance -> "<nicks> <notes> <non-plain notes>"
+lore_balance() {
+  quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$LORE_LOCK" > "$S/funding-lore.txt" 2>/dev/null || die "lore funding read"
+  awk -F'\t' '$1=="FUNDING"{n++; s+=$5; if ($4!="plain") bad++} END{print s+0" "n+0" "bad+0}' "$S/funding-lore.txt"
+}
+LORE_EXPECTED=0
 "$MINER" --node-addr "http://127.0.0.1:$PORT" --mining-pkh "$ALICE" --num-threads 1 >"$RUN/miner.log" 2>&1 &
 MINER_PID=$!; trap 'kill "$MINER_PID" 2>/dev/null || true' EXIT
 echo "miner pid=$MINER_PID"
@@ -67,10 +98,10 @@ token_note() {
   quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$ALICE_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'
 }
 pool_state() { # <token> <fee> -> POOL line fields "first last origin nock tokens" of the single pool note
-  quiet "$NMEME_INDEX" pool --addr "$PUB" --token "$1" --fee-bps "$2" > "$S/pool-$1-$2.txt" 2>/dev/null || die "pool read"
+  quiet "$NMEME_INDEX" pool --addr "$PUB" --token "$1" --fee-bps "$2" $PP > "$S/pool-$1-$2.txt" 2>/dev/null || die "pool read"
   awk -F'\t' '$1=="POOL"{print $2" "$3" "$4" "$5" "$6}' "$S/pool-$1-$2.txt"
 }
-pool_lock() { "$NMEME_TX" pool-lock --token "$1" --fee-bps "$2" | awk -F'\t' '$1=="POOL-LOCK"{print $2}'; }
+pool_lock() { "$NMEME_TX" pool-lock --token "$1" --fee-bps "$2" $PP | awk -F'\t' '$1=="POOL-LOCK"{print $2}'; }
 
 # open_pool <label> <token> <fee> <nock> <tokens>: alice opens a pool from her token note.
 # Sets OPEN_TXID, OPEN_FILE; prints OPEN line.
@@ -103,7 +134,7 @@ trade() {
   local label="$1" who="$2" token="$3" fee="$4" side="$5" tx="$6" orig="$7" ph="$8"; shift 8
   local d="$S/$label"; mkdir -p "$d"
   local st; st=$(pool_state "$token" "$fee" | head -1); [ -n "$st" ] || die "$label: no pool note"
-  "$NMEME_TX" pool-trade "$tx" "$d/assembled.jam" --pool "$st" --token "$token" --fee-bps "$fee" --side "$side" --placeholder "$ph" --dust "$DUST" "$@" > "$d/trade.txt" 2>&1 || die "$label: pool-trade: $(tail -1 "$d/trade.txt")"
+  "$NMEME_TX" pool-trade "$tx" "$d/assembled.jam" --pool "$st" --token "$token" --fee-bps "$fee" $PP --side "$side" --placeholder "$ph" --dust "$DUST" "$@" > "$d/trade.txt" 2>&1 || die "$label: pool-trade: $(tail -1 "$d/trade.txt")"
   sed 's/^/  /' "$d/trade.txt" >&2
   resign "$who" "$orig" "$d/assembled.jam" "$d/trade.txt" "$d/final.jam"
   "$NMEME_TX" pins "$d/final.jam" > "$d/pins.txt" 2>&1 || true
@@ -130,6 +161,13 @@ confirm_trade() {
   [ "$(cut -d' ' -f4,5 <<<"$st")" = "$want" ] || die "$label: pool state after ($(cut -d' ' -f4,5 <<<"$st")) != quoted ($want)"
   echo "MINED	$label	txid=$TRADE_TXID	height=$(cut -d= -f2 "$S/$label.env")	pool_after=$(tr ' ' '/' <<<"$want")	$(grep '^POOL-SPEND' "$d/trade.txt" | cut -f2- | tr '\t' ' ')"
   STEPS_B="${STEPS_B:-} --step $TRADE_TXID:$TRADE_FILE"
+  # the treasury: exactly the quoted share arrived, in NOCK, in a plain note
+  local lf; lf=$(grep '^QUOTE' "$d/trade.txt" | grep -oE 'lore_fee=[0-9]+' | cut -d= -f2)
+  LORE_EXPECTED=$((LORE_EXPECTED + lf))
+  local lb; lb=$(lore_balance)
+  [ "${lb%% *}" = "$LORE_EXPECTED" ] || die "$label: the Lore Wallet holds ${lb%% *} nicks, expected $LORE_EXPECTED"
+  [ "${lb##* }" = 0 ] || die "$label: the Lore Wallet holds a note that is not plain NOCK"
+  echo "LORE	$label	+$lf nicks	balance=${LORE_EXPECTED}	notes=$(cut -d' ' -f2 <<<"$lb")	all_plain=yes"
 }
 # done_already <label>: on a resumed run, a stage whose transaction was mined is
 # picked up from its files rather than run again (its step is added).
@@ -176,7 +214,7 @@ else
   open_pool main "$TOKEN_B" "$FEE_BPS" "$POOL_NOCK" "$POOL_TOKENS"
   MAIN_OPEN_TXID="$OPEN_TXID"; MAIN_OPEN_FILE="$OPEN_FILE"
 fi
-echo "LOCK	main	$MAIN_LOCK	spend-condition=[%amm $TOKEN_B $FEE_BPS]	no key"
+echo "LOCK	main	$MAIN_LOCK	spend-condition=[%amm $TOKEN_B $FEE_BPS $LORE_BPS $LORE_LOCK]	no key"
 
 echo "== stage 3: honest trades =="
 if [ -f "$S/buy1.env" ] && [ "${RESUME:-0}" = 1 ]; then
@@ -190,7 +228,7 @@ trade buy1 bob "$TOKEN_B" "$FEE_BPS" buy "${r%% *}" "${r#* }" "$ALICE_LOCK"
 confirm_trade buy1 "$TOKEN_B" "$FEE_BPS"
 fi
 # a too-small trade is refused before anything is built
-set +e; "$NMEME_TX" pool-trade "${r%% *}" /dev/null --pool "$(pool_state "$TOKEN_B" "$FEE_BPS")" --token "$TOKEN_B" --fee-bps "$FEE_BPS" --side buy --placeholder "$ALICE_LOCK" --dust "$((BUY_NICKS - 1))" > "$S/tiny.txt" 2>&1; rc=$?; set -e
+set +e; "$NMEME_TX" pool-trade "${r%% *}" /dev/null --pool "$(pool_state "$TOKEN_B" "$FEE_BPS")" --token "$TOKEN_B" --fee-bps "$FEE_BPS" $PP --side buy --placeholder "$ALICE_LOCK" --dust "$((BUY_NICKS - 4000))" > "$S/tiny.txt" 2>&1; rc=$?; set -e
 [ $rc -ne 0 ] && grep -q "trade too small\|NoOutput\|no output" "$S/tiny.txt" && echo "ROUNDING	a trade the covenant admits no output for is refused by the quote: $(tail -1 "$S/tiny.txt")" || echo "ROUNDING	unexpected: rc=$rc $(tail -1 "$S/tiny.txt")"
 
 # bob sells half of what he bought
@@ -277,6 +315,8 @@ attack third-lock 104 --extra-seed "$ALICE_LOCK:1000"
 attack drop-claim 105 --drop-claim
 attack inflate-claim 106 --inflate-claim 1000000
 attack mint 107 --successor-tokens "$((POOL_TOKENS + 1000))"
+attack lore-short 111 --lore-short 1
+attack lore-tokens 112 --lore-tokens 10
 # the creator's key: alice signs the pool spend with her own key under a key lock
 open_pool pool-creator-key "$TOKEN_A" 108 "$POOL_NOCK" "$POOL_TOKENS"; ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
 funding_alice "$S/funding-ck.txt"; cb=$(coinbase_note "$S/funding-ck.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
@@ -309,7 +349,7 @@ POOL_MAIN_NOTE=$(grep " $POOL_NOCK $POOL_TOKENS$" <<<"$st"); DON_NOTE=$(grep " 1
 funding_alice "$S/funding-merge.txt"; cb=$(coinbase_note "$S/funding-merge.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
 r=$(user_tx alice "$S/take-donation-user" "[$cb]" "$BOB" "$BUY_NICKS")
 d="$S/take-donation"; mkdir -p "$d"
-"$NMEME_TX" pool-trade "${r%% *}" "$d/assembled.jam" --pool "$POOL_MAIN_NOTE" --token "$TOKEN_A" --fee-bps 109 --side buy --placeholder "$BOB_LOCK" --dust "$DUST" --also-spend "$DON_NOTE" --also-take > "$d/trade.txt" 2>&1 || die "take-donation: $(tail -1 "$d/trade.txt")"
+"$NMEME_TX" pool-trade "${r%% *}" "$d/assembled.jam" --pool "$POOL_MAIN_NOTE" --token "$TOKEN_A" --fee-bps 109 $PP --side buy --placeholder "$BOB_LOCK" --dust "$DUST" --also-spend "$DON_NOTE" --also-take > "$d/trade.txt" 2>&1 || die "take-donation: $(tail -1 "$d/trade.txt")"
 resign alice "${r#* }" "$d/assembled.jam" "$d/trade.txt" "$d/final.jam"
 expect_rejected "$d/final.jam" take-donation "$(cut -d' ' -f1,2 <<<"$POOL_MAIN_NOTE")" "$(cut -d' ' -f1,2 <<<"$DON_NOTE")" "$cb"
 
@@ -320,7 +360,7 @@ st=$(pool_state "$TOKEN_A" 110); POOL_MAIN_NOTE=$(grep " $POOL_NOCK $POOL_TOKENS
 funding_alice "$S/funding-merge-ok.txt"; cb=$(coinbase_note "$S/funding-merge-ok.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
 r=$(user_tx alice "$S/merge-ok-user" "[$cb]" "$BOB" "$BUY_NICKS")
 d="$S/merge-ok"; mkdir -p "$d"
-"$NMEME_TX" pool-trade "${r%% *}" "$d/assembled.jam" --pool "$POOL_MAIN_NOTE" --token "$TOKEN_A" --fee-bps 110 --side buy --placeholder "$BOB_LOCK" --dust "$DUST" --also-spend "$DON_NOTE" > "$d/trade.txt" 2>&1 || die "merge-ok: $(tail -1 "$d/trade.txt")"
+"$NMEME_TX" pool-trade "${r%% *}" "$d/assembled.jam" --pool "$POOL_MAIN_NOTE" --token "$TOKEN_A" --fee-bps 110 $PP --side buy --placeholder "$BOB_LOCK" --dust "$DUST" --also-spend "$DON_NOTE" > "$d/trade.txt" 2>&1 || die "merge-ok: $(tail -1 "$d/trade.txt")"
 sed 's/^/  /' "$d/trade.txt" >&2
 resign alice "${r#* }" "$d/assembled.jam" "$d/trade.txt" "$d/final.jam"
 TRADE_FILE="$d/final.jam"; TRADE_TXID=$("$NMEME_INDEX" tx-id --tx "$TRADE_FILE")
@@ -339,8 +379,10 @@ for f in "$S"/funding-*.txt.lock; do [ -f "$f" ] && PROOFS="$PROOFS --funding $f
   --expect-total "$SUPPLY" > "$S/balances-B.txt" || die "rebuild B failed: $(tail -3 "$S/balances-B.txt")"
 grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances-B.txt" | cut -c1-160
 # shellcheck disable=SC2086
-"$NMEME_INDEX" pool-replay --token "$TOKEN_B" --fee-bps "$FEE_BPS" --open "$MAIN_OPEN_TXID:$MAIN_OPEN_FILE" $STEPS_B > "$S/replay-B.txt" || die "replay: $(tail -1 "$S/replay-B.txt")"
+"$NMEME_INDEX" pool-replay --token "$TOKEN_B" --fee-bps "$FEE_BPS" $PP --open "$MAIN_OPEN_TXID:$MAIN_OPEN_FILE" $STEPS_B > "$S/replay-B.txt" || die "replay: $(tail -1 "$S/replay-B.txt")"
 cat "$S/replay-B.txt"
 live=$(pool_state "$TOKEN_B" "$FEE_BPS" | cut -d' ' -f4,5); rep=$(awk -F'\t' '$1=="STATE"{print $2" "$3}' "$S/replay-B.txt")
 [ "$live" = "$rep" ] && echo "REPLAY-OK	live pool state $live equals the replayed state" || die "replay state $rep != live $live"
+lb=$(lore_balance); lp=$(awk -F'\t' '$1=="STATE"{for(i=1;i<=NF;i++) if ($i ~ /^lore_paid_total=/) print substr($i,17)}' "$S/replay-B.txt")
+echo "LORE-FINAL	balance=${lb%% *} nicks	notes=$(cut -d' ' -f2 <<<"$lb")	non_plain=${lb##* }	replay_total_main_pool=$lp	(attack pools paid nothing: no attack was mined)"
 echo "#### pool suite complete"

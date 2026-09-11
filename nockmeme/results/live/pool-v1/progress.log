@@ -1,0 +1,222 @@
+# funding: 328 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 2 claim
+  bob-wallet: 1/1 verified
+  ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	4498
+  QUOTE	sell	in=4497	out=337172	fee=44	spot_e9=79203999780	exec_e9=74977095841	impact_bps=563
+  POOL-BEFORE	7207960	91005
+  POOL-AFTER	6871788	95502
+  POOL-SPEND	to_user=337172+0t	successor=6870788+95502t	fee=0
+  PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	bDnj55PBX7qchbqtab3QQ9RiXo4AjS36iYnUU5Tn4sDnzjHZH417tQ
+  FEE	current=8192	required=7936	seed_words=43	witness_words=76
+  WROTE	/home/user/nmeme-run/pool/sell1/assembled.jam
+  NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	CfdTkkRiZwjbauqXrSewiCwJGxnzwnz6zJ8tHBvE7uB2nKmMM2s8Qng
+  NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	2P7L8csvK9gekS5ZmTMqU1kcnwczbx4PDVnEzjff2qswDE2vm6UXf16
+  sell1 confirmed at height 340
+# funding: 362 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 2 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8227	fee=6553	spot_e9=71954388389	exec_e9=79659657226	impact_bps=1070
+  POOL-BEFORE	6871788	95502
+  POOL-AFTER	7526148	87275
+  POOL-SPEND	to_user=1000+8227t	successor=6870788+87275t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	C8TYeD7ovHHPyXVxi57Kh77nvioZcpSqkhMK26ir2bDxmCG3x2s4MLJ
+  FEE	current=8192	required=8128	seed_words=43	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/buy2/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	6pShqtLmTBRrRrkLQosBsgfrhmeJNxdgpZdLK6T3ybtudbvFnhDbgni
+  NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	5NW4YsFEPjK9SCzF5N2uVVxnJnnGYmDSFYk1VU71ynqk8KiHiwK4Q8C
+FAIL: sign-hash failed for alice
+run-pool exit: 1
+#### run 19:23:40
+error: connect 127.0.0.1:5556: transport error
+FAIL: funding read at 4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax
+run-pool exit: 1
+#### run 19:25:17
+# funding: 367 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 2 claim
+# funding: 367 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 2 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8227	fee=6553	spot_e9=71954388389	exec_e9=79659657226	impact_bps=1070
+  POOL-BEFORE	6871788	95502
+  POOL-AFTER	7526148	87275
+  POOL-SPEND	to_user=1000+8227t	successor=6870788+87275t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	C8TYeD7ovHHPyXVxi57Kh77nvioZcpSqkhMK26ir2bDxmCG3x2s4MLJ
+  FEE	current=8192	required=8128	seed_words=43	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/buy2/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	6pShqtLmTBRrRrkLQosBsgfrhmeJNxdgpZdLK6T3ybtudbvFnhDbgni
+  NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	5NW4YsFEPjK9SCzF5N2uVVxnJnnGYmDSFYk1VU71ynqk8KiHiwK4Q8C
+/home/user/CoolCryptoGames/nockmeme/scripts/lib-tx.sh: line 69: CONFIRM_FILE: unbound variable
+run-pool exit: 1
+#### run 19:26:36
+# funding: 370 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 2 claim
+# funding: 370 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 2 claim
+FAIL: create-tx failed for alice (see /home/user/nmeme-run/pool/buy2-user/create.txt)
+FAIL: alice: input gate refused (see /home/user/nmeme-run/pool/buy2-user/check-inputs.txt)
+run-pool exit: 1
+#### run 19:28:28
+# funding: 371 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 3 claim
+# funding: 371 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 3 claim
+# funding: 0 coinbase (verified against block parents), 5 plain, 3 claim
+  bob-wallet: 1/1 verified
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=6916	fee=6553	spot_e9=86234866800	exec_e9=94759976865	impact_bps=988
+  POOL-BEFORE	7526148	87275
+  POOL-AFTER	8180508	80359
+  POOL-SPEND	to_user=1000+6916t	successor=7525148+80359t	fee=0
+  PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	6MqibENUBhHVj2vPRntNh4NnfgJPr1JJbBnmCXziFuLNo1UDdyZx6Jf
+  FEE	current=8192	required=7936	seed_words=43	witness_words=76
+  WROTE	/home/user/nmeme-run/pool/sim-bob/assembled.jam
+  NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	5pHCGzFTybSm47SgUKM6MpvSgVNriYETCcU4q5JiMAxZx1DASxBVQcJ
+  NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	4ahRrZNYnuCGg7HjHhRB1u24ZFEvqfCyQysitTaaVkYojwvXyXH5HVe
+  QUOTE	buy	in=655360	out=6916	fee=6553	spot_e9=86234866800	exec_e9=94759976865	impact_bps=988
+  POOL-BEFORE	7526148	87275
+  POOL-AFTER	8180508	80359
+  POOL-SPEND	to_user=1000+6916t	successor=7525148+80359t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	CnCZbgXqYsBjLWtYuRZ6wUiGFMYRZ66BixwKmS7RY6zAfz15AVY7Ye7
+  FEE	current=8192	required=8128	seed_words=43	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/sim-alice/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	9q8HQgYXbM7ygMDtg5oTRVGUpRhpPKeAREcNnYivbpgmPeTgkr6dAio
+  NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	4n7V4x1kED6NyHy7uEv5XAzMCc32jtioPUP125kF9UK71qHhGYiB6ph
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=5896	fee=6553	spot_e9=101799524633	exec_e9=111153324287	impact_bps=918
+  POOL-BEFORE	8180508	80359
+  POOL-AFTER	8834868	74463
+  POOL-SPEND	to_user=1000+5896t	successor=8179508+74463t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	8yDRxARpRf4WtJ2yebXZv4eG8r5NCmUa2BUrepyDrFryV6n41LfkDER
+  FEE	current=8192	required=8128	seed_words=43	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/requote/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	6qVM2TNPPVwqHXEN85mmFQtLVphDo5Bu3BiRuuqeDJatFrrJ6iMa4bg
+  NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	AnpuxA57rDsefpMvzgmb99TTVLzLcW5BqhRxR4AvfCcPaj1DtTZmrVn
+  requote mined (inputs spent) by height 404
+== pool-withdraw: open pool token=37mTNE4WURdES2V3NpLusdPARCrzivgBG2wU6LkNQP5XqttxsAi8KGU fee=101 nock=6553600 tokens=100000 from [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4b7s3bpxKamgSqiAhxAhmCebdiSAtbq7A6ZjXEknh9BXWcdQBzFSjoP] (999900 held) -> lock 2kKMbmyxt8cQZFJ2da1R5tb9g9zfMvNTSSRycYgRrGctpjipMZCRHkr ==
+  pool-withdraw-wallet: 1/1 verified
+  pool-withdraw-resigned: 1/1 verified
+  pool-withdraw mined (inputs spent) by height 418
+# funding: 410 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 4 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8994	fee=6619	spot_e9=65536000000	exec_e9=72866355348	impact_bps=1118
+  POOL-BEFORE	6553600	100000
+  POOL-AFTER	7207960	91006
+  ATTACK	withdraw	100000
+  POOL-SPEND	to_user=101000+8994t	successor=6452600+91006t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	8fmxghp6S5vbwV4M6jRFUqeXzG8QuisxqTv5EtXyKKBCKp43KAHma72
+  FEE	current=8192	required=8000	seed_words=42	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/withdraw/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	9w7KVjbgBe9ERgMT3sKP3WNRLenP1MkMtPJESBe6fRYX9GmofSe2ocF
+  NEWSIGHASH	7A7B2JffgnYr7c8x37tzJpgzAn3hJzZM6bs9pNVAmS4LupERETJRoAS	ATrM5sjvnhHZevefMMRERFH1NXuy9Jx1B54RqP3v7nMATZJdkumJqrn
+== attack: withdraw (txid 2S8xXveJfribSzSueUN75wtw3aLufsrUqYidHEh1h8c7PmrEvNRrFPQ) ==
+  node: TXID	2S8xXveJfribSzSueUN75wtw3aLufsrUqYidHEh1h8c7PmrEvNRrFPQ
+  node: SEND	acknowledged
+  node: MEMPOOL	not admitted	not in the node's accepted set
+== pool-over-payout: open pool token=37mTNE4WURdES2V3NpLusdPARCrzivgBG2wU6LkNQP5XqttxsAi8KGU fee=102 nock=6553600 tokens=100000 from [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 64MSmEFq7cLYfDjVTS7WVaFJHg7xxorj3iS6xbf9HRmhrj64s5zEAfp] (899900 held) -> lock yPVn3EqUG8v5w5c4xWPdCdg22VpqWcajpmMaHpWm75KkWAFjYpKeak ==
+  pool-over-payout-wallet: 1/1 verified
+  pool-over-payout-resigned: 1/1 verified
+  pool-over-payout mined (inputs spent) by height 440
+# funding: 432 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 4 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8994	fee=6684	spot_e9=65536000000	exec_e9=72866355348	impact_bps=1118
+  POOL-BEFORE	6553600	100000
+  POOL-AFTER	7207960	91006
+  ATTACK	payout	8995
+  POOL-SPEND	to_user=1000+8995t	successor=6552600+91005t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	2SnPqBq1AzoBqSQcGHpejkS9rF2n4wznWxctYkptvKQ7E29SPbUccLj
+  FEE	current=8192	required=8000	seed_words=42	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/over-payout/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	2C8kUZVCHLiXbbHXuwASbhaAnC9fKrHcPbfXZCagAun6Xhp8Df4XEXB
+  NEWSIGHASH	3nNaq9vF2Gu3YHCn74QshY6EDjF7814qoDnrrwfLvWgzXnSzLU55fSx	AgcjVHJasLuzfyjrynir4MsceaGjSmirsMtqxgQVF9zwRm4ye9Q4LcU
+== attack: over-payout (txid 4rhM57qHKmc9ynfacKEEnhjxpMTVF3nu1N7RqatabXu5RPPNbimxPrD) ==
+  node: TXID	4rhM57qHKmc9ynfacKEEnhjxpMTVF3nu1N7RqatabXu5RPPNbimxPrD
+  node: SEND	acknowledged
+  node: MEMPOOL	not admitted	not in the node's accepted set
+== pool-pool-fee: open pool token=37mTNE4WURdES2V3NpLusdPARCrzivgBG2wU6LkNQP5XqttxsAi8KGU fee=103 nock=6553600 tokens=100000 from [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8HTYpKrpzskkuz8P5iWVU6jX5NvKeBfXP5ovojZieDvFS5ienPNwBfv] (799900 held) -> lock 5msUsB2AfkEK8JtLqTsV5XQPKUkuwp6vGjCXyCuxeRMRyzybj9sJyEH ==
+  pool-pool-fee-wallet: 1/1 verified
+  pool-pool-fee-resigned: 1/1 verified
+  pool-pool-fee mined (inputs spent) by height 462
+# funding: 454 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 4 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8993	fee=6750	spot_e9=65536000000	exec_e9=72874457911	impact_bps=1119
+  POOL-BEFORE	6553600	100000
+  POOL-AFTER	7207960	91007
+  ATTACK	pool-fee	1
+  POOL-SPEND	to_user=1000+8993t	successor=6552599+91007t	fee=1
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	AgtWpUqj3a5pL7hQ5Cqrezog1v4rFAdb13TQi2rZb32H98TCRZoAoYN
+  FEE	current=8193	required=8000	seed_words=42	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/pool-fee/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	AEZ2s1YhxK4fixTwrmCRgLCv6DHJARQct2Dkxth2MgTnPkh9ZMaELiG
+  NEWSIGHASH	9Ymo6jqxcJqff2z73SdM3Jv7X7dYzAhDVECQ6skB4DvXf5io3yRQ6pp	28wCdpkb9jXGeQ3Sivk9Pbquo7oiDavEiboQJ86dozf2GMf3e7YGSm4
+== attack: pool-fee (txid 3RLrY5CTc34s1gqfs3F2HFXV2q6SvJS9enDtGMu5t5jFnc53Zg5jriZ) ==
+  node: TXID	3RLrY5CTc34s1gqfs3F2HFXV2q6SvJS9enDtGMu5t5jFnc53Zg5jriZ
+  node: SEND	acknowledged
+  node: MEMPOOL	not admitted	not in the node's accepted set
+== pool-third-lock: open pool token=37mTNE4WURdES2V3NpLusdPARCrzivgBG2wU6LkNQP5XqttxsAi8KGU fee=104 nock=6553600 tokens=100000 from [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f CENjyMgf1Z8JPDSxtSQwF5yF4DCFgYRWty9h4v2Nro9kcs4EpUnyjkt] (699900 held) -> lock 2yXRqdHhQZgEH8RsowhsFBXvovfFtLP8dnWW3swDU9nGvif9ewCrzMx ==
+  pool-third-lock-wallet: 1/1 verified
+  pool-third-lock-resigned: 1/1 verified
+  pool-third-lock mined (inputs spent) by height 484
+# funding: 476 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 4 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8992	fee=6815	spot_e9=65536000000	exec_e9=72882562277	impact_bps=1120
+  POOL-BEFORE	6553600	100000
+  POOL-AFTER	7207960	91008
+  ATTACK	extra-seed	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	1000
+  POOL-SPEND	to_user=1000+8992t	successor=6551600+91008t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	8KJNf57SQKCwPS98rbUkoS8aVeu2V3LbWXdXm9j5xXRrcBnZ1MUt6EC
+  FEE	current=8192	required=8000	seed_words=42	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/third-lock/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	VGb4C1kUQpsttAqiASYQvm4CyKyEx5N3SZ9qsFcP9J9FgFyC8wW2dq
+  NEWSIGHASH	7hfxe5SNWT7VJGhsQxbMqRUGFxtX6H7gYcjYPBjMaAUxkBx1Hv3xWkg	4Z1mRuAo6FmGJZiU6SkrtCRRHaJ7jAPuE3bjafNidCwnFK3CHBakbAZ
+== attack: third-lock (txid oWFqfAEU93Efwby5LqCAyim1v1nUBmr3qgXGPqkVzuFVeK2TNCUHWH) ==
+  node: TXID	oWFqfAEU93Efwby5LqCAyim1v1nUBmr3qgXGPqkVzuFVeK2TNCUHWH
+  node: SEND	acknowledged
+  node: MEMPOOL	not admitted	not in the node's accepted set
+== pool-drop-claim: open pool token=37mTNE4WURdES2V3NpLusdPARCrzivgBG2wU6LkNQP5XqttxsAi8KGU fee=105 nock=6553600 tokens=100000 from [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9gczsSoyMkgRyHMB4uJaCKTU1HKhsgpnKdy4pGJtzwkFf4VDxMgr16D] (599900 held) -> lock mFWNqoZRHnN4JPaQTtbpH43Zzsm1PiGASpSPiCduYCT4qjqXa6BfFW ==
+  pool-drop-claim-wallet: 1/1 verified
+  pool-drop-claim-resigned: 1/1 verified
+  pool-drop-claim mined (inputs spent) by height 500
+# funding: 492 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 4 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8991	fee=6881	spot_e9=65536000000	exec_e9=72890668446	impact_bps=1122
+  POOL-BEFORE	6553600	100000
+  POOL-AFTER	7207960	91009
+  ATTACK	drop-claim
+  POOL-SPEND	to_user=1000+8991t	successor=6552600+91009t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	A7sUzwBPiSSRrM8t4AxbTMiDs8z62aRktxzFYAYMLBQwovs3EmG1SZu
+  FEE	current=8192	required=6976	seed_words=34	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/drop-claim/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	DRo2c4ieASzJsqQsYiJwVbpWpBaYgJmiLKwjRwaHZGrehwVo7iGQgeH
+  NEWSIGHASH	BDB71Qp5jVNTBEM1kxzweNxtFYvKPzt3xiGEJahuQTKCFyo2pyx5x8j	CCzr7G4jX1qcehS5FwaT15birKGt7vNrPJcVXYQc9Yaf8QKf3SHFvf8
+== attack: drop-claim (txid 5ohrhv3UeyC4zDDeSy7sU99qK73ep94bkZCR16CxVNaE7oXBtBoQV6c) ==
+  node: TXID	5ohrhv3UeyC4zDDeSy7sU99qK73ep94bkZCR16CxVNaE7oXBtBoQV6c
+  node: SEND	acknowledged
+  node: MEMPOOL	not admitted	not in the node's accepted set
+== pool-inflate-claim: open pool token=37mTNE4WURdES2V3NpLusdPARCrzivgBG2wU6LkNQP5XqttxsAi8KGU fee=106 nock=6553600 tokens=100000 from [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8iit5BThfcyvBtRWBYmRC5RpEjEhhe988QsuwPWqC4kd8S3bNhdzgc8] (499900 held) -> lock 46VJSwhPKm9HK9NPRejuYVwmyQajBRsnXx7YbhkJjKUCA5dwLv7aTa2 ==
+  pool-inflate-claim-wallet: 1/1 verified
+  pool-inflate-claim-resigned: 1/1 verified
+  pool-inflate-claim mined (inputs spent) by height 524
+# funding: 516 coinbase (verified against block parents), 0 plain, 0 claim
+# funding: 0 coinbase (verified against block parents), 4 plain, 4 claim
+  alice-wallet: 1/1 verified
+  QUOTE	buy	in=655360	out=8990	fee=6946	spot_e9=65536000000	exec_e9=72898776418	impact_bps=1123
+  POOL-BEFORE	6553600	100000
+  POOL-AFTER	7207960	91010
+  ATTACK	inflate-claim	1000000
+  POOL-SPEND	to_user=1000+8990t	successor=6552600+91010t	fee=0
+  PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	CGMArmN5X99YjW2J6yjHHaLcJFvDs9ZLH8b4nJu4H57GgM9VptbNQjc
+  FEE	current=8192	required=8000	seed_words=42	witness_words=82
+  WROTE	/home/user/nmeme-run/pool/inflate-claim/assembled.jam
+  NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	5poKtora9GwDvfzXTgRL6hwgcjZZiXwUsqEEJAFLHN2gKWz6hxNQ9GB
+  NEWSIGHASH	2hGeo8KLEuu524wEZDPFttJBC2ujGyyEUegfXFKnkGcfokYFg3SxRsF	B5eKodevd6xNzDevX192JCAH1XjAQ1xkbm6hf3PcvMfgShtbRW3z87Q
+== attack: inflate-claim (txid 8jz9dVk89suU2EfUD2FT6bFLuK3d9Qqs69ohTQS6KVVHGRzwJap8Fgr) ==
+  node: TXID	8jz9dVk89suU2EfUD2FT6bFLuK3d9Qqs69ohTQS6KVVHGRzwJap8Fgr
+  node: SEND	acknowledged
+  node: MEMPOOL	admitted	
+FAIL: inflate-claim: input [2hGeo8KLEuu524wEZDPFttJBC2ujGyyEUegfXFKnkGcfokYFg3SxRsF 2eLijbkQRqpMcC3hfzJJA5nbqYJDfbPo8HPHvBAz85AeEGUPBovpA8E] is no longer unspent after the attack (was it MINED?)
+run-pool exit: 1

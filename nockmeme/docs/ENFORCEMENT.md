@@ -78,13 +78,15 @@ transaction does with the reserves.
 
 ## 3. The primitive: `%amm`
 
-`[%amm tid fee]`, where `tid` is the token's transfer-claim id under the
-note-data token standard (`docs/SPEC.md`) and `fee` is in basis points.
-A pool for token `T` at fee `f` is any note under the lock whose only
-spend-condition is `~[[%amm T f]]`. The lock root is a pure function of
-`(T, f)`, so anyone recomputes the pool's address and refuses one that
-lives anywhere else — in particular one whose lock tree has a second
-branch with a creator's key.
+`[%amm tid fee lore lore-lock]`, where `tid` is the token's transfer-claim
+id under the note-data token standard (`docs/SPEC.md`), `fee` is the
+pool's share in basis points, `lore` the treasury's share in basis points
+and `lore-lock` the treasury's lock root (the Lore Wallet, `docs/FEES.md`).
+A pool for token `T` is any note under the lock whose only spend-condition
+is `~[[%amm T fee lore lore-lock]]`. The lock root is a pure function of
+those four values, so anyone recomputes the pool's address and refuses one
+that lives anywhere else — in particular one whose lock tree has a second
+branch with a creator's key, or one that names a different treasury.
 
 The spend of such a note is valid if and only if, writing `X`, `Y` for the
 NOCK assets and token claims summed over **every** input of the
@@ -100,10 +102,16 @@ x1 > 0,  y1 > 0
 and, in the same transaction:
 
 - the pool spend's miner fee is zero (reserves cannot leave as fees);
-- every seed of the pool spend pays either the pool lock or a lock that
-  another spend of the transaction also pays (a counterparty shows itself
-  by paying its own change; nothing leaves the pool towards a lock no
-  party to the transaction pays);
+- every seed of the pool spend pays the pool lock, the treasury lock, or a
+  lock that another spend of the transaction also pays (a counterparty
+  shows itself by paying its own change; nothing leaves the pool towards a
+  lock no party to the transaction pays);
+- the output at the treasury lock holds at least `⌊lore · N / B⌋` nicks,
+  where `N` is the NOCK paid into the pool lock by the other spends plus
+  the NOCK the pool spends pay to anyone but the pool and the treasury —
+  every nick that crosses the pool's boundary other than the treasury
+  payment itself — and that output carries no `meme` entry: the treasury
+  is paid in NOCK and nothing else;
 - every `meme` entry on every input and every output is a transfer claim
   of `T` (no genesis claims, no other tokens: the token standard would
   otherwise reject the whole transfer while consensus had already moved
@@ -139,9 +147,10 @@ signing.
 
 | file | change |
 |---|---|
-| `hoon/common/tx-engine-1.hoon` | `[%amm amm]` added to `lock-primitive` (`based`, `hashable` arms); a `++  amm` core with `based`, `hashable` (`[hash+tid leaf+fee]`), `claim`, `foreign` and `check`; `check-context` gains a last field `amm=(unit [note sps balance page])` that `validate-with-context` fills; `check:check-context` dispatches `%amm` to `check:amm` (`check-multisig-lock` refuses it); `build-outputs` is lifted out of `new:tx` so the covenant reads the outputs exactly as consensus builds them. |
+| `hoon/common/tx-engine-1.hoon` | `[%amm amm]` added to `lock-primitive` (`based`, `hashable` arms); a `++  amm` core with `based`, `hashable` (`[hash+tid leaf+fee leaf+lore hash+lore-lock]`), `claim`, `foreign` and `check`; `check-context` gains a last field `amm=(unit [note sps balance page])` that `validate-with-context` fills; `check:check-context` dispatches `%amm` to `check:amm` (`check-multisig-lock` refuses it); `build-outputs` is lifted out of `new:tx` so the covenant reads the outputs exactly as consensus builds them. |
 | `hoon/apps/wallet/lib/utils.hoon` | the wallet's lock display gains an `%amm` arm (an exhaustive switch; the wallet kernel would not compile without it). |
-| `crates/nockchain-types/src/tx_engine/v1/tx.rs` | `LockPrimitive::Amm(Amm { token_id, fee_bps })` with noun encode/decode and the same `hashable` digest, so tooling computes the same lock root as the chain. |
+| `crates/nockchain-types/src/tx_engine/v1/tx.rs` | `LockPrimitive::Amm(Amm { token_id, fee_bps, lore_bps, lore_lock })` with noun encode/decode and the same `hashable` digest, so tooling computes the same lock root as the chain. |
+| `crates/wallet-tx-builder/src/word_count.rs` | the transaction-size estimator learns the primitive's size (an exhaustive match). |
 | `crates/nockapp-grpc-proto` | `AmmLock` in the `LockPrimitive` oneof and its conversions, so a transaction carrying the witness can be submitted over gRPC. |
 
 For a real deployment this is a hard fork: a node without the change
@@ -158,8 +167,8 @@ genesis. It needs the maintainers' review, Hoon unit tests in
 |---|---|
 | dedicated NOCK/token pool per coin | one lock per `(token, fee)`; the reserves are one note |
 | automatic prices, quotes with fee and impact | `nmeme-core::pool::quote_buy/quote_sell`: the exact fill the covenant admits, the fee share, spot and execution price, impact in bps |
-| 1% fee, chosen through testing | `fee` is a lock parameter; a different fee is a different pool. The suite runs 100 bps on the main pool |
-| every fee stays in the pool | the inequality; there is no other output the rule allows the fee to reach |
+| 1–2% fee, most to the pool, a smaller share to the treasury | `fee` and `lore` are lock parameters; `docs/FEES.md` proposes 100 + 50 bps. The suite runs those on the main pool |
+| the pool's share stays in the pool; the treasury's share arrives in NOCK | the inequality keeps the pool's share in the reserves; the treasury rule requires the payment in the same transaction, in NOCK only, at the lock the covenant names |
 | no admin withdrawal, creator cannot drain, change rules or unlock | the lock has no key and no other branch; the rule is in consensus; the fee is in the lock root |
 | defined initial reserves | the opening transaction: the creator's NOCK and tokens paid to the pool lock, both required (`x1 > 0`, `y1 > 0` on every successor, and a pool with a zero reserve admits every spend, so a pool must be born with both) |
 | sell payouts backed by real NOCK | reserves are the note's assets; a sell pays out of them and the inequality bounds it. No virtual reserves: nothing is quoted that the note does not hold |

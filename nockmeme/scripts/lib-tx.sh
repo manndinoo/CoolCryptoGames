@@ -5,8 +5,26 @@
 log() { echo "$*" >&2; }
 die() { echo "FAIL: $*" >&2; exit 1; }
 strip() { sed 's/\x1b\[[0-9;]*m//g'; }
+# The wallet is a nockapp with a persistent arena that grows by hundreds of
+# megabytes on every call (seen live: 4.8 GB after one suite, the disk full
+# twice). Before a call, an arena past WALLET_ARENA_MB is thrown away and the
+# wallet rebuilt from its exported keys; its transaction files under txs/
+# are outside the arena and survive.
+wallet_fresh() {
+  local who="$1" keys="$RUN/keys/$who.export"
+  [ -s "$keys" ] || keys="$W/$who/keys.export"
+  [ -s "$keys" ] || die "no exported keys for $who"
+  rm -rf "$W/$who/wallet"
+  ( cd "$W/$who" && NOCKAPP_HOME="$W/$who" RUST_LOG=error "$WALLET" --pma-initial-size 256MiB \
+      --client private --private-grpc-server-port "$PORT" --fakenet import-keys --file "$keys" >/dev/null 2>&1 ) \
+    || die "import-keys failed for $who"
+}
 wallet() {
   local who="$1"; shift
+  if [ -d "$W/$who/wallet" ]; then
+    local mb; mb=$(du -sm "$W/$who/wallet" 2>/dev/null | cut -f1)
+    if [ "${mb:-0}" -gt "${WALLET_ARENA_MB:-700}" ]; then echo "  (rebuilding $who's wallet arena: ${mb} MB)" >&2; wallet_fresh "$who"; fi
+  fi
   ( cd "$W/$who" && NOCKAPP_HOME="$W/$who" RUST_LOG=error "$WALLET" \
       --pma-initial-size 256MiB \
       --client private --private-grpc-server-port "$PORT" --fakenet "$@" )

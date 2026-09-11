@@ -1,0 +1,10 @@
+QUOTE	buy	in=655360	out=8991	fee=6881	spot_e9=65536000000	exec_e9=72890668446	impact_bps=1122
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7207960	91009
+ATTACK	drop-claim
+POOL-SPEND	to_user=1000+8991t	successor=6552600+91009t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	A7sUzwBPiSSRrM8t4AxbTMiDs8z62aRktxzFYAYMLBQwovs3EmG1SZu
+FEE	current=8192	required=6976	seed_words=34	witness_words=82
+WROTE	/home/user/nmeme-run/pool/drop-claim/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	DRo2c4ieASzJsqQsYiJwVbpWpBaYgJmiLKwjRwaHZGrehwVo7iGQgeH
+NEWSIGHASH	BDB71Qp5jVNTBEM1kxzweNxtFYvKPzt3xiGEJahuQTKCFyo2pyx5x8j	CCzr7G4jX1qcehS5FwaT15birKGt7vNrPJcVXYQc9Yaf8QKf3SHFvf8

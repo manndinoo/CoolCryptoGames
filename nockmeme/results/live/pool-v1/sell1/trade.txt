@@ -1,0 +1,10 @@
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	4498
+QUOTE	sell	in=4497	out=337172	fee=44	spot_e9=79203999780	exec_e9=74977095841	impact_bps=563
+POOL-BEFORE	7207960	91005
+POOL-AFTER	6871788	95502
+POOL-SPEND	to_user=337172+0t	successor=6870788+95502t	fee=0
+PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	bDnj55PBX7qchbqtab3QQ9RiXo4AjS36iYnUU5Tn4sDnzjHZH417tQ
+FEE	current=8192	required=7936	seed_words=43	witness_words=76
+WROTE	/home/user/nmeme-run/pool/sell1/assembled.jam
+NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	CfdTkkRiZwjbauqXrSewiCwJGxnzwnz6zJ8tHBvE7uB2nKmMM2s8Qng
+NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	2P7L8csvK9gekS5ZmTMqU1kcnwczbx4PDVnEzjff2qswDE2vm6UXf16

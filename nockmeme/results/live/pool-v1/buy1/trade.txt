@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360	out=8995	fee=6553	spot_e9=65536000000	exec_e9=72858254585	impact_bps=1117
+POOL-BEFORE	6553600	100000
+POOL-AFTER	7207960	91005
+POOL-SPEND	to_user=1000+8995t	successor=6552600+91005t	fee=0
+PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	AKqvExK1PZzRUu6yU7kU4QTr35WauiKRNZTmui1JCGD6kBEJYffSCnz
+FEE	current=8192	required=7936	seed_words=43	witness_words=76
+WROTE	/home/user/nmeme-run/pool/buy1/assembled.jam
+NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	4cuJg5Dr4MZHruuZMPSaQdeGGxodtnbsAgP1z1RXBhn8NoSyJt2bteZ
+NEWSIGHASH	uRTwQJkEWNE2EweAaExDDkekKvhnprJfXEE5ig5DrdeSiKGyACm41Y	23hHy89xxKwDiD3j9Ged7SgiRAiS8tArzuSut9uzThEo7Rfhr7vdqpH

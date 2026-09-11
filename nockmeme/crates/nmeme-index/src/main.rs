@@ -90,10 +90,11 @@ const USAGE: &str = "usage:
                        --funding <funding.txt> [--funding ...] (provenance of inputs)
                        --lock <lock-root-b58> [--lock ...]
                        [--expect <lock-root-b58>=<amount>]... [--expect-total <n>]
-  nmeme-index pool     --addr <host:port> --token <token-b58> --fee-bps <n>
+  nmeme-index pool     --addr <host:port> <pool params>
                        (POOL <first> <last> <origin> <nock> <tokens> for every note at the canonical pool lock)
-  nmeme-index pool-replay --token <token-b58> --fee-bps <n> --open <txid>:<tx.jam> --step <txid>:<tx.jam>...
-                       (TRADE lines with deltas, fee retained and the constant product; STATE at the end)";
+  nmeme-index pool-replay <pool params> --open <txid>:<tx.jam> --step <txid>:<tx.jam>...
+                       (TRADE and LORE lines per step: deltas, fee retained, the treasury's due and paid; STATE at the end)
+  pool params: --token <token-b58> --fee-bps <n> --lore-bps <n> --lore-lock <lock-root>";
 
 fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter()
@@ -852,7 +853,7 @@ fn cmd_pool(args: &[String]) -> Result<ExitCode, String> {
             .await
             .map_err(|e| format!("connect {addr}: {e}"))?;
         let snapshot = read_snapshot_firsts(&mut client, &[first.clone()]).await?;
-        println!("LOCK\t{}\tFIRST\t{}\tFEE-BPS\t{}\tHEIGHT\t{}", root.to_base58(), first.to_base58(), params.fee_bps, snapshot.height);
+        println!("LOCK\t{}\tFIRST\t{}\tFEE-BPS\t{}\tLORE-BPS\t{}\tLORE-FIRST\t{}\tHEIGHT\t{}", root.to_base58(), first.to_base58(), params.fee_bps, params.lore_bps, params.lore_first_name().to_base58(), snapshot.height);
         let mut n = 0;
         for row in &snapshot.notes {
             let tokens = pool_tokens(&params, &row.data);
@@ -879,9 +880,13 @@ fn cmd_pool(args: &[String]) -> Result<ExitCode, String> {
 fn index_pool_params(args: &[String]) -> Result<nmeme_core::PoolParams, String> {
     let token = flag(args, "--token").ok_or("missing --token")?;
     let fee = flag(args, "--fee-bps").ok_or("missing --fee-bps")?;
+    let lore = flag(args, "--lore-bps").ok_or("missing --lore-bps")?;
+    let lore_lock = flag(args, "--lore-lock").ok_or("missing --lore-lock")?;
     nmeme_core::PoolParams::new(
         TokenId(Hash::from_base58(token).map_err(|e| format!("token: {e}"))?),
         fee.parse::<u64>().map_err(|e| format!("fee-bps: {e}"))?,
+        lore.parse::<u64>().map_err(|e| format!("lore-bps: {e}"))?,
+        Hash::from_base58(lore_lock).map_err(|e| format!("lore-lock: {e}"))?,
     )
     .map_err(|e| e.to_string())
 }
@@ -925,6 +930,8 @@ fn cmd_pool_replay(args: &[String]) -> Result<ExitCode, String> {
     let mut state = nmeme_core::Reserves::new(x0, y0);
     let mut fees_nock: u64 = 0;
     let mut fees_tokens: u64 = 0;
+    let mut lore_total: u64 = 0;
+    let lore_first = params.lore_first_name();
     for step in flags(args, "--step") {
         let (id, path) = step.split_once(':').ok_or("--step expects <txid>:<file>")?;
         let spends = load_spends(path)?;
@@ -947,6 +954,15 @@ fn cmd_pool_replay(args: &[String]) -> Result<ExitCode, String> {
         let (x1, y1) = seeds_at_pool(&params, &root, &spends)?;
         let after = nmeme_core::Reserves::new(x1, y1);
         let ok = nmeme_core::pool::invariant_holds(state, after, params.fee_bps);
+        // the treasury: what crossed the boundary, what it was owed, what it got
+        let (gin, gout, lore_got, lore_tokens) = boundary(&params, &first, &lore_first, &spends);
+        let lore_due = nmeme_core::pool::lore_due(&params, gin, gout);
+        let lore_ok = lore_got >= lore_due && lore_tokens == 0;
+        lore_total += lore_got;
+        println!(
+            "LORE\t{id}\tnock_in={gin}\tnock_out={gout}\tdue_floor={lore_due}\tpaid={lore_got}\ttokens_to_lore={lore_tokens}\t{}",
+            if lore_ok { "ok" } else { "VIOLATED" }
+        );
         let (side, dn, dt) = if x1 >= state.nock {
             ("buy", x1 - state.nock, state.tokens.saturating_sub(y1))
         } else {
@@ -968,14 +984,48 @@ fn cmd_pool_replay(args: &[String]) -> Result<ExitCode, String> {
             if side == "buy" { "-" } else { "+" },
             if ok { "holds" } else { "VIOLATED" }
         );
-        if !ok {
-            return Err(format!("{id}: the successor violates the covenant; the chain would not have mined it"));
+        if !ok || !lore_ok {
+            return Err(format!("{id}: the transaction violates the covenant; the chain would not have mined it"));
         }
         state = after;
     }
     let (k_hi, k_lo) = state.product();
-    println!("STATE\t{}\t{}\tK\t{k_hi}:{k_lo}\tfees_retained_nock={fees_nock}\tfees_retained_tokens={fees_tokens}", state.nock, state.tokens);
+    println!("STATE\t{}\t{}\tK\t{k_hi}:{k_lo}\tfees_retained_nock={fees_nock}\tfees_retained_tokens={fees_tokens}\tlore_paid_total={lore_total}", state.nock, state.tokens);
     Ok(ExitCode::SUCCESS)
+}
+
+/// NOCK crossing the pool boundary in a transaction, the way the covenant
+/// counts it: paid to the pool lock by spends of other notes; paid by
+/// spends of pool notes to anyone but the pool and the treasury; and what
+/// the treasury's output holds (nicks, and any tokens it should not).
+fn boundary(params: &nmeme_core::PoolParams, first: &Hash, lore_first: &Hash, spends: &nockchain_types::tx_engine::v1::tx::Spends) -> (u64, u64, u64, u64) {
+    let (mut gin, mut gout, mut lore_got, mut lore_tokens) = (0u64, 0u64, 0u64, 0u64);
+    for (name, sp) in &spends.0 {
+        let Spend::Witness(s1) = sp else { continue };
+        let from_pool = &name.first == first;
+        for seed in &s1.seeds.0 {
+            let f = nmeme_index::first_name_of(&seed.lock_root);
+            if !from_pool && &f == first {
+                gin += seed.gift.0 as u64;
+            }
+            if from_pool && &f != first && &f != lore_first {
+                gout += seed.gift.0 as u64;
+            }
+            if &f == lore_first {
+                lore_got += seed.gift.0 as u64;
+                for entry in seed.note_data.iter() {
+                    if entry.key == nmeme_core::claim::NOTE_DATA_KEY {
+                        if let Ok(Claim::Transfer { token, amount }) = nmeme_index::decode_claim(&entry.value.raw_blob()) {
+                            if token == params.token {
+                                lore_tokens += amount;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    (gin, gout, lore_got, lore_tokens)
 }
 
 fn load_spends(path: &str) -> Result<nockchain_types::tx_engine::v1::tx::Spends, String> {

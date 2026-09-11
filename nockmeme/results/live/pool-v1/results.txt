@@ -1,0 +1,80 @@
+== stage 0: miner ==
+miner pid=7101
+== stage 1: fund bob with 0 plain notes ==
+== stage 2: the main pool (token B) ==
+RESUMED	main pool opened by 9kwg42Lt4cya5pSUSKJpsBBbHDfvd7qA3KRhgwNPP93HpHJkNFFde3t; steps so far: --step DSkicJDRjMGgQwKXTHi377s3xG9MwsdLWCvGtBHW9eV7NZyGgd7CFBZ:/home/user/nmeme-run/pool/buy1/final.jam
+LOCK	main	ANAdVyFTpcK5v9aSwmrJ7csAcjD8iaJxfJ6BXA1EFaw2J6i4WUm3Pn4	spend-condition=[%amm 9vBeiH85xLu1BZF7dNVybsYwPggTH8LqFPbkNAVGzqy4qxT5J6XJMrE 100]	no key
+== stage 3: honest trades ==
+RESUMED	buy1 already mined
+ROUNDING	a trade the covenant admits no output for is refused by the quote: error: quote: trade too small: the covenant admits no output for it
+QUOTE	sell1	sell in=4497 out=337172 fee=44 spot_e9=79203999780 exec_e9=74977095841 impact_bps=563	pool_before=7207960/91005
+MINED	sell1	txid=2S9ZcfhsgB65aqi81LYqL8LmfqWExJwoDaJDsT8SPxoC93UwHTM88Gx	height=340	pool_after=6871788/95502	to_user=337172+0t successor=6870788+95502t fee=0
+#### run 19:23:40
+== stage 0: miner ==
+miner pid=7718
+== stage 1: fund bob with 0 plain notes ==
+#### run 19:25:17
+== stage 0: miner ==
+miner pid=7916
+== stage 1: fund bob with 0 plain notes ==
+== stage 2: the main pool (token B) ==
+RESUMED	main pool opened by 9kwg42Lt4cya5pSUSKJpsBBbHDfvd7qA3KRhgwNPP93HpHJkNFFde3t; steps so far: --step DSkicJDRjMGgQwKXTHi377s3xG9MwsdLWCvGtBHW9eV7NZyGgd7CFBZ:/home/user/nmeme-run/pool/buy1/final.jam
+LOCK	main	ANAdVyFTpcK5v9aSwmrJ7csAcjD8iaJxfJ6BXA1EFaw2J6i4WUm3Pn4	spend-condition=[%amm 9vBeiH85xLu1BZF7dNVybsYwPggTH8LqFPbkNAVGzqy4qxT5J6XJMrE 100]	no key
+== stage 3: honest trades ==
+RESUMED	buy1 already mined
+ROUNDING	a trade the covenant admits no output for is refused by the quote: error: quote: trade too small: the covenant admits no output for it
+RESUMED	sell1 already mined
+QUOTE	buy2	buy in=655360 out=8227 fee=6553 spot_e9=71954388389 exec_e9=79659657226 impact_bps=1070	pool_before=6871788/95502
+#### run 19:26:36
+== stage 0: miner ==
+miner pid=8240
+== stage 1: fund bob with 0 plain notes ==
+== stage 2: the main pool (token B) ==
+RESUMED	main pool opened by 9kwg42Lt4cya5pSUSKJpsBBbHDfvd7qA3KRhgwNPP93HpHJkNFFde3t; steps so far: --step DSkicJDRjMGgQwKXTHi377s3xG9MwsdLWCvGtBHW9eV7NZyGgd7CFBZ:/home/user/nmeme-run/pool/buy1/final.jam
+LOCK	main	ANAdVyFTpcK5v9aSwmrJ7csAcjD8iaJxfJ6BXA1EFaw2J6i4WUm3Pn4	spend-condition=[%amm 9vBeiH85xLu1BZF7dNVybsYwPggTH8LqFPbkNAVGzqy4qxT5J6XJMrE 100]	no key
+== stage 3: honest trades ==
+RESUMED	buy1 already mined
+ROUNDING	a trade the covenant admits no output for is refused by the quote: error: quote: trade too small: the covenant admits no output for it
+RESUMED	sell1 already mined
+#### run 19:28:28
+== stage 0: miner ==
+miner pid=8560
+== stage 1: fund bob with 0 plain notes ==
+== stage 2: the main pool (token B) ==
+RESUMED	main pool opened by 9kwg42Lt4cya5pSUSKJpsBBbHDfvd7qA3KRhgwNPP93HpHJkNFFde3t; steps so far: --step DSkicJDRjMGgQwKXTHi377s3xG9MwsdLWCvGtBHW9eV7NZyGgd7CFBZ:/home/user/nmeme-run/pool/buy1/final.jam
+LOCK	main	ANAdVyFTpcK5v9aSwmrJ7csAcjD8iaJxfJ6BXA1EFaw2J6i4WUm3Pn4	spend-condition=[%amm 9vBeiH85xLu1BZF7dNVybsYwPggTH8LqFPbkNAVGzqy4qxT5J6XJMrE 100]	no key
+== stage 3: honest trades ==
+RESUMED	buy1 already mined
+ROUNDING	a trade the covenant admits no output for is refused by the quote: error: quote: trade too small: the covenant admits no output for it
+RESUMED	sell1 already mined
+RESUMED	buy2 already mined
+== stage 4: simultaneous trades against one pool note ==
+QUOTE	sim-bob	buy in=655360 out=6916 fee=6553 spot_e9=86234866800 exec_e9=94759976865 impact_bps=988	pool_before=7526148/87275
+QUOTE	sim-alice	buy in=655360 out=6916 fee=6553 spot_e9=86234866800 exec_e9=94759976865 impact_bps=988	pool_before=7526148/87275
+SIMULTANEOUS	sent	bob=5uUTFeNW5yiFFJ7TZZxD1NS6wQVhajnuZUPigco8xwgSJmdRNaEZJ9G (admitted)	alice=91VUtpzzZXpF6vMzV5CLMwf9g1ru6rR58q3gxfN1gQAL5Vfg5wpkyfe (not admitted)
+SIMULTANEOUS	mined=sim-bob	not_mined=sim-alice	(the second spend of the same pool note cannot be valid once the first is)
+QUOTE	requote	buy in=655360 out=5896 fee=6553 spot_e9=101799524633 exec_e9=111153324287 impact_bps=918	pool_before=8180508/80359
+MINED	requote	txid=B9ueNZFG5b5f8i3tu4daW7D9qB7Z7L1FpngPzGu72w9dQSGa4Cxu8fG	height=404	pool_after=8834868/74463	to_user=1000+5896t successor=8179508+74463t fee=0
+== stage 5: attacks, each on its own pool (token A) ==
+OPEN	pool-withdraw	txid=2mjEne22efAVjNqrJmAP6T9FJrznFmaZmsqiUfKPWFVJUcXxNppQLMh	height=418	lock=2kKMbmyxt8cQZFJ2da1R5tb9g9zfMvNTSSRycYgRrGctpjipMZCRHkr	nock=6553600	tokens=100000	alice_change=899900
+QUOTE	withdraw	buy in=655360 out=8994 fee=6619 spot_e9=65536000000 exec_e9=72866355348 impact_bps=1118	pool_before=6553600/100000
+REJECTED	withdraw	txid=2S8xXveJfribSzSueUN75wtw3aLufsrUqYidHEh1h8c7PmrEvNRrFPQ	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-over-payout	txid=4C8Kbftgnq7CSaqTmf3HRPWgArYCQEzuWwRvwSXAsrNunorQpcR53H2	height=440	lock=yPVn3EqUG8v5w5c4xWPdCdg22VpqWcajpmMaHpWm75KkWAFjYpKeak	nock=6553600	tokens=100000	alice_change=799900
+QUOTE	over-payout	buy in=655360 out=8994 fee=6684 spot_e9=65536000000 exec_e9=72866355348 impact_bps=1118	pool_before=6553600/100000
+REJECTED	over-payout	txid=4rhM57qHKmc9ynfacKEEnhjxpMTVF3nu1N7RqatabXu5RPPNbimxPrD	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-pool-fee	txid=4gy4gHvkbp5XqMyKiNTdUknkZTGY1zq2vQxZQVEdk5cpM44RroyZTCW	height=462	lock=5msUsB2AfkEK8JtLqTsV5XQPKUkuwp6vGjCXyCuxeRMRyzybj9sJyEH	nock=6553600	tokens=100000	alice_change=699900
+QUOTE	pool-fee	buy in=655360 out=8993 fee=6750 spot_e9=65536000000 exec_e9=72874457911 impact_bps=1119	pool_before=6553600/100000
+REJECTED	pool-fee	txid=3RLrY5CTc34s1gqfs3F2HFXV2q6SvJS9enDtGMu5t5jFnc53Zg5jriZ	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-third-lock	txid=2RGJxz7bMcsJ8qDB3zc9keahtVcyZBmVCfSe54GeogLtG7tTjUXaj4v	height=484	lock=2yXRqdHhQZgEH8RsowhsFBXvovfFtLP8dnWW3swDU9nGvif9ewCrzMx	nock=6553600	tokens=100000	alice_change=599900
+QUOTE	third-lock	buy in=655360 out=8992 fee=6815 spot_e9=65536000000 exec_e9=72882562277 impact_bps=1120	pool_before=6553600/100000
+REJECTED	third-lock	txid=oWFqfAEU93Efwby5LqCAyim1v1nUBmr3qgXGPqkVzuFVeK2TNCUHWH	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-drop-claim	txid=BGaAyg1WKVx2ZfEw12qwsKYbyjiZCVXufJBQhCDoWV9ZdyfB8NX5C5x	height=500	lock=mFWNqoZRHnN4JPaQTtbpH43Zzsm1PiGASpSPiCduYCT4qjqXa6BfFW	nock=6553600	tokens=100000	alice_change=499900
+QUOTE	drop-claim	buy in=655360 out=8991 fee=6881 spot_e9=65536000000 exec_e9=72890668446 impact_bps=1122	pool_before=6553600/100000
+REJECTED	drop-claim	txid=5ohrhv3UeyC4zDDeSy7sU99qK73ep94bkZCR16CxVNaE7oXBtBoQV6c	engine: (refused at admission)	not mined in 2 blocks	inputs still unspent
+  mempool: not admitted
+OPEN	pool-inflate-claim	txid=7RB2okNabquzMxiVsN8oTxhuHZhY19Ga3gmL8E9Qhfi7NFkw6LneWiK	height=524	lock=46VJSwhPKm9HK9NPRejuYVwmyQajBRsnXx7YbhkJjKUCA5dwLv7aTa2	nock=6553600	tokens=100000	alice_change=399900
+QUOTE	inflate-claim	buy in=655360 out=8990 fee=6946 spot_e9=65536000000 exec_e9=72898776418 impact_bps=1123	pool_before=6553600/100000
