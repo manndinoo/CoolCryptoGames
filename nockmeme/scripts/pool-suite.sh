@@ -325,7 +325,7 @@ attack withdraw 101 --withdraw 100000
 QO=$(grep '^QUOTE' "$S/withdraw/trade.txt" | grep -oE 'out_net=[0-9]+' | cut -d= -f2)
 [ -n "$QO" ] || die "no quoted output to exceed"
 attack over-payout 113 --payout "$((QO + 1))"
-attack pool-fee 103 --pool-fee 1
+attack pool-fee 114 --pool-fee 1
 attack third-lock 104 --extra-seed "$ALICE_LOCK:1000"
 attack drop-claim 105 --drop-claim
 attack inflate-claim 106 --inflate-claim 1000000
