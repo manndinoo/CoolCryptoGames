@@ -5,3 +5,9 @@
 2026-09-11T10:53:03.975400Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 7dFCSs6EmbcK4w8n8Jv44JB1WBa76JBFtAQbD7vt6D72G1degNuvUuG
 2026-09-11T10:53:12.860824Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 9RLJYaawZWhpB9hujDA8HvF2o6EsMaRXkKfpwCpQA36Ns4kf28pLPu8 added to validated blocks at 55 with proof version 0
 2026-09-11T10:53:12.885557Z  INFO new_heaviest_chain{block_height=55 block_height=55 heaviest_block_digest="9RLJYaawZWhpB9hujDA8HvF2o6EsMaRXkKfpwCpQA36Ns4kf28pLPu8" heaviest_block_digest="9RLJYaawZWhpB9hujDA8HvF2o6EsMaRXkKfpwCpQA36Ns4kf28pLPu8" block_target="0
+2026-09-11T11:01:24.145961Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CxfcXk3W3dAHAhZXGJjKKZ2FnZBW4JhgfU61Y2ju2RGB4duWipZfhBh
+2026-09-11T11:01:31.856049Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 4UKGZ9qCi682QbaPd1kaTVRLSJydPgzz82BmJvJhWQvZ8yAieAbPy39 added to validated blocks at 75 with proof version 0
+2026-09-11T11:01:31.877818Z  INFO new_heaviest_chain{block_height=75 block_height=75 heaviest_block_digest="4UKGZ9qCi682QbaPd1kaTVRLSJydPgzz82BmJvJhWQvZ8yAieAbPy39" heaviest_block_digest="4UKGZ9qCi682QbaPd1kaTVRLSJydPgzz82BmJvJhWQvZ8yAieAbPy39" block_target="0
+2026-09-11T11:03:06.006839Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: Z8tvhDFP4SkuxcfCzkLpjorxryUF7jocdZB3HCPEeqjmokVqsC5Gi
+2026-09-11T11:03:15.640146Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: accept-block: block 5SbYyzHdJzPDXs5awSAnfJ1FNWfXPBdHYuTWJFwaNwPR3HCkBvaRYVW added to validated blocks at 91 with proof version 0
+2026-09-11T11:03:15.666393Z  INFO new_heaviest_chain{block_height=91 block_height=91 heaviest_block_digest="5SbYyzHdJzPDXs5awSAnfJ1FNWfXPBdHYuTWJFwaNwPR3HCkBvaRYVW" heaviest_block_digest="5SbYyzHdJzPDXs5awSAnfJ1FNWfXPBdHYuTWJFwaNwPR3HCkBvaRYVW" block_target="0

@@ -1,11 +1,28 @@
-# The acceptance gate, and what it will take
+# The acceptance gate, and what it took
 
 SPEC §11 says NMEME is proven only when a live node accepts and mines a real
 creation and a real transfer, and an indexer rebuilt from that chain reports the
-expected split. This document records what was established about that path, so
-the next session starts from facts rather than from guesses.
+expected split.
 
-## Environment: it does not run here
+## Status: passed
+
+On 2026-09-11, in this environment, `scripts/live-demo.sh` ran unmodified to
+exit 0 against a fakenet node: genesis
+`CxfcXk3W3dAHAhZXGJjKKZ2FnZBW4JhgfU61Y2ju2RGB4duWipZfhBh` mined at height 75,
+transfer `Z8tvhDFP4SkuxcfCzkLpjorxryUF7jocdZB3HCPEeqjmokVqsC5Gi` at height 91,
+balances rebuilt from the chain at a stable snapshot at height 104:
+999,900 / 100 of 1,000,000. Evidence and the three things the chain taught
+that source reading had not: [`../results/RESULTS.md`](../results/RESULTS.md)
+§A11 and [`../results/live/`](../results/live/).
+
+The sections below are the path that got there, kept because each turned out
+to matter. The memory ceiling was real; the way around it was to generate the
+verifier-setup seed cache elsewhere, one bucket per free hosted-runner job
+(`../seedgen/`, `.github/workflows/nmeme-seed-buckets.yml`), and install it
+(`scripts/install-seed-cache.sh`). With the cache present the node boots here
+in 10 seconds at 197 MB.
+
+## Environment: generation does not run here (the node does)
 
 `nockchain`, `nockchain-wallet` and `zk-pow-mine` build from revision `2bcb0b9`
 on a 15 GB / 4-core box. The build blockers and their fixes are in
@@ -41,8 +58,10 @@ Both knobs used are documented operator settings, not workarounds:
   (`ai-pow-jets/src/setup.rs:692`; `docs/VERIFIER_SETUP.md` says operators may
   "lower the cap to trade RSS for synchronous page-ins").
 
-**So the gate is blocked on memory.** Budget 32 GB (`DOCKER_MEM ?= 32g` in
-the repository's Makefile); 13.34 GiB is not enough in any configuration found.
+**So generation is blocked on memory here** — and it later measured far
+beyond 32 GB at four threads: the two 2^19 buckets each need a ~50 GB working
+set (`../results/environment.md`). It was never the node that did not fit;
+it was this one-time job, which is why moving the job elsewhere resolved it.
 
 **On a cached setup.** `install_or_build_verifier_setup`
 (`ai-pow-jets/src/setup.rs:743`) takes a fast path when a digest-matching seed
@@ -229,7 +248,9 @@ Steps 2 and 4 are the tool. Everything else is stock.
 
 ## Two things to check on the first live run
 
-Both are read from source and neither has been confirmed against a node:
+Read from source; the first is now observed on chain (the transfer's two
+destinations landed at their lock-roots with their claims), the second is
+still open:
 
 1. **Merging.** Send two seeds to the same lock-root in one transaction, each
    with a `meme` entry, and confirm the resulting note carries exactly one entry

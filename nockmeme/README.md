@@ -20,25 +20,22 @@ executed from what is only designed. Read that before trusting anything here.
 | --- | --- |
 | Consensus facts verified against source | done — [`docs/FINDINGS.md`](./docs/FINDINGS.md) |
 | Standard specified | done — [`docs/SPEC.md`](./docs/SPEC.md) |
-| Encoding + accounting implemented | in progress — [`crates/nmeme-core`](./crates/nmeme-core) |
+| Encoding + accounting implemented | done, 26 tests — [`crates/nmeme-core`](./crates/nmeme-core) |
 | Native stack builds | done — [`docs/DEVELOP.md`](./docs/DEVELOP.md) |
-| Node runs a chain | **no** — OOM-killed at ~13.9 GB in both 4-thread and 1-thread runs; needs ~32 GB — [`results/environment.md`](./results/environment.md) |
-| Transaction tooling | built, **digest not yet verified** — [`crates/nmeme-tx`](./crates/nmeme-tx) |
-| Proven on a live fakenet chain | not done — [`docs/ACCEPTANCE.md`](./docs/ACCEPTANCE.md) |
+| Node runs a chain | **done** — boots in 10 s at ~200 MB once the verifier seed cache is installed; the cache was generated on free hosted runners, one bucket per job — [`results/environment.md`](./results/environment.md) |
+| Transaction tooling | done, digest **verified against the wallet's signature on a live chain** — [`crates/nmeme-tx`](./crates/nmeme-tx) |
+| Proven on a live fakenet chain | **done** — genesis mined at height 75, transfer at height 91, balances rebuilt from the chain: 999,900 / 100 of 1,000,000 — [`results/RESULTS.md`](./results/RESULTS.md) §A11 |
 | Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |
 | Platform UI | not started |
 
-**Nothing here has touched a real chain yet.** The acceptance gate is SPEC §11:
-a local node must accept and mine a real creation and a real transfer, and an
-indexer rebuilt from that chain must report the expected split. Until then this
-is a design with tests, not a working token.
-
-One measured claim to be careful with: the `sig-hash` implementation in
-`nmeme-tx` is **not yet verified against a signature the wallet produced**. The
-obvious offline route does not work — the repository's transaction fixtures
-carry no signatures. Until the check in
-[`docs/ACCEPTANCE.md`](./docs/ACCEPTANCE.md) passes, treat every digest this
-crate computes as unproven.
+**The acceptance gate (SPEC §11) has passed on a single-node fakenet in this
+environment**: a node accepted and mined a real creation and a real transfer,
+and an indexer rebuilt from those blocks reported the expected split. Nothing
+has touched mainnet, trading is a design, and there is no platform UI. The
+run also surfaced three facts source reading had missed — the node's explorer
+cannot decode note-data transactions, balance queries take first-names not
+addresses, and a stock wallet will burn a token by spending its note as
+ordinary funds — all recorded in [`results/RESULTS.md`](./results/RESULTS.md).
 
 ## Why note-data
 

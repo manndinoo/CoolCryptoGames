@@ -92,7 +92,7 @@ The self-test demonstrates that directly, then shows the replacement rejecting
 the same input. The decision now keys on the wallet's exit code
 (`wallet.hoon:2028-2030`).
 
-### A8. Fee enforcement after attachment — 5 tests
+### A8. Fee enforcement after attachment — 5 tests, and observed live
 
 ```bash
 cargo test -p nmeme-tx --test fee
@@ -107,7 +107,7 @@ Constants are parameters with fakenet defaults (base fee 128, bythos at 1,
 divisor 4, floor 256), not baked in. One test pins that attaching raises the
 required fee; one that exactly the minimum passes and one nick less does not.
 
-### A9. Snapshot-consistent, paginated reads — 8 tests
+### A9. Snapshot-consistent, paginated reads — 8 tests, and observed live
 
 ```bash
 cargo test -p nmeme-index --test snapshot
@@ -160,82 +160,123 @@ that failure did not occur here and its cause is not established
 (`docs/DEVELOP.md`). And, in their words: no live node, mined creation, signed
 transfer, or on-chain balance rebuild was executed in that verification either.
 
-### A7. Environment limits, measured
+### A7. Environment limits, measured — and the way around them
 
-| `RAYON_NUM_THREADS` | Peak RSS | Outcome |
-| --- | --- | --- |
-| 4 (default) | 13.24 GiB | OOM-killed before `%born` |
-| 1 | 13.93 GB at kill | OOM-killed before `%born` after 89 min |
+The first-boot generation of the verifier-setup seed cache does not fit
+this environment at any thread count (13.9 GB and still climbing under a
+13.34 GiB ceiling; details and the full memory series in
+[`environment.md`](./environment.md)). What fits is everything else.
 
-Neither configuration completes verifier setup under the 13.34 GiB ceiling. An
-earlier revision of this file said the 1-thread run fit; it did not.
+The cache was generated on free GitHub-hosted runners, one bucket per job
+(`../seedgen/seedgen.rs`, `.github/workflows/nmeme-seed-buckets.yml`), merged in
+bucket order and checked against `AI_POW_V0_VERIFIER_SETUP_TABLE_DIGEST`
+before publication. Measured per bucket, single-threaded, on 16 GB runners
+with swap and a memory throttle: 3.5 GB and 2 minutes for the smallest, a
+50 GB working set and 96–310 minutes for the two largest. The result:
 
-Numbers, `dmesg` evidence and the full RSS series:
-[`environment.md`](./environment.md), [`node-memory-1thread.tsv`](./node-memory-1thread.tsv).
+| | |
+|---|---|
+| run | `nmeme-seed-buckets.yml` run `34562677406` |
+| table digest | `57fb173ad5c70c6382aab7dd84dd0bf0f66912e8472ba429b2d3243981ce46d7` = consensus constant |
+| file | `ai-pow/verifier-setup-seeds-v1.bin`, 85,195,241 bytes |
+| sha256 | `1dec7dfe51deb549c5a3dab9ddafdcee71f349dfc0c1179a25ec51c6ea74aca9` |
+| where | branch `seed-cache` of this repository; [`live/seed-cache.sha256`](./live/seed-cache.sha256), [`live/seed-cache-merge.log`](./live/seed-cache-merge.log) |
+
+With the cache installed, the node here loaded it (no regeneration warning),
+built the fourteen verifier contexts to disk (14.4 GB, 2.9 GB peak RSS,
+40 minutes), and on the next boot reached **`handle-command: born` in 10
+seconds at 197 MB peak RSS**. One more knob was needed: the default PMA arena
+opened at 32 GiB and its first persist filled the disk; `--pma-initial-size
+1GiB` (a documented flag) fixed it. Both boots' memory series:
+[`live/node-boot-rss-first.tsv`](./live/node-boot-rss-first.tsv),
+[`live/node-boot-rss-second.tsv`](./live/node-boot-rss-second.tsv).
+
+### A11. The live chain: token created, transferred, and rebuilt from blocks
+
+`scripts/live-demo.sh`, unmodified, ran to completion (exit 0) against the
+fakenet node in this environment. Its complete output is
+[`live/attempt5/results.txt`](./live/attempt5/results.txt) and
+[`live/attempt5/progress.log`](./live/attempt5/progress.log); the node's own
+log lines for every transaction and block below are in
+[`live/node-log-excerpt.txt`](./live/node-log-excerpt.txt).
+
+| stage | evidence |
+|---|---|
+| signature gate | `PASS genesis-gate` and `PASS xfer-gate`: the wallet's own signature verified against the **Rust** `sig-hash` of a real transaction, both before and after the claim was attached and the transaction re-signed. `B2` below is closed. |
+| genesis (create DOGE, supply 1,000,000) | txid `CxfcXk3W3dAHAhZXGJjKKZ2FnZBW4JhgfU61Y2ju2RGB4duWipZfhBh`, mined at **height 75**, block `4UKGZ9qCi682QbaPd1kaTVRLSJydPgzz82BmJvJhWQvZ8yAieAbPy39`; fee paid 8192 nicks against a consensus minimum of 6016 (the wallet's own `tx-status` report, [`live/attempt5/genesis-tx-status.txt`](./live/attempt5/genesis-tx-status.txt)) |
+| token id | `4Fkt8tEVF5AfozYrCdF5F48vd7VNVektAwz5jLHkdq5eTY4XNzubkRU` |
+| transfer (100 to Bob, 999,900 back to Alice) | spends the token-bearing note **by name**; txid `Z8tvhDFP4SkuxcfCzkLpjorxryUF7jocdZB3HCPEeqjmokVqsC5Gi`, mined at **height 91**, block `5SbYyzHdJzPDXs5awSAnfJ1FNWfXPBdHYuTWJFwaNwPR3HCkBvaRYVW`; fee 8192 against a minimum of 7424 |
+| canonical rebuild | one snapshot at **height 104**, block `A6311czcSLJJapgfa843WA1ApCXFM681XFeh8U35FZbC2ks672rs2fS`, stable across the read; each step bound to its mined transaction by recomputing the file's id the way consensus does; replayed through the real `Indexer` → `Created`, `Transferred` |
+| balances | Alice's lock `6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw` **999,900**; Bob's lock `CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV` **100**; total 1,000,000 = supply; `ASSERT-OK` ×3 |
+
+The run before it ([`live/attempt4/`](./live/attempt4/)) had mined the same
+sequence (genesis `CqnUQ22o…` at height 44, transfer `7dFCSs6E…` at height
+55) and failed only in the rebuild tool; the rebuild over those two mined
+transactions, run by hand after the fix, produced the same balances
+([`live/attempt4/balances.txt`](./live/attempt4/balances.txt)).
+
+**Three things the chain taught that the code did not know:**
+
+1. **The node's explorer cannot decode a note-data transaction.**
+   `GetTransactionDetails` fails with a `NounDecode` error in
+   `extract_transactions_from_map` on a transaction consensus had just mined.
+   The rebuild no longer depends on it: it recomputes each file's transaction
+   id (`RawTx::compute_id`, the consensus hash of version and spends) and
+   requires equality with the mined id, then takes inclusion from
+   `GetTransactionBlock`. That binding covers every field at once.
+2. **`WalletGetBalance` takes a cheetah pubkey or a note first-name, not the
+   wallet's printed address** (a pubkey hash; "improperly formatted"). The
+   tools now read by first-name, which is a function of the lock-root alone.
+3. **Burn-on-unclaimed-spend is real, and wallets will trigger it.** Each run
+   reused Alice's wallet on the same chain. Run 4's genesis picked run 3's
+   token note as an ordinary input (it was the largest NOCK note), and run 5's
+   genesis did the same to run 4's — spending the note with no claim on any
+   output, which under `SPEC §7` burns that token's supply. The rebuild over
+   run 4's transactions now refuses, correctly: its 999,900 output note no
+   longer exists unspent. Only the last token, `4Fkt8tEV…`, still holds. A
+   platform must pin token notes out of the wallet's input selection (the
+   transfer does this with `--names`; the genesis did not need to, until a
+   second token existed).
 
 ---
 
----
+## B. Designed but NOT verified
 
-**Everything above in A is an offline code check. What follows in B is
-separate: it is not a code defect list, it is what cannot be shown without
-a chain.**
+### B1. `output-source` pinning
 
-## B. Designed, implemented, or assumed — but NOT verified
+Note-data merging by lock-root is now observed on chain (the transfer's two
+destinations landed at their lock-roots with their claims). `output-source`
+pinning, on which the swap design rests, is still read from
+`tx-engine-1.hoon` only.
 
-### B1. Two consensus readings a live chain must confirm
+### B2. — closed
 
-- **Note-data merging by lock-root.** `FINDINGS §3` and `SPEC R1` rest on it,
-  and the whole allocation model follows from it.
-- **`output-source` pinning.** The entire swap design rests on it.
+The `sig-hash` gate passed on a live chain (A11). Nothing remains here.
 
-Both are read from `tx-engine-1.hoon` and corroborated by the repository's own
-code, but neither has been observed on a running node.
+### B3. — closed
 
-### B2. The `sig-hash` implementation
-
-`nmeme-tx` computes a v1 spend's signing hash by transcribing
-`tx-engine-1.hoon`. **It has never been checked against a signature the wallet
-produced.** The offline route does not exist: the repository's transaction
-fixtures carry zero signatures (`sighash_fixtures` reports this), and Rust has
-no schnorr verifier.
-
-Until the gate in [`../docs/ACCEPTANCE.md`](../docs/ACCEPTANCE.md) passes, every
-digest this crate computes is unproven, and so is everything built on it —
-including B3.
-
-### B3. Claim injection, re-signing, broadcast, balance rebuild
-
-Implemented (`nmeme-tx attach`/`set-sig`, `nmeme-index`,
-`scripts/live-demo.sh`) and **not yet executed against a chain**. No
-transaction has been broadcast. There are no transaction IDs, no block heights,
-and no on-chain balances to report.
-
-`nmeme-index rebuild` replays the mined transactions through the real
-`Indexer` — genesis rules, exact conservation, burn-on-invalid — and asserts
-per-lock-root balances and total supply. Before a step is replayed, the local
-file is bound to the mined transaction (`verify_canonical`: same inputs, same
-outputs, same merged amounts, present in a block), and each output is bound by
-its **complete computed name** to a note the chain knows (`bind_outputs`).
-Earlier versions summed anything under the `meme` key, then matched outputs by
-recipient; both are gone. None of this has run against a chain.
+Claim injection, re-signing, broadcast and canonical rebuild all executed
+(A11).
 
 ### B4. Trading
 
 [`../docs/SWAPS.md`](../docs/SWAPS.md) is a design derived from source. Nothing
-is implemented and nothing is tested. It also depends on B1's `output-source`
-reading.
+is implemented and nothing is tested. It depends on B1.
 
 ### B5. Everything else
 
 No AMM (not expressible without a consensus change or a trusted sequencer). No
 partial fills. No platform, wallet integration, or UI. No security review. No
-claim of mainnet suitability.
+claim of mainnet suitability. The chain used is a single-node fakenet; nothing
+here has touched mainnet.
 
 ---
 
 ## The single sentence version
 
-The standard is specified against verified consensus rules and its accounting
-layer is tested, including against an inflation bug that was found and fixed.
-Nothing has touched a chain, so the token does not yet work.
+A token was created and transferred on a live Nockchain fakenet node running
+in this environment, and its balances were rebuilt from the mined blocks:
+genesis at height 75, transfer at height 91, 999,900 / 100 of 1,000,000 at a
+stable snapshot at height 104. The seed cache that made the node bootable was
+produced on free hosted runners, one bucket per job. Trading is designed, not
+built.
