@@ -301,7 +301,7 @@ log "== stage 6: transfer 100 to bob, 999900 back to alice =="
 # Spend the token-bearing note EXPLICITLY. Auto-selection would either miss it
 # or spend it with no claim attached, which burns the supply (SPEC §7).
 "$NMEME_INDEX" token-note --addr "${PUBLIC_ADDR:-127.0.0.1:5556}" \
-  --address "$ALICE" --lock "$ALICE_LOCK" > "$RUN/token-note.txt" \
+  --lock "$ALICE_LOCK" > "$RUN/token-note.txt" \
   || die "could not find alice's token-bearing note"
 cat "$RUN/token-note.txt" >&2
 TOKEN_NOTE=$(awk -F'\t' '$1=="NOTE"{print $2}' "$RUN/token-note.txt")
@@ -323,7 +323,7 @@ log "== stage 7: replay the mined transactions and assert balances =="
 "$NMEME_INDEX" rebuild --addr "${PUBLIC_ADDR:-127.0.0.1:5556}" --token "$TOKEN" \
   --step "$GENESIS_TXID:$RUN/genesis/final.jam" \
   --step "$XFER_TXID:$RUN/xfer/final.jam" \
-  --address "$ALICE" --address "$BOB" \
+  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" \
   --expect "$ALICE_LOCK=$XFER_CHANGE" \
   --expect "$BOB_LOCK=$XFER_TO_BOB" \
   --expect-total "${SUPPLY:-1000000}" \

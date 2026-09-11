@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! nmeme-index token-id --tx <tx.jam> --ticker <T> --decimals <D>
-//! nmeme-index rebuild  --addr <host:port> --token <token-b58> --address <addr>...
+//! nmeme-index rebuild  --addr <host:port> --token <token-b58> --lock <lock-root-b58>...
 //! ```
 //!
 //! `token-id` is offline: identity is derived from the genesis transaction's
@@ -62,10 +62,10 @@ fn main() -> ExitCode {
 
 const USAGE: &str = "usage:
   nmeme-index token-id --tx <tx.jam> --ticker <TICKER> --decimals <N>
-  nmeme-index token-note --addr <host:port> --address <addr> --lock <lock-root-b58>
+  nmeme-index token-note --addr <host:port> --lock <lock-root-b58>
   nmeme-index rebuild  --addr <host:port> --token <token-b58>
                        --step <txid>:<tx.jam> [--step ...]   (canonical order)
-                       --address <addr> [--address ...]
+                       --lock <lock-root-b58> [--lock ...]
                        [--expect <lock-root-b58>=<amount>]... [--expect-total <n>]";
 
 fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
@@ -123,7 +123,6 @@ fn cmd_token_id(args: &[String]) -> Result<ExitCode, String> {
 /// `create-tx --names` expects.
 fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
     let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
-    let address = flag(args, "--address").ok_or("missing --address")?.to_string();
     let lock = Hash::from_base58(flag(args, "--lock").ok_or("missing --lock")?)
         .map_err(|e| format!("lock: {e}"))?;
 
@@ -136,7 +135,7 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
             .await
             .map_err(|e| format!("connect {addr}: {e}"))?;
         let want_first = nmeme_index::first_name_of(&lock);
-        let snapshot = read_snapshot(&mut client, &[address.clone()]).await?;
+        let snapshot = read_snapshot(&mut client, &[lock]).await?;
         println!("# snapshot height {} block {}", snapshot.height, snapshot.block_id);
 
         let mut found = Vec::new();
@@ -189,9 +188,12 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         return Err("at least one --step <txid>:<file> is required".to_string());
     }
 
-    let addresses: Vec<String> = flags(args, "--address").into_iter().map(str::to_string).collect();
+    let addresses: Vec<Hash> = flags(args, "--lock")
+        .into_iter()
+        .map(|l| Hash::from_base58(l).map_err(|e| format!("lock {l}: {e}")))
+        .collect::<Result<_, _>>()?;
     if addresses.is_empty() {
-        return Err("at least one --address is required".to_string());
+        return Err("at least one --lock is required".to_string());
     }
 
     let mut expectations: Vec<(String, u64)> = Vec::new();
@@ -221,7 +223,7 @@ async fn rebuild(
     addr: String,
     token: TokenId,
     steps: Vec<(String, std::path::PathBuf)>,
-    addresses: Vec<String>,
+    addresses: Vec<Hash>,
     expectations: Vec<(String, u64)>,
     expect_total: Option<u64>,
 ) -> Result<ExitCode, String> {
@@ -440,19 +442,27 @@ async fn verify_canonical(
 /// Reads every unspent note for every address, following pagination to the
 /// end for each, and folds the pages into one snapshot — refusing if any page
 /// reports a different block than the first.
+/// Reads by note FIRST-NAME, not by wallet address. The node's
+/// `WalletGetBalance` takes either a base58 cheetah pubkey or a first-name
+/// (`public/v2/nockchain.proto`); the wallet's printed "address" is a pubkey
+/// HASH, which the server rejects as "improperly formatted" (seen live). A
+/// note's first name is a function of its lock-root alone (names.rs), and the
+/// lock-roots are what this tool is given, so the first-name selector is the
+/// exact query: every unspent note at that lock.
 async fn read_snapshot(
     client: &mut NockchainServiceClient<tonic::transport::Channel>,
-    addresses: &[String],
+    locks: &[Hash],
 ) -> Result<nmeme_index::Snapshot, String> {
     let mut all_pages: Vec<nmeme_index::Page> = Vec::new();
-    for address in addresses {
+    for lock in locks {
+        let address = nmeme_index::first_name_of(lock).to_base58();
         // collect_pages is synchronous over a closure; fetch each page here.
         let mut token = String::new();
         let mut pages_for_address = Vec::new();
         loop {
             let request = WalletGetBalanceRequest {
-                selector: Some(wallet_get_balance_request::Selector::Address(
-                    nockapp_grpc_proto::pb::common::v1::Base58Pubkey { key: address.clone() },
+                selector: Some(wallet_get_balance_request::Selector::FirstName(
+                    nockapp_grpc_proto::pb::common::v1::Base58Hash { hash: address.clone() },
                 )),
                 page: Some(nockapp_grpc_proto::pb::common::v1::PageRequest {
                     client_page_items_limit: 0,
