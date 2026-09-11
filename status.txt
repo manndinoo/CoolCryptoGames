@@ -1,13 +1,13 @@
-run: 34556716276  attempt: 1  threads: 1  at: 2026-09-11T05:30:26Z
+run: 34556716276  attempt: 1  threads: 1  at: 2026-09-11T05:35:27Z
 
                total        used        free      shared  buff/cache   available
-Mem:           15989       14358         219          52        1809        1630
-Swap:          76799       41501       35298
+Mem:           15989       14391         165          52        1830        1598
+Swap:          76799       42283       34516
 
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/root       145G  140G  5.2G  97% /
 /dev/root       145G  140G  5.2G  97% /
 
 node cgroup:
-13958270976
-43500630016
+13957042176
+44319735808
