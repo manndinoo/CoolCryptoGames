@@ -118,7 +118,8 @@ expect_rejected() {
 # Every spend the wallet signed in the original transaction is re-signed
 # over its new digest (the NEWSIGHASH line for that spend's name).
 resign() {
-  local who="$1" orig="$2" jam="$3" src="$4" out="$5" cur="$jam" i=0
+  local who="$1" orig="$2" jam="$3" src="$4" out="$5" i=0
+  local cur="$jam"
   local name digest pubkey pkh sigfile tag newd
   while IFS=$'\t' read -r tag name digest pubkey pkh sigfile; do
     [ "$tag" = "SIGHASH" ] || continue
