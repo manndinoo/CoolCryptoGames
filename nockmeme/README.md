@@ -25,7 +25,7 @@ executed from what is only designed. Read that before trusting anything here.
 | Node runs a chain | **done** — boots in 10 s at ~200 MB once the verifier seed cache is installed; the cache was generated on free hosted runners, one bucket per job — [`results/environment.md`](./results/environment.md) |
 | Transaction tooling | done, digest **verified against the wallet's signature on a live chain** — [`crates/nmeme-tx`](./crates/nmeme-tx) |
 | Proven on a live fakenet chain | **done, twice over** — two tokens created and transferred with every input proven token-free or named before broadcast; both rebuilt from the chain with input provenance proven, the first unchanged by the second — [`results/RESULTS.md`](./results/RESULTS.md) §A11–A13 |
-| Trading | designed — [`docs/SWAPS.md`](./docs/SWAPS.md) — not implemented |
+| Trading with pooled, automatically priced liquidity | **evaluated, decision needed** — consensus cannot protect pool reserves (locks cannot see outputs); a custodial-reserve pool with atomic settlement and public state is buildable now, a trustless one needs a covenant primitive or the Base bridge — [`docs/LIQUIDITY.md`](./docs/LIQUIDITY.md). Two-party atomic settlement is implemented (`docs/SWAPS.md`). |
 | Platform UI | not started |
 
 **The acceptance gate (SPEC §12) has passed on a single-node fakenet in this

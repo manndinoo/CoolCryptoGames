@@ -116,8 +116,14 @@ neither can inflate the other's cost.
 
 ## 6. Status
 
-Designed and derived from source. **Not implemented and not tested.** The
-construction rests on `output-source` behaving as read in
-`tx-engine-1.hoon:1413-1418`, and that reading has not yet been confirmed
-against a running node. Confirming it is part of the fakenet gate (SPEC §12)
-and should be done before any of this is built on.
+Implemented as a settlement primitive (`nmeme-tx swap`, `pins`, `half`,
+`replace-spend`; `crates/nmeme-tx/src/swap.rs`), with the pinned
+`output-source` hashable in the signing digest and eight unit tests covering
+the construction and the tamper cases. The live fakenet run of
+`scripts/swap-demo.sh` (the honest trade plus four attacks sent first) is
+the confirmation against a running node; see `results/RESULTS.md`.
+
+This is a two-party settlement mechanism, **not the trading product**. The
+platform needs pooled, automatically priced liquidity; what the chain can and
+cannot enforce for that is evaluated in [`LIQUIDITY.md`](./LIQUIDITY.md),
+where this primitive is the settlement layer of the recommended design.
