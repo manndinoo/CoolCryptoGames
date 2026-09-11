@@ -308,8 +308,8 @@ echo "== stage 5: attacks, each on its own pool (token A) =="
 ATT_STEPS_A=""
 attack() {
   local label="$1" fee="$2"; shift 2
-  if [ "${RESUME:-0}" = 1 ] && [ -f "$S/$label.rejected" ]; then
-    echo "RESUMED	$label already refused: $(cat "$S/$label.rejected")"
+  if [ "${RESUME:-0}" = 1 ] && { [ -f "$S/$label.rejected" ] || [ -f "$S/$label.neutralized" ]; }; then
+    echo "RESUMED	$label already tested: $(cat "$S/$label.rejected" "$S/$label.neutralized" 2>/dev/null | head -1)"
     ATT_STEPS_A="$ATT_STEPS_A --step $(awk -F'\t' '$1=="TXID"{print $2}' "$S/send-pool-$label.txt"):$S/pool-$label/final.jam"
     return 0
   fi
@@ -328,7 +328,34 @@ attack over-payout 113 --payout "$((QO + 1))"
 attack pool-fee 114 --pool-fee 1
 attack third-lock 104 --extra-seed "$ALICE_LOCK:1000"
 attack drop-claim 105 --drop-claim
-attack inflate-claim 106 --inflate-claim 1000000
+# A fabricated claim on the trader's own payment to the pool. Consensus
+# unions the note-data of the seeds landing on a lock, so the claim either
+# overwrites the successor's (then conservation fails: refused) or is
+# overwritten by it (then the transaction is an ordinary trade). Either way
+# the pool holds exactly what the quote said.
+attack_neutral() {
+  local label="$1" fee="$2"; shift 2
+  if [ "${RESUME:-0}" = 1 ] && { [ -f "$S/$label.rejected" ] || [ -f "$S/$label.neutralized" ]; }; then
+    echo "RESUMED	$label already tested: $(cat "$S/$label.rejected" "$S/$label.neutralized" 2>/dev/null | head -1)"; return 0
+  fi
+  open_pool "pool-$label" "$TOKEN_A" "$fee" "$POOL_NOCK" "$POOL_TOKENS"
+  ATT_STEPS_A="$ATT_STEPS_A --step $OPEN_TXID:$OPEN_FILE"
+  funding_alice "$S/funding-$label.txt"
+  local cb; cb=$(coinbase_note "$S/funding-$label.txt" $((BUY_NICKS + 20000)) "$USED"); echo "$cb" >> "$USED"
+  local r; r=$(user_tx alice "$S/$label-user" "[$cb]" "$BOB" "$BUY_NICKS")
+  trade "$label" alice "$TOKEN_A" "$fee" buy "${r%% *}" "${r#* }" "$BOB_LOCK" "$@"
+  local txid="$TRADE_TXID"; local sent; sent=$(send "$TRADE_FILE" "$label")
+  local h0; h0=$(node_height); wait_for_height "$RUN/node.log" $((h0 + 2)) "${MINE_TIMEOUT:-900}" >/dev/null
+  local pn; pn=$(cut -d' ' -f1,2 <<<"$POOL_NOTE_IN")
+  if unspent "${pn%% *}" "${pn##* }"; then
+    echo "REJECTED	$label	txid=$txid	mempool: $(awk -F'\t' '$1=="MEMPOOL"{print $2}' "$S/send-$label.txt")	not mined in 2 blocks	inputs still unspent" | tee "$S/$label.rejected"
+  else
+    local st want; st=$(pool_state "$TOKEN_A" "$fee" | head -1); want=$(awk -F'\t' '$1=="POOL-AFTER"{print $2" "$3}' "$S/$label/trade.txt")
+    [ "$(cut -d' ' -f4,5 <<<"$st")" = "$want" ] || die "$label: MINED and the pool state $(cut -d' ' -f4,5 <<<"$st") differs from the quote's $want"
+    echo "NEUTRALIZED	$label	txid=$txid	mined as an ordinary trade: the fabricated claim did not survive the merge; pool_after=$(tr ' ' '/' <<<"$want") as quoted" | tee "$S/$label.neutralized"
+  fi
+}
+attack_neutral inflate-claim 106 --inflate-claim 1000000
 attack mint 107 --successor-tokens "$((POOL_TOKENS + 1000))"
 attack lore-short 111 --lore-short 1
 attack lore-tokens 112 --lore-tokens 10
