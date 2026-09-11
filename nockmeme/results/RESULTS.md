@@ -474,6 +474,43 @@ megabytes per call; polling it for confirmations filled the disk twice.
 The suite now reads confirmations from the node's unspent set and rebuilds
 a wallet from its exported keys when its arena passes a size.
 
+### A16. Phase two: the treasury share, live
+
+The covenant became `[%amm tid fee lore lore-lock]` (`docs/FEES.md`,
+`docs/ENFORCEMENT.md` §3): 100 bps to the pool, 50 bps to the Lore Wallet,
+in NOCK, in the same transaction, or the spend is invalid. Kernels, node
+and tooling were rebuilt; a fresh chain ran `live-demo.sh` and the suite.
+Evidence in [`live/pool-v2/`](./live/pool-v2/).
+
+**The Lore Wallet** is a third wallet's key lock (`lore`), never spent
+from. Its lock root is in every pool's lock; its first name is where its
+notes sit. It started empty.
+
+**The main pool** opened at height 433 with 6,553,600 nicks and 100,000
+tokens. The trader's network fee was 16,384 nicks on every trade (the
+first attempt at 8,192 was refused by the engine as `v1-insufficient-fee`:
+the treasury seed and the covenant witness make the transaction larger
+than a plain two-spend trade, and the fee check in the tooling now counts
+the witness noun's leaves exactly as the chain does).
+
+| trade | who | in | out, net | pool share | Lore share | impact | mined at | pool after | Lore Wallet after |
+|---|---|---|---|---|---|---|---|---|---|
+| buy | Bob | 655,360 nicks | 8,954 tokens | 6,510 nicks | 3,281 nicks | 11.68 % | 443 | 7,204,679 / 91,046 | 3,281 (1 note) |
+| sell | Bob | 4,477 tokens | 333,769 nicks | 44 tokens | 1,682 nicks | 6.14 % | 457 | 6,870,228 / 95,523 | 4,963 (2) |
+| buy | Alice | 655,360 nicks | 8,193 tokens | 6,510 nicks | 3,281 nicks | 11.21 % | 469 | 7,521,307 / 87,330 | 8,244 (3) |
+| buy (of two sent together) | Bob | 655,360 nicks | 6,893 tokens | 6,510 nicks | 3,281 nicks | 10.39 % | ~485 | 8,172,386 / 80,437 | 11,525 (4) |
+| buy (re-quoted) | Alice | 655,360 nicks | 5,880 tokens | 6,510 nicks | 3,281 nicks | 9.70 % | 500 | 8,823,465 / 74,557 | 14,806 (5) |
+
+After every mined trade the Lore Wallet's balance, read from the node,
+equalled the running sum of the quoted shares to the nick, every note
+there was `plain` (NOCK, no claim), and the pool note was exactly the
+quote's `POOL-AFTER`. The share is 0.5 % of the NOCK side: 3,281 of
+655,360 + 1,000 on a buy (the dust that leaves with the tokens counts as
+crossing the boundary); 1,682 of the 335,451-nick gross on the sell, of
+which the seller received 333,769. The disclosed total on a buy was 9,791
+nicks (1.49 % of 655,360: the pool's 1 % is charged on what remains after
+the treasury's 0.5 %).
+
 ---
 
 ## B. Designed but NOT verified
