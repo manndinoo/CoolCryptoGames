@@ -1,0 +1,28 @@
+# Which GitHub-hosted runner sizes does this public repository actually get?
+# The largest verifier-setup buckets need more than a 16 GB standard runner
+# (per-bucket runs 1-2). GitHub documents larger macOS runners; whether they
+# are dispensed to this repository at no cost is answered by asking for them.
+name: nmeme runner probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15-large, macos-14-large, macos-latest-large, macos-15-xlarge, macos-latest-xlarge, macos-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - name: Machine facts
+        run: |
+          uname -a
+          if [ "$(uname)" = Darwin ]; then
+            sysctl -n machdep.cpu.brand_string; sysctl -n hw.ncpu; echo "mem GiB: $(( $(sysctl -n hw.memsize) / 1073741824 ))"
+            df -h / /private/tmp 2>/dev/null | head -3
+            xcode-select -p; rustc --version 2>/dev/null || true; which cargo protoc clang cmake || true
+          else
+            nproc; free -g; df -h /
+          fi
