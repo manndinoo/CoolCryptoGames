@@ -201,6 +201,14 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
             }
         }
 
+        // Filtered by token, every note is printed: a holder may well have
+        // several notes of one token (a transfer's change and a purchase).
+        if want_token.is_some() && !found.is_empty() {
+            for (name, assets, amount, token) in &found {
+                println!("NOTE\t[{} {}]\t{}\t{}\t{}", name.first.to_base58(), name.last.to_base58(), assets, amount, token);
+            }
+            return Ok(ExitCode::SUCCESS);
+        }
         match found.as_slice() {
             [] => Err(format!("no token-bearing note at lock-root {}", lock.to_base58())),
             [(name, assets, amount, token)] => {

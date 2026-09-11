@@ -64,7 +64,7 @@ coinbase_note() {
 USED="$S/used-notes.txt"; : > "$USED"
 # token_note <token> -> "first last amount" of alice note holding the token (at her change lock)
 token_note() {
-  quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$ALICE_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $2" "$4; exit}'
+  quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$ALICE_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'
 }
 pool_state() { # <token> <fee> -> POOL line fields "first last origin nock tokens" of the single pool note
   quiet "$NMEME_INDEX" pool --addr "$PUB" --token "$1" --fee-bps "$2" > "$S/pool-$1-$2.txt" 2>/dev/null || die "pool read"
@@ -135,7 +135,7 @@ bob_note() { # a plain unspent note of bob not yet used
   quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding-bob.txt" || die "bob funding"
   awk -F'\t' '$1=="FUNDING" && $4=="plain" {print $2" "$3}' "$S/funding-bob.txt" | while read -r n; do grep -qF "$n" "$USED" || { echo "$n"; break; }; done
 }
-bob_token_note() { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$BOB_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $2" "$4; exit}'; }
+bob_token_note() { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$BOB_LOCK" --token "$1" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'; }
 
 echo "== stage 1: fund bob with ${BOB_NOTES:-4} plain notes =="
 funding_alice "$S/funding-0.txt"
@@ -151,17 +151,30 @@ for i in $(seq 1 "${BOB_NOTES:-4}"); do
 done
 
 echo "== stage 2: the main pool (token B) =="
-open_pool main "$TOKEN_B" "$FEE_BPS" "$POOL_NOCK" "$POOL_TOKENS"
-MAIN_OPEN_TXID="$OPEN_TXID"; MAIN_OPEN_FILE="$OPEN_FILE"; MAIN_LOCK=$(pool_lock "$TOKEN_B" "$FEE_BPS")
-echo "LOCK	main	$MAIN_LOCK	spend-condition=[%amm $TOKEN_B $FEE_BPS]	no key"
+MAIN_LOCK=$(pool_lock "$TOKEN_B" "$FEE_BPS")
 STEPS_B=""
+if [ "${RESUME:-0}" = 1 ] && [ -f "$S/main.env" ]; then
+  # an earlier run opened the pool (and maybe traded); pick up its files
+  MAIN_OPEN_TXID=$(awk -F'\t' '$1=="TXID"{print $2}' "$S/send-main.txt"); MAIN_OPEN_FILE="$S/main/final.jam"
+  for t in buy1; do [ -f "$S/$t.env" ] && STEPS_B="$STEPS_B --step $("$NMEME_INDEX" tx-id --tx "$S/$t/final.jam"):$S/$t/final.jam"; done
+  echo "RESUMED	main pool opened by $MAIN_OPEN_TXID; steps so far:$STEPS_B"
+else
+  open_pool main "$TOKEN_B" "$FEE_BPS" "$POOL_NOCK" "$POOL_TOKENS"
+  MAIN_OPEN_TXID="$OPEN_TXID"; MAIN_OPEN_FILE="$OPEN_FILE"
+fi
+echo "LOCK	main	$MAIN_LOCK	spend-condition=[%amm $TOKEN_B $FEE_BPS]	no key"
 
 echo "== stage 3: honest trades =="
+if [ -f "$S/buy1.env" ] && [ "${RESUME:-0}" = 1 ]; then
+  echo "RESUMED	buy1 already mined"
+  r="$(head -1 "$S/buy1-user/new.txt" 2>/dev/null || ls "$W"/bob/txs/*.tx | head -1) $S/buy1-user/sighash.txt"
+else
 # bob buys with BUY_NICKS
 bn=$(bob_note); [ -n "$bn" ] || die "bob has no plain note"; echo "$bn" >> "$USED"
 r=$(user_tx bob "$S/buy1-user" "[$bn]" "$ALICE" "$BUY_NICKS")
 trade buy1 bob "$TOKEN_B" "$FEE_BPS" buy "${r%% *}" "${r#* }" "$ALICE_LOCK"
 confirm_trade buy1 "$TOKEN_B" "$FEE_BPS"
+fi
 # a too-small trade is refused before anything is built
 set +e; "$NMEME_TX" pool-trade "${r%% *}" /dev/null --pool "$(pool_state "$TOKEN_B" "$FEE_BPS")" --token "$TOKEN_B" --fee-bps "$FEE_BPS" --side buy --placeholder "$ALICE_LOCK" --dust "$((BUY_NICKS - 1))" > "$S/tiny.txt" 2>&1; rc=$?; set -e
 [ $rc -ne 0 ] && grep -q "trade too small\|NoOutput\|no output" "$S/tiny.txt" && echo "ROUNDING	a trade the covenant admits no output for is refused by the quote: $(tail -1 "$S/tiny.txt")" || echo "ROUNDING	unexpected: rc=$rc $(tail -1 "$S/tiny.txt")"
