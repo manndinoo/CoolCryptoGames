@@ -1,0 +1,217 @@
+# Generate the Nockchain verifier-setup seed cache ONE BUCKET PER JOB.
+#
+# The node's own generator proves all fourteen production buckets in a single
+# process; runs 1-3 of nmeme-seed-cache.yml showed that process needing far more
+# than a hosted runner's 16 GB (38 GB and climbing at four threads). Every bucket
+# is an independent proof, so nockmeme/seedgen/seedgen.rs (built as an extra
+# bin of ai-pow-jets, linking the node's own code) proves one bucket per job,
+# fourteen jobs in parallel, and a merge job concatenates the seeds in bucket
+# order and checks the table against the consensus digest before publishing.
+#
+# Output: the tarball as a workflow artifact, and committed to the
+# `seed-cache` branch so it can be fetched with plain git.
+name: nmeme seed cache (per bucket)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/new-session-wehujv]
+    paths:
+      - .github/workflows/nmeme-seed-buckets.yml
+      - nockmeme/seedgen/**
+
+permissions:
+  contents: write
+
+env:
+  NOCKCHAIN_REV: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
+  WORK: /mnt/work
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Overcommit (the kernel jams reserve 16 GB of address space)
+        run: sudo sysctl -w vm.overcommit_memory=1
+      - name: System deps
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q protobuf-compiler clang cmake make pkg-config
+      - name: Clone Nockchain at the pinned revision
+        run: |
+          sudo mkdir -p "$WORK" && sudo chown "$USER" "$WORK"
+          git init -q "$WORK/nockchain" && cd "$WORK/nockchain"
+          git remote add origin https://github.com/nockchain/nockchain.git
+          git fetch -q --depth 1 origin "$NOCKCHAIN_REV"
+          git checkout -q FETCH_HEAD
+          git rev-parse HEAD
+      - name: Restore the cargo cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /mnt/work/nockchain/target
+          key: nmeme-seedgen-${{ env.NOCKCHAIN_REV }}-${{ runner.os }}-v1
+      - name: Build seedgen as an extra bin of ai-pow-jets
+        working-directory: /mnt/work/nockchain
+        run: |
+          mkdir -p crates/ai-pow-jets/src/bin
+          cp "$GITHUB_WORKSPACE/nockmeme/seedgen/seedgen.rs" crates/ai-pow-jets/src/bin/seedgen.rs
+          cargo build --release -p ai-pow-jets --bin seedgen
+          ls -la target/release/seedgen
+          ./target/release/seedgen count
+          ./target/release/seedgen list
+      - name: Save the cargo cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /mnt/work/nockchain/target
+          key: nmeme-seedgen-${{ env.NOCKCHAIN_REV }}-${{ runner.os }}-v1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: seedgen-bin
+          path: /mnt/work/nockchain/target/release/seedgen
+          retention-days: 7
+
+  prove:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        bucket: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    name: prove bucket ${{ matrix.bucket }}
+    env:
+      NODE_MEMORY_MAX: 13G
+      RAYON_NUM_THREADS: 1
+      PROGRESS_BRANCH: seed-bucket-progress-${{ matrix.bucket }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: seedgen-bin
+          path: bin
+      - name: Machine facts, overcommit, swap from the free disk
+        run: |
+          chmod +x bin/seedgen
+          nproc; free -g; df -h /
+          sudo sysctl -w vm.overcommit_memory=1
+          sudo sysctl -w vm.swappiness=100
+          avail=$(df -BG --output=avail / | tail -1 | tr -dc 0-9)
+          size=$((avail - 8))
+          sudo fallocate -l "${size}G" /swapfile && sudo chmod 600 /swapfile
+          sudo mkswap /swapfile >/dev/null && sudo swapon /swapfile
+          free -g
+      - name: Prove the bucket (cgroup-confined, RSS sampled, progress pushed)
+        run: |
+          mkdir -p out
+          ( while true; do
+              P=$(pgrep -x seedgen | head -1) || true
+              if [ -n "$P" ]; then
+                R=$(awk '/^VmRSS:/{print $2}' /proc/$P/status 2>/dev/null || echo 0)
+                S=$(awk '/^VmSwap:/{print $2}' /proc/$P/status 2>/dev/null || echo 0)
+                printf '%s\t%s\t%s\n' "$(date +%s)" "$R" "$S" >> out/rss.tsv
+              fi
+              sleep 15
+            done ) &
+          SAMPLER=$!
+          PROG="$RUNNER_TEMP/progress"
+          git init -q "$PROG" && ( cd "$PROG" && git config user.name "nmeme-seed-cache[bot]" \
+            && git config user.email "nmeme-seed-cache@users.noreply.github.com" \
+            && git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            && git checkout -q --orphan "$PROGRESS_BRANCH" )
+          ( while true; do
+              sleep 300
+              { echo "run: ${{ github.run_id }}  bucket: ${{ matrix.bucket }}  at: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"; echo; free -m; } > "$PROG/status.txt"
+              cp out/rss.tsv "$PROG/rss.tsv" 2>/dev/null || true
+              tail -n 100 out/seedgen.log > "$PROG/seedgen.log.tail" 2>/dev/null || true
+              ( cd "$PROG" && git add -A && git commit -qm "progress $(date -u +%H:%M)" && git push -fq origin "$PROGRESS_BRANCH" ) || true
+            done ) &
+          PUBLISHER=$!
+          echo +memory | sudo tee /sys/fs/cgroup/cgroup.subtree_control >/dev/null || true
+          sudo mkdir -p /sys/fs/cgroup/nmeme-prove
+          echo "$NODE_MEMORY_MAX" | sudo tee /sys/fs/cgroup/nmeme-prove/memory.max
+          echo max | sudo tee /sys/fs/cgroup/nmeme-prove/memory.swap.max
+          set +e
+          sudo -E env RUST_LOG=info RAYON_NUM_THREADS="$RAYON_NUM_THREADS" \
+            bash -c 'echo $$ > /sys/fs/cgroup/nmeme-prove/cgroup.procs && exec ./bin/seedgen prove "$0" "$1"' \
+            "${{ matrix.bucket }}" "out/seed-${{ matrix.bucket }}.bin" > out/seedgen.log 2>&1
+          RC=$?
+          set -e
+          sudo chown -R "$USER" out
+          kill $SAMPLER $PUBLISHER 2>/dev/null || true
+          echo "exit code: $RC"
+          grep -a "^bucket" out/seedgen.log || true
+          echo "peak RSS:  $(awk -F'\t' '{if($2>m)m=$2}END{printf "%.2f GiB", m/1048576}' out/rss.tsv)"
+          echo "peak swap: $(awk -F'\t' '{if($3>m)m=$3}END{printf "%.2f GiB", m/1048576}' out/rss.tsv)"
+          echo "cgroup peak: $(cat /sys/fs/cgroup/nmeme-prove/memory.peak 2>/dev/null || echo n/a)"
+          { echo "finished with exit code $RC at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"; grep -a "^bucket" out/seedgen.log || true; free -m; } > "$PROG/status.txt"
+          cp out/rss.tsv "$PROG/rss.tsv" 2>/dev/null || true
+          tail -n 200 out/seedgen.log > "$PROG/seedgen.log.tail" 2>/dev/null || true
+          ( cd "$PROG" && git add -A && git commit -qm "final: exit $RC" && git push -fq origin "$PROGRESS_BRANCH" ) || true
+          [ "$RC" -eq 0 ] && [ "$(head -c 8 "out/seed-${{ matrix.bucket }}.bin")" = "NCVPSEED" ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: seed-${{ matrix.bucket }}
+          path: out/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  merge:
+    needs: prove
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: seedgen-bin
+          path: bin
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: seed-*
+          path: seeds
+          merge-multiple: true
+      - name: Merge in bucket order and check the consensus table digest
+        run: |
+          chmod +x bin/seedgen
+          ls -la seeds
+          n=$(./bin/seedgen count)
+          files=""
+          for i in $(seq 0 $((n - 1))); do files="$files seeds/seed-$i.bin"; done
+          mkdir -p cache/ai-pow
+          ./bin/seedgen merge cache/ai-pow/verifier-setup-seeds-v1.bin $files | tee merge.log
+          ./bin/seedgen check cache/ai-pow/verifier-setup-seeds-v1.bin
+          SEED=cache/ai-pow/verifier-setup-seeds-v1.bin
+          SIZE=$(stat -c %s "$SEED"); SHA=$(sha256sum "$SEED" | cut -d' ' -f1)
+          tar -C cache -czf nmeme-seed-cache.tar.gz ai-pow/verifier-setup-seeds-v1.bin
+          { echo "file:     ai-pow/verifier-setup-seeds-v1.bin"; echo "sha256:   $SHA"; echo "bytes:    $SIZE"
+            echo "revision: $NOCKCHAIN_REV"; echo "made:     $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "how:      one bucket per GitHub-hosted runner job (nmeme-seed-buckets.yml run ${{ github.run_id }}), merged, digest-checked"
+          } | tee nmeme-seed-cache.sha256
+          cat seeds/rss.tsv >/dev/null 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nmeme-seed-cache
+          path: |
+            nmeme-seed-cache.tar.gz
+            nmeme-seed-cache.sha256
+            merge.log
+          retention-days: 90
+      - name: Publish to the seed-cache branch (fetchable with plain git)
+        run: |
+          git config user.name  "nmeme-seed-cache[bot]"
+          git config user.email "nmeme-seed-cache@users.noreply.github.com"
+          git checkout --orphan seed-cache
+          git rm -rfq . || true
+          git add -f nmeme-seed-cache.tar.gz nmeme-seed-cache.sha256 merge.log
+          git commit -qm "Verifier-setup seed cache for Nockchain $NOCKCHAIN_REV (per-bucket run ${{ github.run_id }})"
+          git push -f origin seed-cache
