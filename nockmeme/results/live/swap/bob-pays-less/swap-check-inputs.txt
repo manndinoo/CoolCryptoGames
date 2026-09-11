@@ -1,0 +1,4 @@
+# inputs read live at height 1177 block 46fB5zDL1Kg98kFL1GQGqsMgN4odjprYamuptzevb25kxEPFxgEFhpr
+INPUT-OK	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK AoV2kitaQVDMpBgWwE4iuFy9iSApgzKXFBHpteveV9kzxnfr4EMyKmC]	tokenfree (node shows no claim)
+INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8AobeFME73ciC3ceu53MdJeNFqnWhjvBdCTYYSXHAT6xzh6iM6UxwxJ]	named token note
+INPUTS	2 verified live

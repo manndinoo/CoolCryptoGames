@@ -1,0 +1,7 @@
+[38;5;253m[4mTransaction Status[0m
+- tx id: [48;5;237m[38;5;252mgfH6S5eiz6kbdLdTmmsN7EMsb86MPnGRKSH2xH4QogKceaTqnbT55[49m[39m
+- status: [1mconfirmed[0m (mined into a block)
+- block height: 1071
+- block id: [48;5;237m[38;5;252m7Z8C6s63ofDcoarhvxBWJByXsLShj8sWEX4G587D9gX5bfiPqrPBZpm[49m[39m
+- confirmations: 33 (tip at height 1103)
+

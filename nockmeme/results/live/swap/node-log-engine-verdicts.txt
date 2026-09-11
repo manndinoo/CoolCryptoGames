@@ -1,0 +1,12 @@
+2026-09-11T16:59:01.850178Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 9MR9cjihU8L4MkEN89cNSrf8eRSXdQm6kKtBAhqp2iTy52byrxBRs1W
+2026-09-11T16:59:01.856015Z  WARN poke{src="zk-pow-miner"}:do_poke:slam: slogger: tx-acc: process failed: v1-tx-invalid
+  (26 candidate blocks tried it)
+2026-09-11T17:02:58.778340Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 7DVNq9Lg6Ea3LhBcQUio6Z59bpitzwjHp2qikVzWqVbWXzcuVePG4mT
+2026-09-11T17:02:58.784405Z  WARN poke{src="zk-pow-miner"}:do_poke:slam: slogger: tx-acc: process failed: v1-tx-invalid
+  (22 candidate blocks tried it)
+2026-09-11T17:05:32.676120Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: CqTxwi2NubG8hwp618wzzcsCny758K2q43vcivt4g6WVMXQbD1YZbM6
+2026-09-11T17:05:32.688658Z  WARN poke{src="zk-pow-miner"}:do_poke:slam: slogger: tx-acc: process failed: v1-tx-invalid
+  (21 candidate blocks tried it)
+2026-09-11T17:13:09.153010Z  INFO poke{src="zk-pow-miner"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 3qspLe75gej7bUiArC89uRXccpEH8dcTZCPNy9SEMuu7cyxhdLJZnVu
+2026-09-11T17:13:09.165452Z  WARN poke{src="zk-pow-miner"}:do_poke:slam: slogger: tx-acc: process failed: v1-tx-invalid
+  (9 candidate blocks tried it)

@@ -1,0 +1,63 @@
+#### instance alice-half token 8wcgLgFgaaMav68GtNzqqC2xinvFnDgwoB5cCYKEsyahee6ocwuKxh9 note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7jbp7N12PnHQ1YxS3MCkVNFs9VgQWpqjYroS8Xj8EdTK7heEkQT9tKC]
+FUND	txid=gfH6S5eiz6kbdLdTmmsN7EMsb86MPnGRKSH2xH4QogKceaTqnbT55	height=1071	bob+=655360 nicks
+  PASS alice-half-wallet 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  alice-half-wallet: 1/1 verified
+  PASS bob-half-wallet AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  bob-half-wallet: 1/1 verified
+  PASS swap-both-spends AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  PASS swap-both-spends 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  swap-both-spends: 2/2 verified
+SWAP-BUILT	txid=9aYbdAz7f7ZQ2Yw668ftLd8pxiXCsZBCy5Pb1ov78VPKDfLTm67zPZg	100 tokens for 327680 nicks	pins=2
+== stage 5: mode alice-half ==
+REJECTED	alice-half-alone	txid=9MR9cjihU8L4MkEN89cNSrf8eRSXdQm6kKtBAhqp2iTy52byrxBRs1W	engine: v1-tx-invalid	not mined in 2 blocks	inputs still unspent
+  mempool: admitted; pins: 1 violated
+#### instance bob-half token 2vJT5B5jExdnWYhnuNfG7iFStTSLfj3KQkNSdqvaxXHEvgCxT3msShL note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4fZSTvzRQV2yaUtsN94LZKkg1xyoxC8J1W91uFhF1Y5m42rdnoe9NXW]
+INSTANCE-FAILED	bob-half
+#### instance bob-half token 2vJT5B5jExdnWYhnuNfG7iFStTSLfj3KQkNSdqvaxXHEvgCxT3msShL note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4fZSTvzRQV2yaUtsN94LZKkg1xyoxC8J1W91uFhF1Y5m42rdnoe9NXW]
+FUND	txid=6oz49hZLhwM4ZFUVchS4JV9tUmxVZrRWoBou5JyPPZCwtCHaaNbvr3W	height=1132	bob+=655360 nicks
+  PASS alice-half-wallet 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  alice-half-wallet: 1/1 verified
+  PASS bob-half-wallet AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  bob-half-wallet: 1/1 verified
+  PASS swap-both-spends 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  PASS swap-both-spends AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  swap-both-spends: 2/2 verified
+SWAP-BUILT	txid=8LgvfEme9wxFijw5fkRjFFfm91iCkCZGrzyR3jF1t8x7ryGmzEZNZoA	100 tokens for 327680 nicks	pins=2
+== stage 5: mode bob-half ==
+REJECTED	bob-half-alone	txid=7DVNq9Lg6Ea3LhBcQUio6Z59bpitzwjHp2qikVzWqVbWXzcuVePG4mT	engine: v1-tx-invalid	not mined in 2 blocks	inputs still unspent
+  mempool: admitted; pins: 1 violated
+#### instance bob-pays-less token 9MZ3Bkv43bMEPY61vFTvhsCzaV2tz7vsqPAextmS7NY9QMoUe3aUhA6 note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8AobeFME73ciC3ceu53MdJeNFqnWhjvBdCTYYSXHAT6xzh6iM6UxwxJ]
+FUND	txid=4KqgXBMykXHfp81UrznMR68Nt15UZDQVKPo7BbEMj2bYVKKbxNyeZEC	height=1154	bob+=655360 nicks
+  PASS alice-half-wallet 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  alice-half-wallet: 1/1 verified
+  PASS bob-half-wallet AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  bob-half-wallet: 1/1 verified
+  PASS swap-both-spends AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  PASS swap-both-spends 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  swap-both-spends: 2/2 verified
+SWAP-BUILT	txid=APWfPniTqbW41MkrM5fJZ5PfLm4mUpGyACguq2kQxcfPEqqaNaP466W	100 tokens for 327680 nicks	pins=2
+== stage 5: mode bob-pays-less ==
+REJECTED	bob-pays-less	txid=CqTxwi2NubG8hwp618wzzcsCny758K2q43vcivt4g6WVMXQbD1YZbM6	engine: v1-tx-invalid	not mined in 2 blocks	inputs still unspent
+  mempool: admitted; pins: 1 violated
+#### instance alice-gives-less token 4Fkt8tEVF5AfozYrCdF5F48vd7VNVektAwz5jLHkdq5eTY4XNzubkRU note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4erSxvPWCtETFWGCZJqwofJhej238mj4SsYu9XnZW26TFn1zsGQKitc]
+FUND	txid=5MNBi9uFssDzCsLYkoXq2GNH8NDBhnMgXeKAwCs4G2kUDWTMsp1qHSm	height=1186	bob+=655360 nicks
+  PASS alice-half-wallet 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  alice-half-wallet: 1/1 verified
+  PASS bob-half-wallet AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  bob-half-wallet: 1/1 verified
+INSTANCE-FAILED	alice-gives-less
+#### instance alice-gives-less token 4Fkt8tEVF5AfozYrCdF5F48vd7VNVektAwz5jLHkdq5eTY4XNzubkRU note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4erSxvPWCtETFWGCZJqwofJhej238mj4SsYu9XnZW26TFn1zsGQKitc]
+FUND	txid=7z5vzhZ4p6yZVHgyssaBFWVgviDTYQGVbg8GPv1KeLi84xrRiv5Pywg	height=1222	bob+=655360 nicks
+  PASS alice-half-wallet 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  alice-half-wallet: 1/1 verified
+  PASS bob-half-wallet AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  bob-half-wallet: 1/1 verified
+  PASS swap-both-spends AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK
+  PASS swap-both-spends 2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f
+  swap-both-spends: 2/2 verified
+SWAP-BUILT	txid=8hnHZsf6xk8sJaEy2sisD8aCQB72rFxVD2LYt42r9afkLG59bNCmYBq	100 tokens for 327680 nicks	pins=2
+== stage 5: mode alice-gives-less ==
+REJECTED	alice-gives-less	txid=3qspLe75gej7bUiArC89uRXccpEH8dcTZCPNy9SEMuu7cyxhdLJZnVu	engine: v1-tx-invalid	not mined in 2 blocks	inputs still unspent
+  mempool: admitted; pins: 1 violated
+#### instance honest token Cd1wN6o5fgr66r1wY6ai1LgrrjaPzCAG4RVVPZ2zyN6Gdc1YWEhSPTb note [2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7gZbLAvbyHs6UjE96s14bmBKzTbyQP5YjRXoBhgEoBKZFicUwY28V6k]
+INSTANCE-FAILED	honest

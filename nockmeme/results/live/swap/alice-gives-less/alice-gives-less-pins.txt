@@ -1,0 +1,3 @@
+PIN	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	VIOLATED: the seed set at this lock differs from what was pinned
+PIN	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	matches the seed set at this lock
+PINS	1 violated
