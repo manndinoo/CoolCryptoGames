@@ -55,14 +55,14 @@ pub enum Error {
     UnsupportedTxTag(u64),
     #[error("unsupported witness-data tag {0}")]
     UnsupportedWitnessTag(u64),
-    #[error("lock hash: {0:?}")]
-    LockHash(nockchain_types::tx_engine::v1::tx::LockHashError),
+    #[error("lock hash: {0}")]
+    LockHash(String),
     #[error("{0}")]
     Pool(#[from] nmeme_core::pool::PoolError),
 }
 
 impl From<nockchain_types::tx_engine::v1::tx::LockHashError> for Error {
     fn from(e: nockchain_types::tx_engine::v1::tx::LockHashError) -> Self {
-        Error::LockHash(e)
+        Error::LockHash(format!("{e:?}"))
     }
 }

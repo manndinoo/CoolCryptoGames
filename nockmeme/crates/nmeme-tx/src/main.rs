@@ -15,7 +15,11 @@
 
 use std::process::ExitCode;
 
-use nmeme_core::Claim;
+use nmeme_core::pool::{PoolParams, Side};
+use nmeme_core::{Claim, TokenId};
+use nmeme_tx::pool::PoolNote;
+use nockchain_types::tx_engine::v1::note::NoteData;
+use nockchain_types::tx_engine::v1::tx::Seed;
 use nmeme_tx::cli::{parse_claim, witness_with_signature};
 use nmeme_tx::fee::{enforce_fee, required_fee, FeeParams};
 use nmeme_tx::sighash::spend_sig_hash;
