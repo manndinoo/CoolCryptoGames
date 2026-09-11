@@ -1,160 +1,54 @@
-Test run
-========
+# nmeme test results
 
-Date:      2026-09-10 13:17 UTC
-Built as:  a member of the Nockchain workspace at 2bcb0b9dfd190f17252205afd1c8a067048a1ad9,
-           so nockchain-types, nockchain-math and wallet-tx-builder are the real crates,
-           and the workspace's warnings = deny / clippy::unwrap_used = deny apply.
-Toolchain: rustc 1.96.0-nightly (nightly-2026-04-03), 4 cores, Linux x86_64
-Profile:   default dev/test profile linked here without overrides. An independent
-           verifier needed CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false;
-           see docs/DEVELOP.md.
+Run on a GitHub-hosted runner (ubuntu-latest) inside the pinned Nockchain
+workspace (rev 2bcb0b9dfd190f17252205afd1c8a067048a1ad9), by
+.github/workflows/nmeme-tests.yml, run 34593341963, commit ddabd880,
+2026-09-11 11:20 UTC. This container's disk allowance could not hold a
+test-profile build next to the node's verifier contexts, which is why the
+suites run there; the same command is RUNBOOK.md step 4.
 
-Unique tests passing: 88 (nmeme-core also run in release), plus 9 signature-gate
-and 6 height-gate shell checks.
-Suites: nmeme-core 26; nmeme-tx attach 13, roundtrip 6, names 8, fee 5, fee_path 6,
-        independent_fee_path 1 (retained from the external report), fixture 1;
-        nmeme-index decode 8, binding 6, snapshot 8.
+    cargo test -p nmeme-core -p nmeme-tx -p nmeme-index
+    (CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false NOCKCHAIN_REPO=<checkout>)
 
-SCOPE: offline code checks only. Nothing here has touched a chain. No transaction
-has been broadcast. The live test is blocked on memory (results/environment.md),
-a separate matter from anything verified here.
+## cargo test — 88 passed, 0 failed
 
-### cargo test -p nmeme-core
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test amounts_above_the_supply_cap_are_rejected_at_the_codec ... ok
-test claim_rejects_zero_and_oversized_values ... ok
-test claiming_a_token_never_consumed_mints_nothing ... ok
-test every_ticker_limb_is_a_field_element ... ok
-test genesis_cannot_consume_existing_token_weight ... ok
-test genesis_claim_round_trips ... ok
-test genesis_creates_fixed_supply ... ok
-test many_capped_claims_cannot_overflow_the_indexer ... ok
-test mixed_token_inputs_are_rejected_in_v0 ... ok
-test non_conserving_transfer_burns_everything ... ok
-test one_claim_per_lock_root_after_merging ... ok
-test reorg_rebuilds_from_replacement_history ... ok
-test replay_is_deterministic ... ok
-test spending_with_a_token_unaware_wallet_burns ... ok
-test ticker_rejects_bad_input ... ok
-test ticker_round_trips_through_limbs ... ok
-test token_id_binds_ticker_and_decimals ... ok
-test token_id_is_independent_of_input_ordering ... ok
-test supply_is_conserved_across_a_long_chain_of_transfers ... ok
-test token_id_noun_round_trips ... ok
-test token_id_separates_same_ticker_from_different_anchors ... ok
-test transfer_claim_round_trips ... ok
-test transfer_splits_and_conserves ... ok
-test two_capped_amounts_cannot_overflow_a_u64 ... ok
-test wrapped_claim_sum_cannot_mint ... ok
-test wrapped_genesis_supply_cannot_understate_holdings ... ok
-test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+| crate / suite | tests |
+|---|---|
+| nmeme-core tests/standard.rs | 26 passed |
+| nmeme-index tests/binding.rs | 6 passed |
+| nmeme-index tests/decode.rs | 8 passed |
+| nmeme-index tests/snapshot.rs | 8 passed |
+| nmeme-tx tests/attach.rs | 13 passed |
+| nmeme-tx tests/fee.rs | 5 passed |
+| nmeme-tx tests/fee_path.rs | 6 passed |
+| nmeme-tx tests/independent_fee_path.rs | 1 passed |
+| nmeme-tx tests/names.rs | 8 passed |
+| nmeme-tx tests/roundtrip.rs | 6 passed |
+| nmeme-tx tests/sighash_fixtures.rs | 1 passed (reports the repository fixtures carry 0 signatures; the live gate is the real check) |
+| unit and doc tests | 0 in every crate |
 
-### cargo test -p nmeme-core --release
-test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Raw `test result:` lines, in the order cargo printed them:
 
-### cargo test -p nmeme-tx
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test attaches_to_the_seed_paying_the_named_lock_root ... ok
-test empty_note_data_digests_as_the_null_leaf ... ok
-test different_claims_give_different_note_data_digests ... ok
-test a_pinned_output_source_is_refused_rather_than_guessed ... ok
-test genesis_and_transfer_claims_are_distinguishable_in_the_digest ... ok
-test preserves_note_data_that_is_already_present ... ok
-test note_data_digest_is_not_a_plain_noun_hash ... ok
-test attaching_a_claim_changes_the_signing_hash ... ok
-test refuses_an_unknown_lock_root ... ok
-test refuses_to_overwrite_an_existing_meme_entry ... ok
-test refuses_two_seeds_sharing_one_lock_root ... ok
-test the_signing_hash_covers_the_fee ... ok
-test the_signing_hash_is_deterministic_and_order_independent ... ok
-test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test mainnet_charges_more_per_word_than_fakenet ... ok
-test the_minimum_is_never_below_the_network_floor ... ok
-test attaching_a_claim_raises_the_required_fee ... ok
-test a_fee_below_the_post_attach_minimum_is_refused_with_the_shortfall ... ok
-test a_fee_at_the_minimum_is_accepted_and_one_below_is_not ... ok
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test a_path_deeper_than_any_defined_lock_is_refused_not_estimated ... ok
-test a_simple_lock_with_no_path_is_charged_as_before ... ok
-test the_count_derivation_is_exactly_the_estimators_inverse ... ok
-test each_extra_sibling_costs_five_words ... ok
-test the_undercount_is_now_visible_in_nicks ... ok
-test a_path_of_n_siblings_is_charged_as_a_2_to_the_n_lock ... ok
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test fee_must_include_the_supplied_merkle_path ... ok
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test a_seed_for_another_lock_is_rejected ... ok
-test last_name_depends_on_the_seeds_hash ... ok
-test first_name_matches_the_repository_implementation ... ok
-test equal_gifts_to_the_same_recipient_still_differ_by_parent ... ok
-test merged_seeds_name_one_note ... ok
-test output_source_is_stripped_before_hashing ... ok
-test successive_outputs_to_the_same_recipient_have_distinct_identities ... ok
-test the_name_is_a_pure_function_of_the_seed_set ... ok
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test dump_synthetic_transaction_when_asked ... ok
-test a_synthetic_transaction_file_round_trips_unchanged ... ok
-test a_substituted_witness_replaces_only_its_own_entry ... ok
-test other_seeds_and_the_fee_are_untouched_by_attachment ... ok
-test attaching_a_claim_survives_the_round_trip ... ok
-test rewrite_without_changes_preserves_the_spends ... ok
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
-test report_fixture_sig_hashes ... ok
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+    test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+    test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 
-### cargo test -p nmeme-index
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test a_note_cannot_be_claimed_by_two_steps ... ok
-test a_missing_output_fails_rather_than_binding_partially ... ok
-test each_step_binds_to_its_own_note_and_only_that_note ... ok
-test a_note_with_the_right_recipient_but_wrong_identity_is_refused ... ok
-test equal_gifts_across_steps_never_collide_in_binding ... ok
-test successive_change_outputs_to_alice_share_a_first_name ... ok
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test a_transfer_claim_survives_the_blob_encoding ... ok
-test a_foreign_payload_under_the_meme_key_is_rejected ... ok
-test a_future_version_is_rejected_rather_than_guessed ... ok
-test a_genesis_claim_survives_the_blob_encoding ... ok
-test garbage_is_rejected ... ok
-test a_truncated_blob_is_rejected_not_misread ... ok
-test the_supply_cap_survives_the_round_trip ... ok
-test every_ticker_width_survives ... ok
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test a_single_page_read_is_the_degenerate_case_not_a_shortcut ... ok
-test a_page_without_a_block_id_cannot_anchor_a_snapshot ... ok
-test a_repeated_token_is_an_error_not_an_infinite_loop ... ok
-test pages_at_different_blocks_are_refused ... ok
-test bracketing_detects_a_tip_that_moved_during_transaction_reads ... ok
-test same_height_different_block_is_still_refused ... ok
-test the_loop_follows_tokens_until_the_node_returns_an_empty_one ... ok
-test a_runaway_pager_is_bounded ... ok
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+## shell self-tests — 15 passed (same run, and again in this container)
 
-### bash scripts/gate-selftest.sh
-ok    valid signature, exit 0 -> accept
-ok    invalid signature, exit 1 -> reject
-ok    "Invalid signature" does match grep -i valid (the old bug)
-ok    ...but verify_decision rejects it
-ok    exit 0 with failure text -> reject
-ok    exit 1 with success text -> reject
-ok    empty output -> reject
-ok    unrelated error -> reject
-ok    crash exit code -> reject
+    gate self-test: all checks passed          (9: scripts/gate-selftest.sh)
+    height-gate self-test: all checks passed   (6: scripts/height-gate-selftest.sh)
 
-gate self-test: all checks passed
+## the live run — not a unit test
 
-### bash scripts/height-gate-selftest.sh
-ok    no blocks at all -> fail (rc=1 out=)
-ok    height 1 below minimum 3 -> fail (the reproduced bug) (rc=1 out=)
-ok    height 2, one short -> fail (rc=1 out=)
-ok    height 3 meets minimum 3 -> pass (rc=0 out=3)
-ok    height 7 exceeds minimum -> pass (rc=0 out=7)
-ok    latest line wins -> pass (rc=0 out=5)
-
-height-gate self-test: all checks passed
+scripts/live-demo.sh, unmodified, exit 0 against the fakenet node in this
+container on 2026-09-11 (RESULTS.md §A11, live/attempt5/): signature gates
+PASS, genesis mined at height 75, transfer at height 91, balances rebuilt
+from the chain 999900 / 100 of 1000000, ASSERT-OK ×3.
