@@ -183,7 +183,8 @@ B_SPEND=$(awk -F'\t' '$1=="SIGHASH"{print $2; exit}' "$S/b/sighash.txt"); B_PK=$
 
 # build_swap <a.tx> <b.tx> <out> <sell> -> attaches claims and pins both locks
 build_swap() {
-  local a="$1" b="$2" out="$3" sell="$4" keep=$((TOKEN_HELD - sell))
+  local a="$1" b="$2" out="$3" sell="$4"
+  local keep=$((TOKEN_HELD - sell))
   NMEME_FEE_HEIGHT="$(node_height)" "$NMEME_TX" swap "$a" "$b" "$out" \
     --claim "$BOB_LOCK=transfer:$TOKEN:$sell" --claim "$ALICE_LOCK=transfer:$TOKEN:$keep" \
     --pin-a "$ALICE_LOCK" --pin-b "$BOB_LOCK"
