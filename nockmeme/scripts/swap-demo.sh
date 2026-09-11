@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
-# swap-demo.sh — a token-for-NOCK trade between two wallets in ONE transaction,
-# with output-source pins (docs/SWAPS.md), against the running fakenet node.
+# swap-demo.sh — ONE instance of a token-for-NOCK trade between two wallets in
+# a single transaction with output-source pins (docs/SWAPS.md), against the
+# running fakenet node. MODE selects what is done with the assembled trade:
 #
-# Runs after live-demo.sh on the same chain and wallets. Stages:
-#   1  fund Bob with NOCK (a plain, gated transaction from Alice)
-#   2  both parties build their halves with the stock wallet
-#   3  nmeme-tx swap: merge, attach the token claims, pin both outputs
-#   4  each party signs its own spend; the input gate reads the node live
-#   5  the attacks, each sent to the node BEFORE the honest trade:
-#        Alice's half alone, Bob's half alone,
-#        Bob paying less (his re-signed spend spliced into Alice's signed one),
-#        Alice giving less (her re-signed spend spliced into Bob's signed one)
-#      each must be refused, and the inputs must still be unspent afterwards
-#   6  the honest trade, mined
-#   7  the rebuild: token balances with provenance, and the NOCK legs
+#   honest            send it, confirm it, rebuild the token with provenance
+#   alice-half        Alice's spend alone
+#   bob-half          Bob's spend alone
+#   bob-pays-less     Bob's re-built, re-signed spend spliced into the trade Alice signed
+#   alice-gives-less  Alice's re-built, re-signed spend spliced into the trade Bob signed
 #
-# Usage: REPO=... RUN=... [FEE_NICKS=8192] bash swap-demo.sh 2>progress.log | tee results.txt
+# Every attack MODE sends the tampered transaction to the node and requires
+# the transaction engine's verdict, no inclusion after two blocks, and the
+# inputs still unspent. Each instance uses its own token note and a fresh
+# NOCK note for Bob, because the node keeps an admitted-but-invalid
+# transaction's inputs reserved in its mempool (seen live: "Inputs present in
+# spent-by, discarding transaction"), so instances must not share inputs.
+# swap-suite.sh runs the five modes on five token notes.
+#
+# Stages: 1 fund Bob (plain, gated); 2 both halves from the stock wallet;
+# 3 nmeme-tx swap (merge, claims, pins); 4 each party signs its own spend,
+# the input gate reads the node live; 5 the MODE.
+#
+# Usage: MODE=... TOKEN=... TOKEN_NOTE="<first> <last>" TOKEN_HELD=... REPO=... RUN=... bash swap-demo.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HERE/lib-verify.sh"
@@ -30,7 +36,8 @@ WALLET="$REPO/target/release/nockchain-wallet"
 MINER="$REPO/target/release/zk-pow-mine"
 NMEME_TX="$REPO/target/debug/nmeme-tx"
 NMEME_INDEX="$REPO/target/debug/nmeme-index"
-S="$RUN/swap"; mkdir -p "$S" "$S/final" "$S/a" "$S/b"
+MODE="${MODE:?set MODE (honest|alice-half|bob-half|bob-pays-less|alice-gives-less)}"
+S="$RUN/swap/$MODE"; mkdir -p "$S" "$S/final" "$S/a" "$S/b"
 : > "$RUN/verify.log"
 
 log() { echo "$*" >&2; }
@@ -104,9 +111,9 @@ node_height() { wait_for_height "$RUN/node.log" 0 10; }
 confirm() {
   local txid="$1" label="$2" deadline=$((SECONDS + ${INCLUDE_TIMEOUT:-900}))
   while (( SECONDS < deadline )); do
-    set +e; wallet_pub alice tx-status "$txid" >"$RUN/status-$label.txt" 2>&1; set -e
-    if grep -qi "confirmed" "$RUN/status-$label.txt"; then
-      local h; h=$(grep -oiE 'height[^0-9]*([0-9]+)' "$RUN/status-$label.txt" | grep -oE '[0-9]+' | head -1 || true)
+    set +e; wallet_pub alice tx-status "$txid" >"$S/status-$label.txt" 2>&1; set -e
+    if grep -qi "confirmed" "$S/status-$label.txt"; then
+      local h; h=$(grep -oiE 'height[^0-9]*([0-9]+)' "$S/status-$label.txt" | grep -oE '[0-9]+' | head -1 || true)
       echo "HEIGHT=${h:-unknown}" > "$S/$label.env"; log "  $label confirmed at height ${h:-unknown}"; return 0
     fi
     sleep 15
@@ -119,8 +126,8 @@ confirm() {
 # so nothing reached the node. Submitting through the public gRPC directly
 # is deterministic, and the node's accepted/rejected verdict is recorded.
 send() {
-  "$NMEME_INDEX" send --addr "$PUB" --tx "$1" >"$RUN/send-$2.txt" 2>&1 || true
-  awk -F'\t' '$1=="TXID"{print $2}' "$RUN/send-$2.txt" | head -1
+  "$NMEME_INDEX" send --addr "$PUB" --tx "$1" >"$S/send-$2.txt" 2>&1 || true
+  awk -F'\t' '$1=="TXID"{print $2}' "$S/send-$2.txt" | head -1
 }
 # unspent <first> <last>: is the note in the node's unspent set? (retries a
 # read that failed on a moving tip)
@@ -152,12 +159,12 @@ expect_rejected() {
   "$NMEME_TX" pins "$file" > "$S/$label-pins.txt" 2>&1 || true
   sed 's/^/  /' "$S/$label-pins.txt" >&2
   local sent; sent=$(send "$file" "$label")
-  sed 's/^/  node: /' "$RUN/send-$label.txt" >&2
-  [ "$sent" = "$txid" ] || die "$label: the node was not asked about $txid (see $RUN/send-$label.txt)"
+  sed 's/^/  node: /' "$S/send-$label.txt" >&2
+  [ "$sent" = "$txid" ] || die "$label: the node was not asked about $txid (see $S/send-$label.txt)"
   local h0; h0=$(node_height)
   wait_for_height "$RUN/node.log" $((h0 + 2)) "${MINE_TIMEOUT:-900}" >/dev/null || die "$label: chain did not advance"
-  set +e; wallet_pub alice tx-status "$txid" >"$RUN/status-$label.txt" 2>&1; set -e
-  if grep -qi "confirmed" "$RUN/status-$label.txt"; then die "$label: the node MINED an invalid transaction"; fi
+  set +e; wallet_pub alice tx-status "$txid" >"$S/status-$label.txt" 2>&1; set -e
+  if grep -qi "confirmed" "$S/status-$label.txt"; then die "$label: the node MINED an invalid transaction"; fi
   local n
   for n in "$@"; do
     unspent "${n%% *}" "${n##* }" || die "$label: input [$n] is no longer unspent after the attack"
@@ -166,7 +173,7 @@ expect_rejected() {
   engine=$(strip < "$RUN/node.log" | grep -a -A2 "heard-new-tx: Miner received new transaction: $txid" | grep -a -o -m1 "tx-acc: process failed: [a-z0-9-]*" || true)
   [ -n "$engine" ] || die "$label: the node log shows no transaction-engine verdict for $txid; inconclusive"
   echo "REJECTED	$label	txid=$txid	engine: ${engine#tx-acc: process failed: }	not mined in 2 blocks	inputs still unspent"
-  echo "  mempool: $(awk -F'\t' '$1=="MEMPOOL"{print $2}' "$RUN/send-$label.txt"); pins: $(grep '^PINS' "$S/$label-pins.txt" | cut -f2-)"
+  echo "  mempool: $(awk -F'\t' '$1=="MEMPOOL"{print $2}' "$S/send-$label.txt"); pins: $(grep '^PINS' "$S/$label-pins.txt" | cut -f2-)"
 }
 
 ALICE=$(wallet alice list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //')
@@ -196,8 +203,8 @@ FTX=$(create_tx alice "$S/fund" "$FUND" "$BOB" "$BOB_FUND_NICKS")
 "$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$FTX" > "$S/fund/check-inputs.txt" 2>&1 || die "fund gate refused"
 sed 's/^/  /' "$S/fund/check-inputs.txt" >&2
 cp "$FTX" "$S/fund.jam"
-FTXID=$(send "$S/fund.jam" fund); [ -n "$FTXID" ] || die "fund: no txid (see $RUN/send-fund.txt)"
-grep -q "MEMPOOL	admitted" "$RUN/send-fund.txt" || die "fund: the mempool did not admit it"
+FTXID=$(send "$S/fund.jam" fund); [ -n "$FTXID" ] || die "fund: no txid (see $S/send-fund.txt)"
+grep -q "MEMPOOL	admitted" "$S/send-fund.txt" || die "fund: the mempool did not admit it"
 confirm "$FTXID" fund
 echo "FUND	txid=$FTXID	height=$(cut -d= -f2 "$S/fund.env")	bob+=$BOB_FUND_NICKS nicks"
 
@@ -243,42 +250,45 @@ sed 's/^/  /' "$S/swap-check-inputs.txt" >&2
 SWAP_ID=$("$NMEME_INDEX" tx-id --tx "$S/swap.jam")
 echo "SWAP-BUILT	txid=$SWAP_ID	$SELL tokens for $PRICE_NICKS nicks	pins=2"
 
-echo "== stage 5: the attacks, before the honest trade =="
-"$NMEME_TX" half "$S/swap.jam" "$A_SPEND" "$S/attack-alice-half.jam" >/dev/null
-expect_rejected "$S/attack-alice-half.jam" alice-half-alone "$TOKEN_NOTE" "$BOB_NOTE"
-"$NMEME_TX" half "$S/swap.jam" "$B_SPEND" "$S/attack-bob-half.jam" >/dev/null
-expect_rejected "$S/attack-bob-half.jam" bob-half-alone "$TOKEN_NOTE" "$BOB_NOTE"
-# Bob pays less: his own re-built, re-signed spend spliced into the trade Alice signed.
-B4=$(create_tx bob "$S/b4" "[$BOB_NOTE]" "$ALICE" $((PRICE_NICKS - 65536))); cp "$B4" "$S/b4.tx"
-build_swap "$S/a.tx" "$S/b4.tx" "$S/t1-unsigned.jam" "$SELL" > "$S/t1-build.txt" || die "t1 build"
-sign_spend bob "$S/t1-unsigned.jam" "$B_SPEND" "$B_PKH" "$B_PK" "$S/t1-bob-signed.jam" "$S/t1-build.txt"
-"$NMEME_TX" replace-spend "$S/swap.jam" "$S/t1-bob-signed.jam" "$B_SPEND" "$S/attack-bob-pays-less.jam" >/dev/null
-expect_rejected "$S/attack-bob-pays-less.jam" bob-pays-less "$TOKEN_NOTE" "$BOB_NOTE"
-# Alice gives less: her re-built, re-signed spend spliced into the trade Bob signed.
-build_swap "$S/a.tx" "$S/b.tx" "$S/t2-unsigned.jam" $((SELL / 2)) > "$S/t2-build.txt" || die "t2 build"
-sign_spend alice "$S/t2-unsigned.jam" "$A_SPEND" "$A_PKH" "$A_PK" "$S/t2-alice-signed.jam" "$S/t2-build.txt"
-"$NMEME_TX" replace-spend "$S/swap.jam" "$S/t2-alice-signed.jam" "$A_SPEND" "$S/attack-alice-gives-less.jam" >/dev/null
-expect_rejected "$S/attack-alice-gives-less.jam" alice-gives-less "$TOKEN_NOTE" "$BOB_NOTE"
-
-echo "== stage 6: the honest trade =="
-SENT=$(send "$S/swap.jam" swap); sed 's/^/  node: /' "$RUN/send-swap.txt" >&2
-[ -n "$SENT" ] || die "swap: the node was not asked (see $RUN/send-swap.txt)"
-grep -q "MEMPOOL	admitted" "$RUN/send-swap.txt" || die "swap: the mempool did not admit the honest trade"
-confirm "$SENT" swap
-SWAP_H=$(cut -d= -f2 "$S/swap.env")
-echo "SWAP	txid=$SENT	height=$SWAP_H	alice -$SELL tokens +$PRICE_NICKS nicks	bob +$SELL tokens -$PRICE_NICKS nicks"
-
-echo "== stage 7: rebuild with provenance =="
-"$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" --lock "$BOB_LOCK" > "$S/funding-after.txt" || die "funding after"
-STEPS="${STEPS:?set STEPS to the earlier --step args of the token}"
-PROOFS="${PROOFS:?set PROOFS to the --funding args covering the earlier steps}"
-"$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN" $STEPS \
-  --step "$FTXID:$S/fund.jam" --step "$SENT:$S/swap.jam" \
-  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" $PROOFS --funding "$S/funding-0.txt" \
-  --expect "$ALICE_LOCK=$((TOKEN_HELD - SELL))" --expect "$BOB_LOCK=$((EXPECT_BOB_BEFORE + SELL))" \
-  > "$S/balances.txt" 2>&1 || { cat "$S/balances.txt" >&2; die "rebuild"; }
-grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances.txt"
-echo "== NOCK legs (assets of the merged notes) =="
-awk -F'\t' -v h="$SWAP_H" '$1=="FUNDING" && $6==h {print "NOTE\t"$2"\t"$3"\t"$4"\t"$5" nicks\torigin "$6}' "$S/funding-after.txt"
-echo "== summary =="
-echo "one transaction, two spends, two pins: $SELL tokens moved to bob, $PRICE_NICKS nicks moved to alice; four attacks refused, inputs intact until the honest trade."
+echo "== stage 5: mode $MODE =="
+case "$MODE" in
+  alice-half)
+    "$NMEME_TX" half "$S/swap.jam" "$A_SPEND" "$S/attack.jam" >/dev/null
+    expect_rejected "$S/attack.jam" alice-half-alone "$TOKEN_NOTE" "$BOB_NOTE" ;;
+  bob-half)
+    "$NMEME_TX" half "$S/swap.jam" "$B_SPEND" "$S/attack.jam" >/dev/null
+    expect_rejected "$S/attack.jam" bob-half-alone "$TOKEN_NOTE" "$BOB_NOTE" ;;
+  bob-pays-less)
+    # Bob's own re-built, re-signed spend (4 NOCK instead of 5), spliced into the trade Alice signed.
+    B4=$(create_tx bob "$S/b4" "[$BOB_NOTE]" "$ALICE" $((PRICE_NICKS - 65536))); cp "$B4" "$S/b4.tx"
+    build_swap "$S/a.tx" "$S/b4.tx" "$S/t-unsigned.jam" "$SELL" > "$S/t-build.txt" || die "tampered build"
+    sign_spend bob "$S/t-unsigned.jam" "$B_SPEND" "$B_PKH" "$B_PK" "$S/t-bob-signed.jam" "$S/t-build.txt"
+    "$NMEME_TX" replace-spend "$S/swap.jam" "$S/t-bob-signed.jam" "$B_SPEND" "$S/attack.jam" >/dev/null
+    expect_rejected "$S/attack.jam" bob-pays-less "$TOKEN_NOTE" "$BOB_NOTE" ;;
+  alice-gives-less)
+    # Alice's re-built, re-signed spend (half the tokens), spliced into the trade Bob signed.
+    build_swap "$S/a.tx" "$S/b.tx" "$S/t-unsigned.jam" $((SELL / 2)) > "$S/t-build.txt" || die "tampered build"
+    sign_spend alice "$S/t-unsigned.jam" "$A_SPEND" "$A_PKH" "$A_PK" "$S/t-alice-signed.jam" "$S/t-build.txt"
+    "$NMEME_TX" replace-spend "$S/swap.jam" "$S/t-alice-signed.jam" "$A_SPEND" "$S/attack.jam" >/dev/null
+    expect_rejected "$S/attack.jam" alice-gives-less "$TOKEN_NOTE" "$BOB_NOTE" ;;
+  honest)
+    SENT=$(send "$S/swap.jam" swap); sed 's/^/  node: /' "$S/send-swap.txt" >&2
+    [ -n "$SENT" ] || die "swap: the node was not asked (see $S/send-swap.txt)"
+    grep -q "MEMPOOL	admitted" "$S/send-swap.txt" || die "swap: the mempool did not admit the honest trade"
+    confirm "$SENT" swap
+    SWAP_H=$(cut -d= -f2 "$S/swap.env")
+    echo "SWAP	txid=$SENT	height=$SWAP_H	alice -$SELL tokens +$PRICE_NICKS nicks	bob +$SELL tokens -$PRICE_NICKS nicks"
+    echo "== rebuild with provenance =="
+    "$NMEME_INDEX" funding --addr "$PUB" --lock "$ALICE_LOCK" --lock "$BOB_LOCK" > "$S/funding-after.txt" || die "funding after"
+    STEPS="${STEPS:?set STEPS to the earlier --step args of the token}"
+    PROOFS="${PROOFS:?set PROOFS to the --funding args covering the earlier steps}"
+    "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN" $STEPS \
+      --step "$FTXID:$S/fund.jam" --step "$SENT:$S/swap.jam" \
+      --lock "$ALICE_LOCK" --lock "$BOB_LOCK" $PROOFS --funding "$S/funding-0.txt" \
+      --expect "$ALICE_LOCK=$((TOKEN_HELD - SELL))" --expect "$BOB_LOCK=$((EXPECT_BOB_BEFORE + SELL))" \
+      > "$S/balances.txt" 2>&1 || { cat "$S/balances.txt" >&2; die "rebuild"; }
+    grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances.txt"
+    echo "== NOCK legs (the merged notes the trade created) =="
+    awk -F'\t' -v h="$SWAP_H" '$1=="FUNDING" && $6==h {print "NOTE\t"$2"\t"$3"\t"$4"\t"$5" nicks\torigin "$6}' "$S/funding-after.txt" ;;
+  *) die "unknown MODE $MODE" ;;
+esac
