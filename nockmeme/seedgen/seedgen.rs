@@ -18,12 +18,16 @@
 //!   seedgen prove <bucket-index> <out.bin>
 //!   seedgen merge <out.bin> <seed-0.bin> <seed-1.bin> ... (in bucket order)
 //!   seedgen check <cache.bin>
+//!   seedgen contexts <data-dir>   (what a node does at boot: load the cache from
+//!                                 <data-dir>/ai-pow/, digest-check it, build every
+//!                                 bucket's on-disk context; prints their sizes)
 
 use std::path::Path;
 
 use ai_pow_jets::setup::{
-    build_verifier_setup_seed, build_verifier_setup_seed_dense, load_verifier_setup_seeds,
-    production_verifier_setup_buckets, save_verifier_setup_seeds,
+    build_verifier_setup_seed, build_verifier_setup_seed_dense, install_or_build_verifier_setup,
+    load_verifier_setup_seeds, production_verifier_setup_buckets, save_verifier_setup_seeds,
+    verifier_setup_seed_cache_path,
 };
 use ai_pow_jets::table_digest::verify_verifier_setup_seed_table_digest;
 
@@ -139,6 +143,36 @@ fn run(args: &[String]) -> Result<(), String> {
                 "{p}: {} seeds, table digest {} matches AI_POW_V0_VERIFIER_SETUP_TABLE_DIGEST",
                 seeds.len(),
                 hex(&digest)
+            );
+            Ok(())
+        }
+        Some("contexts") => {
+            let dir = Path::new(args.get(1).ok_or("contexts: data dir required")?);
+            let cache = verifier_setup_seed_cache_path(dir);
+            if !cache.exists() {
+                return Err(format!("no seed cache at {}", cache.display()));
+            }
+            let started = std::time::Instant::now();
+            // Empty bucket list: the cache MUST load and digest-check, never regenerate.
+            let n = install_or_build_verifier_setup(dir, &[])
+                .map_err(|e| format!("boot-path install from cache FAILED: {e}"))?;
+            let ai_pow = dir.join("ai-pow");
+            let mut total = 0u64;
+            let mut entries: Vec<_> = std::fs::read_dir(&ai_pow)
+                .map_err(|e| format!("read {}: {e}", ai_pow.display()))?
+                .flatten()
+                .collect();
+            entries.sort_by_key(|e| e.file_name());
+            for e in entries {
+                let len = e.metadata().map(|m| m.len()).unwrap_or(0);
+                total += len;
+                println!("{:>12}  {}", len, e.file_name().to_string_lossy());
+            }
+            println!(
+                "installed {n} buckets from cache in {:.0}s; on-disk total {:.2} GiB; peak_rss_gib={:.2}",
+                started.elapsed().as_secs_f64(),
+                total as f64 / 1073741824.0,
+                peak_rss_gib()
             );
             Ok(())
         }

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Start a fakenet Nockchain node under a constrained memory budget.
 #
-# The verifier-setup build is rayon-parallel and its peak RSS is dominated by
-# per-thread prover buffers. On a 13.34 GiB cgroup the default 4-thread build
-# was OOM-killed at 13.24 GiB; pinning rayon to one thread peaks at 2.85 GiB.
-# It is slower, and it fits.
+# First-boot GENERATION of the verifier-setup seed cache does not fit here at
+# any thread count (measured: 38 GB and climbing at 4 threads, >13 GB at 1;
+# results/environment.md). Install a cache produced elsewhere first
+# (install-seed-cache.sh); with it present the node only REBUILDS contexts
+# from seeds and writes them to disk, which is the phase this script is for.
 #
 # Both settings are documented operator knobs:
 #   RAYON_NUM_THREADS         prover parallelism

@@ -1,0 +1,78 @@
+# Measure the node's BOOT path on a hosted runner, given the published seed
+# cache: load it, digest-check it, rebuild every bucket's on-disk verifier
+# context (what install_or_build_verifier_setup does on every first boot with a
+# cache present), and report the on-disk size and peak RSS. Those two numbers
+# decide whether the node can boot in this project's 13 GiB / ~10 GB-disk
+# environment. Dispatch only; needs the `seed-cache` branch.
+name: nmeme seed contexts (boot-path measurement)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NOCKCHAIN_REV: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
+  WORK: /mnt/work
+
+jobs:
+  contexts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Overcommit
+        run: sudo sysctl -w vm.overcommit_memory=1
+      - name: System deps
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q protobuf-compiler clang cmake make pkg-config
+      - name: Clone Nockchain at the pinned revision
+        run: |
+          sudo mkdir -p "$WORK" && sudo chown "$USER" "$WORK"
+          git init -q "$WORK/nockchain" && cd "$WORK/nockchain"
+          git remote add origin https://github.com/nockchain/nockchain.git
+          git fetch -q --depth 1 origin "$NOCKCHAIN_REV"
+          git checkout -q FETCH_HEAD
+      - name: Restore the cargo cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /mnt/work/nockchain/target
+          key: nmeme-seedgen-${{ env.NOCKCHAIN_REV }}-${{ runner.os }}-v1
+      - name: Build seedgen
+        working-directory: /mnt/work/nockchain
+        run: |
+          mkdir -p crates/ai-pow-jets/src/bin
+          cp "$GITHUB_WORKSPACE/nockmeme/seedgen/seedgen.rs" crates/ai-pow-jets/src/bin/seedgen.rs
+          cargo build --release -p ai-pow-jets --bin seedgen
+      - name: Fetch the published seed cache
+        run: |
+          git fetch --depth 1 origin seed-cache
+          git show origin/seed-cache:nmeme-seed-cache.sha256
+          mkdir -p "$WORK/data"
+          git show origin/seed-cache:nmeme-seed-cache.tar.gz | tar -C "$WORK/data" -xz
+          ls -la "$WORK/data/ai-pow"
+      - name: Boot path with RSS sampling (cap 1 = one resident context, as node-lowmem.sh runs it)
+        run: |
+          ( while true; do
+              P=$(pgrep -x seedgen | head -1) || true
+              [ -n "$P" ] && printf '%s\t%s\n' "$(date +%s)" "$(awk '/^VmRSS:/{print $2}' /proc/$P/status 2>/dev/null || echo 0)" >> rss.tsv
+              sleep 5
+            done ) &
+          SAMPLER=$!
+          AI_POW_VERIFIER_CACHE_CAP=1 RUST_LOG=info "$WORK/nockchain/target/release/seedgen" contexts "$WORK/data" 2>&1 | tee contexts.log
+          kill $SAMPLER || true
+          echo "sampled peak RSS: $(awk -F'\t' '{if($2>m)m=$2}END{printf "%.2f GiB", m/1048576}' rss.tsv)"
+          du -sh "$WORK/data/ai-pow"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nmeme-seed-contexts-measurement
+          path: |
+            contexts.log
+            rss.tsv
+          if-no-files-found: ignore
