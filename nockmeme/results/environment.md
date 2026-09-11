@@ -113,9 +113,47 @@ node-log tail to a `seed-cache-progress` branch every five minutes so a
 reclaimed VM still leaves evidence.
 
 Attempt 2 is the first real measurement of the generation's working set, and
-it is not 32 GB: past 38 GB at four proving threads. Attempt 3 sizes swap from
-all the disk left after the build instead of a fixed 24 GB, and runs two
-variants in parallel, `RAYON_NUM_THREADS=1` and `=2`, on the reasoning that
-per-table proving memory scales with the lane count, so fewer threads should
-pull the peak toward physical RAM (and out of swap, which is what made attempt
-2 take 69 minutes to get as far as it did).
+it is not 32 GB: past 38 GB at four proving threads. Attempt 3 (run
+`34556716276`) sized swap from all the disk left after the build (77 GB) and
+ran `RAYON_NUM_THREADS=1` and `=2` side by side. Both stayed alive for over
+75 minutes at the 13 GB cap with 15 GB (one thread) and 35 GB (two threads)
+swapped, and neither reached `%born` in that time: correct, but swap-bound.
+
+## Generation one bucket per job
+
+The node's generator is a plain loop over fourteen independent proofs
+(`build_and_cache_verifier_setup_seeds`, `ai-pow-jets/src/setup.rs`), so
+`nockmeme/seedgen/seedgen.rs`, built as an extra bin of `ai-pow-jets` against
+the pinned checkout, proves ONE bucket per hosted-runner job and a merge job
+concatenates the fourteen seed files in bucket order and checks the table
+against `AI_POW_V0_VERIFIER_SETUP_TABLE_DIGEST` before publishing
+(`.github/workflows/nmeme-seed-buckets.yml`). Measured, single-threaded:
+
+| bucket | trace height | wall time | peak RSS | note |
+|---|---|---|---|---|
+| 0, 1 | 2^13 | 2.3 min | 3.5 GB | |
+| 2, 3 | 2^14 | 3.5 min | 5.7 GB | |
+| 4, 5 | 2^15 | 3.2 min | 4.0 GB | |
+| 6, 7 | 2^16 | 4–5 min | 6.6 GB | |
+| 8, 9 | 2^17 | 8 min | 12 GB + 1 GB swap | at the 12–13 GB cap |
+| 10–13 | 2^18, 2^19 | — | >13.6 GB | see below |
+
+Buckets 0–9 are cheap and reproducible: two runs, identical
+`verifier_key_digest` per bucket, which is the proof-independence the table
+digest relies on. The four largest buckets are the whole problem:
+
+- Under a hard `memory.max=13G` they were **OOM-killed within a minute**: they
+  allocate ~10 GB in the first fifteen seconds, faster than the kernel can
+  swap out, so the cgroup killer fires with swap still free (run 1).
+- Under `memory.high=12G` (throttle, never kill) they did not die, but sat at
+  13.6 GB resident for forty minutes without logging a line. The progress
+  branch showed 3 GB of swap, all used: that runner had the small-root
+  layout (11 GB free on `/`, a separate 70 GB `/mnt`) and the job had sized
+  swap from `/` alone (run 2). Run 4 takes swap from both disks and refuses
+  to start with under 20 GB.
+
+Runner sizes: a probe (`nmeme-runner-probe.yml`) asked for every documented
+larger label. `macos-*-large` and `*-xlarge` are refused instantly for this
+repository; `macos-latest` and `ubuntu-24.04-arm` are dispensed but are no
+larger than the 16 GB standard runner. There is no bigger free machine, so
+the four large buckets have to fit 16 GB of RAM plus swap.
