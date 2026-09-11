@@ -27,6 +27,288 @@ use nockchain_types::tx_engine::v1::tx::{Spend, Spends};
 use nockvm::noun::NounAllocator;
 use noun_serde::{NounDecode, NounEncode};
 
+/// `retarget <tx.jam> <out.jam> <from-root> <to-root>`: every seed paying
+/// `from` pays `to` instead. This is how a wallet-built payment to a
+/// placeholder address becomes a payment to a lock the wallet cannot name,
+/// such as a pool's covenant lock. The digest changes; re-sign after.
+fn cmd_retarget(args: &[String]) -> Result<ExitCode, String> {
+    let (slab, mut spends) = load_noun(&args[2])?;
+    let from = Hash::from_base58(&args[4]).map_err(|e| format!("from: {e}"))?;
+    let to = Hash::from_base58(&args[5]).map_err(|e| format!("to: {e}"))?;
+    let moved = nmeme_tx::pool::retarget(&mut spends, &from, &to);
+    if moved == 0 {
+        return Err(format!("no seed pays lock-root {}", from.to_base58()));
+    }
+    println!("RETARGETED\t{moved}\t{}\t{}", from.to_base58(), to.to_base58());
+    write_assembled(&slab, &spends, &args[3])?;
+    print_digests(&spends)?;
+    Ok(ExitCode::SUCCESS)
+}
+
+fn pool_params(args: &[String]) -> Result<PoolParams, String> {
+    let token = opt(args, "--token").ok_or("missing --token")?;
+    let fee = opt(args, "--fee-bps").ok_or("missing --fee-bps")?;
+    PoolParams::new(
+        TokenId(Hash::from_base58(token).map_err(|e| format!("token: {e}"))?),
+        fee.parse::<u64>().map_err(|e| format!("fee-bps: {e}"))?,
+    )
+    .map_err(|e| e.to_string())
+}
+
+/// `pool-lock --token <b58> --fee-bps N`: the canonical pool lock.
+fn cmd_pool_lock(args: &[String]) -> Result<ExitCode, String> {
+    let params = pool_params(args)?;
+    let root = params.lock_root().map_err(|e| format!("{e:?}"))?;
+    println!("POOL-LOCK\t{}", root.to_base58());
+    println!("POOL-FIRST\t{}", nmeme_tx::names::first_name(&root).to_base58());
+    Ok(ExitCode::SUCCESS)
+}
+
+/// `note-hash "<first> <last> <origin> <nock> <tokens>" --token <b58> --fee-bps N`:
+/// `hash:nnote-1` of a pool note, the parent-hash its spend must carry.
+fn cmd_note_hash(args: &[String]) -> Result<ExitCode, String> {
+    let params = pool_params(args)?;
+    let note = PoolNote::parse(&args[2])?;
+    println!("NOTEHASH\t{}", note.hash(&params).map_err(|e| e.to_string())?.to_base58());
+    Ok(ExitCode::SUCCESS)
+}
+
+fn opt<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
+    args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).map(String::as_str)
+}
+
+fn opts<'a>(args: &'a [String], name: &str) -> Vec<&'a str> {
+    let mut out = Vec::new();
+    for (i, a) in args.iter().enumerate() {
+        if a == name {
+            if let Some(v) = args.get(i + 1) {
+                out.push(v.as_str());
+            }
+        }
+    }
+    out
+}
+
+fn has(args: &[String], name: &str) -> bool {
+    args.iter().any(|a| a == name)
+}
+
+fn parse_u64(args: &[String], name: &str) -> Result<Option<u64>, String> {
+    opt(args, name)
+        .map(|v| v.parse::<u64>().map_err(|e| format!("{name}: {e}")))
+        .transpose()
+}
+
+/// `pool-trade <user.tx> <out.jam> --pool "<first> <last> <origin> <nock> <tokens>"
+///             --token <b58> --fee-bps N --side buy|sell --placeholder <lock-root>
+///             [--tokens-in N] [--claim <lock-root>=<claim-spec>]... [--dust N]
+///             [attack: --payout N | --withdraw N | --pool-fee N | --extra-seed <root>:<gift>
+///                      | --drop-claim | --successor-tokens N | --inflate-claim N
+///                      | --witness-pkh <b58> | --also-spend "<note>" [--also-take]]`
+///
+/// The user's wallet-built transaction pays the placeholder; that seed is
+/// retargeted to the pool lock. The pool note's keyless spend is built from
+/// the quote: for a buy, the bought tokens (with `dust` nicks) go to the
+/// user's lock and the rest stays; for a sell, the quoted nicks go to the
+/// user and the successor carries the tokens received. The user's own spend
+/// pins the user's lock, so the user gets exactly the quoted fill or nothing.
+/// The attack options build a transaction that the covenant must refuse.
+fn cmd_pool_trade(args: &[String]) -> Result<ExitCode, String> {
+    let (slab, mut spends) = load_noun(&args[2])?;
+    let out_path = &args[3];
+    let params = pool_params(args)?;
+    let pool_root = params.lock_root().map_err(|e| format!("{e:?}"))?;
+    let pool = PoolNote::parse(opt(args, "--pool").ok_or("missing --pool")?)?;
+    let placeholder = Hash::from_base58(opt(args, "--placeholder").ok_or("missing --placeholder")?)
+        .map_err(|e| format!("placeholder: {e}"))?;
+    let side = match opt(args, "--side") {
+        Some("buy") => Side::Buy,
+        Some("sell") => Side::Sell,
+        other => return Err(format!("--side must be buy or sell, got {other:?}")),
+    };
+    let dust = parse_u64(args, "--dust")?.unwrap_or(1000);
+    let tokens_in = parse_u64(args, "--tokens-in")?.unwrap_or(0);
+    let user_inputs: Vec<Name> = spends.0.iter().map(|(n, _)| n.clone()).collect();
+
+    let moved = nmeme_tx::pool::retarget(&mut spends, &placeholder, &pool_root);
+    if moved != 1 {
+        return Err(format!("expected exactly one seed paying the placeholder, found {moved}"));
+    }
+    for spec in opts(args, "--claim") {
+        let (lock, claim) = spec.split_once('=').ok_or_else(|| format!("expected <lock-root>=<claim-spec>, got {spec:?}"))?;
+        let lock = Hash::from_base58(lock).map_err(|e| format!("lock-root {lock}: {e}"))?;
+        let claim = parse_claim(claim)?;
+        let mut done = false;
+        for (_, spend) in spends.0.iter_mut() {
+            let Spend::Witness(spend1) = spend else { continue };
+            if spend1.seeds.0.iter().any(|s| s.lock_root == lock) {
+                attach_claim(&mut spend1.seeds, &lock, &claim).map_err(|e: Error| format!("attach: {e}"))?;
+                done = true;
+                break;
+            }
+        }
+        if !done {
+            return Err(format!("no seed of the user's transaction pays lock-root {}", lock.to_base58()));
+        }
+        println!("ATTACHED\t{}\t{}", lock.to_base58(), claim.amount());
+    }
+
+    // The user's lock: the one lock the user's seeds pay besides the pool.
+    let mut user_locks: Vec<Hash> = Vec::new();
+    let mut paid: u64 = 0;
+    for (_, spend) in &spends.0 {
+        let Spend::Witness(spend1) = spend else { continue };
+        for s in &spend1.seeds.0 {
+            if s.lock_root == pool_root {
+                paid += s.gift.0 as u64;
+            } else if !user_locks.contains(&s.lock_root) {
+                user_locks.push(s.lock_root.clone());
+            }
+        }
+    }
+    let user_lock = match opt(args, "--user-lock") {
+        Some(l) => Hash::from_base58(l).map_err(|e| format!("user-lock: {e}"))?,
+        None => {
+            if user_locks.len() != 1 {
+                return Err(format!("the user's seeds pay {} locks besides the pool; pass --user-lock", user_locks.len()));
+            }
+            user_locks[0].clone()
+        }
+    };
+
+    let fee_bps = params.fee_bps;
+    let quote = match side {
+        Side::Buy => nmeme_core::pool::quote_buy(pool.reserves, paid, dust, fee_bps),
+        Side::Sell => {
+            if tokens_in == 0 {
+                return Err("a sell needs --tokens-in".to_string());
+            }
+            nmeme_core::pool::quote_sell(pool.reserves, tokens_in, paid, fee_bps)
+        }
+    }
+    .map_err(|e| format!("quote: {e}"))?;
+    println!(
+        "QUOTE\t{}\tin={}\tout={}\tfee={}\tspot_e9={}\texec_e9={}\timpact_bps={}",
+        match side { Side::Buy => "buy", Side::Sell => "sell" },
+        quote.amount_in, quote.amount_out, quote.fee_amount, quote.spot_before_e9, quote.execution_e9, quote.price_impact_bps
+    );
+    println!("POOL-BEFORE\t{}\t{}", pool.reserves.nock, pool.reserves.tokens);
+    println!("POOL-AFTER\t{}\t{}", quote.after.nock, quote.after.tokens);
+
+    let parent = pool.hash(&params).map_err(|e| e.to_string())?;
+    let (mut to_user_gift, mut to_user_tokens, mut succ_gift, mut succ_tokens) = match side {
+        Side::Buy => (dust, quote.amount_out, pool.reserves.nock - dust, pool.reserves.tokens - quote.amount_out),
+        Side::Sell => (quote.amount_out, 0u64, pool.reserves.nock - quote.amount_out, pool.reserves.tokens + tokens_in),
+    };
+    // A second note at the pool lock, spent in the same transaction.
+    let also = opt(args, "--also-spend").map(PoolNote::parse).transpose()?;
+    let also_take = has(args, "--also-take");
+    let mut extra_spends: Vec<(Name, Spend)> = Vec::new();
+    if let Some(other) = &also {
+        let ph = other.hash(&params).map_err(|e| e.to_string())?;
+        let w = nmeme_tx::pool::covenant_witness(&params).map_err(|e| e.to_string())?;
+        if also_take {
+            // the attacker keeps the other note's NOCK and folds its tokens
+            // into what the user receives
+            to_user_tokens += other.reserves.tokens;
+            let s = nmeme_tx::pool::seed(user_lock.clone(), other.reserves.nock, NoteData::new(vec![]), ph);
+            extra_spends.push(nmeme_tx::pool::pool_spend(other, w, vec![s], 0));
+            println!("ALSO-SPEND\ttake\t{}\t{}", other.reserves.nock, other.reserves.tokens);
+        } else {
+            succ_tokens += other.reserves.tokens;
+            let s = nmeme_tx::pool::seed(pool_root.clone(), other.reserves.nock, NoteData::new(vec![]), ph);
+            extra_spends.push(nmeme_tx::pool::pool_spend(other, w, vec![s], 0));
+            println!("ALSO-SPEND\tmerge\t{}\t{}", other.reserves.nock, other.reserves.tokens);
+        }
+    }
+    // Attack overrides.
+    if let Some(p) = parse_u64(args, "--payout")? {
+        match side {
+            Side::Buy => {
+                to_user_tokens = p;
+                succ_tokens = pool.reserves.tokens.checked_sub(p).ok_or("payout exceeds the token reserve")?;
+            }
+            Side::Sell => {
+                to_user_gift = p;
+                succ_gift = pool.reserves.nock.checked_sub(p).ok_or("payout exceeds the NOCK reserve")?;
+            }
+        }
+        println!("ATTACK\tpayout\t{p}");
+    }
+    if let Some(w) = parse_u64(args, "--withdraw")? {
+        to_user_gift += w;
+        succ_gift = succ_gift.checked_sub(w).ok_or("withdraw exceeds the reserve")?;
+        println!("ATTACK\twithdraw\t{w}");
+    }
+    let pool_fee = parse_u64(args, "--pool-fee")?.unwrap_or(0);
+    if pool_fee > 0 {
+        succ_gift = succ_gift.checked_sub(pool_fee).ok_or("pool fee exceeds the reserve")?;
+        println!("ATTACK\tpool-fee\t{pool_fee}");
+    }
+    let mut seeds: Vec<Seed> = Vec::new();
+    for spec in opts(args, "--extra-seed") {
+        let (root, gift) = spec.split_once(':').ok_or("expected <lock-root>:<gift>")?;
+        let root = Hash::from_base58(root).map_err(|e| format!("extra-seed: {e}"))?;
+        let gift: u64 = gift.parse().map_err(|e| format!("extra-seed gift: {e}"))?;
+        succ_gift = succ_gift.checked_sub(gift).ok_or("extra seed exceeds the reserve")?;
+        seeds.push(nmeme_tx::pool::seed(root.clone(), gift, NoteData::new(vec![]), parent.clone()));
+        println!("ATTACK\textra-seed\t{}\t{gift}", root.to_base58());
+    }
+    if let Some(t) = parse_u64(args, "--successor-tokens")? {
+        succ_tokens = t;
+        println!("ATTACK\tsuccessor-tokens\t{t}");
+    }
+    let succ_data = if has(args, "--drop-claim") {
+        println!("ATTACK\tdrop-claim");
+        NoteData::new(vec![])
+    } else {
+        nmeme_tx::pool::claim_data(&params, succ_tokens).map_err(|e| e.to_string())?
+    };
+    let user_data = if to_user_tokens > 0 {
+        nmeme_tx::pool::claim_data(&params, to_user_tokens).map_err(|e| e.to_string())?
+    } else {
+        NoteData::new(vec![])
+    };
+    seeds.push(nmeme_tx::pool::seed(user_lock.clone(), to_user_gift, user_data, parent.clone()));
+    seeds.push(nmeme_tx::pool::seed(pool_root.clone(), succ_gift, succ_data, parent.clone()));
+    if let Some(n) = parse_u64(args, "--inflate-claim")? {
+        // a fabricated claim on the user's own seed to the pool
+        let claim = Claim::Transfer { token: params.token.clone(), amount: n };
+        for (_, spend) in spends.0.iter_mut() {
+            let Spend::Witness(spend1) = spend else { continue };
+            if spend1.seeds.0.iter().any(|s| s.lock_root == pool_root) {
+                attach_claim(&mut spend1.seeds, &pool_root, &claim).map_err(|e: Error| format!("inflate: {e}"))?;
+            }
+        }
+        println!("ATTACK\tinflate-claim\t{n}");
+    }
+    let witness = match opt(args, "--witness-pkh") {
+        Some(pkh) => {
+            println!("ATTACK\twitness-pkh\t{pkh}");
+            nmeme_tx::pool::key_witness(Hash::from_base58(pkh).map_err(|e| format!("witness-pkh: {e}"))?)
+        }
+        None => nmeme_tx::pool::covenant_witness(&params),
+    }
+    .map_err(|e| e.to_string())?;
+    println!("POOL-SPEND\tto_user={to_user_gift}+{to_user_tokens}t\tsuccessor={succ_gift}+{succ_tokens}t\tfee={pool_fee}");
+
+    let (name, spend) = nmeme_tx::pool::pool_spend(&pool, witness, seeds, pool_fee);
+    let mut all = nmeme_tx::swap::merge(spends, Spends(vec![(name, spend)])).map_err(|e| format!("merge: {e}"))?;
+    for extra in extra_spends {
+        all = nmeme_tx::swap::merge(all, Spends(vec![extra])).map_err(|e| format!("merge: {e}"))?;
+    }
+    let digest = pin_on(&mut all, &user_lock, &user_inputs)?;
+    println!("PINNED\tuser\t{}\t{}", user_lock.to_base58(), digest.to_base58());
+    let report = enforce_fee(&all, fee_params_from_env()).map_err(|e| format!("{e}"))?;
+    println!(
+        "FEE\tcurrent={}\trequired={}\tseed_words={}\twitness_words={}",
+        report.current, report.required, report.seed_words, report.witness_words
+    );
+    write_assembled(&slab, &all, out_path)?;
+    print_digests(&all)?;
+    Ok(ExitCode::SUCCESS)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().collect();
     let result = match args.get(1).map(String::as_str) {
@@ -39,6 +321,10 @@ fn main() -> ExitCode {
         Some("pins") if args.len() == 3 => cmd_pins(&args),
         Some("half") if args.len() == 5 => cmd_half(&args),
         Some("replace-spend") if args.len() == 6 => cmd_replace_spend(&args),
+        Some("retarget") if args.len() == 6 => cmd_retarget(&args),
+        Some("pool-lock") if args.len() >= 6 => cmd_pool_lock(&args),
+        Some("note-hash") if args.len() >= 7 => cmd_note_hash(&args),
+        Some("pool-trade") if args.len() >= 12 => cmd_pool_trade(&args),
         _ => {
             eprintln!("{}", USAGE);
             return ExitCode::from(2);
@@ -63,6 +349,13 @@ const USAGE: &str = "usage:
   nmeme-tx pins    <tx.jam>                        (does every pinned seed match the seed set at its lock?)
   nmeme-tx half    <tx.jam> <spend-first-b58> <out.jam>
   nmeme-tx replace-spend <base.jam> <donor.jam> <spend-first-b58> <out.jam>
+  nmeme-tx retarget <tx.jam> <out.jam> <from-lock-root> <to-lock-root>
+  nmeme-tx pool-lock --token <token-b58> --fee-bps <n>
+  nmeme-tx note-hash \"<first> <last> <origin> <nock> <tokens>\" --token <token-b58> --fee-bps <n>
+  nmeme-tx pool-trade <user.tx> <out.jam> --pool \"<first> <last> <origin> <nock> <tokens>\" --token <b58> --fee-bps <n>
+                      --side buy|sell --placeholder <lock-root> [--tokens-in <n>] [--claim <lock-root>=<claim-spec>]... [--dust <n>]
+                      [--payout n | --withdraw n | --pool-fee n | --extra-seed <root>:<gift> | --drop-claim | --successor-tokens n
+                       | --inflate-claim n | --witness-pkh <b58> | --also-spend \"<note>\" [--also-take]]
 
 claim-spec: transfer:<token-b58>:<amount> | genesis:<TICKER>:<decimals>:<amount>";
 

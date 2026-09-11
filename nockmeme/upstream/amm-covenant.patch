@@ -1,0 +1,450 @@
+diff --git a/crates/nockapp-grpc-proto/proto/nockchain/common/v2/blockchain.proto b/crates/nockapp-grpc-proto/proto/nockchain/common/v2/blockchain.proto
+index 77296a5..ff5dd4b 100644
+--- a/crates/nockapp-grpc-proto/proto/nockchain/common/v2/blockchain.proto
++++ b/crates/nockapp-grpc-proto/proto/nockchain/common/v2/blockchain.proto
+@@ -124,9 +124,16 @@ message LockPrimitive {
+     LockTim tim = 2;
+     HaxLock hax = 3;
+     BurnLock burn = 4;
++    AmmLock amm = 5;
+   }
+ }
+ 
++// Constant-product pool covenant: token transfer-claim id and fee in basis points.
++message AmmLock {
++  common.v1.Hash token_id = 1;
++  uint64 fee_bps = 2;
++}
++
+ message PkhLock {
+   uint64 m = 1;
+   repeated common.v1.Hash hashes = 2;
+diff --git a/crates/nockapp-grpc-proto/src/v2/convert.rs b/crates/nockapp-grpc-proto/src/v2/convert.rs
+index 5380cf1..f00b7d6 100644
+--- a/crates/nockapp-grpc-proto/src/v2/convert.rs
++++ b/crates/nockapp-grpc-proto/src/v2/convert.rs
+@@ -5,7 +5,7 @@ use nockchain_math::belt::Belt;
+ use nockchain_math::owned_based_noun::OwnedBasedNoun;
+ use nockchain_types::tx_engine::common::Name;
+ use nockchain_types::tx_engine::v1::{
+-    BalanceUpdate, Hax, HaxPreimage as V1HaxPreimage, LockMerkleProof, LockPrimitive, LockTim,
++    Amm, BalanceUpdate, Hax, HaxPreimage as V1HaxPreimage, LockMerkleProof, LockPrimitive, LockTim,
+     MerkleProof, Note, NoteData, NoteDataEntry, NoteV1, Pkh, PkhSignature, PkhSignatureEntry,
+     RawTx as V1RawTx, Seed as V1Seed, Spend as V1Spend, Spend0, Spend1, SpendCondition,
+     Witness as V1Witness,
+@@ -23,7 +23,7 @@ use crate::pb::common::v1::{
+ };
+ use crate::pb::common::v2::{
+     lock_primitive, note, spend, Balance as PbBalance, BalanceEntry as PbBalanceEntry,
+-    BurnLock as PbBurnLock, HaxLock as PbHaxLock, HaxPreimage as PbHaxPreimage,
++    AmmLock as PbAmmLock, BurnLock as PbBurnLock, HaxLock as PbHaxLock, HaxPreimage as PbHaxPreimage,
+     LegacySpend as PbLegacySpend, LockMerkleProof as PbLockMerkleProof,
+     LockPrimitive as PbLockPrimitive, LockTim as PbLockTim, MerkleProof as PbMerkleProof,
+     Note as PbNote, NoteData as PbNoteData, NoteDataEntry as PbNoteDataEntry, NoteV1 as PbNoteV1,
+@@ -267,6 +267,10 @@ impl From<LockPrimitive> for PbLockPrimitive {
+             LockPrimitive::Pkh(pkh) => lock_primitive::Primitive::Pkh(pkh.into()),
+             LockPrimitive::Tim(tim) => lock_primitive::Primitive::Tim(tim.into()),
+             LockPrimitive::Hax(hax) => lock_primitive::Primitive::Hax(hax.into()),
++            LockPrimitive::Amm(amm) => lock_primitive::Primitive::Amm(PbAmmLock {
++                token_id: Some(PbHash::from(amm.token_id)),
++                fee_bps: amm.fee_bps,
++            }),
+             LockPrimitive::Burn => lock_primitive::Primitive::Burn(PbBurnLock {}),
+         };
+         PbLockPrimitive {
+@@ -448,6 +452,10 @@ impl TryFrom<PbLockPrimitive> for LockPrimitive {
+                     .collect::<Result<Vec<_>, _>>()?;
+                 Ok(LockPrimitive::Hax(Hax::new(hashes)))
+             }
++            lock_primitive::Primitive::Amm(amm) => Ok(LockPrimitive::Amm(Amm {
++                token_id: v1::Hash::try_from(amm.token_id.required("AmmLock", "token_id")?)?,
++                fee_bps: amm.fee_bps,
++            })),
+             lock_primitive::Primitive::Burn(_) => Ok(LockPrimitive::Burn),
+         }
+     }
+diff --git a/crates/nockchain-types/src/tx_engine/v1/tx.rs b/crates/nockchain-types/src/tx_engine/v1/tx.rs
+index e45829b..2e82bbf 100644
+--- a/crates/nockchain-types/src/tx_engine/v1/tx.rs
++++ b/crates/nockchain-types/src/tx_engine/v1/tx.rs
+@@ -777,9 +777,38 @@ pub enum LockPrimitive {
+     Pkh(Pkh),
+     Tim(LockTim),
+     Hax(Hax),
++    /// Constant-product pool covenant (`[%amm tid fee]`): keyless; the spend
++    /// is valid only if the transaction leaves a successor at the same lock
++    /// that keeps the product of NOCK and token reserves, fee included.
++    Amm(Amm),
+     Burn,
+ }
+ 
++/// The `%amm` covenant's parameters: the token (its transfer-claim id) and
++/// the fee in basis points.
++#[derive(Debug, Clone, PartialEq, Eq)]
++pub struct Amm {
++    pub token_id: Hash,
++    pub fee_bps: u64,
++}
++
++impl NounEncode for Amm {
++    fn to_noun<A: NounAllocator>(&self, allocator: &mut A) -> Noun {
++        let tid = self.token_id.to_noun(allocator);
++        let fee = self.fee_bps.to_noun(allocator);
++        nockvm::noun::T(allocator, &[tid, fee])
++    }
++}
++
++impl NounDecode for Amm {
++    fn from_noun(noun: &Noun, space: &NounSpace) -> Result<Self, NounDecodeError> {
++        let cell = noun.in_space(space).as_cell()?;
++        let token_id = Hash::from_noun(&cell.head().noun(), space)?;
++        let fee_bps = u64::from_noun(&cell.tail().noun(), space)?;
++        Ok(Self { token_id, fee_bps })
++    }
++}
++
+ impl NounEncode for LockPrimitive {
+     fn to_noun<A: NounAllocator>(&self, allocator: &mut A) -> Noun {
+         match self {
+@@ -798,6 +827,11 @@ impl NounEncode for LockPrimitive {
+                 let value = hax.to_noun(allocator);
+                 nockvm::noun::T(allocator, &[tag, value])
+             }
++            LockPrimitive::Amm(amm) => {
++                let tag = make_tas(allocator, "amm").as_noun();
++                let value = amm.to_noun(allocator);
++                nockvm::noun::T(allocator, &[tag, value])
++            }
+             LockPrimitive::Burn => {
+                 let tag = make_tas(allocator, "brn").as_noun();
+                 let value = D(0);
+@@ -831,6 +865,10 @@ impl NounDecode for LockPrimitive {
+                 &cell.tail().noun(),
+                 space,
+             )?)),
++            "amm" => Ok(LockPrimitive::Amm(Amm::from_noun(
++                &cell.tail().noun(),
++                space,
++            )?)),
+             "brn" => Ok(LockPrimitive::Burn),
+             _ => Err(NounDecodeError::InvalidEnumVariant),
+         }
+@@ -1017,6 +1055,11 @@ impl HashHashable for LockPrimitive {
+                 let payload = hax.hash_digest()?;
+                 Ok(hash_pair(&tag, &payload))
+             }
++            Self::Amm(amm) => {
++                let tag = hash_leaf_atom(nockvm_macros::tas!(b"amm"))?;
++                let payload = amm.hash_digest()?;
++                Ok(hash_pair(&tag, &payload))
++            }
+             Self::Burn => {
+                 let burn_tag = hash_leaf_atom(nockvm_macros::tas!(b"brn"))?;
+                 let null_leaf = hash_leaf_null();
+@@ -1026,6 +1069,16 @@ impl HashHashable for LockPrimitive {
+     }
+ }
+ 
++impl HashHashable for Amm {
++    type Error = LockHashError;
++
++    // Mirrors `hashable:amm`: `[hash+tid leaf+fee]`.
++    fn hash_digest(&self) -> Result<Hash, Self::Error> {
++        let fee = hash_leaf_atom(self.fee_bps)?;
++        Ok(hash_pair(&self.token_id, &fee))
++    }
++}
++
+ impl HashHashable for Pkh {
+     type Error = LockHashError;
+ 
+diff --git a/hoon/apps/wallet/lib/utils.hoon b/hoon/apps/wallet/lib/utils.hoon
+index b9b588a..7425ca3 100644
+--- a/hoon/apps/wallet/lib/utils.hoon
++++ b/hoon/apps/wallet/lib/utils.hoon
+@@ -798,6 +798,15 @@
+               abs-min
+               abs-max
+           ==
++        ::
++            %amm
++          ;:  (cury cat 3)
++              '\0a  - Pool covenant (constant product)'
++              '\0a    - Token: '
++              (to-b58:hash:transact tid.prim)
++              '\0a    - Fee (bps): '
++              (format-ui:common fee.prim)
++          ==
+         ::
+             %brn
+           '\0a  - Unspendable (burn) condition'
+diff --git a/hoon/common/tx-engine-1.hoon b/hoon/common/tx-engine-1.hoon
+index a687f27..eda587d 100644
+--- a/hoon/common/tx-engine-1.hoon
++++ b/hoon/common/tx-engine-1.hoon
+@@ -1267,6 +1267,7 @@
+             (sig-hash:spend-1 +.sp)
+             witness.+.sp
+             bythos-phase
++            `[note sps balance page-num]
+         ==
+       ?.  %+  check:check-context  ctx
+           (lock-hash:nnote-1 note)
+@@ -1521,6 +1522,7 @@
+     $%  [%pkh pkh]
+         [%tim tim]
+         [%hax hax]
++        [%amm amm]
+     ::  it's important that this be the default to break a type loop in the compiler
+         [%brn ~]
+     ==
+@@ -1530,6 +1532,7 @@
+         %tim  (based:tim +.form)
+         %hax  (based:hax +.form)
+         %pkh  (based:pkh +.form)
++        %amm  (based:amm +.form)
+         %brn  %&
+     ==
+   ++  hashable
+@@ -1539,6 +1542,7 @@
+         %tim  [leaf+%tim (hashable:tim +.form)]
+         %hax  [leaf+%hax (hashable:hax +.form)]
+         %pkh  [leaf+%pkh (hashable:pkh +.form)]
++        %amm  [leaf+%amm (hashable:amm +.form)]
+         %brn  [leaf+%brn leaf+~]
+     ==
+   ++  hash
+@@ -2211,6 +2215,152 @@
+     [pk sig-hash sig]
+   --
+ ::
++::  $amm: constant-product pool covenant over one token
++::
++::    A note under a lock whose only spend-condition is ~[[%amm tid fee]]
++::    has no key: anyone may spend it, and the spend is valid only if the
++::    transaction leaves a successor note at the same lock whose NOCK assets
++::    x1 and token claim y1 (the `meme` note-data entry of the token standard,
++::    [%0 %t tid amount]) satisfy, against the sums X, Y over every input at
++::    this lock,
++::
++::        (B*x1 - fee*max(x1-X,0)) * (B*y1 - fee*max(y1-Y,0)) >= B*B*X*Y
++::
++::    with B = 10.000 and fee in basis points: the constant product may never
++::    fall, and the fee share of whatever comes in does not count towards the
++::    price, so it stays in the reserves. Further: the pool spend pays no
++::    miner fee; its seeds go only back to this lock or to a lock that
++::    another spend of the transaction also pays; the token claims in play
++::    are exactly the standard's transfer claims for .tid, and their total
++::    is conserved across the transaction, so a fabricated claim cannot
++::    stand in for real tokens; and the successor holds both assets.
++++  amm
++  =<  form
++  |%
++  +$  form  [tid=^hash fee=@]
++  ++  based
++    |=  =form
++    ^-  ?
++    ?&  (based:^hash tid.form)
++        (^based fee.form)
++        (lte fee.form 10.000)
++    ==
++  ++  hashable
++    |=  =form
++    ^-  hashable:tip5
++    [hash+tid.form leaf+fee.form]
++  ++  hash
++    |=  =form
++    %-  hash-hashable:tip5
++    (hashable form)
++  ::
++  ::  +claim: tokens of .tid that a note-data entry assigns (0 if none)
++  ++  claim
++    |=  [tid=^hash nd=note-data]
++    ^-  @
++    =/  v=(unit *)  (~(get z-by nd) %meme)
++    ?~  v  0
++    ?.  ?=([%0 %t [@ @ @ @ @] @] u.v)  0
++    ?.  =(tid +>-.u.v)  0
++    +>+.u.v
++  ::
++  ::  +foreign: a `meme` entry that is not a transfer claim for .tid
++  ++  foreign
++    |=  [tid=^hash nd=note-data]
++    ^-  ?
++    =/  v=(unit *)  (~(get z-by nd) %meme)
++    ?~  v  %.n
++    ?.  ?=([%0 %t [@ @ @ @ @] @] u.v)  %.y
++    !=(tid +>-.u.v)
++  ::
++  ++  check
++    |=  [=form ctx=check-context]
++    ^-  ?
++    ?~  amm.ctx  %.n
++    =/  note=nnote-1  note.u.amm.ctx
++    =/  sps=spends  sps.u.amm.ctx
++    =/  balance=(h-map nname nnote)  balance.u.amm.ctx
++    =/  first=^hash  -.name.note
++    ::  the spend of this note
++    =/  msp=(unit spend)  (~(get z-by sps) name.note)
++    ?~  msp  %.n
++    ?.  ?=(%1 -.u.msp)  %.n
++    =/  sp=spend-1  +.u.msp
++    ::  the pool pays no miner fee: reserves cannot leave as fees
++    ?.  =(0 fee.sp)  %.n
++    ::  every input of the transaction, as notes
++    =/  ins=(list nnote-1)
++      %+  murn  ~(tap z-by sps)
++      |=  [nam=nname sp=spend]
++      ^-  (unit nnote-1)
++      =/  mn=(unit nnote)  (~(get h-by balance) nam)
++      ?~  mn  ~
++      ?^  -.u.mn  ~
++      `u.mn
++    ?.  =((lent ins) ~(wyt z-by sps))  %.n
++    ::  no input carries a claim of another token, or a malformed one
++    ?:  (lien ins |=(n=nnote-1 (foreign tid.form note-data.n)))  %.n
++    ::  X, Y: everything at this lock going in; tin: every token of .tid going in
++    =/  x=@  (roll ins |=([n=nnote-1 a=@] ?.(=(first -.name.n) a (add a assets.n))))
++    =/  y=@  (roll ins |=([n=nnote-1 a=@] ?.(=(first -.name.n) a (add a (claim tid.form note-data.n)))))
++    =/  tin=@  (roll ins |=([n=nnote-1 a=@] (add a (claim tid.form note-data.n))))
++    ::  the outputs the transaction creates, exactly as consensus builds them
++    =/  outs=(list output)  ~(tap z-in (build-outputs:tx sps page.u.amm.ctx))
++    ?:  (lien outs |=(o=output ?^(-.note.o %.y (foreign tid.form note-data.note.o))))  %.n
++    =/  tout=@
++      %+  roll  outs
++      |=  [o=output a=@]
++      ?^  -.note.o  a
++      (add a (claim tid.form note-data.note.o))
++    ::  the successor: the one output note at this lock
++    =/  succ=(list output)
++      (skim outs |=(o=output ?^(-.note.o %.n =(first -.name.note.o))))
++    ?.  ?=([* ~] succ)  %.n
++    =/  out=output  i.succ
++    ?^  -.note.out  %.n
++    =/  x1=@  assets.note.out
++    =/  y1=@  (claim tid.form note-data.note.out)
++    ::  seeds of the pool spend go only to this lock or to a lock that
++    ::  another spend of this transaction also pays: a counterparty shows
++    ::  itself by paying its own lock (its change), and nothing leaves the
++    ::  pool towards a lock no party to the transaction pays
++    =/  others=(z-set ^hash)
++      %-  ~(gas z-in *(z-set ^hash))
++      %-  zing
++      %+  turn  ~(tap z-by sps)
++      |=  [nam=nname osp=spend]
++      ^-  (list ^hash)
++      ?:  =(nam name.note)  ~
++      =/  seds=(list seed)
++        ?-  -.osp
++          %0  ~(tap z-in seeds.+.osp)
++          %1  ~(tap z-in seeds.+.osp)
++        ==
++      (turn seds |=(sed=seed (hash-hashable:tip5 [leaf+& hash+lock-root.sed])))
++    =/  dest-ok=?
++      %-  ~(all z-in seeds.sp)
++      |=  sed=seed
++      =/  f=^hash  (hash-hashable:tip5 [leaf+& hash+lock-root.sed])
++      ?|  =(f first)
++          (~(has z-in others) f)
++      ==
++    ::  the invariant, in integers: no rounding anywhere
++    =/  b=@  10.000
++    =/  dx=@  ?:((gth x1 x) (sub x1 x) 0)
++    =/  dy=@  ?:((gth y1 y) (sub y1 y) 0)
++    =/  lhs=@
++      %+  mul
++        (sub (mul b x1) (mul fee.form dx))
++      (sub (mul b y1) (mul fee.form dy))
++    =/  rhs=@  (mul (mul b b) (mul x y))
++    ?&  dest-ok
++        =(tin tout)
++        (gth x1 0)
++        (gth y1 0)
++        (gte lhs rhs)
++    ==
++  --
++::
+ ::  $check-context: Context provided for validating locks
+ ::
+ ::    .now: current page height
+@@ -2218,15 +2368,23 @@
+ ::    .sig-hash: signature to be hashed for a spend
+ ::    .witness: witness to spend conditions
+ ::    .bythos-phase: height at which bythos activates (for full LMP gating)
++::    .amm: the transaction around the spend, for the %amm covenant
+ ++  check-context
+   =<  form
+   |%
++  +$  amm-context
++    $:  note=nnote-1
++        sps=spends
++        balance=(h-map nname nnote)
++        page=page-number
++    ==
+   +$  form
+     $:  now=page-number
+         since=page-number
+         sig-hash=hash
+         =witness
+         bythos-phase=page-number
++        amm=(unit amm-context)
+     ==
+   ::
+   ++  check
+@@ -2264,6 +2422,7 @@
+         %tim  (check:tim +.p form)
+         %hax  (check:hax +.p form)
+         %pkh  (check:pkh +.p form)
++        %amm  (check:amm +.p form)
+         %brn  %|
+       ==
+     ==
+@@ -2299,6 +2458,7 @@
+         %pkh  (check:pkh +.p form)
+         %tim  (check:tim +.p form)
+         %hax  (check:hax +.p form)
++        %amm  %|
+         %brn  %|
+       ==
+     ==
+@@ -2334,19 +2494,19 @@
+   ++  new
+     |=  [=raw-tx =page-number]
+     ^-  form
+-    |^
+-      =/  =outputs  (build-outputs raw-tx)
+-      %*  .  *form
+-        raw-tx      raw-tx
+-        total-size  ~(size get:^raw-tx raw-tx)
+-        outputs     outputs
+-      ==
+-    ::
+-    ++  build-outputs
+-      |=  =^raw-tx
+-      ^-  outputs
+-      =/  spends-list=(list [nname spend])
+-        ~(tap z-by spends.raw-tx)
++    =/  =outputs  (build-outputs spends.raw-tx page-number)
++    %*  .  *form
++      raw-tx      raw-tx
++      total-size  ~(size get:^raw-tx raw-tx)
++      outputs     outputs
++    ==
++  ::
++  ::  +build-outputs: the notes a set of spends creates, merged by lock
++  ++  build-outputs
++    |=  [sps=spends =page-number]
++    ^-  outputs
++    =/  spends-list=(list [nname spend])
++      ~(tap z-by sps)
+       =|  children=(z-map hash output)
+       |-  ^-  outputs
+       ?~  spends-list
+@@ -2403,7 +2563,6 @@
+         =/  out=output  [note1 single]
+         (~(put z-by acc) key out)
+       $(spends-list t.spends-list)
+-    --
+   ::
+   ++  get
+     |_  =form

@@ -153,3 +153,26 @@ read from source; supply is conserved on chain.
 It would not prove: `output-source` pinning (the swap design rests on it and
 this demo does not exercise it), anything about adversarial inputs at the node
 level, or anything about mainnet.
+
+## The pool covenant fork
+
+The pool (`docs/ENFORCEMENT.md`) needs the `%amm` primitive, which the
+shipped node does not have. Apply `upstream/amm-covenant.patch` to the
+Nockchain checkout at `2bcb0b9`, rebuild the four kernels (step 2 above)
+and the node, wallet and miner (step 3), and this package's crates (step
+4). A node built this way is a different consensus from the shipped one:
+run it on a fresh fakenet data directory (keep `data/ai-pow`, the verifier
+contexts; delete the rest).
+
+```bash
+cd /path/to/nockchain && git apply /path/to/nockmeme/upstream/amm-covenant.patch
+# steps 2, 3, 4 as above; then a fresh chain:
+find "$RUN/data" -mindepth 1 -maxdepth 1 ! -name ai-pow -exec rm -rf {} +
+bash /path/to/nockmeme/scripts/node-lowmem.sh /path/to/nockchain "$RUN"
+# tokens first (live-demo.sh), then the pool suite on the same chain
+REPO=... RUN=... bash /path/to/nockmeme/scripts/live-demo.sh | tee "$RUN/demo-results.txt"
+# from the demo's output: TOKEN[A], TOKEN[B], GENESIS/TRANSFER txids, alice/bob lock-roots
+REPO=... RUN=... ALICE_LOCK=... BOB_LOCK=... TOKEN_A=... TOKEN_B=... GTX_A=... XTX_A=... GTX_B=... XTX_B=... \
+ALICE_FIRSTS="<first-names of alice's coinbase notes>" FEE_BPS=100 \
+  bash /path/to/nockmeme/scripts/pool-suite.sh 2>"$RUN/pool-progress.log" | tee "$RUN/pool-results.txt"
+```

@@ -1,18 +1,20 @@
 # Automated liquidity on Nockchain: what can be enforced, and by whom
 
-**The short answer.** A pool whose reserves are protected by the chain itself
-is not possible on Nockchain as it stands. A lock can require signatures,
-a time, or a hash preimage; it cannot see what the spending transaction does
-with the note. So nothing on chain can make a reserve note stay a reserve,
-or make a price follow a curve. Every automated-market design on this chain
-today is **custodial at the reserve level**, and the honest question is who
-holds the keys and what can be verified about their behaviour.
+**Where this stands.** This document was written first, against the node
+as shipped, and its short answer then was that a pool protected by the
+chain itself is not possible on Nockchain: a lock cannot see what the
+spending transaction does with the note (§1). That finding stands for the
+shipped node. The specification rules out every design that follows from
+it (§3, §4: custodial reserves) and asks for the missing capability to be
+named and built instead. It has been: `docs/ENFORCEMENT.md` is the proof
+of the gap and the specification of the `%amm` covenant primitive added to
+a fork of the transaction engine, `nockmeme/upstream/amm-covenant.patch` is
+the change, and `results/RESULTS.md` §A15 is the pool running under it on a
+fakenet, with the attacks the rule refuses. §5 below was the sketch of that
+primitive; the built one differs in the details ENFORCEMENT.md gives.
 
-Three concrete paths exist. One is buildable now on the token standard and
-tooling in this repository, with the custody stated plainly (§3–§4). One
-needs a consensus change and is written here as an upstream proposal (§5).
-One moves trading to the chain Nockchain already bridges to, where trustless
-pools exist (§6). §7 says which to build and what the decision hinges on.
+§3 and §4 are kept as the record of what a key-based pool would be, and of
+why it does not meet the requirement. They are not the recommendation.
 
 Everything in §1 is read from the node's source at revision `2bcb0b9`.
 
@@ -170,7 +172,12 @@ custody, same enforcement table. This is the familiar launch-and-trade
 flow; nothing in it is trustless at the reserve level, and it should be
 described that way.
 
-## 5. Design C — a covenant primitive (consensus change; not buildable here)
+## 5. Design C — a covenant primitive (consensus change; built in the fork)
+
+*This section is the original sketch. The primitive as built — its exact
+rule, the conservation and destination checks, and the context it reads —
+is specified in `docs/ENFORCEMENT.md` §3–§4; the fork's kernels run it on
+the fakenet in `results/RESULTS.md` §A15.*
 
 What would make a pool trustless is a lock primitive that can see the
 spending transaction's outputs. The hook is `check-context`: today it is
@@ -202,10 +209,14 @@ security that does not depend on the platform.
 
 ## 7. Recommendation
 
+*Superseded.* Platform custody was not acceptable, and the covenant path
+(§5) has been built and tested; see `docs/ENFORCEMENT.md`. What remains
+of this section is the reasoning as it stood before that.
+
 The product as specified — automatic quotes, a pool to buy from and sell
 into, no counterparties — cannot be given consensus-level reserve safety on
-Nockchain today. The decision is whether platform custody of reserves is
-acceptable.
+Nockchain as shipped. The decision was whether platform custody of
+reserves is acceptable.
 
 - **If yes:** build Designs A/B natively. It keeps the tokens on Nockchain,
   reuses everything verified so far (the standard, provenance-checked

@@ -12,6 +12,7 @@ on:
       - .github/workflows/nmeme-tests.yml
       - nockmeme/crates/**
       - nockmeme/scripts/link-into-workspace.sh
+      - nockmeme/upstream/amm-covenant.patch
 
 env:
   NOCKCHAIN_REV: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
@@ -36,6 +37,9 @@ jobs:
           git remote add origin https://github.com/nockchain/nockchain.git
           git fetch -q --depth 1 origin "$NOCKCHAIN_REV"
           git checkout -q FETCH_HEAD
+          # the pool covenant fork (docs/ENFORCEMENT.md): the crates build against it
+          git apply "$GITHUB_WORKSPACE/nockmeme/upstream/amm-covenant.patch"
+          git diff --stat
       - name: Restore the cargo cache
         uses: actions/cache/restore@v4
         with:
