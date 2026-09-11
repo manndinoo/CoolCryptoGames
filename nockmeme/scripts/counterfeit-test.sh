@@ -19,11 +19,11 @@ MINER="$REPO/target/release/zk-pow-mine"
 W="$RUN/wallets"; S="$RUN/counterfeit"; mkdir -p "$S"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HERE/lib-verify.sh"; . "$HERE/lib-mine.sh"; . "$HERE/lib-tx.sh"
-TOKEN="${TOKEN:?the token with a live pool}"; FEE_BPS="${FEE_BPS:-100}"; LORE_BPS="${LORE_BPS:-50}"; LORE_LOCK="${LORE_LOCK:?}"
+TOKEN="${TOKEN:?the token with a live pool}"; FEE_BPS="${FEE_BPS:-100}"; LORE_BPS="${LORE_BPS:-50}"; LORE_LOCK="${LORE_LOCK:-}"
 ALICE_LOCK="${ALICE_LOCK:?}"; BOB_LOCK="${BOB_LOCK:?}"; ALICE_FIRSTS="${ALICE_FIRSTS:?}"
 FAKE="${FAKE:-500000}"; SELL="${SELL:-400000}"; DUST="${DUST:-1000}"
 export NMEME_FEE_HEIGHT="${NMEME_FEE_HEIGHT:-1}"
-PP="--lore-bps $LORE_BPS --lore-lock $LORE_LOCK"
+PP="--lore-bps $LORE_BPS --lore-lock ${LORE_LOCK:-$ALICE_LOCK}"
 ALICE=$(wallet alice list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //')
 BOB=$(wallet bob list-active-addresses | strip | grep -oE '^- Address: .*' | head -1 | sed 's/^- Address: //')
 "$MINER" --node-addr "http://127.0.0.1:$PORT" --mining-pkh "$ALICE" --num-threads 1 >"$RUN/miner.log" 2>&1 &

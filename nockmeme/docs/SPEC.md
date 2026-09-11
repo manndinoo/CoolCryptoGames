@@ -27,8 +27,25 @@ The value under `meme` is a versioned noun:
 `claim` is exactly one of:
 
 ```
-[%c ticker decimals amount]      ::  genesis claim
+[%c ticker decimals amount tid]  ::  genesis claim; tid = the id it creates (§2a)
 [%t token-id amount]             ::  transfer claim
+
+### 2a. The genesis claim names its id
+
+`tid` is `TokenId::derive(inputs, ticker, decimals)`: the transaction's
+smallest input name (by the big-endian bytes of its atoms), the ticker
+and the decimals, hashed as a noun. A genesis whose claims name any other
+id creates nothing (indexer rule G6), and on the forked node
+(`docs/ENFORCEMENT.md` §3) consensus refuses the transaction. The field
+was added after review found that a claim consensus never validated could
+be sold into a pool; carrying the id lets a later spend of the genesis
+note be counted by consensus without knowing the genesis transaction.
+
+Under the fork, consensus also enforces conservation of transfer claims
+per token id on every transaction (outputs never exceed inputs plus the
+genesis claims of that id); the indexer's rules T2–T3 become a consensus
+guarantee rather than a reading convention. On the unchanged node they
+remain conventions the indexer verifies.
 ```
 
 - `ticker` is a **list of atoms, each at most 7 bytes** of ASCII. Seven bytes

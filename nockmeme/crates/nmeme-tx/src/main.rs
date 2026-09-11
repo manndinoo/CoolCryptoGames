@@ -202,10 +202,18 @@ fn cmd_pool_trade(args: &[String]) -> Result<ExitCode, String> {
         }
     }
     .map_err(|e| format!("quote: {e}"))?;
+    // Every fee with its denomination: the pool's share is retained in the
+    // unit that came in (nicks on a buy, tokens on a sell); the treasury's
+    // is always nicks; the network fee is nicks the trader's own spend pays
+    // the miner, outside the trading fee.
+    let (pool_unit, in_unit, out_unit) = match side {
+        Side::Buy => ("nicks", "nicks", "tokens"),
+        Side::Sell => ("tokens", "tokens", "nicks"),
+    };
     println!(
-        "QUOTE\t{}\tin={}\tout_net={}\tpool_fee={}\tlore_fee={}\ttotal_fee_nicks={}\tnetwork_fee={}\tspot_e9={}\texec_e9={}\timpact_bps={}",
+        "QUOTE\t{}\tin={} {in_unit}\tout_net={} {out_unit}\tpool_fee={} {pool_unit}\tlore_fee={} nicks\tnock_fees={} nicks\ttoken_fees={} tokens\tnetwork_fee={} nicks\tspot_e9={}\texec_e9={}\timpact_bps={}",
         match side { Side::Buy => "buy", Side::Sell => "sell" },
-        quote.amount_in, quote.amount_out, quote.pool_fee, quote.lore_fee, quote.total_fee_nicks(), quote.network_fee,
+        quote.amount_in, quote.amount_out, quote.pool_fee, quote.lore_fee, quote.nock_fees(), quote.token_fees(), quote.network_fee,
         quote.spot_before_e9, quote.execution_e9, quote.price_impact_bps
     );
     println!("POOL-BEFORE\t{}\t{}", pool.reserves.nock, pool.reserves.tokens);

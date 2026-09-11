@@ -1,5 +1,14 @@
 # What Nockchain can enforce about a pool, and what had to be added
 
+> **Status: a fork-only prototype.** Everything below the shipped-node
+> analysis runs on a modified Nockchain node and is **not deployable on the
+> unchanged mainnet**. No separate public chain has been launched or is
+> proposed, and native NOCK is not replaced by anything: the fakenet here
+> is a private test network of one node. For the pool to exist on mainnet
+> the change has to be adopted upstream, by the Nockchain maintainers, as a
+> consensus upgrade with an activation height, and every node has to run
+> it; §8 sets out that path and what can exist on mainnet until then.
+
 **Short answer.** As shipped (revision `2bcb0b9`), Nockchain cannot enforce
 any of the pool rules. A note's lock is checked against `[now since
 sig-hash witness bythos-phase]` and nothing else; it cannot see what the
@@ -116,7 +125,29 @@ and, in the same transaction:
   of `T` (no genesis claims, no other tokens: the token standard would
   otherwise reject the whole transfer while consensus had already moved
   the NOCK), and the total of those claims over the outputs equals the
-  total over the inputs (a fabricated claim cannot stand in for tokens).
+  total over the inputs.
+
+That last rule only counts claims; it does not say where they came from.
+Review of the first prototype found the hole (`results/RESULTS.md` §A17):
+a note carrying a *fabricated* transfer claim of `T` — an ordinary
+transaction whose seed carried `[%0 %t T 500000]` with no token input —
+was mined, because consensus never validated claims, and selling it into
+the pool released real NOCK. The fix is that consensus validates every
+claim on every transaction (`++  meme` in the patch):
+
+- a genesis claim is `[%0 %c ticker decimals amount tid]`, valid only if
+  no input carries a `meme` entry and `tid` equals the id derived from the
+  transaction's anchor input, the ticker and the decimals (the same
+  derivation the indexer uses, transcribed to Hoon);
+- for every token id, the transfer claims on a transaction's outputs may
+  not exceed the transfer and genesis claims of that id on its inputs;
+- a malformed entry counts for nothing.
+
+A transaction breaking either rule is refused (`v1-token-claims`). So a
+claim on a mined note is backed by an unbroken history to a genesis, and
+the covenant's count is a count of real tokens. This makes the token
+standard's no-inflation rule a consensus rule for every transaction, not
+only for pool trades.
 
 The inequality is the constant product with the fee charged on the input
 side: the fee share of whatever comes in does not count towards the
@@ -217,3 +248,32 @@ genesis. It needs the maintainers' review, Hoon unit tests in
 - No activation height; the fork is fakenet-only.
 - No wallet support; `nmeme-tx` builds the keyless spend.
 - No batcher; trades are one per block.
+
+## 8. The path to mainnet, and what exists without it
+
+Nothing here changes mainnet. The prototype demonstrates, on a private
+fakenet, what one consensus change buys; putting it on mainnet is a
+decision for the Nockchain maintainers and the network, in this order:
+
+1. **Proposal.** `upstream/amm-covenant.patch` against `2bcb0b9`, with
+   this document, `docs/FEES.md` and the evidence, raised with the
+   maintainers as a consensus-upgrade proposal.
+2. **Review and tests.** Hoon unit tests for `++  amm` and `++  meme` in
+   `hoon/tests/dumb`, review of the derivation and the arithmetic, and of
+   the mempool's handling of the new failure reasons.
+3. **Activation height.** The rules take effect at a height (`amm-phase`,
+   `meme-phase`) the way `bythos-phase` and `parent-hash-phase` gate the
+   existing v1 rules; before it, the new lock tag and the claim rules are
+   inert, so nodes can be upgraded ahead of time. This is a hard fork: a
+   node that has not upgraded rejects a block containing a covenant spend
+   after activation.
+4. **Release and adoption.** Node release, miners and nodes upgrade before
+   the height, wallet support for the keyless spend and the genesis id.
+5. **Then** pools can be opened on mainnet, and only then.
+
+Until adoption, what exists on the unchanged mainnet is what was verified
+on the shipped node earlier in this repository: the note-data token
+standard with indexer-side verification (§A1–A13), transfers, and
+two-party atomic settlement by pins (§A14). Those need no network change.
+A pool does. A pool built without the change would be custodial, which
+is ruled out.

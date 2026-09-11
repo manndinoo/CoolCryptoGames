@@ -1,6 +1,6 @@
 # Trading fees and the Lore Wallet
 
-## The proposal
+## 0. The proposal
 
 | | rate | where it goes |
 |---|---|---|
@@ -18,7 +18,9 @@ material: at fakenet scale one 10-NOCK buy adds 0.05 NOCK to the Lore
 Wallet, and every trade adds something. 1.5 % sits in the middle of the
 allowed band, leaving room to move either way after mainnet data without
 leaving it. Both rates are parameters of the pool's lock, so the choice is
-per pool at launch and cannot be changed afterwards (§4).
+per pool at launch and cannot be changed afterwards (§4). **The split is a
+proposal**: the numbers above ran on the fakenet and are what the evidence
+shows, and nothing in the design depends on them being these.
 
 The network fee — what the trader's own spend pays the miner — is not part
 of the 1.5 %. It is disclosed separately on every quote (`network_fee`),
@@ -34,44 +36,74 @@ the Lore Wallet's balance equal to the sum of the quoted shares after each
 one, every note there plain NOCK; a trade that short-changes the treasury
 by one nick and one that sends it tokens both refused by the chain.
 
-## 1. What the fee is charged on
+## 1. The exact calculation, by direction
 
-Every trade has a NOCK side: the NOCK a buyer pays, or the gross NOCK a
-seller's tokens fetch. Both shares are charged on that side, and the Lore
-share is taken first:
+`B = 10000`. `pool = 100`, `lore = 50` (basis points; a proposal, §0). All
+arithmetic is on integers; `⌊ ⌋` is the floor. Nothing is ever rounded in
+the trader's favour, and no fee is ever collected twice.
 
-- **Buy.** The buyer pays `P` nicks. The Lore share `L = ⌊P · 50 / 10000⌋`
-  is deducted; `P − L` is what the trade is priced on; the pool share is
-  the 1 % of `P − L` that the curve does not count, and it stays in the
-  reserves.
-- **Sell.** The seller's tokens fetch `G` nicks gross from the curve, of
-  which the pool share was already retained on the token side. The Lore
-  share `L = ⌊G · 50 / 10000⌋` is deducted and the seller receives `G − L`.
+### Buy: nicks in, tokens out
 
-Everything is integer arithmetic with floors. The remainder of a floor
-stays where the value already is: in the pool on buys, with the seller's
-gross on sells. Nothing is rounded up against the trader.
+| step | value | unit |
+|---|---|---|
+| the trader pays | `P` | nicks |
+| the dust that travels to the trader with the tokens | `d` (1,000 on the fakenet) | nicks |
+| **treasury share** | `L = ⌊(P + d) · lore / B⌋` | nicks, paid to the Lore lock in the same transaction |
+| priced amount | `A = P − L − d` | nicks |
+| **pool share** | `F = ⌊A · pool / B⌋` | nicks, retained in the reserves (not a payment: it is the part of `A` the curve does not count) |
+| reserves after | `x1 = x + A`, and `y1` the least value with `(B·x1 − pool·(x1 − x)) · B·y1 ≥ B²·x·y` | nicks, tokens |
+| **tokens out, net** | `y − y1` | tokens |
+| network fee | what the trader's spend pays the miner (16,384 on the fakenet) | nicks, disclosed separately |
+
+The `d` nicks are counted in the treasury's base because they cross the
+pool's boundary; they are 0.5 % of 1,000 = 5 nicks.
+
+### Sell: tokens in, nicks out
+
+| step | value | unit |
+|---|---|---|
+| the trader pays | `T` | tokens |
+| the dust the trader's payment carries into the pool | `d` | nicks |
+| **pool share** | `F = ⌊T · pool / B⌋` | **tokens**, retained in the reserves (the curve counts `T − F`) |
+| gross proceeds | `G`, the most the curve pays: the largest value with `(B·(x + d − G)) · (B·(y + T) − pool·T) ≥ B²·x·y` | nicks |
+| **treasury share** | `L = ⌊(G + d) · lore / B⌋` | nicks, paid to the Lore lock in the same transaction |
+| **nicks out, net** | `G − L` | nicks |
+| reserves after | `x1 = x + d − G`, `y1 = y + T` | nicks, tokens |
+| network fee | as above | nicks, separate |
+
+The chain's own floor for `L` is `⌊(gin + gout) · lore / B⌋` with `gin` the
+nicks paid into the pool by the trader's spend and `gout` the nicks the
+pool pays to anyone but the treasury: on a buy that is `P + d`, exactly
+the client's `L`; on a sell it is `d + (G − L)`, 0.25 bps under the
+client's figure. The client pays its figure; the replay checks it; the
+chain checks the floor.
 
 ## 2. What the quote shows
 
-For every trade, before signing (`nmeme-tx pool-trade`, `QUOTE` line):
+For every trade, before signing (`nmeme-tx pool-trade`, the `QUOTE` line),
+each with its unit:
 
 | field | meaning |
 |---|---|
 | `in` | what the trader pays (nicks on a buy, tokens on a sell) |
-| `out` | what the trader receives, **net**: after both shares |
-| `pool_fee` | the 1 % share retained in the pool |
-| `lore_fee` | the 0.5 % share paid to the Lore Wallet, in nicks |
-| `total_fee` | the two together, the disclosed 1.5 % |
-| `spot`, `exec`, `impact_bps` | mid price before, execution price, their distance |
-| `network_fee` | the miner fee the trader's spend pays, separately |
+| `out_net` | what the trader receives after both shares (tokens on a buy, nicks on a sell) |
+| `pool_fee` | the pool's share, retained in the reserves: **nicks on a buy, tokens on a sell** |
+| `lore_fee` | the treasury's share, always nicks |
+| `nock_fees` | every fee charged in nicks: both shares on a buy, the treasury's alone on a sell |
+| `token_fees` | every fee charged in tokens: the pool's share on a sell, none on a buy |
+| `network_fee` | nicks the trader's own spend pays the miner, outside the trading fee |
+| `spot_e9`, `exec_e9`, `impact_bps` | mid price before, execution price net of fees, their distance in basis points |
+
+There is no single "total fee" on a sell, because its two shares are in
+different units; the quote lists both. A percentage of "the trade" can be
+stated only after choosing a price to convert one into the other, and the
+quote does not do that for the trader.
 
 **Slippage protection is exact.** The trader's own spend pins the
 complete seed set that must land on their lock (`docs/SWAPS.md`): the
-transaction is valid only if they receive precisely `out`, or it is not
-mined at all. There is no "minimum received" below the quote, because
-nothing below the quote can be mined. What can happen is non-inclusion —
-another trade spends the pool note first — and then the trader re-quotes.
+transaction is valid only if they receive precisely `out_net`, or it is not
+mined at all. What can happen is non-inclusion — another trade spends the
+pool note first — and then the trader re-quotes.
 
 ## 3. The Lore Wallet
 

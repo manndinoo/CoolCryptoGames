@@ -247,13 +247,20 @@ pub struct Quote {
 }
 
 impl Quote {
-    /// The disclosed trading fee, in the unit of the NOCK side: the pool
-    /// share plus the treasury share on a buy; on a sell the pool share is
-    /// in tokens and only the treasury share is in nicks.
-    pub fn total_fee_nicks(&self) -> u64 {
+    /// The fees charged in nicks: on a buy both shares (the pool's is
+    /// retained from the NOCK paid); on a sell only the treasury's, since
+    /// the pool's share of a sell is retained in tokens.
+    pub fn nock_fees(&self) -> u64 {
         match self.side {
             Side::Buy => self.pool_fee + self.lore_fee,
             Side::Sell => self.lore_fee,
+        }
+    }
+    /// The fees charged in tokens: the pool's share of a sell; none on a buy.
+    pub fn token_fees(&self) -> u64 {
+        match self.side {
+            Side::Buy => 0,
+            Side::Sell => self.pool_fee,
         }
     }
 }

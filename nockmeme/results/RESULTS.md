@@ -579,6 +579,59 @@ miner, so no competing chain can be produced. The property is argued in
 every block of whatever chain is canonical, and a trade in an orphaned
 block never happened.
 
+### A17. Review finding: counterfeit inputs across transactions
+
+The reviewer of pack 4 asked whether the covenant counts claims consensus
+never validated. It did. Reproduced live on the phase-two chain
+([`live/pool-v2/counterfeit/`](./live/pool-v2/counterfeit/), transaction
+files and the node's answers kept):
+
+1. An ordinary transaction from one of Alice's coinbase notes, paying Bob
+   100,000 nicks, with `[%0 %t <token> 500000]` attached to Bob's seed —
+   a transfer claim of the main pool's token, consuming no tokens. **Mined
+   at height 940.** Consensus accepted a claim nothing backed.
+2. Bob sold 400,000 of those "tokens" into the real pool. The covenant
+   summed the claims on its inputs (74,557 real + 500,000 fabricated),
+   found the successor's 474,557 consistent, and released the NOCK. **Mined
+   at height 953**: the pool went from 8,823,465 / 74,557 to
+   1,398,027 / 474,557; Bob's NOCK from 4,321,777 to 11,693,694 nicks. The
+   treasury received its 37,137-nick share of the theft.
+3. The indexer, replaying the same history, called the creation
+   `Untouched` (no valid token event) and the sale
+   `Burned { units: 74557, reason: "supply not conserved" }` — the pool's
+   genuine tokens written off, after the NOCK was already gone. A later
+   warning does not undo a payout.
+
+**The fix** (`docs/ENFORCEMENT.md` §3, `upstream/amm-covenant.patch`,
+`++  meme`): consensus validates every `meme` claim on every transaction.
+A genesis claim carries the id it creates and must equal the id derived
+from the transaction's anchor input, ticker and decimals, with no token
+input; and for every token id, the transfer claims on a transaction's
+outputs may not exceed the transfer and genesis claims of that id on its
+inputs. A transaction breaking either rule is refused (`v1-token-claims`),
+so step 1 above cannot be mined and step 2 has nothing to sell. The
+standard's genesis payload gained the id (`docs/SPEC.md` §2a); the
+indexer checks it too (rule G6).
+
+**Regression** (`scripts/counterfeit-test.sh`, run on a fresh chain with
+the rebuilt node after the demo's genesis): *(filled in below once the
+rerun completes)*.
+
+### A18. What is implemented, what passed live, what needs a network change
+
+| item | implemented | passed live (fakenet) | needs a network change |
+|---|---|---|---|
+| note-data token standard: genesis, transfer, indexer verification, provenance | yes | yes (§A1–A13) | no: works on the shipped node |
+| two-party atomic settlement by output-source pins | yes | yes (§A14) | no |
+| `%amm` pool covenant: keyless reserves, constant product, pool share retained | yes (fork) | yes (§A15–A16) | **yes**: the primitive is not in the shipped engine |
+| treasury share to the Lore Wallet, NOCK only, in the same transaction | yes (fork) | yes (§A16) | **yes** |
+| consensus validation of token claims (genesis id, per-token conservation) | yes (fork) | regression in §A17 | **yes** |
+| exact quotes: net amount, both shares with units, impact, network fee | yes | yes | no |
+| Lore Wallet: held by a key, receipts verifiable on chain | yes | yes | no |
+| batching many trades per block | no | — | no |
+| reorganisations | argued (§A16) | not exercised: one node | — |
+| Hoon unit tests, activation height, wallet support for the keyless spend | no | — | part of the upstream path (`docs/ENFORCEMENT.md` §8) |
+
 ---
 
 ## B. Designed but NOT verified
