@@ -1,5 +1,26 @@
 # nmeme test results
 
+## 2026-09-12 22:50 UTC: pack 10 (the consensus upgrade candidate, verified and mirrored)
+
+The candidate's 24 Hoon assertions: compiled and evaluated here with the
+workspace's honk compiler at our pack 9 state plus the candidate's delta
+(`scripts/verify-activation.sh`, in a scratch worktree): 34 Hoon files, the
+check file 52 s, a 64-byte artifact with the candidate's SHA-256
+(9e2eace4…) reducing to the constant [1 24] under %spot hints — checked by
+our own decoder (`scripts/verify-activation-result.py`). A first attempt
+panicked in the Nock stack reservation with vm.overcommit_memory back at 0.
+Rust, locally (release profile, nmeme-core and nmeme-index only, the
+nmeme-tx tests unchanged): 95 passed, 0 failed, of which
+crates/nmeme-core/tests/activation.rs is  new tests (the policy's
+truth table; before activation or disabled the rule does not apply; a
+legacy claim gives no credit but its NOCK is spendable; credit from
+activation on is conserved with the partial burn; a fresh genesis on a
+legacy anchor, a legacy entry blocking one; the always-active fork as
+activation at 0; the indexer records nothing before activation and credits
+nothing legacy; replay_at agrees with the rule at 98/99/100/101). CI run
+47 on 9a326cd: green (Rust 136 + , shell 15, backend 41). Nothing
+was built into a node and nothing ran live under the candidate.
+
 ## 2026-09-12 19:45 UTC: pack 9 (the queue after the pack 8 review)
 
 Unit, in CI (runs 43 and 44 on 0e11976 / 0013370, the hosted runner): 136
