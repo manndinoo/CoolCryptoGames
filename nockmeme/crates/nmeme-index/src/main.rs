@@ -32,10 +32,12 @@ use nmeme_core::{Indexer, Ticker, TokenId};
 use nmeme_tx::txfile::ParsedTransaction;
 use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockapp_grpc_proto::pb::public::v2::nockchain_block_service_client::NockchainBlockServiceClient;
+use nockapp_grpc_proto::pb::public::v2::nockchain_metrics_service_client::NockchainMetricsServiceClient;
 use nockapp_grpc_proto::pb::public::v2::nockchain_service_client::NockchainServiceClient;
 use nockapp_grpc_proto::pb::public::v2::{
-    get_block_details_request, get_block_details_response, get_transaction_block_response,
-    GetBlockDetailsRequest, GetTransactionBlockRequest,
+    get_block_details_request, get_block_details_response, get_explorer_metrics_response,
+    get_transaction_block_response, GetBlockDetailsRequest, GetExplorerMetricsRequest,
+    GetTransactionBlockRequest,
 };
 use nockapp_grpc_proto::pb::public::v2::{
     wallet_get_balance_request, wallet_get_balance_response, WalletGetBalanceRequest,
@@ -58,6 +60,7 @@ fn main() -> ExitCode {
         Some("check-inputs") => cmd_check_inputs(&args),
         Some("block") => cmd_block(&args),
         Some("tx-id") => cmd_tx_id(&args),
+        Some("tx-status") => cmd_tx_status(&args),
         Some("send") => cmd_send(&args),
         Some("rebuild") => cmd_rebuild(&args),
         Some("pool") => cmd_pool(&args),
@@ -78,7 +81,9 @@ fn main() -> ExitCode {
 
 const USAGE: &str = "usage:
   nmeme-index token-id --tx <tx.jam> --ticker <TICKER> --decimals <N>
-  nmeme-index token-note --addr <host:port> --lock <lock-root-b58> [--name \"<first> <last>\"]
+  nmeme-index token-note --addr <host:port> --lock <lock-root-b58> [--name \"<first> <last>\"] [--token <b58>] [--all]
+  nmeme-index tx-status --addr <host:port> --txid <id-b58>
+                       (TX-STATUS <id> mined height=<h> block=<id> canonical=yes|no | pending | unknown; TIP <height>)
   nmeme-index funding  --addr <host:port> [--lock <lock-root-b58>]... [--first <first-name-b58>]...
                        (every unspent note there: FUNDING <first> <last> coinbase|plain|claim <nicks> <origin>;
                         coinbase = last name recomputed from the origin block's parent id)
@@ -158,6 +163,9 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
     // caller names the one it means (the genesis output, by full name).
     let want_name = flag(args, "--name").map(parse_name).transpose()?;
     // Or by token: only notes carrying a transfer claim of that token.
+    // `--all`: every token-bearing note at the lock, whatever its token,
+    // one NOTE line each (and NOTE-UNKNOWN for a claim that does not decode)
+    let all = args.iter().any(|a| a == "--all");
     let want_token = flag(args, "--token")
         .map(|t| Hash::from_base58(t).map_err(|e| format!("token: {e}")))
         .transpose()?;
@@ -175,6 +183,7 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
         println!("# snapshot height {} block {}", snapshot.height, snapshot.block_id);
 
         let mut found = Vec::new();
+        let mut unknown = 0usize;
         for row in &snapshot.notes {
             let (name, data) = (&row.name, &row.data);
             if name.first != want_first {
@@ -189,7 +198,24 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
                 if key != nmeme_core::NOTE_DATA_KEY {
                     continue;
                 }
-                let claim = nmeme_index::decode_claim(blob).map_err(|e| format!("claim on note: {e}"))?;
+                // `--all`: a note whose claim does not decode is reported as
+                // such and the listing goes on (a backend classifies it as
+                // unknown: never plain funds, never a token holding)
+                let claim = match nmeme_index::decode_claim(blob) {
+                    Ok(c) => c,
+                    Err(e) if all => {
+                        unknown += 1;
+                        println!(
+                            "NOTE-UNKNOWN\t[{} {}]\t{}\t{}",
+                            name.first.to_base58(),
+                            name.last.to_base58(),
+                            row.assets,
+                            e.to_string().replace(['\t', '\n'], " ")
+                        );
+                        continue;
+                    }
+                    Err(e) => return Err(format!("claim on note: {e}")),
+                };
                 // a genesis note carries the id it created (SPEC §2a): it
                 // holds that token as much as a transfer note does
                 let token = match &claim {
@@ -210,6 +236,13 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
 
         // Filtered by token, every note is printed: a holder may well have
         // several notes of one token (a transfer's change and a purchase).
+        if all {
+            for (name, assets, amount, token) in &found {
+                println!("NOTE\t[{} {}]\t{}\t{}\t{}", name.first.to_base58(), name.last.to_base58(), assets, amount, token);
+            }
+            eprintln!("# token-note: {} token notes, {} undecodable", found.len(), unknown);
+            return Ok(ExitCode::SUCCESS);
+        }
         if want_token.is_some() && !found.is_empty() {
             for (name, assets, amount, token) in &found {
                 println!("NOTE\t[{} {}]\t{}\t{}\t{}", name.first.to_base58(), name.last.to_base58(), assets, amount, token);
@@ -634,6 +667,92 @@ fn cmd_tx_id(args: &[String]) -> Result<ExitCode, String> {
     let path = std::path::PathBuf::from(flag(args, "--tx").ok_or("missing --tx")?);
     println!("{}", nmeme_index::read_tx_id(&path)?);
     Ok(ExitCode::SUCCESS)
+}
+
+/// `tx-status --addr <host:port> --txid <b58>`: settlement of a transaction
+/// by ITS ID, from the node. Inputs having left the unspent set proves only
+/// that *some* transaction spending them was mined; this asks the node which
+/// block holds this id (`GetTransactionBlock`, the lookup the wallet's
+/// `tx-status` uses) and then checks that the block is the canonical one at
+/// that height (`GetBlockDetails` by height on the heaviest chain): a
+/// transaction in an orphaned block is `mined ... canonical=no`.
+///
+///   TX-STATUS <id> mined height=<h> block=<id> canonical=yes|no [canonical_block=<id>]
+///   TX-STATUS <id> pending            (in the node's mempool, not in a block)
+///   TX-STATUS <id> unknown <reason>   (the node knows no such transaction)
+///   TIP <height>                      (the heaviest chain's height, when served)
+fn cmd_tx_status(args: &[String]) -> Result<ExitCode, String> {
+    let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
+    let txid = flag(args, "--txid").ok_or("missing --txid")?.to_string();
+    Hash::from_base58(&txid).map_err(|e| format!("txid: {e}"))?;
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("tokio: {e}"))?;
+    runtime.block_on(async move {
+        let mut blocks = NockchainBlockServiceClient::connect(format!("http://{addr}"))
+            .await
+            .map_err(|e| format!("connect {addr}: {e}"))?;
+        let request = GetTransactionBlockRequest {
+            tx_id: Some(nockapp_grpc_proto::pb::common::v1::Base58Hash { hash: txid.clone() }),
+        };
+        let response = blocks
+            .get_transaction_block(request)
+            .await
+            .map_err(|e| format!("get_transaction_block({txid}): {e}"))?
+            .into_inner();
+        match response.result {
+            Some(get_transaction_block_response::Result::Block(b)) => {
+                let block = b
+                    .block_id
+                    .as_ref()
+                    .map(|h| decode_hash(h).map(|h| h.to_base58()))
+                    .transpose()?
+                    .ok_or_else(|| format!("{txid}: block data without a block id"))?;
+                let at_height = GetBlockDetailsRequest {
+                    selector: Some(get_block_details_request::Selector::Height(b.height)),
+                };
+                let canonical = match blocks.get_block_details(at_height).await {
+                    Ok(r) => match r.into_inner().result {
+                        Some(get_block_details_response::Result::Details(d)) => d
+                            .block_id
+                            .as_ref()
+                            .map(|h| decode_hash(h).map(|h| h.to_base58()))
+                            .transpose()?,
+                        _ => None,
+                    },
+                    Err(_) => None,
+                };
+                match canonical {
+                    Some(c) if c == block => println!(
+                        "TX-STATUS\t{txid}\tmined\theight={}\tblock={block}\tcanonical=yes",
+                        b.height
+                    ),
+                    Some(c) => println!(
+                        "TX-STATUS\t{txid}\tmined\theight={}\tblock={block}\tcanonical=no\tcanonical_block={c}",
+                        b.height
+                    ),
+                    None => println!(
+                        "TX-STATUS\t{txid}\tmined\theight={}\tblock={block}\tcanonical=unverified",
+                        b.height
+                    ),
+                }
+            }
+            Some(get_transaction_block_response::Result::Pending(_)) => println!("TX-STATUS\t{txid}\tpending"),
+            Some(get_transaction_block_response::Result::Error(e)) => {
+                println!("TX-STATUS\t{txid}\tunknown\t{}", e.message.replace(['\t', '\n'], " "))
+            }
+            None => println!("TX-STATUS\t{txid}\tunknown\tno result"),
+        }
+        if let Ok(mut metrics) = NockchainMetricsServiceClient::connect(format!("http://{addr}")).await {
+            if let Ok(m) = metrics.get_explorer_metrics(GetExplorerMetricsRequest {}).await {
+                if let Some(get_explorer_metrics_response::Result::Metrics(m)) = m.into_inner().result {
+                    println!("TIP\t{}", m.heaviest_height);
+                }
+            }
+        }
+        Ok(ExitCode::SUCCESS)
+    })
 }
 
 /// `block --addr <host:port> --height <h>`: the block's id and parent id, as

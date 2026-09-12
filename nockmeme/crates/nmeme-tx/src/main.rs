@@ -27,7 +27,7 @@ use nmeme_tx::txfile::{rewrite, ParsedTransaction};
 use nmeme_tx::{attach_claim, Error};
 use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockchain_types::tx_engine::common::{Hash, Name, SchnorrPubkey, SchnorrSignature};
-use nockchain_types::tx_engine::v1::tx::{Spend, Spends};
+use nockchain_types::tx_engine::v1::tx::{Lock, LockPrimitive, Pkh, Spend, SpendCondition, Spends};
 use nockvm::noun::NounAllocator;
 use noun_serde::{NounDecode, NounEncode};
 
@@ -70,6 +70,20 @@ fn cmd_pool_lock(args: &[String]) -> Result<ExitCode, String> {
     println!("POOL-LOCK\t{}", root.to_base58());
     println!("POOL-FIRST\t{}", nmeme_tx::names::first_name(&root).to_base58());
     println!("LORE-FIRST\t{}", params.lore_first_name().to_base58());
+    Ok(ExitCode::SUCCESS)
+}
+
+/// `key-lock <address-b58>`: the lock root of the 1-of-1 key lock the wallet
+/// pays an address with (its `p2pkh` recipient), and the first name every
+/// note at that lock carries. This is what a wallet's "address" resolves to
+/// on the chain, so a backend can read a wallet's notes without first
+/// building a throwaway transaction to learn its lock root.
+fn cmd_key_lock(args: &[String]) -> Result<ExitCode, String> {
+    let pkh = Hash::from_base58(&args[2]).map_err(|e| format!("address: {e}"))?;
+    let spend_condition = SpendCondition::new(vec![LockPrimitive::Pkh(Pkh::new(1, [pkh]))]);
+    let root = Lock::SpendCondition(spend_condition).hash().map_err(|e| format!("{e:?}"))?;
+    println!("KEY-LOCK\t{}", root.to_base58());
+    println!("KEY-FIRST\t{}", nmeme_tx::names::first_name(&root).to_base58());
     Ok(ExitCode::SUCCESS)
 }
 
@@ -372,6 +386,7 @@ fn main() -> ExitCode {
         Some("replace-spend") if args.len() == 6 => cmd_replace_spend(&args),
         Some("retarget") if args.len() == 6 => cmd_retarget(&args),
         Some("pool-lock") if args.len() >= 10 => cmd_pool_lock(&args),
+        Some("key-lock") if args.len() == 3 => cmd_key_lock(&args),
         Some("note-hash") if args.len() >= 11 => cmd_note_hash(&args),
         Some("pool-trade") if args.len() >= 16 => cmd_pool_trade(&args),
         _ => {
@@ -400,6 +415,7 @@ const USAGE: &str = "usage:
   nmeme-tx replace-spend <base.jam> <donor.jam> <spend-first-b58> <out.jam>
   nmeme-tx retarget <tx.jam> <out.jam> <from-lock-root> <to-lock-root>
   nmeme-tx pool-lock --token <token-b58> --fee-bps <n> --lore-bps <n> --lore-lock <lock-root>
+  nmeme-tx key-lock <address-b58>            (KEY-LOCK <lock-root> and KEY-FIRST: the wallet's 1-of-1 key lock)
   nmeme-tx note-hash \"<first> <last> <origin> <nock> <tokens>\" <pool params>
   nmeme-tx pool-trade <user.tx> <out.jam> --pool \"<first> <last> <origin> <nock> <tokens>\" <pool params>
                       --side buy|sell --placeholder <lock-root> [--tokens-in <n>] [--claim <lock-root>=<claim-spec>]... [--dust <n>]

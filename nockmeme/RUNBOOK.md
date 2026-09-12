@@ -197,4 +197,15 @@ REPO=... RUN=... ... LORE_LOCK=... GFILE_A=$RUN/genesis-A/final.jam XFILE_A=$RUN
 # 100 -> 99 spend mined on the chain.
 # a new wallet's whole flow: creation, funding, buy, sell, transfer, with ids and balances
 REPO=... RUN=... ... LORE_LOCK=... bash /path/to/nockmeme/scripts/wallet-demo.sh 2>"$RUN/wallet-progress.log" | tee "$RUN/wallet-results.txt"
+# the wallet backend (backend/, Python 3.10+, no dependencies) on the same chain: a completely
+# fresh wallet from zero NOCK and zero tokens through create -> fund -> buy -> sell -> transfer,
+# two requests at once from one wallet, and a restart in the middle of a submission (a crash
+# after the reservation, after the build, after the broadcast), each reconciled by transaction id
+cd /path/to/nockmeme/backend && python3 -m unittest discover -s tests -v      # 26 tests, no chain needed
+REPO=... RUN=... TOKEN_B=... LORE_LOCK=... PLACEHOLDER_ADDR=<alice's address> MINING_PKH=<alice's address> \
+  bash /path/to/nockmeme/scripts/backend-demo.sh | tee "$RUN/backend-results.txt"
+# the same commands one at a time: python3 backend/cli.py {create|balances|pay|buy|sell|transfer|reconcile|wait|status} <wallet> ...
+# (the environment as above; --crash-after reserved|built|broadcast is the restart test's hook).
+# The node needs vm.overcommit_memory=1 (its 32 GiB Nock stack is mapped, not used); a container
+# restart resets it, and the node then dies at boot with "Failed to map memory for stack".
 ```

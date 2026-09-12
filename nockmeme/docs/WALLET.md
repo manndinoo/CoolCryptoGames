@@ -1,14 +1,15 @@
-# The wallet side: rules, what exists, what a backend has to do
+# The wallet side: rules, the backend, what the fakenet showed
 
-The review of pack 5 asked for the wallet backend "supplied separately" to
-be integrated, with four properties: enough ordinary NOCK for network
-fees, token holdings and change preserved, pending-transaction tracking,
-and reservation handling. **No wallet backend was supplied to this work**:
-nothing under that name is in the repository or was attached to the task.
-This document states the rules such a backend must follow, what this
-package already implements of them (and demonstrates live), and the
-contract a backend integrates against. The demonstration is
-`scripts/wallet-demo.sh` (results: `results/RESULTS.md` §A20).
+The review of pack 5 asked for a wallet backend with four properties:
+enough ordinary NOCK for network fees, token holdings and change preserved,
+pending-transaction tracking, and reservation handling. Pack 6 stated the
+rules and demonstrated them with shell tooling (`scripts/wallet-demo.sh`,
+§A20). With the review of pack 6 a backend was supplied
+(`nockmeme-wallet-backend`, a Python planner with persistent SQLite
+reservations); it is integrated under `backend/` (its README explains what
+was adapted and why) and run on the fakenet by `scripts/backend-demo.sh`
+(results: `results/RESULTS.md` §A23). This document states the rules, what
+implements them, and the contract over the package's tools.
 
 ## 1. The four rules
 
@@ -46,9 +47,18 @@ contract a backend integrates against. The demonstration is
    check keeps its inputs reserved in the mempool), the wallet would
    otherwise keep building against a note it cannot spend.
 
-## 2. What this package implements
+## 2. What implements them
 
-`scripts/lib-wallet.sh`, used by `scripts/wallet-demo.sh`:
+`backend/` (the integrated backend; `backend/README.md`):
+
+| rule | where | how |
+|---|---|---|
+| 1 | `wallet_backend.Planner.reserve` | a buy is funded from plain notes only; a sell or transfer spends the token notes of the requested token (largest first) and pays fee and dust from their NOCK when the wallet's own even split can (`wallet_split`, a port of `++create-spends-1`), adding plain notes largest-first only when it cannot; other tokens' notes, undecodable (`unknown`) notes and reserved notes never fund anything |
+| 2 | `service.WalletService._finish_trade` / `_finish_transfer` | the change claim `transfer:<token>:<held − sent>` is attached to the wallet's own lock on every sell and transfer, from the plan's `token_change_units` |
+| 3 | `service.WalletService._fee_ok` / `_finish_plain` | `FEE current ≥ required` from `nmeme-tx` on the built transaction, or it is not signed or sent |
+| 4 | `wallet_backend.Planner` + `service.WalletService` | one `BEGIN IMMEDIATE` transaction reserves the inputs before anything is built; the signed transaction and its id are recorded before the broadcast; settlement is `nmeme-index tx-status --txid` — mined in the canonical block at its height — and only that releases the inputs; `reconcile()` on restart resumes every open request from the record |
+
+`scripts/lib-wallet.sh`, used by `scripts/wallet-demo.sh` (pack 6's shell version, kept as it ran):
 
 | rule | function | how |
 |---|---|---|
@@ -64,10 +74,10 @@ transaction id, the block, the balances before and after (NOCK in plain
 notes at the wallet's lock, tokens by the indexer's view of its notes), and
 the ledger's state after each send.
 
-What is *not* here: a service. The ledger is a file per wallet, selection
-is a shell function over an indexer read, and the demo drives one wallet
-serially. There is no API, no concurrency across wallets, no persistence
-beyond the file, no retry policy. Those belong to the backend.
+The shell ledger settled on inputs leaving the unspent set; the backend
+does not (§A23: that proves *a* transaction spending them was mined, not
+this one). What is still not here: a network API and key custody beyond the
+stock wallet's export file.
 
 ## 3. The contract a backend integrates against
 
@@ -82,23 +92,25 @@ Everything the backend needs is a command with a line-oriented output:
 | a token transfer | `nmeme-tx attach <wallet-tx> <out> <lock>=transfer:<id>:<n> <change-lock>=transfer:<id>:<held − n>` | `ATTACHED`, `FEE`, `NEWSIGHASH` |
 | re-signing | `nockchain-wallet sign-hash <digest>` then `nmeme-tx set-sig` | the signed file |
 | sending | `nmeme-index send --addr <node> --tx <file>` | `TXID <id>`, `MEMPOOL admitted / not admitted` |
-| settlement | `nmeme-index funding --first <first>` (the note's presence) | mined when every input has left the unspent set |
+| settlement | `nmeme-index tx-status --addr <node> --txid <id>` | `TX-STATUS <id> mined height=<h> block=<id> canonical=yes/no`, `pending`, or `unknown`; `TIP <height>` |
+| a wallet's lock root | `nmeme-tx key-lock <address>` | `KEY-LOCK <root>`, `KEY-FIRST <first>` (verified live against carol's and bob's locks) |
+| every token note at a lock | `nmeme-index token-note --addr <node> --lock <lock-root> --all` | one `NOTE` per token-bearing note, `NOTE-UNKNOWN` for a claim that does not decode |
 | the node's verdict | the node's log: `heard-tx: Transaction context invalid: <reason>` | a refusal at admission |
 
-A backend keeps rules 1–4 above over these calls. The wallet's own
-`create-tx` builds the base transaction (it selects plain notes when given
-`--names`, and adds inputs for the fee on its own — which is why the
-funding proofs and the reservation ledger matter: the backend must read
-the inputs the wallet actually chose, `nmeme-index outputs --tx <file>`,
-and reserve those).
+The backend keeps rules 1–4 above over these calls. The wallet's own
+`create-tx --names` builds the base transaction over exactly the named
+notes (seen live; the backend still reads the inputs the wallet chose,
+`nmeme-index outputs --tx <file>`, and aborts if they differ from the plan).
 
 ## 4. What the fakenet showed
 
-`results/RESULTS.md` §A20: the wallet flow, with ids and balances. The
-facts a backend must design around, from this and the earlier runs: the
-stock wallet's planner floors any spend's fee around 3,500 nicks and
-spreads the fee evenly over the notes named, so a token note holding 1,000
-nicks cannot be spent by it; a wallet building two spends pays its change
+`results/RESULTS.md` §A20 (the shell flow) and §A23 (the backend), with
+ids and balances. The facts a backend must design around, from these and
+the earlier runs: the stock wallet's planner spreads the fee evenly over
+the notes named — `ceil(fee / n)` each, capped to leave one nick per note,
+the payment drawn from what remains in order, each note's leftover its own
+change seed (`tx-builder.hoon`, `++create-spends-1`) — so a token note
+holding 1,000 nicks cannot carry a 16,384-nick fee share; a wallet building two spends pays its change
 from each to the same lock, and consensus merges those seeds into one
 note; the planner left to itself picks the smallest notes first, so a lock
 full of trade dust cannot pay a fee unless a note is named. And: the
