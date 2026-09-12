@@ -458,5 +458,8 @@ cat "$S/replay-B.txt"
 live=$(pool_state "$TOKEN_B" "$FEE_BPS" | cut -d' ' -f4,5); rep=$(awk -F'\t' '$1=="STATE"{print $2" "$3}' "$S/replay-B.txt")
 [ "$live" = "$rep" ] && echo "REPLAY-OK	live pool state $live equals the replayed state" || die "replay state $rep != live $live"
 lb=$(lore_balance); lp=$(awk -F'\t' '$1=="STATE"{for(i=1;i<=NF;i++) if ($i ~ /^lore_paid_total=/) print substr($i,17)}' "$S/replay-B.txt")
-echo "LORE-FINAL	balance=${lb%% *} nicks	notes=$(cut -d' ' -f2 <<<"$lb")	non_plain=${lb##* }	replay_total_main_pool=$lp	(attack pools paid nothing: no attack was mined)"
+# the balance beyond the main pool's total: the honest merge on pool 110, and a
+# neutralized inflate-claim trade if one mined (no refused attack pays anything)
+extra=$(( ${lb%% *} - lp ))
+echo "LORE-FINAL	balance=${lb%% *} nicks	notes=$(cut -d' ' -f2 <<<"$lb")	non_plain=${lb##* }	replay_total_main_pool=$lp	other_pools=$extra (the merge-ok buy$([ -f "$S/inflate-claim.neutralized" ] && echo " and the neutralized inflate-claim trade"); no refused attack paid anything)"
 echo "#### pool suite complete"
