@@ -3,9 +3,13 @@
 # applies them, for a wallet the suites drive. Expects lib-tx.sh's helpers
 # and: NMEME_INDEX PUB W.
 #
-#   - NOCK for a payment and for the network fee comes from plain notes
-#     only: a note carrying a token claim is never selected as funds (a
-#     token-unaware spend of it burns the tokens, SPEC §7)
+#   - NOCK for a payment and for the network fee comes from plain notes;
+#     a note carrying a token claim is never spent *without its claim* (a
+#     token-unaware spend of it burns the tokens, SPEC §7). When a token
+#     note is being spent anyway, with its change claim attached, the NOCK
+#     it carries may pay the fee: consensus merges a spend's change with a
+#     token seed to the same lock, so after a buy the buyer's change sits
+#     inside the token note (seen live), and that NOCK is not lost
 #   - a spend of a token note always carries its change claim (the callers
 #     attach `<change-lock>=transfer:<token>:<held - sent>`)
 #   - the inputs of a transaction that was sent are reserved until it is
@@ -48,7 +52,7 @@ w_reconcile() {
 # w_pick_plain <who> <lock> <need-nicks> -> "first last amount": a plain
 # unspent note at the lock, not reserved, holding at least <need>
 w_pick_plain() {
-  local who="$1" lock="$2" need="$3" out="$W/$who/funding-now.txt"
+  local who="$1" lock="$2" need="$3"; local out="$W/$who/funding-now.txt"
   quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$lock" > "$out" 2>/dev/null || die "funding read at $lock"
   local reserved; reserved=$(w_reserved "$who")
   local n

@@ -119,8 +119,10 @@ echo "== 4. sell half back =="
 tn=$(token_note_at "$MY_LOCK" "$TOKEN_B"); [ -n "$tn" ] || die "sell: $WHO holds no token note"
 tf="${tn%% *}"; r1="${tn#* }"; tl="${r1%% *}"; held="${r1#* }"; half=$((held / 2))
 st=$(pool_state "$TOKEN_B" "$FEE_BPS"); nock0=$(nock_at "$MY_LOCK"); tok0=$(tokens_at "$MY_LOCK" "$TOKEN_B")
-pick=$(w_pick_plain "$WHO" "$MY_LOCK" $((DUST + ${FEE_NICKS:-16384} + 20000))) || die "sell: no plain note for the fee (a token note is never the source of fees)"
-r=$(prepared "$WHO" sell "[$tf $tl],[${pick%% *} $(cut -d' ' -f2 <<<"$pick")]" "$ALICE" "$DUST" "$tf $tl")
+# a plain note pays the fee if there is one; otherwise the token note's own
+# NOCK does (it is spent with its change claim either way)
+if pick=$(w_pick_plain "$WHO" "$MY_LOCK" $((DUST + ${FEE_NICKS:-16384} + 20000))); then names="[$tf $tl],[${pick%% *} $(cut -d' ' -f2 <<<"$pick")]"; else names="[$tf $tl]"; echo "NOTE	sell	no plain note left: the token note's own NOCK pays the fee (spent with its change claim)"; fi
+r=$(prepared "$WHO" sell "$names" "$ALICE" "$DUST" "$tf $tl")
 "$NMEME_TX" pool-trade "${r%% *}" "$S/sell/assembled.jam" --pool "$st" --token "$TOKEN_B" --fee-bps "$FEE_BPS" $PP --side sell --placeholder "$ALICE_LOCK" --dust "$DUST" --tokens-in "$half" --claim "$MY_LOCK=transfer:$TOKEN_B:$((held - half))" > "$S/sell/trade.txt" 2>&1 || die "sell: pool-trade: $(tail -1 "$S/sell/trade.txt")"
 sed 's/^/  /' "$S/sell/trade.txt" >&2; w_fee_ok "$S/sell/trade.txt" || die "sell: the fee does not cover what the chain requires"
 resign "$WHO" "${r#* }" "$S/sell/assembled.jam" "$S/sell/trade.txt" "$S/sell/final.jam"
@@ -136,8 +138,8 @@ echo "== 5. transfer $XFER tokens to bob =="
 tn=$(token_note_at "$MY_LOCK" "$TOKEN_B"); tf="${tn%% *}"; r1="${tn#* }"; tl="${r1%% *}"; held="${r1#* }"
 [ "$held" -gt "$XFER" ] || die "transfer: $WHO holds $held"
 tok0=$(tokens_at "$MY_LOCK" "$TOKEN_B"); bob0=$(tokens_at "$BOB_LOCK" "$TOKEN_B"); nock0=$(nock_at "$MY_LOCK")
-pick=$(w_pick_plain "$WHO" "$MY_LOCK" $((DUST + ${FEE_NICKS:-16384} + 20000))) || die "transfer: no plain note for the fee"
-r=$(prepared "$WHO" xfer "[$tf $tl],[${pick%% *} $(cut -d' ' -f2 <<<"$pick")]" "$BOB" "$DUST" "$tf $tl")
+if pick=$(w_pick_plain "$WHO" "$MY_LOCK" $((DUST + ${FEE_NICKS:-16384} + 20000))); then names="[$tf $tl],[${pick%% *} $(cut -d' ' -f2 <<<"$pick")]"; else names="[$tf $tl]"; echo "NOTE	transfer	no plain note left: the token note's own NOCK pays the fee (spent with its change claim)"; fi
+r=$(prepared "$WHO" xfer "$names" "$BOB" "$DUST" "$tf $tl")
 "$NMEME_TX" attach "${r%% *}" "$S/xfer/attached.jam" "$BOB_LOCK=transfer:$TOKEN_B:$XFER" "$MY_LOCK=transfer:$TOKEN_B:$((held - XFER))" > "$S/xfer/attach.txt" || die "transfer: attach: $(tail -1 "$S/xfer/attach.txt")"
 w_fee_ok "$S/xfer/attach.txt" || die "transfer: the fee does not cover what the chain requires"
 resign "$WHO" "${r#* }" "$S/xfer/attached.jam" "$S/xfer/attach.txt" "$S/xfer/final.jam"

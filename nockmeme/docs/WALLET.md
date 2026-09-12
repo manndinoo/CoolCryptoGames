@@ -12,12 +12,18 @@ contract a backend integrates against. The demonstration is
 
 ## 1. The four rules
 
-1. **Funds come from plain notes only.** A note carrying a `meme` claim is
-   a token holding; spending it as NOCK burns the tokens (SPEC §7, a
-   consensus fact on every node). Coin selection for a payment or a fee
-   never picks a note with a claim. If the plain notes at the wallet's lock
-   do not cover the amount plus the network fee, the wallet refuses to
-   build rather than reach for a token note.
+1. **A token note is never spent without its claim.** A note carrying a
+   `meme` claim is a token holding; spending it as plain NOCK burns the
+   tokens (SPEC §7, a consensus fact on every node). Coin selection for a
+   payment or a fee prefers plain notes and never picks a token note as
+   *plain* funds. When a token note is being spent anyway — with its change
+   claim attached (rule 2) — the NOCK it carries may pay the fee. It has to:
+   consensus merges a spend's change seed with a token seed to the same
+   lock into one note, so after a buy the buyer's change sits inside the
+   token note, and after a sell the seller's change does too (seen live,
+   `wallet-demo.sh`: a wallet that bought and sold held no plain note at
+   all, all its NOCK inside two token notes). A backend that only ever
+   spent plain notes would strand that NOCK.
 2. **A token spend carries its change claim.** Spending a note holding `n`
    of a token to send `k` attaches `transfer:<token>:<k>` to the
    recipient's seed and `transfer:<token>:<n − k>` to the sender's change
@@ -46,7 +52,7 @@ contract a backend integrates against. The demonstration is
 
 | rule | function | how |
 |---|---|---|
-| 1 | `w_pick_plain <who> <lock> <need>` | reads the wallet's unspent notes through the indexer (`nmeme-index funding --lock`), takes the smallest note typed `plain` holding at least `need`, never one typed `claim`, never a reserved one |
+| 1 | `w_pick_plain <who> <lock> <need>` | reads the wallet's unspent notes through the indexer (`nmeme-index funding --lock`), takes the smallest note typed `plain` holding at least `need`, never one typed `claim`, never a reserved one; when none exists and a token note is being spent with its claim, that note's NOCK pays the fee |
 | 1 | `w_nock <lock>` | the wallet's spendable NOCK: plain and coinbase notes only; token notes counted separately |
 | 2 | callers | every token spend in the suites attaches the change claim (`open_pool`, `pool-trade --claim`, `attach … <change-lock>=transfer:…`) |
 | 3 | `w_fee_ok <attach-or-trade output>` | `current ≥ required` from the tool's FEE line, or the transaction is not sent |
