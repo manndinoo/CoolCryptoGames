@@ -13,12 +13,23 @@ on:
       - nockmeme/crates/**
       - nockmeme/scripts/link-into-workspace.sh
       - nockmeme/upstream/amm-covenant.patch
+      - nockmeme/backend/**
 
 env:
   NOCKCHAIN_REV: 2bcb0b9dfd190f17252205afd1c8a067048a1ad9
   WORK: /mnt/work
 
 jobs:
+  # the wallet backend (Python, standard library): the supplied planner's
+  # tests and the service lifecycle against a scripted chain
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: backend tests
+        working-directory: nockmeme/backend
+        run: python3 -m unittest discover -s tests -v
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 90
