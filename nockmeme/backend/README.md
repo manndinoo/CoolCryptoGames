@@ -78,16 +78,43 @@ Notes of another token still never fund a buy — their claim would be a
 second claim at the buyer's lock, and consensus keeps one. `Plan.token_change_units`
 on a buy is the held units the claim must add.
 
-**The per-pool trade queue (pack 8).** Two trades built against the same
-pool note cannot both stand (the node refuses the second at admission, §A23).
-`PoolQueue` gives a pool one trade at a time across every wallet and process
-on the node: a file lock per pool lock root, and a registry
-(`<wallets>/pools.sqlite`) of the last trade sent on each pool. A request's
-turn waits until that trade is no longer pending (mined, or gone from the
-node's accepted set), then reads the pool as it stands, quotes, checks the
-request's floor, builds and broadcasts, and records its id for the next in
-line. A pool that stays busy past `queue_wait` (default 900 s) aborts the
-request and releases its inputs.
+**The per-pool trade queue (pack 8, reworked in pack 9 after the review).**
+Two trades built against the same pool note cannot both stand (the node
+refuses the second at admission, §A23). `PoolQueue` gives a pool one trade
+at a time across every wallet and process on the node: a file lock per pool
+lock root, and a registry (`<wallets>/pools.sqlite`) of the transaction
+that owns each pool. A request's turn: take the lock (without blocking,
+retried until the deadline), look up the pool's owner and ask the node
+about it, then read the pool as it stands, quote, check the request's
+floor, build, **claim the pool for the built transaction's id — durably,
+before anything is sent** — and broadcast. What the turn does with the
+owner, by the node's answer:
+
+| the owner is | the turn |
+|---|---|
+| pending | waits (polls until the deadline) |
+| mined, canonical | proceeds: the pool is free |
+| mined, not canonical | waits: a reorganisation may bring it back |
+| unknown to the node (never sent, or dropped) | proceeds; the owner's reconcile resends it through this queue and the node refuses it if the pool has moved on |
+| this very transaction (a resend) | proceeds as its owner |
+
+So a crash anywhere after the build — before the send, right after it,
+before the record of it — leaves the pool owned by that id, and the next
+request waits for it as long as the node holds it. A built or dropped
+transaction is resent by its owner's reconcile through the same turn
+(`own_txid`), which waits for whatever trade holds the pool now; a resend
+that finds the pool busy past the deadline is deferred (`DEFERRED`, the
+record stands for the next reconcile), one the node refuses is aborted and
+its inputs released. A refused or aborted trade owns no pool (`forget`).
+`queue_wait` (default 900 s, a monotonic deadline from entry) bounds the
+lock acquisition and the polling together; a request that hits it is
+aborted and its inputs released. Any failure while entering the turn — the
+node unreachable, the registry unreadable — releases the lock before the
+error is raised (Python does not run `__exit__` when `__enter__` raises),
+and the service aborts and releases the request if nothing was built yet.
+Tests: `tests/test_queue.py` (the reviewer's three regressions, two wallets
+crashing after the build and after the broadcast while the other trades,
+the lock held elsewhere, a node error on entry, a refused trade).
 
 **Slippage.** `buy --slippage-bps N` / `sell --slippage-bps N` take a quote
 now (`nmeme-tx quote`, the same function `pool-trade` applies) and set the
