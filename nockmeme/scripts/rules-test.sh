@@ -233,12 +233,12 @@ for P in "${POOL_DIR:-$RUN/pool}" "$RUN"/rules-attempt*; do
   [ -d "$P" ] || continue
   for e in "$P"/*.env; do
     [ -f "$e" ] || continue; l=$(basename "$e" .env); f="$P/$l/final.jam"
-    case "$l" in main|pool-*|donate-*|merge-ok|inflate-claim|prep-*|short|multi|open|sell) [ -f "$f" ] && echo "$(cut -d= -f2 "$e") $l $f" >> "$S/prior-steps.txt";; esac
+    case "$l" in main|pool-*|donate-*|merge-ok|prep-*|short|multi|open|sell) [ -f "$f" ] && echo "$(cut -d= -f2 "$e") $l $f" >> "$S/prior-steps.txt";; esac
   done
-  # a neutralized inflate-claim trade has no .env: it follows its pool
-  if [ -f "$P/inflate-claim.neutralized" ] && ! grep -q " inflate-claim " "$S/prior-steps.txt"; then
-    h=$(grep " pool-inflate-claim " "$S/prior-steps.txt" | cut -d' ' -f1); echo "$h inflate-claim $P/inflate-claim/final.jam" >> "$S/prior-steps.txt"
-  fi
+  # a neutralized inflate-claim trade (two claims at the pool lock, consensus
+  # kept one) is not a step: the indexer's replay does not model the merge
+  # order (`two meme claims target lock-root`), and nothing here spends its
+  # outputs; the pool's note stays at its opening state in this replay
 done
 sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
 while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
