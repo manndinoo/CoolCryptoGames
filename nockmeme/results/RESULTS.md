@@ -852,6 +852,63 @@ settle, and a token-scoped tolerance for outputs of *other* tokens spent
 outside the replay. Each of these is in the tooling and the docs now, and
 each cost an attempt (`results-attempt*.txt`).
 
+### A23. The wallet backend on the fakenet: a fresh wallet from zero, simultaneous requests, a restart during submission
+
+The backend supplied with the review of pack 6 is integrated under
+`backend/` (its README says what was adapted and why: a token note a sell
+or transfer spends anyway pays the network fee from the NOCK it carries,
+the wallet's own fee split ported, settlement by transaction id) and run
+by `scripts/backend-demo.sh` on the phase-four chain (`live/backend-v1/`:
+every request's plan, transaction file, node answer, quote, and the
+balances before and after; `progress-run1.log` is the flow and the
+simultaneous phase, `progress-run2.log` the restart and retry phases).
+Balances are the backend's own reading: total NOCK, available NOCK (plain
+notes not reserved), pending NOCK (reserved), NOCK attached to token
+notes, and tokens. The unit tests: 26 (`backend/tests`, no chain needed).
+
+**A completely fresh wallet.** `dave` was created by the stock wallet's
+`keygen` (keys exported to `keys/dave.export`), its lock root computed from
+its address (`nmeme-tx key-lock`, a new command; checked against carol's
+and bob's known locks), and read at zero: `nock_total=0 … tokens=-`.
+
+| step | txid | block (canonical) | what moved | dave's NOCK total / available / attached | dave's tokens |
+|---|---|---|---|---|---|
+| funded by alice (`pay`) | `43E7iP…` | 1555 | 2,000,000 nicks from one coinbase note, alice's change 4,292,834,528 | 0 → 2,000,000 / 2,000,000 / 0 | 0 |
+| buy | `BsWJC6…` | 1574 | 655,360 nicks in, 3,535 tokens out, pool share 6,510 nicks, Lore share 3,281 nicks, network fee 16,384, impact 7.82 % | 2,000,000 → 1,329,256 / **0** / **1,329,256** | 0 → 3,535 |
+| sell half | `5MW3aQ…` | 1602 | 1,767 tokens in, 327,950 nicks out net, pool share 17 tokens, Lore share 1,653 nicks, network fee 16,384, impact 4.23 %; change claim 1,768 | 1,329,256 → 1,639,822 / 0 / 1,639,822 | 3,535 → 1,768 |
+| transfer 100 to bob | `BJwetf…` | 1623 | 100 tokens and 1,000 nicks of dust to bob, change claim 1,668, network fee 16,384 | 1,639,822 → 1,622,438 / 0 / 1,622,438 | 1,768 → 1,668; bob 11,970 → 12,070 |
+
+Every number reconciles: after the buy the wallet's 1,328,256 nicks of
+change plus the 1,000-nick dust of its token seed sit *inside* the token
+note (available 0, attached 1,329,256 — the merge of §A20, now read by the
+backend as a balance rather than found by surprise); the sell's plan
+reserved that one token note and nothing else (`required_plain=0
+backing=1329256 backing_spent=17384`: the fee and the dust from the note's
+own NOCK), and 1,329,256 − 17,384 + 327,950 = 1,639,822; the transfer the
+same, 1,639,822 − 17,384 = 1,622,438, with bob's attached NOCK up by the
+1,000 nicks of dust. Each transaction was reserved before it was built,
+recorded with its id before it was sent, and released only when
+`tx-status` reported it in the canonical block at its height.
+
+**Simultaneous requests.** With two plain notes (2,000,000 and 1,000,000),
+two buys of 655,360 nicks were started at once from two processes on one
+database. Each reserved a different note (`6D7wK9…` and `6jDuzs…`); both
+were built against the pool as it stood (10,981,986 / 60,230) and both
+were broadcast. The node admitted the first (`38ACnb…`, mined at 1702,
+3,339 tokens) and refused the second at admission — `Inputs not in
+heaviest balance, discarding transaction`: both spend the *same pool
+note*, and the node holds the first spend of it. The backend recorded the
+refusal and released the second's note at once (available NOCK went
+3,000,000 → 1,000,000: the first buy's note spent, the second's free
+again). A second pair (`sim2`) behaved the same way (`4vUnkD…` mined at
+1747, the other refused). So two requests from one wallet never
+double-select an input (the reservation is one SQLite transaction), and
+two trades against one pool can never both stand: the pool note is a
+single input, and the second trade has to be re-quoted after the first is
+mined — which the retry phase below does. The case where the *second*
+request is refused by the reservation itself, before anything is built,
+is `onenote` below.
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |
@@ -920,7 +977,12 @@ a block; a counterfeit input an outside review asked about drained a pool
 on the first prototype and is refused on arrival by the second; node and
 indexer apply one token rule, shown live on a 100 → 99 spend (99 held, 1
 burned on both), a two-token transaction and eight genesis-bound
-refusals; and a new wallet was created, funded, bought, sold and
-transferred with every id and balance recorded. None of this runs on the
+refusals; a new wallet was created, funded, bought, sold and
+transferred with every id and balance recorded; and the supplied wallet
+backend, integrated, ran a second wallet from zero through the same flow
+with inputs reserved before the build, settlement by transaction id in
+the canonical block, balances split into available and attached NOCK,
+two simultaneous requests never sharing an input, and a restart at each
+point of a submission resumed from the record. None of this runs on the
 shipped node: the fork is a prototype for an upstream proposal, not a
 deployment.

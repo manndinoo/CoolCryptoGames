@@ -17,6 +17,9 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; CLI="python3 $HERE/../back
 S="$RUN/backend"; mkdir -p "$S"
 WHO="${WHO:-dave}"; FUND="${FUND_NICKS:-2000000}"; BUY="${BUY_NICKS:-655360}"; XFER="${XFER:-100}"
 export FEE_BPS="${FEE_BPS:-100}" LORE_BPS="${LORE_BPS:-50}" FEE_NICKS="${FEE_NICKS:-16384}" DUST="${DUST:-1000}"
+PHASES="${PHASES:-flow,sim,restart,retry}"
+T="${TAG:-}"   # appended to the request ids of the restart and retry phases (a request id is never planned twice)   # which phases run (a later phase on the wallet the earlier ones left)
+phase() { case ",$PHASES," in *",$1,"*) return 0;; *) return 1;; esac; }
 MINER="$REPO/target/release/zk-pow-mine"
 "$MINER" --node-addr "http://127.0.0.1:$PORT" --mining-pkh "${MINING_PKH:?}" --num-threads 1 >"$RUN/miner.log" 2>&1 &
 MINER_PID=$!; trap 'kill "$MINER_PID" 2>/dev/null || true' EXIT
@@ -35,11 +38,13 @@ ALICE_ADDR="${PLACEHOLDER_ADDR:?}"
 run bob-before balances bob | grep -E "^BALANCES" || exit 1
 BOB_ADDR=$(python3 -c "import json;print(json.load(open('$RUN/wallets/bob/identity.json'))['address'])")
 echo "BOB	address=$BOB_ADDR"
+dave_addr() { python3 -c "import json;print(json.load(open('$RUN/wallets/$WHO/identity.json'))['address'])"; }
+[ -f "$RUN/wallets/$WHO/identity.json" ] && DAVE_ADDR=$(dave_addr) || DAVE_ADDR=""
 
+if phase flow; then
 step "1. a completely fresh wallet: $WHO (zero NOCK, zero tokens)"
 if [ -d "$RUN/wallets/$WHO" ]; then echo "SKIP	$WHO exists (RESUME)"; run created balances "$WHO"; else run created create "$WHO" || exit 1; fi
-DAVE_ADDR=$(python3 -c "import json;print(json.load(open('$RUN/wallets/$WHO/identity.json'))['address'])")
-echo "ADDRESS	$WHO	$DAVE_ADDR"
+DAVE_ADDR=$(dave_addr); echo "ADDRESS	$WHO	$DAVE_ADDR"
 
 step "2. funding: alice pays $WHO $FUND nicks (a plain payment through the backend)"
 run fund pay alice "$DAVE_ADDR" "$FUND" --request-id "fund-$WHO-1" || exit 1
@@ -56,7 +61,9 @@ step "5. transfer $XFER tokens to bob"
 run xfer transfer "$WHO" "$XFER" "$BOB_ADDR" --request-id "xfer-$WHO-1" || exit 1
 run bob-after balances bob | grep -E "^BALANCES"
 run status-after-flow status "$WHO"
+fi
 
+if phase sim; then
 step "6. simultaneous requests: two buys at once from one wallet holding two plain notes"
 run fund2a pay alice "$DAVE_ADDR" "$FUND" --request-id "fund-$WHO-2a" || exit 1
 run fund2b pay alice "$DAVE_ADDR" "$((FUND / 2))" --request-id "fund-$WHO-2b" || exit 1
@@ -76,23 +83,42 @@ $CLI buy "$WHO" "$BUY" --request-id "sim2-buy-B" > "$S/sim2-B.txt" 2>&1 &
 PB=$!
 wait $PA; RA=$?; wait $PB; RB=$?
 echo "SIM2	A rc=$RA	B rc=$RB"; grep -hE "^(PLAN|BUILT|SENT|MINED|REFUSED|ABORTED|ERROR|RESULT)" "$S/sim2-A.txt" "$S/sim2-B.txt"
+fi
 
+if phase restart; then
 step "7. a restart during submission"
-run fund4 pay alice "$DAVE_ADDR" "$FUND" --request-id "fund-$WHO-4" || exit 1
+run fund4 pay alice "$DAVE_ADDR" "$FUND" --request-id "fund-$WHO-4$T" || exit 1
 echo "-- 7a. crash after the reservation (nothing built, nothing sent): the restart aborts it and releases the inputs"
-$CLI buy "$WHO" "$BUY" --request-id "crash-reserved" --crash-after reserved 2>&1 | tee "$S/crash-reserved.txt"
+$CLI buy "$WHO" "$BUY" --request-id "crash-reserved$T" --crash-after reserved 2>&1 | tee "$S/crash-reserved.txt"
 run crash-reserved-balances balances "$WHO" | grep -E "^BALANCES|OPEN"
 run crash-reserved-reconcile reconcile "$WHO"
 echo "-- 7b. crash after the build (a signed transaction on disk with its id, never sent): the restart sends it"
-$CLI buy "$WHO" "$BUY" --request-id "crash-built" --crash-after built 2>&1 | tee "$S/crash-built.txt"
+$CLI buy "$WHO" "$BUY" --request-id "crash-built$T" --crash-after built 2>&1 | tee "$S/crash-built.txt"
 run crash-built-reconcile reconcile "$WHO"
-run crash-built-wait wait "$WHO" crash-built
+run crash-built-wait wait "$WHO" "crash-built$T"
+run crash-built-status status "$WHO" | grep "crash-built$T"
 echo "-- 7c. crash after the broadcast, before the record of it: the restart finds the transaction by its id"
-run fund5 pay alice "$DAVE_ADDR" "$FUND" --request-id "fund-$WHO-5" || exit 1
-$CLI buy "$WHO" "$BUY" --request-id "crash-broadcast" --crash-after broadcast 2>&1 | tee "$S/crash-broadcast.txt"
+run fund5 pay alice "$DAVE_ADDR" "$FUND" --request-id "fund-$WHO-5$T" || exit 1
+$CLI buy "$WHO" "$BUY" --request-id "crash-broadcast$T" --crash-after broadcast 2>&1 | tee "$S/crash-broadcast.txt"
 run crash-broadcast-balances balances "$WHO" | grep -E "^BALANCES|OPEN"
 run crash-broadcast-reconcile reconcile "$WHO"
-run crash-broadcast-wait wait "$WHO" crash-broadcast
+run crash-broadcast-wait wait "$WHO" "crash-broadcast$T"
+fi
+
+if phase retry; then
+step "8. a refused simultaneous trade is retried: a new request, a new quote against the pool as it is now"
+run fund6 pay alice "$DAVE_ADDR" "$FUND" --request-id "fund-$WHO-6$T" || exit 1
+run retry-a buy "$WHO" "$BUY" --request-id "sim-buy-retry$T" || exit 1
+step "8b. two requests against ONE free plain note: the second is refused by the reservation before anything is built"
+run before-onenote balances "$WHO" | grep -E "^BALANCES|NOTE.*plain"
+$CLI buy "$WHO" "$BUY" --request-id "onenote-A$T" > "$S/onenote-A.txt" 2>&1 &
+PA=$!
+$CLI buy "$WHO" "$BUY" --request-id "onenote-B$T" > "$S/onenote-B.txt" 2>&1 &
+PB=$!
+wait $PA; RA=$?; wait $PB; RB=$?
+echo "ONENOTE	A rc=$RA	B rc=$RB"; grep -hE "^(PLAN|BUILT|SENT|MINED|REFUSED|ABORTED|ERROR|RESULT)" "$S/onenote-A.txt" "$S/onenote-B.txt"
+fi
+
 run final balances "$WHO"
 run final-status status "$WHO"
 echo "#### backend demo complete"

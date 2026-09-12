@@ -81,15 +81,23 @@ request ─► snapshot (funding + token notes at ONE block; the tip re-read)
         ─► settle: nmeme-index tx-status --txid
                mined, canonical=yes  → mined, released
                mined, canonical=no   → stays sent (an orphaned block is not settlement)
-               pending               → stays sent (built → sent if the record of the broadcast was lost)
-               unknown               → the stored file is sent (a built transaction never sent, or a mempool the node lost);
+               pending               → not in a block AND in the node's accepted set: stays sent
+                                       (built → sent if the record of the broadcast was lost)
+               unknown               → not in a block and not in the accepted set: the stored file is sent
+                                       (a built transaction never sent, or a mempool the node lost);
                                        its id is a content hash, so this is the same transaction
         ─► reconcile() on start: every open request through settle(); a planned request with no built
            transaction was never broadcast (the record precedes the send) and is aborted, its inputs released
 ```
 
 Inputs having left the unspent set is never taken as settlement: it proves
-that *a* transaction spending them was mined, not this one.
+that *a* transaction spending them was mined, not this one. And the node's
+block lookup (`GetTransactionBlock`) answers "pending" for any id that is
+not in a block — an id it has never seen included (seen live: a refused
+transaction, and a built one that was never sent, both read as pending).
+`tx-status` therefore asks the node's accepted set as well
+(`TransactionAccepted`, the question `send` asks after a broadcast) and
+reports `pending` only when the node holds the transaction.
 
 **Balances** (`balances`): `nock_total` (every note at the lock),
 `nock_available` (plain notes not reserved), `nock_pending` (plain notes

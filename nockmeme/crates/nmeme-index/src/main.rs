@@ -678,8 +678,8 @@ fn cmd_tx_id(args: &[String]) -> Result<ExitCode, String> {
 /// transaction in an orphaned block is `mined ... canonical=no`.
 ///
 ///   TX-STATUS <id> mined height=<h> block=<id> canonical=yes|no [canonical_block=<id>]
-///   TX-STATUS <id> pending            (in the node's mempool, not in a block)
-///   TX-STATUS <id> unknown <reason>   (the node knows no such transaction)
+///   TX-STATUS <id> pending            (not in a block, and in the node's accepted set: its mempool)
+///   TX-STATUS <id> unknown <reason>   (not in a block and not in the accepted set: the node does not hold it)
 ///   TIP <height>                      (the heaviest chain's height, when served)
 fn cmd_tx_status(args: &[String]) -> Result<ExitCode, String> {
     let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
@@ -738,7 +738,34 @@ fn cmd_tx_status(args: &[String]) -> Result<ExitCode, String> {
                     ),
                 }
             }
-            Some(get_transaction_block_response::Result::Pending(_)) => println!("TX-STATUS\t{txid}\tpending"),
+            // "pending" from the block lookup means only "not in a block": the
+            // node answers it for an id it has never seen too (seen live: a
+            // refused transaction reads as pending). Whether the node HOLDS
+            // the transaction is the accepted-set question, the same one
+            // `send` asks after a broadcast.
+            Some(get_transaction_block_response::Result::Pending(_)) => {
+                let mut node = NockchainServiceClient::connect(format!("http://{addr}"))
+                    .await
+                    .map_err(|e| format!("connect {addr}: {e}"))?;
+                let req = TransactionAcceptedRequest {
+                    tx_id: Some(nockapp_grpc_proto::pb::common::v1::Base58Hash { hash: txid.clone() }),
+                };
+                match node.transaction_accepted(req).await {
+                    Ok(resp) => match resp.into_inner().result {
+                        Some(transaction_accepted_response::Result::Accepted(true)) => {
+                            println!("TX-STATUS\t{txid}\tpending\tin the node's accepted set")
+                        }
+                        Some(transaction_accepted_response::Result::Accepted(false)) => {
+                            println!("TX-STATUS\t{txid}\tunknown\tnot in a block, not in the node's accepted set")
+                        }
+                        Some(transaction_accepted_response::Result::Error(e)) => {
+                            println!("TX-STATUS\t{txid}\tunknown\taccepted-set lookup: {}", e.message.replace(['\t', '\n'], " "))
+                        }
+                        None => println!("TX-STATUS\t{txid}\tunknown\taccepted-set lookup returned nothing"),
+                    },
+                    Err(e) => return Err(format!("transaction_accepted({txid}): {e}")),
+                }
+            }
             Some(get_transaction_block_response::Result::Error(e)) => {
                 println!("TX-STATUS\t{txid}\tunknown\t{}", e.message.replace(['\t', '\n'], " "))
             }
