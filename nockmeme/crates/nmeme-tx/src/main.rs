@@ -437,19 +437,19 @@ fn cmd_sighash(args: &[String]) -> Result<ExitCode, String> {
     let mut emitted = 0usize;
     for (name, spend) in &spends.0 {
         let Spend::Witness(spend1) = spend else {
-            println!("INFO\t{}\tlegacy v0 spend, different digest", name.first.to_base58());
+            println!("INFO\t{}\tlegacy v0 spend, different digest", spend_key(name));
             continue;
         };
         let digest = match spend_sig_hash(&spend1.seeds, spend1.fee.0 as u64) {
             Ok(digest) => digest,
             Err(err) => {
-                println!("INFO\t{}\tskipped: {err}", name.first.to_base58());
+                println!("INFO\t{}\tskipped: {err}", spend_key(name));
                 continue;
             }
         };
         println!(
             "INFO\t{}\t{} seed(s), fee {}, {} signature(s)",
-            name.first.to_base58(),
+            spend_key(name),
             spend1.seeds.0.len(),
             spend1.fee.0,
             spend1.witness.pkh_signature.0.len(),
@@ -465,12 +465,12 @@ fn cmd_sighash(args: &[String]) -> Result<ExitCode, String> {
             let mut sig_slab: NounSlab<NockJammer> = NounSlab::new();
             let sig_noun = entry.signature.to_noun(&mut sig_slab);
             sig_slab.set_root(sig_noun);
-            let path = out_dir.join(format!("sig-{}-{index}.jam", name.first.to_base58()));
+            let path = out_dir.join(format!("sig-{}-{index}.jam", spend_key(name)));
             std::fs::write(&path, sig_slab.jam())
                 .map_err(|e| format!("write {}: {e}", path.display()))?;
             println!(
                 "SIGHASH\t{}\t{}\t{}\t{}\t{}",
-                name.first.to_base58(),
+                spend_key(name),
                 digest.to_base58(),
                 pubkey,
                 entry.pkh.to_base58(),
@@ -609,7 +609,7 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
         let Spend::Witness(spend1) = spend else { continue };
         let digest = spend_sig_hash(&spend1.seeds, spend1.fee.0 as u64)
             .map_err(|e| format!("sighash: {e}"))?;
-        println!("NEWSIGHASH\t{}\t{}", name.first.to_base58(), digest.to_base58());
+        println!("NEWSIGHASH\t{}\t{}", spend_key(name), digest.to_base58());
     }
     Ok(ExitCode::SUCCESS)
 }
@@ -664,11 +664,7 @@ fn cmd_set_sig(args: &[String]) -> Result<ExitCode, String> {
         ParsedTransaction::from_noun(noun.in_space(&space)).map_err(|e| format!("decode: {e}"))?;
     let spends = parsed.spliced().map_err(|e| format!("splice: {e}"))?;
 
-    let original = spends
-        .0
-        .iter()
-        .find(|(name, _)| &name.first.to_base58() == target)
-        .ok_or_else(|| format!("no spend named {target}"))?;
+    let original = find_spend(&spends, target)?;
     let Spend::Witness(spend1) = &original.1 else {
         return Err("target spend is legacy v0".to_string());
     };
@@ -714,22 +710,40 @@ fn write_assembled(loaded: &Loaded, spends: &Spends, out_path: &str) -> Result<(
     Ok(())
 }
 
+/// The key a spend is reported and addressed by: `<first>.<last>` of its
+/// input note. Two notes of one wallet share a first name (it is the
+/// lock's), so the first name alone is not a key — a two-input
+/// transaction's signature files overwrote each other under it (seen
+/// live, the wallet demo's sell).
+fn spend_key(name: &Name) -> String {
+    format!("{}.{}", name.first.to_base58(), name.last.to_base58())
+}
+
+/// A spend by its key, or by its first name alone when that is unique
+/// among the transaction's spends (the older scripts pass a first name).
+fn find_spend<'a>(spends: &'a Spends, key: &str) -> Result<&'a (Name, Spend), String> {
+    if let Some(hit) = spends.0.iter().find(|(n, _)| spend_key(n) == key) {
+        return Ok(hit);
+    }
+    let by_first: Vec<&(Name, Spend)> = spends.0.iter().filter(|(n, _)| n.first.to_base58() == key).collect();
+    match by_first.len() {
+        1 => Ok(by_first[0]),
+        0 => Err(format!("no spend keyed by {key}")),
+        n => Err(format!("{n} spends share the first name {key}; name the spend as <first>.<last>")),
+    }
+}
+
 fn print_digests(spends: &Spends) -> Result<(), String> {
     for (name, spend) in &spends.0 {
         let Spend::Witness(spend1) = spend else { continue };
         let digest = spend_sig_hash(&spend1.seeds, spend1.fee.0 as u64).map_err(|e| format!("sighash: {e}"))?;
-        println!("NEWSIGHASH\t{}\t{}", name.first.to_base58(), digest.to_base58());
+        println!("NEWSIGHASH\t{}\t{}", spend_key(name), digest.to_base58());
     }
     Ok(())
 }
 
-fn spend_named<'a>(spends: &'a Spends, first_b58: &str) -> Result<&'a Name, String> {
-    spends
-        .0
-        .iter()
-        .map(|(n, _)| n)
-        .find(|n| n.first.to_base58() == first_b58)
-        .ok_or_else(|| format!("no spend keyed by an input with first-name {first_b58}"))
+fn spend_named<'a>(spends: &'a Spends, key: &str) -> Result<&'a Name, String> {
+    find_spend(spends, key).map(|(n, _)| n)
 }
 
 /// `swap <a.tx> <b.tx> <out.jam> [--claim L=spec]... --pin-a L --pin-b L`

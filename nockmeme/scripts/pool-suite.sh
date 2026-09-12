@@ -386,7 +386,7 @@ r=$(user_tx alice "$S/creator-key-user" "[$cb]" "$BOB" "$BUY_NICKS")
 APKH=$(awk -F'\t' '$1=="SIGHASH"{print $5; exit}' "${r#* }"); APUB=$(awk -F'\t' '$1=="SIGHASH"{print $4; exit}' "${r#* }")
 trade creator-key alice "$TOKEN_A" 108 buy "${r%% *}" "${r#* }" "$BOB_LOCK" --witness-pkh "$APKH"
 # also sign the pool spend itself with alice key
-PSN="${POOL_NOTE_IN%% *}"; PD=$(awk -F'\t' -v n="$PSN" '$1=="NEWSIGHASH" && $2==n {print $3}' "$S/creator-key/trade.txt")
+PSN="$(tr ' ' '.' <<<"$POOL_NOTE_IN")"; PD=$(awk -F'\t' -v n="$PSN" '$1=="NEWSIGHASH" && $2==n {print $3}' "$S/creator-key/trade.txt")
 sign_hash alice "$PD" "$S/creator-key/pool.sig"
 "$NMEME_TX" set-sig "$S/creator-key/final.jam" "$PSN" "$APKH" "$APUB" "$S/creator-key/pool.sig" "$S/creator-key/final-signed.jam" >/dev/null || die "creator-key: set-sig"
 TRADE_FILE="$S/creator-key/final-signed.jam"; TRADE_TXID=$("$NMEME_INDEX" tx-id --tx "$TRADE_FILE")
