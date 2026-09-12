@@ -364,7 +364,9 @@ attack_neutral() {
   else
     local st want; st=$(pool_state "$TOKEN_A" "$fee" | head -1); want=$(awk -F'\t' '$1=="POOL-AFTER"{print $2" "$3}' "$S/$label/trade.txt")
     [ "$(cut -d' ' -f4,5 <<<"$st")" = "$want" ] || die "$label: MINED and the pool state $(cut -d' ' -f4,5 <<<"$st") differs from the quote's $want"
-    echo "NEUTRALIZED	$label	txid=$txid	mined as an ordinary trade: the fabricated claim did not survive the merge; pool_after=$(tr ' ' '/' <<<"$want") as quoted" | tee "$S/$label.neutralized"
+    # an ordinary trade pays the treasury its share like any other
+    local wl; wl=$(grep '^QUOTE' "$S/$label/trade.txt" | grep -oE 'lore_fee=[0-9]+' | cut -d= -f2); LORE_EXPECTED=$((LORE_EXPECTED + wl))
+    echo "NEUTRALIZED	$label	txid=$txid	mined as an ordinary trade: the fabricated claim did not survive the merge; pool_after=$(tr ' ' '/' <<<"$want") as quoted; the treasury received its $wl nicks" | tee "$S/$label.neutralized"
   fi
 }
 attack_neutral inflate-claim 106 --inflate-claim 1000000
