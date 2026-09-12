@@ -190,12 +190,17 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
                     continue;
                 }
                 let claim = nmeme_index::decode_claim(blob).map_err(|e| format!("claim on note: {e}"))?;
+                // a genesis note carries the id it created (SPEC §2a): it
+                // holds that token as much as a transfer note does
                 let token = match &claim {
                     Claim::Transfer { token, .. } => token.0.to_base58(),
-                    Claim::Genesis { .. } => "genesis".to_string(),
+                    Claim::Genesis { token, .. } => format!("{} (genesis)", token.0.to_base58()),
                 };
                 if let Some(w) = &want_token {
-                    if !matches!(&claim, Claim::Transfer { token, .. } if &token.0 == w) {
+                    let held = match &claim {
+                        Claim::Transfer { token, .. } | Claim::Genesis { token, .. } => &token.0,
+                    };
+                    if held != w {
                         continue;
                     }
                 }

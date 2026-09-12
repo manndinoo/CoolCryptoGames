@@ -59,11 +59,12 @@ coinbase_note() { # <funding-file> <min-nicks>: a verified coinbase note not yet
   return 0
 }
 # token_note_at <lock> <token> -> "first last amount" (the largest note)
+# (a lock holding none of the token makes the indexer exit non-zero: a zero here, not an error)
 token_note_at() {
-  quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'
+  { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null || true; } | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'
 }
 token_total_at() { # <lock> <token> -> units held (indexer's live view)
-  quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null | awk -F'\t' '$1=="NOTE"{s+=$4} END{print s+0}'
+  { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null || true; } | awk -F'\t' '$1=="NOTE"{s+=$4} END{print s+0}'
 }
 pool_state() { quiet "$NMEME_INDEX" pool --addr "$PUB" --token "$1" --fee-bps "$2" $PP 2>/dev/null | awk -F'\t' '$1=="POOL"{print $2" "$3" "$4" "$5" "$6}'; }
 pool_lock() { "$NMEME_TX" pool-lock --token "$1" --fee-bps "$2" $PP | awk -F'\t' '$1=="POOL-LOCK"{print $2}'; }
@@ -108,6 +109,19 @@ quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding0-bob
 # note_out <tx.jam> <lock> -> "first last": the transaction's output note at the lock
 note_out() { "$NMEME_INDEX" outputs --tx "$1" | awk -F'\t' -v l="$2" '$1=="OUTPUT" && $2==l {print $3" "$4; exit}'; }
 
+# RESUME=1: every stage up to the edge genesis was mined by an earlier run in
+# this $S; pick up its files and go on to the checks and the rebuild
+if [ "${RESUME:-0}" = 1 ]; then
+  for l in prep-A prep-B short multi open sell edge; do [ -f "$S/$l.env" ] || die "resume: $l was not mined"; done
+  for l in prep-A prep-B short multi open sell; do STEPS_A="$STEPS_A --step $("$NMEME_INDEX" tx-id --tx "$S/$l/final.jam"):$S/$l/final.jam"; done
+  OPEN_TXID=$("$NMEME_INDEX" tx-id --tx "$S/open/final.jam"); OPEN_FILE="$S/open/final.jam"
+  SELL_TXID=$("$NMEME_INDEX" tx-id --tx "$S/sell/final.jam"); SELL_FILE="$S/sell/final.jam"
+  SHORT_TXID=$("$NMEME_INDEX" tx-id --tx "$S/short/final.jam")
+  lock=$(pool_lock "$TOKEN_A" "$POOL_FEE")
+  TXID=$("$NMEME_INDEX" tx-id --tx "$S/edge/final.jam"); FILE="$S/edge/final.jam"
+  echo "RESUMED	stages 0-D mined by an earlier run: $(ls "$S"/*.rejected 2>/dev/null | wc -l) refusals recorded, edge genesis $TXID"
+fi
+if [ "${RESUME:-0}" != 1 ]; then
 echo "== 0. alice hands bob 100 A and 100 B in notes that carry NOCK =="
 prep() { # <label> <token> -> PREP_NOTE (bob's new note), step appended
   local label="$1" token="$2"
@@ -198,9 +212,9 @@ genesis_case two-tickers refused "$BOB_LOCK=raw-genesis:AAA:6:1000" "$ALICE_LOCK
 genesis_case zero-transfer refused "$BOB_LOCK=raw-transfer:$TOKEN_A:0"
 genesis_case huge-transfer refused "$BOB_LOCK=raw-transfer:$TOKEN_A:9223372036854775808"
 genesis_case edge mined "$BOB_LOCK=genesis:LONGTICKER:18:9223372036854775807"
+fi
 EDGE_TXID="$TXID"; EDGE_FILE="$FILE"
-EDGE_ID=$("$NMEME_INDEX" token-id --tx "$EDGE_FILE" --ticker LONGTICKER --decimals 18 | awk -F'\t' '$1=="TOKEN"{print $2}')
-[ -n "$EDGE_ID" ] || EDGE_ID=$("$NMEME_INDEX" token-id --tx "$EDGE_FILE" --ticker LONGTICKER --decimals 18 | tail -1)
+EDGE_ID=$("$NMEME_INDEX" token-id --tx "$EDGE_FILE" --ticker LONGTICKER --decimals 18 | tail -1)
 edge_held=$(token_note_at "$BOB_LOCK" "$EDGE_ID" | awk '{print $3}')
 [ "$edge_held" = 9223372036854775807 ] || die "edge: bob holds $edge_held of the edge token"
 echo "GENESIS	edge	txid=$EDGE_TXID	height=$(cut -d= -f2 "$S/edge.env")	token=$EDGE_ID	ticker=LONGTICKER (two limbs)	decimals=18	supply=9223372036854775807 (the cap)	node=accepted	indexer=bob holds the supply"
