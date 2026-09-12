@@ -141,13 +141,19 @@ class WalletService:
     def open(self):
         self.dir.mkdir(parents=True, exist_ok=True)
         ident = self.dir / "identity.json"
-        if ident.is_file():
-            d = json.loads(ident.read_text())
-        else:
+        d = None
+        try:
+            if ident.is_file():
+                d = json.loads(ident.read_text())
+        except json.JSONDecodeError:
+            d = None  # a second process is writing it right now (seen in the two-process test)
+        if d is None:
             address = self.tools.address(self.who)
             lock, first = self.tools.key_lock(address)
             d = {"address": address, "lock": lock, "first": first}
-            ident.write_text(json.dumps(d))
+            tmp = ident.with_suffix(f".{os.getpid()}.tmp")
+            tmp.write_text(json.dumps(d))
+            os.replace(tmp, ident)  # atomic: a reader sees the old file or the whole new one
         self.address, self.lock, self.first = d["address"], d["lock"], d["first"]
         genesis = self.tools.genesis()
         self.planner = Planner(self.db_path, genesis, self.lock)

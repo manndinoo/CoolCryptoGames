@@ -298,7 +298,7 @@ class ServiceTests(unittest.TestCase):
                     s.close()
         a, b = threading.Thread(target=go, args=("A",)), threading.Thread(target=go, args=("B",))
         a.start(); b.start(); a.join(); b.join()
-        self.assertEqual(sorted(v[:7] for v in results.values()), ["refused", "sent"])
+        self.assertEqual(sorted(v[:7] for v in results.values()), ["refused", "sent"], results)
         self.assertEqual(len(self.tools.sent), 1)
         self.assertIn("insufficient ordinary NOCK", [v for v in results.values() if v.startswith("refused")][0])
 
