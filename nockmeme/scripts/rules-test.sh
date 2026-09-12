@@ -248,16 +248,18 @@ done
 sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
 # the suite's attack pools (fees 101-114, and room) still hold their notes of token A:
 # their locks are read so the rebuild finds those outputs unspent
+# every 100 -> 99 spend on this chain (this run's, and earlier attempts') burned one unit
+NSHORT=$(( $(grep -c " short " "$S/prior-steps.txt") + 1 ))
 ATTACK_LOCKS=""; for fee in $(seq 101 119); do ATTACK_LOCKS="$ATTACK_LOCKS --lock $(pool_lock "$TOKEN_A" "$fee")"; done
 while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
 # shellcheck disable=SC2086
 settled "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_A" --step "$GTX_A:${GFILE_A:-$RUN/genesis-A/final.jam}" --step "$XTX_A:${XFILE_A:-$RUN/xfer-A/final.jam}" \
   --step "$GTX_B:${GFILE_B:-$RUN/genesis-B/final.jam}" --step "$XTX_B:${XFILE_B:-$RUN/xfer-B/final.jam}" \
   $PRIOR $STEPS_A $PROOFS --scan-coinbase "$(node_height)" \
-  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$lock" $ATTACK_LOCKS --expect-total $((SUPPLY - 1)) > "$S/balances-A.txt" || die "rebuild A failed: $(tail -3 "$S/balances-A.txt")"
+  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$lock" $ATTACK_LOCKS --expect-total $((SUPPLY - NSHORT)) > "$S/balances-A.txt" || die "rebuild A failed: $(tail -3 "$S/balances-A.txt")"
 grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances-A.txt" | cut -c1-200
 grep -q "^ASSERT-OK" "$S/balances-A.txt" || die "rebuild: no ASSERT-OK"
-echo "REBUILD	token A	total=$((SUPPLY - 1))	(one unit burned by the 100->99 spend)	$(grep "^STEP	$SHORT_TXID" "$S/balances-A.txt" | cut -f3 | cut -c1-80)"
+echo "REBUILD	token A	total=$((SUPPLY - NSHORT))	($NSHORT unit(s) burned: one per 100->99 spend mined on this chain, this run's and earlier attempts')	$(grep "^STEP	$SHORT_TXID" "$S/balances-A.txt" | cut -f3 | cut -c1-80)"
 settled "$NMEME_INDEX" pool-replay --token "$TOKEN_A" --fee-bps "$POOL_FEE" $PP --open "$OPEN_TXID:$OPEN_FILE" --step "$SELL_TXID:$SELL_FILE" > "$S/replay-A.txt" || die "replay: $(tail -1 "$S/replay-A.txt")"
 cat "$S/replay-A.txt"
 due=$(awk -F'\t' '$1=="LORE"{for(i=1;i<=NF;i++) if ($i ~ /^due_floor=/) print substr($i,11)}' "$S/replay-A.txt"); paid=$(awk -F'\t' '$1=="LORE"{for(i=1;i<=NF;i++) if ($i ~ /^paid=/) print substr($i,6)}' "$S/replay-A.txt")
