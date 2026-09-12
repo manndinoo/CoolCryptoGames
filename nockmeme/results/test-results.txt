@@ -1,5 +1,25 @@
 # nmeme test results
 
+## 2026-09-12 18:10 UTC: pack 8 (repeat buying, the per-pool queue, slippage floors)
+
+Unit, in CI (run 40 on f36940a, the hosted runner; the local release
+build could not be re-run this round for lack of disk): 136 Rust tests
+passed, 0 failed across nmeme-core, nmeme-tx and nmeme-index; the 15 shell
+self-checks passed. Backend: 32 passed, 0 failed (backend/tests): the 26
+of pack 7 — three of the supplied planner tests updated to the buy rule
+(a buy of NEW, held by no note, is still refused with plain NOCK short; a
+buy of MEME draws on the MEME note after the plain one) — plus a test of
+the buy drawing on a same-token note (units re-claimed, the wallet's split
+over [token, plain]), the second buy through the service (`--held`), the
+queue waiting for the previous trade and quoting the moved pool, the queue
+giving up on a pool that stays busy (aborted, released), the slippage floor
+from a quote now enforced at build (aborted before signing, released; within
+the allowance it goes through), and a sell's floor. An independent rerun of
+pack 7 reported the default release build failing to link (`undefined
+symbol: main`) and passing with CARGO_PROFILE_RELEASE_LTO=false; the
+workaround is in RUNBOOK.md and docs/DEVELOP.md. Live: results/RESULTS.md
+§A24 (results/live/backend-v2), on the modified fakenet node only.
+
 ## 2026-09-12 14:30 UTC: the wallet backend integrated
 
 Unit: 136 passed, 0 failed across nmeme-core, nmeme-tx and nmeme-index

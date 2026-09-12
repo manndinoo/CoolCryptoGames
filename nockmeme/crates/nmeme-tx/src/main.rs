@@ -241,7 +241,6 @@ fn cmd_pool_trade(args: &[String]) -> Result<ExitCode, String> {
         }
     };
 
-    let fee_bps = params.fee_bps;
     // the miner fee the user's own spend pays: disclosed, not part of the trading fee
     let network_fee: u64 = spends
         .0
