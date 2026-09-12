@@ -242,9 +242,9 @@ for P in "${POOL_DIR:-$RUN/pool}" "$RUN"/rules-attempt*; do
   # outputs; the pool's note stays at its opening state in this replay
 done
 sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
-# the suite's attack pools (fees 101-112) still hold their notes of token A:
+# the suite's attack pools (fees 101-114, and room) still hold their notes of token A:
 # their locks are read so the rebuild finds those outputs unspent
-ATTACK_LOCKS=""; for fee in $(seq 101 112); do ATTACK_LOCKS="$ATTACK_LOCKS --lock $(pool_lock "$TOKEN_A" "$fee")"; done
+ATTACK_LOCKS=""; for fee in $(seq 101 119); do ATTACK_LOCKS="$ATTACK_LOCKS --lock $(pool_lock "$TOKEN_A" "$fee")"; done
 while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
 # shellcheck disable=SC2086
 "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_A" --step "$GTX_A:${GFILE_A:-$RUN/genesis-A/final.jam}" --step "$XTX_A:${XFILE_A:-$RUN/xfer-A/final.jam}" \
