@@ -1111,6 +1111,41 @@ build time, so the crash after the broadcast lost nothing. No stale build,
 no refusal at admission, and erin's transaction was settled by its id
 without a second send. Both wallets ended with no reservation held.
 
+### A26. The consensus upgrade candidate: verified here, mirrored in the indexer, not built into a node
+
+A third party supplied a "consensus upgrade candidate" on 12 September
+2026: an activation height and a legacy-claim cutoff on top of the pack 9
+fork (docs/ACTIVATION.md; the candidate's own notes in
+`upstream/activation-candidate/`). What was established in this environment:
+
+- **The candidate is our fork plus a 278-line delta.** Its full patch,
+  applied to Nockchain `2bcb0b9d` in a scratch worktree, is byte for byte
+  our pack 9 checkout's diff plus `activation-on-pack9.patch` (the Cargo
+  files that link our crates aside). The delta is kept as
+  `upstream/activation.patch`.
+- **The 24 assertions pass here.** Compiled and evaluated with the
+  workspace's honk compiler (`--new --dynock`, 34 Hoon files, the check
+  file 52 s) at our state plus the delta: a 64-byte artifact whose SHA-256
+  is the candidate's (`9e2eace4…`), reducing under `%spot` hints to the
+  constant `[1 24]` — decoded by our own script, not the candidate's. The
+  first attempt panicked in the Nock stack reservation because
+  `vm.overcommit_memory` had reverted to 0; the same setting the node needs.
+- **The rule is mirrored** (`consensus::check_at`, `creditable`, `active`,
+  `Verdict::Inactive`; `Indexer::apply_at`, `Outcome::Inactive`;
+  `nmeme-index rebuild --activation`), with the candidate's cases in
+  `crates/nmeme-core/tests/activation.rs`: disabled, H−1/H/H+1, legacy
+  credit refused and legacy NOCK spendable, a fresh genesis on a legacy
+  anchor, a legacy entry blocking a genesis, the always-active fork as
+  activation at 0, the indexer recording nothing before activation and
+  crediting nothing legacy.
+- **Not done:** no kernel or node rebuild with the delta and no live run
+  under it (the fakenet and every live section above are the pack 9 fork,
+  always active); the candidate's distributable default disables the rule
+  entirely, so a fakenet build must pin a height first (docs/ACTIVATION.md).
+  Five findings for the candidate's author are in the same document; the
+  first — the covenant's token-in count not gated by the cutoff — is
+  caught by conservation today but should be closed in the covenant too.
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |

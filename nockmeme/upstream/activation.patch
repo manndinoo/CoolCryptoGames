@@ -1,0 +1,278 @@
+--- a/hoon/common/tx-engine-1.hoon
++++ b/hoon/common/tx-engine-1.hoon
+@@ -1,4 +1,5 @@
+ /=  v0  /common/tx-engine-0
++/=  nmeme-policy  /common/nmeme-policy
+ /=  *  /common/zeke
+ /=  *  /common/h-zoon
+ |%
+@@ -1233,6 +1234,20 @@
+             parent-hash-phase=page-number
+         ==
+     ^-  (reason ~)
++    (validate-at-phase balance sps page-num max-size bythos-phase parent-hash-phase phase:nmeme-policy)
++  ::  Explicit phase is exposed for boundary tests; normal callers use the
++  ::  compile-time network policy above, never a per-request setting.
++  ++  validate-at-phase
++    |=  $:  balance=(h-map nname nnote)
++            sps=form
++            page-num=page-number
++            max-size=@
++            bythos-phase=page-number
++            ::  first page whose %1 spends bind seeds to their input note
++            parent-hash-phase=page-number
++            phase=(unit page-number)
++        ==
++    ^-  (reason ~)
+     ?:  (note-data-exceeds-max sps max-size)
+       [%.n %v1-note-data-exceeds-max-size]
+     =/  per-spend=(reason ~)
+@@ -1268,10 +1283,12 @@
+             (sig-hash:spend-1 +.sp)
+             witness.+.sp
+             bythos-phase
+-            `[note sps balance page-num]
+         ==
+-      ?.  %+  check:check-context  ctx
+-          (lock-hash:nnote-1 note)
++      =/  around=(unit amm-context:check-context)
++        ?~  phase  ~
++        ?.  (active:nmeme-policy phase page-num)  ~
++        `[note sps balance page-num u.phase]
++      ?.  (check-with-amm:check-context ctx (lock-hash:nnote-1 note) around)
+         [%.n %v1-spend-1-lock-failed]
+       ?.  (check-gifts-and-fee:spend sp note)
+         [%.n %v1-spend-1-gifts-failed]
+@@ -1280,7 +1297,9 @@
+     ?.  ?=(%.y -.per-spend)  per-spend
+     ::  token claims: a transfer claim on an output is backed by the inputs,
+     ::  a genesis claim names the id it derives from (+meme)
+-    ?.  (conserved:meme sps balance page-num)
++    ?~  phase  [%.y ~]
++    ?.  (active:nmeme-policy phase page-num)  [%.y ~]
++    ?.  (conserved:meme sps balance page-num u.phase)
+       [%.n %v1-token-claims]
+     [%.y ~]
+   ++  validate
+@@ -2350,7 +2369,7 @@
+     ^-  hash
+     (hash-noun-varlen:tip5 [[-.anc +<.anc] [ticker decimals]])
+   ++  conserved
+-    |=  [sps=spends balance=(h-map nname nnote) page=page-number]
++    |=  [sps=spends balance=(h-map nname nnote) page=page-number activation=page-number]
+     ^-  ?
+     =/  ins=(list nnote-1)
+       %+  murn  ~(tap z-by sps)
+@@ -2377,6 +2396,9 @@
+       %+  murn  ins
+       |=  n=nnote-1
+       ^-  (unit [tid=hash amt=@])
++      ::  Before activation this key was arbitrary metadata. Do not give
++      ::  legacy claims token credit; the native NOCK can still be spent.
++      ?.  (creditable:nmeme-policy `activation page origin-page.n)  ~
+       =/  t=(unit [tid=hash amt=@])  (transfer note-data.n)
+       ?^  t  `[tid.u.t amt.u.t]
+       =/  g=(unit [ticker=* decimals=@ amt=@ tid=hash])  (genesis note-data.n)
+@@ -2496,12 +2518,13 @@
+     (hash-hashable:tip5 [leaf+& hash+lock-root])
+   ::
+   ++  check
+-    |=  [=form ctx=check-context]
+-    ^-  ?
+-    ?~  amm.ctx  %.n
+-    =/  note=nnote-1  note.u.amm.ctx
+-    =/  sps=spends  sps.u.amm.ctx
+-    =/  balance=(h-map nname nnote)  balance.u.amm.ctx
++    |=  [=form ctx=check-context around=(unit amm-context:check-context)]
++    ^-  ?
++    ?~  around  %.n
++    ?.  (creditable:nmeme-policy `activation.u.around now.ctx origin-page.note.u.around)  %.n
++    =/  note=nnote-1  note.u.around
++    =/  sps=spends  sps.u.around
++    =/  balance=(h-map nname nnote)  balance.u.around
+     =/  first=^hash  -.name.note
+     =/  lore-first=^hash  (first-of lore-lock.form)
+     ::  the spend of this note
+@@ -2528,7 +2551,7 @@
+     =/  y=@  (roll ins |=([n=nnote-1 a=@] ?.(=(first -.name.n) a (add a (claim tid.form note-data.n)))))
+     =/  tin=@  (roll ins |=([n=nnote-1 a=@] (add a (claim tid.form note-data.n))))
+     ::  the outputs the transaction creates, exactly as consensus builds them
+-    =/  outs=(list output)  ~(tap z-in (build-outputs:tx sps page.u.amm.ctx))
++    =/  outs=(list output)  ~(tap z-in (build-outputs:tx sps page.u.around))
+     ?:  (lien outs |=(o=output ?^(-.note.o %.y (foreign tid.form note-data.note.o))))  %.n
+     =/  tout=@
+       %+  roll  outs
+@@ -2635,7 +2658,7 @@
+ ::    .sig-hash: signature to be hashed for a spend
+ ::    .witness: witness to spend conditions
+ ::    .bythos-phase: height at which bythos activates (for full LMP gating)
+-::    .amm: the transaction around the spend, for the %amm covenant
++::    Transaction context is supplied separately by +check-with-amm.
+ ++  check-context
+   =<  form
+   |%
+@@ -2644,6 +2667,7 @@
+         sps=spends
+         balance=(h-map nname nnote)
+         page=page-number
++        activation=page-number
+     ==
+   +$  form
+     $:  now=page-number
+@@ -2651,11 +2675,16 @@
+         sig-hash=hash
+         =witness
+         bythos-phase=page-number
+-        amm=(unit amm-context)
+     ==
+   ::
+   ++  check
+     |=  [=form lock=hash]
++    ^-  ?
++    (check-with-amm form lock ~)
++  ::  Preserve the original five-field check-context API for wallets/tests.
++  ::  Only transaction validation supplies an activated covenant context.
++  ++  check-with-amm
++    |=  [=form lock=hash around=(unit amm-context)]
+     ^-  ?
+     ::  Protocol-fund notes (014-aletheia) committed an unsatisfiable lock:
+     ::  +make-name:coinbase wrapped +protocol-fund-address (itself the lock-root of a
+@@ -2689,7 +2718,7 @@
+         %tim  (check:tim +.p form)
+         %hax  (check:hax +.p form)
+         %pkh  (check:pkh +.p form)
+-        %amm  (check:amm +.p form)
++        %amm  (check:amm +.p form around)
+         %brn  %|
+       ==
+     ==
+--- /dev/null
++++ b/hoon/common/nmeme-policy.hoon
+@@ -0,0 +1,21 @@
++::  NMEME consensus upgrade candidate. Disabled in the distributable build.
++::  A network-coordinated release must pin one activation height here.
++::  Changing this value changes consensus; it is NOT a user preference.
++|%
++++  phase
++  ^-  (unit @)
++  ~
++++  active
++  |=  [activation=(unit @) height=@]
++  ^-  ?
++  ?~  activation  %.n
++  (gte height u.activation)
++++  creditable
++  |=  [activation=(unit @) height=@ origin=@]
++  ^-  ?
++  ?~  activation  %.n
++  ?&  (gte height u.activation)
++      (gte origin u.activation)
++      (lte origin height)
++  ==
++--
+--- /dev/null
++++ b/hoon/tests/dumb/mod/unit/nmeme-upgrade.hoon
+@@ -0,0 +1,94 @@
++/=  t  /common/tx-engine-1
++/=  policy  /common/nmeme-policy
++/=  *  /common/zeke
++/=  *  /common/h-zoon
++|%
++++  data
++  |=  value=(unit *)
++  ^-  note-data:t
++  ?~  value  *note-data:t
++  (~(put z-by *note-data:t) %meme u.value)
++++  fixture
++  |=  [origin=@ incoming=(unit *) outgoing=(unit *) pool=?]
++  ^-  [balance=(h-map nname:t nnote:t) sps=spends:t]
++  =/  prim=lock-primitive:t
++    ?:  pool  [%amm *hash:t 0 0 *hash:t]
++    [%tim *tim:t]
++  =/  script=lock:t  ~[prim]
++  =/  root=hash:t  (hash:lock:t script)
++  =/  note=nnote-1:t
++    %*  .  *nnote-1:t
++      version      %1
++      origin-page  origin
++      name         (new-v1:nname:t root [*hash:t %.n])
++      note-data    (data incoming)
++      assets       1.000
++    ==
++  =/  sed=seed:t
++    %*  .  *seed:t
++      lock-root    root
++      note-data    (data outgoing)
++      gift         1.000
++      parent-hash  (hash:nnote-1:t note)
++    ==
++  =/  wit=witness:t  *witness:t
++  =.  wit  wit(lmp (build-lock-merkle-proof-stub:lock:t script 1))
++  =/  sp=spend-1:t
++    %*  .  *spend-1:t
++      witness  wit
++      seeds    (~(put z-in *seeds:t) sed)
++      fee      0
++    ==
++  :*  (~(put h-by *(h-map nname:t nnote:t)) name.note note)
++      (~(put z-by *spends:t) name.note [%1 sp])
++  ==
++++  accepted
++  |=  [activation=(unit @) height=@ origin=@ incoming=(unit *) outgoing=(unit *) pool=?]
++  ^-  ?
++  =/  f  (fixture origin incoming outgoing pool)
++  =/  result=(reason:t ~)
++    (validate-at-phase:spends:t balance.f sps.f height 2.048 0 0 activation)
++  ?=(%.y -.result)
++++  claim
++  |=  amount=@
++  ^-  (unit *)
++  `[%0 %t *hash:t amount]
++++  genesis
++  ^-  (unit *)
++  =/  f  (fixture 50 ~ ~ %.n)
++  =/  anchor=(unit nname:t)  (anchor:meme:t sps.f)
++  ?>  ?=(^ anchor)
++  `[%0 %c ~['TEST'] 0 100 (derive:meme:t u.anchor ~['TEST'] 0)]
++++  results
++  ^-  (list ?)
++  :~  !(active:policy ~ 1.000.000)
++      !(active:policy `100 99)
++      (active:policy `100 100)
++      (active:policy `100 101)
++      !(creditable:policy `100 101 99)
++      (creditable:policy `100 101 100)
++      !(creditable:policy `100 101 102)
++      ::  Arbitrary metadata retains its historical behavior before activation.
++      (accepted ~ 101 50 ~ `123 %.n)
++      (accepted `100 99 50 ~ `123 %.n)
++      !(accepted `100 100 50 ~ `123 %.n)
++      !(accepted `100 101 50 ~ `123 %.n)
++      ::  Legacy claims cannot acquire credit; their native NOCK can be spent.
++      !(accepted `100 101 99 (claim 100) (claim 100) %.n)
++      (accepted `100 101 99 (claim 100) ~ %.n)
++      (accepted `100 101 100 (claim 100) (claim 100) %.n)
++      !(accepted `100 101 100 (claim 100) (claim 101) %.n)
++      (accepted `100 101 100 (claim 100) (claim 99) %.n)
++      ::  New genesis is valid without importing historical token weight.
++      (accepted `100 100 50 ~ genesis %.n)
++      ::  Pool spend: a no-op preserves the exact invariant.
++      !(accepted ~ 101 100 (claim 100) (claim 100) %.y)
++      !(accepted `100 99 50 (claim 100) (claim 100) %.y)
++      (accepted `100 100 100 (claim 100) (claim 100) %.y)
++      (accepted `100 101 100 (claim 100) (claim 100) %.y)
++      !(accepted `100 101 99 (claim 100) (claim 100) %.y)
++      ::  Re-evaluating an earlier height must restore the earlier rules.
++      (accepted `100 99 50 ~ `123 %.n)
++      (accepted `100 101 50 ~ ~ %.n)
++  ==
++--
+--- /dev/null
++++ b/hoon/tests/dumb/nmeme-upgrade-check.hoon
+@@ -0,0 +1,6 @@
++/=  checks  /tests/dumb/mod/unit/nmeme-upgrade
++::  Request constant evaluation; verify_assertions.py requires emitted [1 24].
++^~
++?>  =((lent results:checks) 24)
++?>  (levy results:checks |=(ok=? ok))
++24

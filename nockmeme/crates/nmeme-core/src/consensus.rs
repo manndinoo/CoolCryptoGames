@@ -75,11 +75,18 @@ pub enum Verdict {
         effects: Vec<Effect>,
     },
     Refused(Refusal),
+    /// The token rule did not apply: the transaction is before the
+    /// activation height, or activation is disabled (`phase` is `~` in
+    /// `nmeme-policy.hoon`). Consensus accepts the transaction as it did
+    /// before the upgrade; a `meme` entry on it is arbitrary metadata.
+    Inactive,
 }
 
 impl Verdict {
+    /// Consensus does not refuse the transaction on account of tokens: it is
+    /// accepted under the rule, or the rule does not apply to it.
     pub fn accepted(&self) -> bool {
-        matches!(self, Self::Accepted { .. })
+        !matches!(self, Verdict::Refused(_))
     }
 }
 
@@ -87,10 +94,53 @@ fn sum(amounts: impl IntoIterator<Item = u64>) -> u128 {
     amounts.into_iter().map(u128::from).sum()
 }
 
-/// Applies the rule to one transaction: `inputs` are the input notes with
-/// the claim each carries (as consensus reads it from the note), `outputs`
-/// the entries on the output notes as consensus builds them.
+/// The activation policy of the consensus upgrade candidate
+/// (`hoon/common/nmeme-policy.hoon`, `upstream/activation.patch`): the rule
+/// is active at and after the activation height; `None` is disabled, not
+/// height zero.
+pub fn active(activation: Option<u64>, page: u64) -> bool {
+    matches!(activation, Some(h) if page >= h)
+}
+
+/// `creditable:nmeme-policy`: an input note's claim carries token credit
+/// only if the note's origin is at or after activation (and not in the
+/// future). A claim written before activation was arbitrary metadata and
+/// never becomes token weight by surviving the upgrade.
+pub fn creditable(activation: Option<u64>, page: u64, origin: u64) -> bool {
+    matches!(activation, Some(h) if page >= h && origin >= h && origin <= page)
+}
+
+/// Applies the rule as it stands on the pack 9 fork, where it is always
+/// active: `inputs` are the input notes with the claim each carries (as
+/// consensus reads it from the note), `outputs` the entries on the output
+/// notes as consensus builds them.
 pub fn check(inputs: &[(Name, Option<Claim>)], outputs: &[Entry]) -> Verdict {
+    evaluate(inputs, inputs, outputs)
+}
+
+/// Applies the rule under the activation policy: `inputs` carry each note's
+/// origin page, `page` is the transaction's. Before activation (or with
+/// none) the verdict is `Inactive`. At and after it, a legacy input (origin
+/// before activation) gives no credit (`creditable`), while for the genesis
+/// rule its entry still counts as an entry — exactly as `conserved:meme`
+/// reads it after `activation-on-pack9.patch`: only the credit is gated.
+pub fn check_at(inputs: &[(Name, Option<Claim>, u64)], outputs: &[Entry], page: u64, activation: Option<u64>) -> Verdict {
+    if !active(activation, page) {
+        return Verdict::Inactive;
+    }
+    let all: Vec<(Name, Option<Claim>)> = inputs.iter().map(|(n, c, _)| (n.clone(), c.clone())).collect();
+    let credited: Vec<(Name, Option<Claim>)> = inputs
+        .iter()
+        .map(|(n, c, origin)| (n.clone(), if creditable(activation, page, *origin) { c.clone() } else { None }))
+        .collect();
+    evaluate(&all, &credited, outputs)
+}
+
+/// The rule over two views of the inputs: `all` for what the inputs carry
+/// (the genesis rule), `credited` for what counts as token weight going in
+/// (the transfer rule). On the always-active fork the two are the same.
+fn evaluate(all: &[(Name, Option<Claim>)], credited: &[(Name, Option<Claim>)], outputs: &[Entry]) -> Verdict {
+    let inputs = all;
     // W
     if outputs.iter().any(|e| matches!(e, Entry::Malformed)) {
         return Verdict::Refused(Refusal::MalformedOutputClaim);
@@ -105,7 +155,7 @@ pub fn check(inputs: &[(Name, Option<Claim>)], outputs: &[Entry]) -> Verdict {
 
     // what goes in, per id: transfer and genesis claims alike
     let mut going_in: BTreeMap<TokenId, u128> = BTreeMap::new();
-    for (_, claim) in inputs {
+    for (_, claim) in credited {
         if let Some(claim) = claim {
             let (token, amount) = match claim {
                 Claim::Transfer { token, amount } => (token, *amount),

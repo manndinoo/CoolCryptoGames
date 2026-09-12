@@ -69,6 +69,11 @@ pub enum Outcome {
     /// The general case: several tokens consumed, or some units carried on
     /// and the rest destroyed (a partial burn), per token.
     Settled(Vec<Effect>),
+    /// The token rule did not apply to this transaction: it is before the
+    /// activation height, or activation is disabled. Nothing is indexed —
+    /// a `meme` entry written then is arbitrary metadata, never credit
+    /// (`consensus::creditable`).
+    Inactive,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -77,13 +82,23 @@ pub struct AuditEntry {
     pub outcome: Outcome,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct Indexer {
     /// Unspent notes that carry token weight.
     holdings: BTreeMap<Vec<u8>, (TokenId, u64, NockHash)>,
     tokens: BTreeMap<TokenId, TokenMeta>,
     seen: BTreeSet<Vec<u8>>,
     audit: Vec<AuditEntry>,
+    /// The activation height the indexed node enforces (`nmeme-policy.hoon`
+    /// in `upstream/activation.patch`): `Some(0)` is the pack 9 fork, always
+    /// active; `None` is disabled.
+    activation: Option<u64>,
+}
+
+impl Default for Indexer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Sums amounts, refusing to wrap.
@@ -113,8 +128,21 @@ fn hash_key(hash: &NockHash) -> Vec<u8> {
 }
 
 impl Indexer {
+    /// An indexer for the pack 9 fork: the rule active from height zero.
     pub fn new() -> Self {
-        Self::default()
+        Self::with_activation(Some(0))
+    }
+
+    /// An indexer for a node built with the activation policy set to
+    /// `activation` (`None`: disabled, every transaction `Inactive`).
+    pub fn with_activation(activation: Option<u64>) -> Self {
+        Self {
+            holdings: BTreeMap::new(),
+            tokens: BTreeMap::new(),
+            seen: BTreeSet::new(),
+            audit: Vec::new(),
+            activation,
+        }
     }
 
     /// Applies one canonical transaction.
@@ -124,11 +152,25 @@ impl Indexer {
     /// (SPEC §7). There is no path that leaves an input both spent on the base
     /// chain and still holding weight here.
     pub fn apply(&mut self, tx: &TxView) -> Outcome {
+        // no page stated: the latest possible one, under the rule whenever
+        // the rule is active at all
+        self.apply_at(tx, u64::MAX)
+    }
+
+    /// Applies one transaction mined at `page`. Before activation the
+    /// outcome is `Inactive` and nothing changes: a note created then
+    /// carries no credit later (`consensus::creditable`), so it never
+    /// enters the holdings, and a transaction mined then cannot spend a
+    /// note created after it.
+    pub fn apply_at(&mut self, tx: &TxView, page: u64) -> Outcome {
         let tx_key = hash_key(&tx.id);
         if !self.seen.insert(tx_key) {
             // A duplicate transaction id in canonical order is a caller bug,
             // not a chain state: applying it twice would double-spend weight.
             return self.record(tx, Outcome::Untouched);
+        }
+        if !crate::consensus::active(self.activation, page) {
+            return self.record(tx, Outcome::Inactive);
         }
 
         let consumed: Vec<(TokenId, u64)> = tx
@@ -381,6 +423,16 @@ impl Indexer {
         let mut indexer = Self::new();
         for tx in history {
             indexer.apply(tx);
+        }
+        indexer
+    }
+
+    /// Rebuilds state from a canonical history with heights, under an
+    /// activation policy.
+    pub fn replay_at(history: &[(TxView, u64)], activation: Option<u64>) -> Self {
+        let mut indexer = Self::with_activation(activation);
+        for (tx, page) in history {
+            indexer.apply_at(tx, *page);
         }
         indexer
     }

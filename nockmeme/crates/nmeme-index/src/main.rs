@@ -90,7 +90,7 @@ const USAGE: &str = "usage:
   nmeme-index outputs  --tx <tx.jam>      (INPUT <first> <last>; OUTPUT <lock> <first> <last> <claim>)
   nmeme-index check-inputs --tx <tx.jam> --funding <funding.txt> [--token-note \"<first> <last>\"]...
                        (every input must be proven token-free, or be a named token note)
-  nmeme-index rebuild  --addr <host:port> --token <token-b58>
+  nmeme-index rebuild  --addr <host:port> --token <token-b58> [--activation <height>|none]
                        --step <txid>:<tx.jam> [--step ...]   (canonical order)
                        --funding <funding.txt> [--funding ...] (provenance of inputs)
                        [--scan-coinbase <height>]  (also accept inputs whose last name is a reward note's, recomputed from blocks 1..height)
@@ -273,6 +273,15 @@ fn cmd_token_note(args: &[String]) -> Result<ExitCode, String> {
 fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
     let addr = flag(args, "--addr").ok_or("missing --addr")?.to_string();
     let token_b58 = flag(args, "--token").ok_or("missing --token")?;
+    // the activation height the indexed node enforces (nmeme-policy.hoon in
+    // upstream/activation.patch): 0 is the pack 9 fork (always active),
+    // "none" a node with the policy disabled (nothing is a token)
+    let activation: Option<u64> = match flag(args, "--activation") {
+        None => Some(0),
+        Some("none") => None,
+        Some(h) => Some(h.parse::<u64>().map_err(|e| format!("--activation: {e}"))?),
+    };
+    println!("ACTIVATION\t{}", activation.map_or("none".to_string(), |h| h.to_string()));
     let token = TokenId(Hash::from_base58(token_b58).map_err(|e| format!("token: {e}"))?);
 
     let mut steps: Vec<(String, std::path::PathBuf)> = Vec::new();
@@ -356,7 +365,7 @@ async fn rebuild(
     for h in needed {
         parents.fill(&mut oracle_client, h).await?;
     }
-    let token_free = nmeme_index::admitted_token_free(&records, |h| parents.get(h))?;
+    let token_free = nmeme_index::admitted_token_free_at(&records, activation, |h| parents.get(h))?;
     println!("EVIDENCE\t{} coinbase note(s) re-verified against block parents", token_free.len());
     // Optionally, every coinbase name the chain could have issued up to a
     // height: the last name of a block's reward note is recomputed from its
@@ -389,7 +398,7 @@ async fn rebuild(
     }
 
     // 3. Replay through the real Indexer.
-    let mut indexer = Indexer::new();
+    let mut indexer = Indexer::with_activation(activation);
     let mut taken: Vec<Vec<u8>> = Vec::new();
     // Outputs the replay has assigned so far; an input must be one of these
     // or proven token-free, or the history is incomplete (lib.rs, provenance).
@@ -436,7 +445,7 @@ async fn rebuild(
 
         let tx_id = Hash::from_base58(txid).map_err(|e| format!("txid {txid}: {e}"))?;
         let view = TxView { id: tx_id, inputs: plan.inputs.clone(), outputs };
-        let outcome = indexer.apply(&view);
+        let outcome = indexer.apply_at(&view, height);
         println!("STEP\t{txid}\t{outcome:?}");
     }
 

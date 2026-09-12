@@ -558,13 +558,42 @@ pub fn check_funding_consistency(records: &[FundingRecord]) -> Result<(), String
 /// does not recompute is an error (a forged or corrupted file), and `plain`
 /// or legacy `tokenfree` records admit nothing — once spent, nothing can
 /// re-verify them, so the step that created them must be supplied instead.
-pub fn admitted_token_free<F>(records: &[FundingRecord], mut parent_of: F) -> Result<BTreeSet<Vec<u8>>, String>
+pub fn admitted_token_free<F>(records: &[FundingRecord], parent_of: F) -> Result<BTreeSet<Vec<u8>>, String>
+where
+    F: FnMut(u64) -> Result<Hash, String>,
+{
+    admitted_token_free_at(records, Some(0), parent_of)
+}
+
+/// `admitted_token_free` under an activation policy (`upstream/activation.patch`):
+/// a `claim` record whose origin is before the activation height is also
+/// token-free — after activation its claim is legacy metadata, never
+/// credit (`nmeme_core::consensus::creditable`), so the note is plain NOCK
+/// to the rule and nothing about it needs a step to be supplied. A `claim`
+/// record at or after activation admits nothing, as before. With activation
+/// disabled (`None`) every claim is legacy.
+pub fn admitted_token_free_at<F>(
+    records: &[FundingRecord],
+    activation: Option<u64>,
+    mut parent_of: F,
+) -> Result<BTreeSet<Vec<u8>>, String>
 where
     F: FnMut(u64) -> Result<Hash, String>,
 {
     check_funding_consistency(records)?;
     let mut out = BTreeSet::new();
     for rec in records {
+        if rec.status == FundingStatus::Claim {
+            let legacy = match (activation, rec.origin_page) {
+                (None, _) => true,
+                (Some(h), Some(origin)) => origin < h,
+                (Some(_), None) => false, // no origin known: not shown to be legacy
+            };
+            if legacy {
+                out.insert(name_key(&rec.name));
+            }
+            continue;
+        }
         if rec.status != FundingStatus::Coinbase {
             continue;
         }

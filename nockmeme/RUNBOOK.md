@@ -170,6 +170,12 @@ contexts; delete the rest).
 
 ```bash
 cd /path/to/nockchain && git apply /path/to/nockmeme/upstream/amm-covenant.patch
+# optional, the consensus upgrade candidate (docs/ACTIVATION.md): activation height + legacy cutoff.
+# Its default `phase` is ~ = DISABLED (no covenant, no token rule); pin a height for a fakenet:
+#   git apply /path/to/nockmeme/upstream/activation.patch
+#   sed -i '0,/^  ~$/s//  `1/' hoon/common/nmeme-policy.hoon
+#   bash /path/to/nockmeme/scripts/verify-activation.sh /path/to/nockchain   # the 24 assertions (needs honk built)
+# and index with `nmeme-index rebuild ... --activation 1`.
 # steps 2, 3, 4 as above; then a fresh chain:
 find "$RUN/data" -mindepth 1 -maxdepth 1 ! -name ai-pow -exec rm -rf {} +
 bash /path/to/nockmeme/scripts/node-lowmem.sh /path/to/nockchain "$RUN"
