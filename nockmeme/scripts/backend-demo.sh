@@ -17,7 +17,10 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; CLI="python3 $HERE/../back
 S="$RUN/backend"; mkdir -p "$S"
 WHO="${WHO:-dave}"; FUND="${FUND_NICKS:-2000000}"; BUY="${BUY_NICKS:-655360}"; XFER="${XFER:-100}"
 export FEE_BPS="${FEE_BPS:-100}" LORE_BPS="${LORE_BPS:-50}" FEE_NICKS="${FEE_NICKS:-16384}" DUST="${DUST:-1000}"
-PHASES="${PHASES:-flow,sim,restart,retry}"
+PHASES="${PHASES:-flow,sim,restart,retry}"   # which phases run (a later phase on the wallet the earlier ones left)
+# pack 8 phases (a second fresh wallet, WHO=erin): flow2 (fund -> buy -> buy again from the
+# token note's NOCK -> sell -> transfer), simq (two buys at once through the per-pool queue),
+# restart2 (a crash after the broadcast, reconciled by id)
 T="${TAG:-}"   # appended to the request ids of the restart and retry phases (a request id is never planned twice)   # which phases run (a later phase on the wallet the earlier ones left)
 phase() { case ",$PHASES," in *",$1,"*) return 0;; *) return 1;; esac; }
 MINER="$REPO/target/release/zk-pow-mine"
@@ -117,6 +120,52 @@ $CLI buy "$WHO" "$BUY" --request-id "onenote-B$T" > "$S/onenote-B.txt" 2>&1 &
 PB=$!
 wait $PA; RA=$?; wait $PB; RB=$?
 echo "ONENOTE	A rc=$RA	B rc=$RB"; grep -hE "^(PLAN|BUILT|SENT|MINED|REFUSED|ABORTED|ERROR|RESULT)" "$S/onenote-A.txt" "$S/onenote-B.txt"
+fi
+
+if phase flow2; then
+step "P8-1. a completely fresh wallet: $WHO (zero NOCK, zero tokens)"
+if [ -d "$RUN/wallets/$WHO" ]; then echo "SKIP	$WHO exists (RESUME)"; run p8-created balances "$WHO"; else run p8-created create "$WHO" || exit 1; fi
+DAVE_ADDR=$(dave_addr); echo "ADDRESS	$WHO	$DAVE_ADDR"
+step "P8-2. funding: alice pays $WHO $FUND nicks"
+run p8-fund pay alice "$DAVE_ADDR" "$FUND" --request-id "p8-fund-$WHO-1$T" || exit 1
+run p8-funded balances "$WHO" | grep -E "^BALANCES"
+step "P8-3. first buy ($BUY nicks, slippage floor 1 %)"
+run p8-quote1 quote "$WHO" buy "$BUY"
+run p8-buy1 buy "$WHO" "$BUY" --slippage-bps 100 --request-id "p8-buy-$WHO-1$T" || exit 1
+step "P8-4. second buy with what is left: the token note's NOCK funds it, its units join the bought claim"
+run p8-quote2 quote "$WHO" buy "$BUY"
+run p8-buy2 buy "$WHO" "$BUY" --slippage-bps 100 --request-id "p8-buy-$WHO-2$T" || exit 1
+HELD=$(tokens_of p8-buy2); echo "HELD	$WHO	$HELD tokens (one note)"
+step "P8-5. sell half back ($((HELD / 2)) tokens, slippage floor 1 %)"
+run p8-sell sell "$WHO" "$((HELD / 2))" --slippage-bps 100 --request-id "p8-sell-$WHO-1$T" || exit 1
+step "P8-6. transfer $XFER tokens to bob"
+run p8-xfer transfer "$WHO" "$XFER" "$BOB_ADDR" --request-id "p8-xfer-$WHO-1$T" || exit 1
+run p8-bob-after balances bob | grep -E "^BALANCES"
+fi
+
+if phase simq; then
+step "P8-7. two buys at once through the per-pool queue: the second waits for the first to be mined and is quoted against the pool as it stands"
+run p8-fund2 pay alice "$DAVE_ADDR" "$FUND" --request-id "p8-fund-$WHO-2$T" || exit 1
+run p8-fund3 pay alice "$DAVE_ADDR" "$FUND" --request-id "p8-fund-$WHO-3$T" || exit 1
+run p8-before-simq balances "$WHO" | grep -E "^BALANCES|NOTE.*plain"
+$CLI buy "$WHO" "$BUY" --slippage-bps 300 --request-id "p8-simq-A$T" > "$S/p8-simq-A.txt" 2>&1 &
+PA=$!
+$CLI buy "$WHO" "$BUY" --slippage-bps 300 --request-id "p8-simq-B$T" > "$S/p8-simq-B.txt" 2>&1 &
+PB=$!
+wait $PA; RA=$?; wait $PB; RB=$?
+echo "SIMQ	A rc=$RA	B rc=$RB"; grep -hE "^(FLOOR|PLAN|QUEUE|BUILT|SENT|MINED|REFUSED|ABORTED|ERROR|RESULT)" "$S/p8-simq-A.txt" "$S/p8-simq-B.txt"
+run p8-after-simq balances "$WHO" | grep -E "^BALANCES"
+step "P8-7b. a floor the pool cannot meet: refused before the build, nothing reserved afterwards"
+run p8-floor buy "$WHO" "$BUY" --min-out 999999999 --request-id "p8-floor$T"
+run p8-after-floor balances "$WHO" | grep -E "^BALANCES"
+fi
+
+if phase restart2; then
+step "P8-8. a restart after the broadcast, reconciled by transaction id"
+$CLI buy "$WHO" "$BUY" --request-id "p8-crash-broadcast$T" --crash-after broadcast 2>&1 | tee "$S/p8-crash-broadcast.txt"
+run p8-crash-balances balances "$WHO" | grep -E "^BALANCES|OPEN"
+run p8-crash-reconcile reconcile "$WHO"
+run p8-crash-wait wait "$WHO" "p8-crash-broadcast$T"
 fi
 
 run final balances "$WHO"

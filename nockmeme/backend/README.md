@@ -67,6 +67,35 @@ a wallet), a `transfer` side (like a sell for selection), and for a buy
 `token_units` is the minimum the quote must deliver (the builder refuses a
 quote below it before signing).
 
+**Repeat buying (pack 8).** After a buy, all of the wallet's NOCK change sits
+inside the token note it bought, and pack 7's rule (buys from plain notes
+only) left such a wallet unable to buy again. Now a buy may draw on token
+notes of the token it buys, after plain notes: their units are re-claimed on
+the bought output as ONE merged claim at the buyer's lock (`nmeme-tx
+pool-trade --held <units>`: the user's seed from the pool's spend carries
+`held + bought`), so nothing is burned and the notes consolidate into one.
+Notes of another token still never fund a buy — their claim would be a
+second claim at the buyer's lock, and consensus keeps one. `Plan.token_change_units`
+on a buy is the held units the claim must add.
+
+**The per-pool trade queue (pack 8).** Two trades built against the same
+pool note cannot both stand (the node refuses the second at admission, §A23).
+`PoolQueue` gives a pool one trade at a time across every wallet and process
+on the node: a file lock per pool lock root, and a registry
+(`<wallets>/pools.sqlite`) of the last trade sent on each pool. A request's
+turn waits until that trade is no longer pending (mined, or gone from the
+node's accepted set), then reads the pool as it stands, quotes, checks the
+request's floor, builds and broadcasts, and records its id for the next in
+line. A pool that stays busy past `queue_wait` (default 900 s) aborts the
+request and releases its inputs.
+
+**Slippage.** `buy --slippage-bps N` / `sell --slippage-bps N` take a quote
+now (`nmeme-tx quote`, the same function `pool-trade` applies) and set the
+floor to that output less the allowance; `--min-out N` sets the floor
+directly. The floor is checked against the quote of the built transaction —
+the pool as it stands when the request's turn came — and a quote below it
+aborts the request before signing and releases its inputs.
+
 ## The lifecycle (service.py)
 
 ```
@@ -111,14 +140,17 @@ reservation is one `BEGIN IMMEDIATE` transaction, so the second sees the
 first's reservation or waits for it. Wallet binary calls are serialised per
 wallet with `flock` (two processes in one arena corrupt it, seen live).
 
-## What the fakenet showed (results/RESULTS.md §A23)
+## What the fakenet showed (results/RESULTS.md §A23, §A24)
 
 See the results section for the transaction ids, blocks and balances of the
 fresh wallet's flow, the simultaneous requests and the restarts.
 
 ## Not here
 
-A network API, key custody beyond the stock wallet's export file,
+Everything here runs on the modified fakenet node (the `%amm` covenant and
+the token-claim rule are consensus changes of the fork, docs/ENFORCEMENT.md);
+nothing of it runs on mainnet or on the shipped node. A network API, key
+custody beyond the stock wallet's export file,
 reorganisation handling beyond the canonical check at settlement (a
 transaction whose block leaves the canonical chain stays `sent` and is
 re-checked; on one fakenet node no reorganisation can be provoked), fee

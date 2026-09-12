@@ -26,6 +26,16 @@ the plan states the change claim (`token_change_units`) the transaction
 must carry, and the backing NOCK not spent on fee and payment returns as the
 token note's change (`token_backing_nicks - backing_spent_nicks`).
 
+A buy, too, may be funded from token notes of the token being bought (pack
+8: after a buy all of a wallet's NOCK sits inside its token note, and a
+wallet that could not buy again with it would be stuck): their units are
+re-claimed on the bought output — one merged claim at the buyer's lock,
+`held + bought` — so nothing is burned and the notes consolidate into one.
+Plain notes are still taken first; a token note of the same token is added
+only when they do not cover fee and payment. Notes of another token never
+fund a buy: their claim would be a second claim at the buyer's lock, and
+consensus keeps one.
+
 Trusted local adapter API, never a public request API.
 """
 from dataclasses import dataclass
@@ -96,7 +106,7 @@ class Plan:
     token_inputs: tuple[str, ...]
     required_plain_nicks: int  # NOCK the plain inputs must supply (fee + payment not paid by backing)
     plain_change_nicks: int  # change of the plain inputs
-    token_change_units: int  # the change claim the transaction must carry
+    token_change_units: int  # sell/transfer: the change claim; buy: units held on the token inputs, re-claimed with the bought units
     token_backing_nicks: int  # NOCK carried by the token inputs: conserved minus backing_spent_nicks
     backing_spent_nicks: int = 0  # of the backing, what pays fee and payment
     fee_per_note_nicks: int = 0  # the wallet's even share, ceil(fee / inputs)
@@ -233,11 +243,12 @@ class Planner:
             locked = {row[0] for row in self.db.execute("SELECT name FROM reservations")}
             available = sorted((n for n in snapshot.notes if n.spendable and n.name not in locked), key=lambda n: n.name)
             tokens, units, backing = [], 0, 0
+            same_token = sorted((n for n in available if n.kind == "token" and n.token == request.token),
+                                key=lambda n: (-n.units, n.name))
             if request.side not in ("buy", "pay"):
                 # the token notes a sell or transfer spends anyway: enough of
                 # the requested token, largest holdings first (fewest inputs)
-                for note in sorted((n for n in available if n.kind == "token" and n.token == request.token),
-                                   key=lambda n: (-n.units, n.name)):
+                for note in same_token:
                     if units >= request.token_units:
                         break
                     tokens.append(note)
@@ -257,22 +268,35 @@ class Planner:
                     break
                 plain.append(note)
                 split = wallet_split([n.nicks for n in tokens + plain], fee, gift)
+            if split is None and request.side == "buy":
+                # a buy may draw on token notes of the token it buys (their
+                # units join the bought claim), the most NOCK first
+                for note in sorted(same_token, key=lambda n: (-n.nicks, n.name)):
+                    if split is not None:
+                        break
+                    tokens.append(note)
+                    units = total((units, note.units))
+                    backing = total((backing, note.nicks))
+                    split = wallet_split([n.nicks for n in tokens + plain], fee, gift)
             if split is None:
                 have = total(n.nicks for n in plain)
                 raise WalletError(f"insufficient ordinary NOCK: need {fee + gift} nicks for fee and payment, "
                                   f"plain notes hold {have}, token backing {backing}")
+            # the wallet spends the notes in the order named: token notes first
+            ordered = tokens + plain
+            split = wallet_split([n.nicks for n in ordered], fee, gift)
             k = len(tokens)
             backing_spent = sum(f + g for f, g, _ in split[:k])
             plain_change = sum(c for _, _, c in split[k:])
             required_plain = fee + gift - backing_spent
-            n_in = k + len(plain)
+            n_in = len(ordered)
             per = fee // n_in + (1 if fee % n_in else 0)
             self.db.execute("INSERT INTO requests VALUES (?)", (request.request_id,))
             self.db.executemany("INSERT INTO reservations VALUES (?, ?)",
-                                ((n.name, request.request_id) for n in tokens + plain))
+                                ((n.name, request.request_id) for n in ordered))
+            change_units = units if request.side == "buy" else (units - request.token_units if tokens else 0)
             plan = Plan(request.request_id, snapshot.block, tuple(n.name for n in plain), tuple(n.name for n in tokens),
-                        required_plain, plain_change, units - request.token_units if tokens else 0, backing,
-                        backing_spent, per)
+                        required_plain, plain_change, change_units, backing, backing_spent, per)
             self.db.execute("COMMIT")
             return plan
         except Exception:

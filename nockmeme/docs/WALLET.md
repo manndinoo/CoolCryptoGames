@@ -53,9 +53,10 @@ implements them, and the contract over the package's tools.
 
 | rule | where | how |
 |---|---|---|
-| 1 | `wallet_backend.Planner.reserve` | a buy is funded from plain notes only; a sell or transfer spends the token notes of the requested token (largest first) and pays fee and dust from their NOCK when the wallet's own even split can (`wallet_split`, a port of `++create-spends-1`), adding plain notes largest-first only when it cannot; other tokens' notes, undecodable (`unknown`) notes and reserved notes never fund anything |
+| 1 | `wallet_backend.Planner.reserve` | a buy is funded from plain notes, then from token notes of the token it buys (their units re-claimed on the bought output as one merged claim, `pool-trade --held`); a sell or transfer spends the token notes of the requested token (largest first) and pays fee and dust from their NOCK when the wallet's own even split can (`wallet_split`, a port of `++create-spends-1`), adding plain notes largest-first only when it cannot; other tokens' notes, undecodable (`unknown`) notes and reserved notes never fund anything |
 | 2 | `service.WalletService._finish_trade` / `_finish_transfer` | the change claim `transfer:<token>:<held − sent>` is attached to the wallet's own lock on every sell and transfer, from the plan's `token_change_units` |
 | 3 | `service.WalletService._fee_ok` / `_finish_plain` | `FEE current ≥ required` from `nmeme-tx` on the built transaction, or it is not signed or sent |
+| 5 (pack 8) | `service.PoolQueue` | one trade at a time per pool across wallets and processes: the request's turn waits for the previous trade on the pool to be mined or gone, then quotes the pool as it stands and checks the request's slippage floor (`--slippage-bps`, `--min-out`) before building |
 | 4 | `wallet_backend.Planner` + `service.WalletService` | one `BEGIN IMMEDIATE` transaction reserves the inputs before anything is built; the signed transaction and its id are recorded before the broadcast; settlement is `nmeme-index tx-status --txid` — mined in the canonical block at its height — and only that releases the inputs; `reconcile()` on restart resumes every open request from the record |
 
 `scripts/lib-wallet.sh`, used by `scripts/wallet-demo.sh` (pack 6's shell version, kept as it ran):

@@ -126,9 +126,20 @@ runtime symbols) and succeeded with:
 CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false cargo test -p nmeme-core -p nmeme-tx -p nmeme-index
 ```
 
-That failure was not reproduced on the machine this work was done on, and its
-cause has not been established. If the default profile fails to link, try the
-override; do not report a build that needed it as a default-profile build.
+The independent rerun of pack 7 hit the same link failure in the default
+*release* build (`undefined symbol: main`) and passed all 136 tests with
+
+```bash
+CARGO_PROFILE_RELEASE_LTO=false cargo test --release -p nmeme-core -p nmeme-tx -p nmeme-index
+```
+
+Neither failure was reproduced on the machine this work was done on, and the
+cause has not been established (the workspace turns LTO on for release, and
+the test harness's `main` is what goes missing at link time — a linker /
+LTO interaction, not a source problem: the source was unchanged between the
+failing and the passing build). If a profile fails to link, turn LTO off for
+that profile with the matching `CARGO_PROFILE_<PROFILE>_LTO=false`; do not
+report a build that needed it as a default-profile build.
 
 ## Building nmeme-core
 

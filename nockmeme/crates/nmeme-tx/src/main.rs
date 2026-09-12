@@ -73,6 +73,39 @@ fn cmd_pool_lock(args: &[String]) -> Result<ExitCode, String> {
     Ok(ExitCode::SUCCESS)
 }
 
+/// `quote --pool "<POOL line>" <pool params> --side buy --nicks-in N [--dust D] [--network-fee F]`
+/// `quote --pool "<POOL line>" <pool params> --side sell --tokens-in N [--dust D] [--network-fee F]`:
+/// the quote alone, the same function `pool-trade` applies when it builds,
+/// so a backend can set a slippage floor before it reserves and builds and
+/// re-check it against the pool as it stands when its turn comes.
+fn cmd_quote(args: &[String]) -> Result<ExitCode, String> {
+    let params = pool_params(args)?;
+    let pool = PoolNote::parse(opt(args, "--pool").ok_or("missing --pool")?)?;
+    let dust = parse_u64(args, "--dust")?.unwrap_or(1000);
+    let network_fee = parse_u64(args, "--network-fee")?.unwrap_or(0);
+    let (side, quote) = match opt(args, "--side") {
+        Some("buy") => {
+            let paid = parse_u64(args, "--nicks-in")?.ok_or("a buy needs --nicks-in")?;
+            ("buy", nmeme_core::pool::quote_buy(pool.reserves, paid, dust, &params, network_fee))
+        }
+        Some("sell") => {
+            let tokens_in = parse_u64(args, "--tokens-in")?.ok_or("a sell needs --tokens-in")?;
+            ("sell", nmeme_core::pool::quote_sell(pool.reserves, tokens_in, dust, &params, network_fee))
+        }
+        other => return Err(format!("--side must be buy or sell, got {other:?}")),
+    };
+    let quote = quote.map_err(|e| format!("quote: {e}"))?;
+    let (pool_unit, in_unit, out_unit) = if side == "buy" { ("nicks", "nicks", "tokens") } else { ("tokens", "tokens", "nicks") };
+    println!(
+        "QUOTE\t{side}\tin={} {in_unit}\tout_net={} {out_unit}\tpool_fee={} {pool_unit}\tlore_fee={} nicks\tnock_fees={} nicks\ttoken_fees={} tokens\tnetwork_fee={} nicks\tspot_e9={}\texec_e9={}\timpact_bps={}",
+        quote.amount_in, quote.amount_out, quote.pool_fee, quote.lore_fee, quote.nock_fees(), quote.token_fees(), quote.network_fee,
+        quote.spot_before_e9, quote.execution_e9, quote.price_impact_bps
+    );
+    println!("POOL-BEFORE\t{}\t{}", pool.reserves.nock, pool.reserves.tokens);
+    println!("POOL-AFTER\t{}\t{}", quote.after.nock, quote.after.tokens);
+    Ok(ExitCode::SUCCESS)
+}
+
 /// `key-lock <address-b58>`: the lock root of the 1-of-1 key lock the wallet
 /// pays an address with (its `p2pkh` recipient), and the first name every
 /// note at that lock carries. This is what a wallet's "address" resolves to
@@ -151,6 +184,15 @@ fn cmd_pool_trade(args: &[String]) -> Result<ExitCode, String> {
     };
     let dust = parse_u64(args, "--dust")?.unwrap_or(1000);
     let tokens_in = parse_u64(args, "--tokens-in")?.unwrap_or(0);
+    // `--held N` (buy): the user's spend consumes token notes of this token
+    // holding N units (their NOCK funds the buy); the bought output's claim
+    // carries N + the quote's output, one claim at the user's lock. A change
+    // claim on the user's own change seed would be a second claim at that
+    // lock, and consensus keeps one (the other's tokens burn).
+    let held = parse_u64(args, "--held")?.unwrap_or(0);
+    if held > 0 && side != Side::Buy {
+        return Err("--held applies to a buy (a sell carries its change with --claim)".to_string());
+    }
     let user_inputs: Vec<Name> = spends.0.iter().map(|(n, _)| n.clone()).collect();
 
     let moved = nmeme_tx::pool::retarget(&mut spends, &placeholder, &pool_root);
@@ -232,13 +274,16 @@ fn cmd_pool_trade(args: &[String]) -> Result<ExitCode, String> {
     );
     println!("POOL-BEFORE\t{}\t{}", pool.reserves.nock, pool.reserves.tokens);
     println!("POOL-AFTER\t{}\t{}", quote.after.nock, quote.after.tokens);
+    if held > 0 {
+        println!("HELD\t{held}\tuser-claim={}", quote.amount_out + held);
+    }
 
     let parent = pool.hash(&params).map_err(|e| e.to_string())?;
     // the pool's spend pays: the user, the treasury, and its own successor;
     // the user's payment (paid) lands on the successor from the user's spend
     let mut lore_gift = quote.lore_fee;
     let (mut to_user_gift, mut to_user_tokens, mut succ_gift, mut succ_tokens) = match side {
-        Side::Buy => (dust, quote.amount_out, pool.reserves.nock - dust - lore_gift, pool.reserves.tokens - quote.amount_out),
+        Side::Buy => (dust, quote.amount_out + held, pool.reserves.nock - dust - lore_gift, pool.reserves.tokens - quote.amount_out),
         Side::Sell => (quote.amount_out, 0u64, pool.reserves.nock - quote.amount_out - lore_gift, pool.reserves.tokens + tokens_in),
     };
     // A second note at the pool lock, spent in the same transaction.
@@ -386,6 +431,7 @@ fn main() -> ExitCode {
         Some("replace-spend") if args.len() == 6 => cmd_replace_spend(&args),
         Some("retarget") if args.len() == 6 => cmd_retarget(&args),
         Some("pool-lock") if args.len() >= 10 => cmd_pool_lock(&args),
+        Some("quote") if args.len() >= 12 => cmd_quote(&args),
         Some("key-lock") if args.len() == 3 => cmd_key_lock(&args),
         Some("note-hash") if args.len() >= 11 => cmd_note_hash(&args),
         Some("pool-trade") if args.len() >= 16 => cmd_pool_trade(&args),
@@ -416,6 +462,9 @@ const USAGE: &str = "usage:
   nmeme-tx retarget <tx.jam> <out.jam> <from-lock-root> <to-lock-root>
   nmeme-tx pool-lock --token <token-b58> --fee-bps <n> --lore-bps <n> --lore-lock <lock-root>
   nmeme-tx key-lock <address-b58>            (KEY-LOCK <lock-root> and KEY-FIRST: the wallet's 1-of-1 key lock)
+  nmeme-tx quote --pool \"<POOL line>\" <pool params> --side buy --nicks-in <n> | --side sell --tokens-in <n> [--dust <d>] [--network-fee <f>]
+                                             (the QUOTE line alone, the function pool-trade applies)
+  pool-trade ... [--held <units>]            (buy: token notes of this token the user spends fund it; their units join the bought claim)
   nmeme-tx note-hash \"<first> <last> <origin> <nock> <tokens>\" <pool params>
   nmeme-tx pool-trade <user.tx> <out.jam> --pool \"<first> <last> <origin> <nock> <tokens>\" <pool params>
                       --side buy|sell --placeholder <lock-root> [--tokens-in <n>] [--claim <lock-root>=<claim-spec>]... [--dust <n>]

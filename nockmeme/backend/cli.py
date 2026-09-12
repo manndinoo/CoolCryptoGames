@@ -5,12 +5,16 @@
     python3 cli.py pay      <who> <to-address> <nicks>
     python3 cli.py buy      <who> <nicks> [--min-out N]
     python3 cli.py sell     <who> <units>
+    python3 cli.py quote    <who> buy|sell <amount>   (the pool as it stands; no reservation, nothing built)
     python3 cli.py transfer <who> <units> <to-address>
     python3 cli.py reconcile <who>          (every open request against the node, by transaction id)
     python3 cli.py wait     <who> <request-id> [--timeout S]
     python3 cli.py status   <who>           (every request recorded)
 
-Options: --request-id ID (default: a timestamped id), --no-wait (return after the
+Options: --request-id ID (default: a timestamped id), --min-out N (a buy's least
+tokens out, a sell's least nicks out), --slippage-bps N (the floor is a quote made
+now less this allowance; the build re-checks it against the pool as it stands
+when the request's turn on the pool comes), --no-wait (return after the
 broadcast), --crash-after reserved|built|broadcast (test hook: exit without
 cleanup at that point), --json (balances as JSON).
 
@@ -78,7 +82,8 @@ def main(argv=None):
     ap.add_argument("who")
     ap.add_argument("rest", nargs="*")
     ap.add_argument("--request-id")
-    ap.add_argument("--min-out", type=int, default=1)
+    ap.add_argument("--min-out", type=int, default=None, help="buy: least tokens out; sell: least nicks out")
+    ap.add_argument("--slippage-bps", type=int, default=None, help="floor = a quote now, less this allowance")
     ap.add_argument("--timeout", type=int, default=900)
     ap.add_argument("--no-wait", action="store_true")
     ap.add_argument("--json", action="store_true")
@@ -116,9 +121,13 @@ def main(argv=None):
         if args.command == "pay":
             sub = svc.pay(args.rest[0], int(args.rest[1]), rid)
         elif args.command == "buy":
-            sub = svc.buy(token, int(args.rest[0]), rid, args.min_out)
+            sub = svc.buy(token, int(args.rest[0]), rid, args.min_out or 1, args.slippage_bps)
         elif args.command == "sell":
-            sub = svc.sell(token, int(args.rest[0]), rid)
+            sub = svc.sell(token, int(args.rest[0]), rid, args.min_out or 0, args.slippage_bps)
+        elif args.command == "quote":
+            q = svc.quote_now(token, args.rest[0], int(args.rest[1]))
+            out("QUOTE\t" + "\t".join(f"{k}={v}" for k, v in q.items()))
+            return 0
         elif args.command == "transfer":
             sub = svc.transfer(token, int(args.rest[0]), args.rest[1], rid)
         else:

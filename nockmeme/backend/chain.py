@@ -228,8 +228,23 @@ class Tools:
         out = self.tx("sighash", path, out_dir).stdout
         return [tuple(r) for r in self.rows(out, "SIGHASH")]  # (key, digest, pubkey, pkh, sigfile)
 
+    def pool_lock(self, token, fee_bps, lore_bps, lore_lock):
+        out = self.tx("pool-lock", "--token", token, "--fee-bps", str(fee_bps), "--lore-bps", str(lore_bps),
+                      "--lore-lock", lore_lock).stdout
+        return self.rows(out, "POOL-LOCK")[0][0]
+
+    def quote_only(self, pool_line, token, fee_bps, lore_bps, lore_lock, side, amount, dust, network_fee):
+        """`nmeme-tx quote`: the quote alone against a POOL line (no transaction)."""
+        args = ["quote", "--pool", pool_line, "--token", token, "--fee-bps", str(fee_bps), "--lore-bps", str(lore_bps),
+                "--lore-lock", lore_lock, "--side", side, "--dust", str(dust), "--network-fee", str(network_fee),
+                "--nicks-in" if side == "buy" else "--tokens-in", str(amount)]
+        cp = self.tx(*args, ok=False)
+        if cp.returncode != 0:
+            raise ChainError(f"quote: {(cp.stderr or cp.stdout).strip()[-600:]}")
+        return self.quote(cp.stdout)
+
     def pool_trade(self, path, out, pool_line, token, fee_bps, lore_bps, lore_lock, side, placeholder_lock, dust,
-                   tokens_in=0, claim=None):
+                   tokens_in=0, claim=None, held=0):
         args = ["pool-trade", path, out, "--pool", pool_line, "--token", token, "--fee-bps", str(fee_bps),
                 "--lore-bps", str(lore_bps), "--lore-lock", lore_lock, "--side", side, "--placeholder",
                 placeholder_lock, "--dust", str(dust)]
@@ -237,6 +252,8 @@ class Tools:
             args += ["--tokens-in", str(tokens_in)]
         if claim:
             args += ["--claim", claim]
+        if held:
+            args += ["--held", str(held)]
         cp = self.tx(*args, ok=False)
         if cp.returncode != 0:
             raise ChainError(f"pool-trade: {(cp.stderr or cp.stdout).strip()[-600:]}")

@@ -27,6 +27,73 @@ import time
 
 from wallet_backend import Note, Snapshot, Request, Plan, Planner, WalletError
 from chain import ChainError
+import fcntl
+
+
+class PoolQueue:
+    """One trade at a time per pool, across every wallet and process on this
+    node (pack 8). Two trades built against the same pool note cannot both
+    stand: the pool note is one input, the node admits the first spend of
+    it and refuses the second at admission (seen live, §A23). So a request
+    takes the pool's turn — a file lock per pool lock root — and, before it
+    reads the pool and quotes, waits until the previous trade on that pool
+    is no longer pending (mined, or gone from the node); then it reads the
+    pool AS IT STANDS, quotes, checks the request's slippage floor, builds
+    and broadcasts, and records its id for the next in line. The registry
+    is a small SQLite file shared by every wallet (`<wallets>/pools.sqlite`).
+    """
+
+    def __init__(self, tools, log=None):
+        self.tools, self.log = tools, log or (lambda s: None)
+        self.dir = tools.wallets
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.db = sqlite3.connect(str(self.dir / "pools.sqlite"), timeout=30, isolation_level=None)
+        self.db.execute("CREATE TABLE IF NOT EXISTS pool_trades (pool TEXT PRIMARY KEY, txid TEXT, request TEXT, wallet TEXT, at REAL)")
+
+    def close(self):
+        self.db.close()
+
+    class Turn:
+        def __init__(self, queue, pool_lock, wait, poll):
+            self.queue, self.pool_lock, self.wait, self.poll = queue, pool_lock, wait, poll
+            self.fh = None
+
+        def __enter__(self):
+            q = self.queue
+            self.fh = open(q.dir / f"pool-{self.pool_lock}.lock", "w")
+            t0 = time.time()
+            fcntl.flock(self.fh, fcntl.LOCK_EX)
+            waited = time.time() - t0
+            if waited > 1:
+                q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\twaited {waited:.0f}s for the pool's turn")
+            # the previous trade on this pool must be out of the way
+            row = q.db.execute("SELECT txid, request, wallet FROM pool_trades WHERE pool=?", (self.pool_lock,)).fetchone()
+            if row and row[0]:
+                deadline = time.time() + self.wait
+                while True:
+                    st = q.tools.tx_status(row[0])
+                    if st.state != "pending":
+                        q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\tprevious trade {row[1]} ({row[0][:10]}…) is {st.state}: the pool is free")
+                        break
+                    if time.time() > deadline:
+                        fcntl.flock(self.fh, fcntl.LOCK_UN)
+                        self.fh.close()
+                        raise WalletError(f"pool busy: {row[1]} ({row[0]}) still pending after {self.wait}s")
+                    q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\twaiting for {row[1]} ({row[0][:10]}…) to leave the mempool")
+                    time.sleep(self.poll)
+            return self
+
+        def record(self, txid, request, wallet):
+            self.queue.db.execute("INSERT OR REPLACE INTO pool_trades VALUES (?, ?, ?, ?, ?)",
+                                  (self.pool_lock, txid, request, wallet, time.time()))
+
+        def __exit__(self, *exc):
+            fcntl.flock(self.fh, fcntl.LOCK_UN)
+            self.fh.close()
+            return False
+
+    def turn(self, pool_lock, wait=900, poll=10):
+        return PoolQueue.Turn(self, pool_lock, wait, poll)
 
 STATES = ("planned", "built", "sent", "mined", "refused", "aborted")
 ACTIVE = ("planned", "built", "sent")
@@ -62,6 +129,8 @@ class WalletService:
         self.network_fee, self.dust = network_fee, dust
         self.log = log or (lambda s: None)
         self.crash_after = crash_after  # test hook: reserved, built, broadcast
+        self.queue = None  # PoolQueue, opened with the service
+        self.queue_wait = 900
         self.dir = tools.wallet_dir(who)
         self.db_path = str(db_path or self.dir / "backend.sqlite")
         self.address = self.lock = self.first = None
@@ -82,6 +151,7 @@ class WalletService:
         self.address, self.lock, self.first = d["address"], d["lock"], d["first"]
         genesis = self.tools.genesis()
         self.planner = Planner(self.db_path, genesis, self.lock)
+        self.queue = PoolQueue(self.tools, self.log)
         self.db = sqlite3.connect(self.db_path, timeout=30, isolation_level=None)
         self.db.execute("""CREATE TABLE IF NOT EXISTS submissions (
             request TEXT PRIMARY KEY, side TEXT, token TEXT, state TEXT, txid TEXT DEFAULT '', file TEXT DEFAULT '',
@@ -95,6 +165,8 @@ class WalletService:
             self.planner.close()
         if self.db:
             self.db.close()
+        if self.queue:
+            self.queue.close()
 
     def _put(self, sub):
         sub.updated = time.time()
@@ -169,11 +241,36 @@ class WalletService:
         req = Request(request_id, "pay", "", 0, nicks, self.network_fee, 0)
         return self._execute(req, to_address, nicks, self._finish_plain)
 
-    def buy(self, token, nicks, request_id, min_tokens_out=1):
+    def pool_lock_of(self, token):
+        return self.tools.pool_lock(token, self.fee_bps, self.lore_bps, self.lore_lock)
+
+    def quote_now(self, token, side, amount):
+        """A quote against the pool as it stands (no reservation, no build)."""
+        pool = self.tools.pool(token, self.fee_bps, self.lore_bps, self.lore_lock)
+        return self.tools.quote_only(pool, token, self.fee_bps, self.lore_bps, self.lore_lock, side, amount,
+                                     self.dust, self.network_fee)
+
+    @staticmethod
+    def floor_from_slippage(quote_out, slippage_bps):
+        """The least output acceptable: the quote's output less the slippage allowance (rounded down)."""
+        return max(1, quote_out - (quote_out * slippage_bps) // 10_000)
+
+    def buy(self, token, nicks, request_id, min_tokens_out=1, slippage_bps=None):
+        """`min_tokens_out`: the slippage floor the quote at build time must
+        meet; with `slippage_bps` the floor is taken from a quote made now."""
+        if slippage_bps is not None:
+            q = self.quote_now(token, "buy", nicks)
+            min_tokens_out = self.floor_from_slippage(q["out_net"], slippage_bps)
+            self.log(f"FLOOR\t{request_id}\tquote_now out={q['out_net']} tokens\tslippage={slippage_bps} bps\tmin_out={min_tokens_out}")
         req = Request(request_id, "buy", token, min_tokens_out, nicks, self.network_fee, self.dust)
         return self._execute(req, self.placeholder_address, nicks, self._finish_trade)
 
-    def sell(self, token, units, request_id):
+    def sell(self, token, units, request_id, min_nicks_out=0, slippage_bps=None):
+        if slippage_bps is not None:
+            q = self.quote_now(token, "sell", units)
+            min_nicks_out = self.floor_from_slippage(q["out_net"], slippage_bps)
+            self.log(f"FLOOR\t{request_id}\tquote_now out={q['out_net']} nicks\tslippage={slippage_bps} bps\tmin_out={min_nicks_out}")
+        self._min_nicks_out = min_nicks_out
         req = Request(request_id, "sell", token, units, 0, self.network_fee, self.dust)
         return self._execute(req, self.placeholder_address, self.dust, self._finish_trade)
 
@@ -201,6 +298,29 @@ class WalletService:
         self._crash("reserved")
         work = self.dir / "requests" / req.request_id
         work.mkdir(parents=True, exist_ok=True)
+        if req.side in ("buy", "sell"):
+            # a trade: the pool's turn is held from the pool read through the broadcast
+            try:
+                turn = self.queue.turn(self.pool_lock_of(req.token), self.queue_wait)
+                with turn:
+                    sub = self._build(sub, plan, req, to_address, gift, finish, work)
+                    self._crash("built")
+                    sub = self.broadcast(sub)
+                    if sub.state == "sent":
+                        turn.record(sub.txid, sub.request, self.who)
+                return sub
+            except WalletError as e:
+                if sub.state == "planned":  # the queue refused before anything was built
+                    sub.state, sub.detail = "aborted", f"{e}"[:800]
+                    self._put(sub)
+                    self.planner.release(req.request_id)
+                    self.log(f"ABORTED\t{req.request_id}\t{e}")
+                raise
+        sub = self._build(sub, plan, req, to_address, gift, finish, work)
+        self._crash("built")
+        return self.broadcast(sub)
+
+    def _build(self, sub, plan, req, to_address, gift, finish, work):
         try:
             # 2. the wallet builds the base transaction over exactly the planned inputs
             base = self.tools.create_tx(self.who, plan.inputs, to_address, gift, req.network_fee_nicks)
@@ -231,8 +351,7 @@ class WalletService:
             self.planner.release(req.request_id)
             self.log(f"ABORTED\t{req.request_id}\t{e}")
             raise
-        self._crash("built")
-        return self.broadcast(sub)
+        return sub
 
     def broadcast(self, sub):
         """Sends a built transaction and records the node's answer."""
@@ -290,24 +409,34 @@ class WalletService:
         return base, {"kind": "pay", "nicks": req.buy_debit_nicks, "fee": current, "fee_required": required}
 
     def _finish_trade(self, base, plan, req, work, rows):
+        # the pool is read inside the pool's turn (PoolQueue): the previous
+        # trade on it is settled or gone, so this is the pool as it stands
         pool = self.tools.pool(req.token, self.fee_bps, self.lore_bps, self.lore_lock)
         claim = None
-        tokens_in = 0
+        tokens_in = held = 0
         if req.side == "sell":
             tokens_in = req.token_units
             claim = f"{self.lock}=transfer:{req.token}:{plan.token_change_units}"
+        else:
+            # token notes of this token spent as funding: their units join
+            # the bought claim (one claim at the buyer's lock)
+            held = plan.token_change_units
         text = self.tools.pool_trade(base, work / "assembled.jam", pool, req.token, self.fee_bps, self.lore_bps,
-                                     self.lore_lock, req.side, self.placeholder_lock, self.dust, tokens_in, claim)
+                                     self.lore_lock, req.side, self.placeholder_lock, self.dust, tokens_in, claim, held)
         (work / "trade.txt").write_text(text)
         quote = self.tools.quote(text)
         current, required = self._fee_ok(text, req.side)
         if req.side == "buy" and quote["out_net"] < req.token_units:
-            raise WalletError(f"quote delivers {quote['out_net']} tokens, below the requested minimum {req.token_units}")
-        if req.side == "sell" and quote["in"] != tokens_in:
-            raise WalletError("quote does not sell the requested units")
+            raise WalletError(f"quote delivers {quote['out_net']} tokens, below the request's floor {req.token_units}")
+        if req.side == "sell":
+            if quote["in"] != tokens_in:
+                raise WalletError("quote does not sell the requested units")
+            floor = getattr(self, "_min_nicks_out", 0)
+            if quote["out_net"] < floor:
+                raise WalletError(f"quote pays {quote['out_net']} nicks, below the request's floor {floor}")
         final = self._resign(work, rows, work / "assembled.jam", text)
         info = {"kind": req.side, "quote": quote, "fee": current, "fee_required": required, "pool_before": pool,
-                "change_claim": claim}
+                "change_claim": claim, "held": held, "floor": req.token_units if req.side == "buy" else getattr(self, "_min_nicks_out", 0)}
         return final, info
 
     def _finish_transfer(self, base, plan, req, work, rows, *, to_lock):

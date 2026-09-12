@@ -48,23 +48,36 @@ class WalletTests(unittest.TestCase):
         self.assertEqual((p.token_inputs, p.plain_inputs, p.fee_per_note_nicks, p.backing_spent_nicks, p.plain_change_nicks), (("b/full",), ("a/full",), 10, 10, 190))
 
     def test_failed_plan_does_not_reserve(self):
+        # 200 plain + 900 on the MEME note cannot pay 2000 + 20
         with self.assertRaises(WalletError):
-            self.plan(request=d.replace(self.r, buy_debit_nicks=201))
+            self.plan(request=d.replace(self.r, buy_debit_nicks=2000))
         self.plan()
+
+    def test_buy_draws_on_a_note_of_the_token_it_buys_after_plain_notes(self):
+        # pack 8: 201 + 20 exceeds the plain note; the MEME note's NOCK funds the
+        # rest and its 50 units are re-claimed with the bought units (one claim)
+        p = self.plan(request=d.replace(self.r, buy_debit_nicks=201))
+        self.assertEqual((p.token_inputs, p.plain_inputs, p.token_change_units, p.token_backing_nicks), (("b/full",), ("a/full",), 50, 900))
+        # the wallet's split over [token, plain]: fee 10 each, the gift from what remains
+        self.assertEqual((p.fee_per_note_nicks, p.backing_spent_nicks, p.plain_change_nicks), (10, 211, 190))
+        # a note of another token never funds a buy: buying NEW, the MEME and
+        # OTHER notes (900 and 5,000 nicks) are not touched, and 200 cannot pay 221
+        with self.assertRaisesRegex(WalletError, "ordinary NOCK"):
+            self.plan(request=d.replace(self.r, request_id="other", token="NEW", buy_debit_nicks=201))
 
     def test_reservations_survive_restart(self):
         self.plan()
         self.p.close()
         self.p = Planner(self.path, "test-genesis", "alice")
         with self.assertRaisesRegex(WalletError, "ordinary NOCK"):
-            self.plan(request=d.replace(self.r, request_id="trade-2"))
+            self.plan(request=d.replace(self.r, request_id="trade-2", token="NEW"))
 
     def test_independent_connection_cannot_double_select(self):
         other = Planner(self.path, "test-genesis", "alice")
         try:
             self.plan()
             with self.assertRaises(WalletError):
-                other.reserve(self.s, d.replace(self.r, request_id="other"), current_block="block-1", now=100)
+                other.reserve(self.s, d.replace(self.r, request_id="other", token="NEW"), current_block="block-1", now=100)
         finally:
             other.close()
 

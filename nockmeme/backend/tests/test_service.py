@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import uuid
 
@@ -33,6 +34,7 @@ class FakeTools:
         self.admit = True
         self.sent = []
         self.created_inputs = None  # override: what create_tx "spends"
+        self.pool_nock, self.pool_tokens = 10_000_000, 60_000  # the pool as it stands; a mined trade moves it
         self.wallets = self.root / "wallets"
         self.keys = self.root / "keys"
 
@@ -66,7 +68,16 @@ class FakeTools:
         return self.status.get(txid, TxStatus(txid, "unknown", tip=self.height, detail="no such transaction"))
 
     def pool(self, *a):
-        return "PF PL 5 10000000 60000"
+        return f"PF PL 5 {self.pool_nock} {self.pool_tokens}"
+
+    def pool_lock(self, *a):
+        return "POOLLOCK"
+
+    def quote_only(self, pool_line, token, fee_bps, lore_bps, lore_lock, side, amount, dust, network_fee):
+        nock, toks = int(pool_line.split()[3]), int(pool_line.split()[4])
+        if side == "buy":
+            return {"in": amount, "out_net": toks * amount // (nock + amount), "pool_after": (nock + amount, toks)}
+        return {"in": amount, "out_net": nock * amount // (toks + amount), "pool_after": (nock, toks + amount)}
 
     # building
     def create_tx(self, who, names, to, amount, fee):
@@ -92,12 +103,13 @@ class FakeTools:
     def fee(self, path):
         return 16384, 8192
 
-    def pool_trade(self, path, out, pool, token, fee_bps, lore_bps, lore_lock, side, placeholder, dust, tokens_in=0, claim=None):
-        Path(out).write_text(Path(path).read_text() + f"|trade:{side}:{tokens_in}:{claim}")
-        q = ("QUOTE\tbuy\tin=655360 nicks\tout_net=3953 tokens\tpool_fee=6510 nicks\tlore_fee=3281 nicks\tnetwork_fee=16384 nicks"
-             if side == "buy" else
-             f"QUOTE\tsell\tin={tokens_in} tokens\tout_net=347576 nicks\tpool_fee=20 tokens\tlore_fee=1751 nicks\tnetwork_fee=16384 nicks")
-        return q + "\nPOOL-AFTER\t10704173\t61662\nNEWSIGHASH\tk1\td2\nFEE\tcurrent=16384\trequired=16384\n"
+    def pool_trade(self, path, out, pool, token, fee_bps, lore_bps, lore_lock, side, placeholder, dust, tokens_in=0, claim=None, held=0):
+        Path(out).write_text(Path(path).read_text() + f"|trade:{side}:{tokens_in}:{claim}:held={held}")
+        amount = 655_360 if side == "buy" else tokens_in
+        q = self.quote_only(pool, token, fee_bps, lore_bps, lore_lock, side, amount, dust, 16384)
+        unit_in, unit_out = ("nicks", "tokens") if side == "buy" else ("tokens", "nicks")
+        line = f"QUOTE\t{side}\tin={q['in']} {unit_in}\tout_net={q['out_net']} {unit_out}\tpool_fee=1 x\tlore_fee=1 nicks\tnetwork_fee=16384 nicks"
+        return line + f"\nPOOL-AFTER\t{q['pool_after'][0]}\t{q['pool_after'][1]}\nNEWSIGHASH\tk1\td2\nFEE\tcurrent=16384\trequired=16384\n"
 
     def attach(self, path, out, claims):
         Path(out).write_text(Path(path).read_text() + f"|attach:{claims}")
@@ -122,8 +134,10 @@ class FakeTools:
         return SendResult(txid, False, "MEMPOOL\tnot admitted\tv1-token-claims")
 
     # what the chain does next
-    def mine(self, txid, canonical="yes"):
+    def mine(self, txid, canonical="yes", pool_after=None):
         self.height += 1
+        if pool_after:
+            self.pool_nock, self.pool_tokens = pool_after
         self.status[txid] = TxStatus(txid, "mined", self.height, f"B{self.height}", canonical,
                                      f"B{self.height}" if canonical == "yes" else "OTHER", self.height)
 
@@ -141,6 +155,7 @@ class ServiceTests(unittest.TestCase):
     def svc(self, **kw):
         s = WalletService(self.tools, "dave", placeholder_address="alice", placeholder_lock="lock-of-alice",
                           lore_lock=LORE, log=self.log.append, **kw)
+        s.queue_wait = 3
         return s.open()
 
     def test_buy_reserves_builds_sends_and_settles_by_txid(self):
@@ -269,20 +284,89 @@ class ServiceTests(unittest.TestCase):
         results = {}
 
         def go(name):
-            s = self.svc()
+            s = None
             try:
+                s = self.svc()
                 results[name] = s.buy(TOKEN, 655_360, name).state
             except WalletError as e:
                 results[name] = f"refused: {e}"
-            except Exception as e:  # noqa: BLE001 - make a broken thread visible in the assertion
-                results[name] = f"error: {e!r}"
+            except BaseException:  # noqa: BLE001 - make a broken thread visible in the assertion
+                import traceback
+                results[name] = "error: " + traceback.format_exc()
             finally:
-                s.close()
+                if s:
+                    s.close()
         a, b = threading.Thread(target=go, args=("A",)), threading.Thread(target=go, args=("B",))
         a.start(); b.start(); a.join(); b.join()
         self.assertEqual(sorted(v[:7] for v in results.values()), ["refused", "sent"])
         self.assertEqual(len(self.tools.sent), 1)
         self.assertIn("insufficient ordinary NOCK", [v for v in results.values() if v.startswith("refused")][0])
+
+    def test_second_buy_draws_on_the_token_note_with_one_merged_claim(self):
+        # pack 8: after the first buy the wallet's NOCK sits inside its token
+        # note; a second buy spends that note, its units re-claimed with the bought ones
+        self.tools.notes = {"t1 b": (2_000_000, "token", TOKEN, 3535)}
+        s = self.svc()
+        sub = s.buy(TOKEN, 655_360, "buy-2")
+        self.assertEqual(sub.state, "sent")
+        info = json.loads(sub.detail)
+        self.assertEqual(info["held"], 3535)
+        self.assertIn(":held=3535", Path(sub.file).read_text())
+        self.assertEqual(s.planner.reserved(), {"t1 b": "buy-2"})
+        s.close()
+
+    def test_queue_waits_for_the_previous_trade_and_quotes_the_pool_as_it_stands(self):
+        self.tools.notes["p2 c"] = (2_000_000, "plain", "", 0)
+        s = self.svc()
+        first = s.buy(TOKEN, 655_360, "buy-1")
+        q1 = json.loads(first.detail)["quote"]
+        # the pool moves when the first trade is mined, a moment later
+        def mine_soon():
+            time.sleep(1)
+            self.tools.mine(first.txid, pool_after=q1["pool_after"])
+        threading.Thread(target=mine_soon).start()
+        t0 = time.time()
+        second = s.buy(TOKEN, 655_360, "buy-2")
+        self.assertGreater(time.time() - t0, 0.9)  # it waited for the first trade
+        q2 = json.loads(second.detail)["quote"]
+        self.assertLess(q2["out_net"], q1["out_net"])  # quoted against the moved pool, not the stale one
+        self.assertTrue(any(line.startswith("QUEUE") and "waiting for buy-1" in line for line in self.log))
+        s.close()
+
+    def test_queue_gives_up_on_a_pool_that_stays_busy_and_releases(self):
+        self.tools.notes["p2 c"] = (2_000_000, "plain", "", 0)
+        s = self.svc()
+        s.buy(TOKEN, 655_360, "buy-1")  # stays pending: nobody mines it
+        with self.assertRaisesRegex(WalletError, "pool busy"):
+            s.buy(TOKEN, 655_360, "buy-2")
+        self.assertEqual(s.get("buy-2").state, "aborted")
+        self.assertEqual(s.planner.reserved(), {"p1 a": "buy-1"})
+        self.assertEqual(len(self.tools.sent), 1)
+        s.close()
+
+    def test_slippage_floor_from_a_quote_now_is_enforced_at_build(self):
+        s = self.svc()
+        q = s.quote_now(TOKEN, "buy", 655_360)
+        floor = s.floor_from_slippage(q["out_net"], 100)
+        self.assertEqual(floor, q["out_net"] - q["out_net"] // 100)
+        # the pool moves against the buyer between the quote and the build
+        self.tools.pool_nock, self.tools.pool_tokens = 12_000_000, 55_000
+        with self.assertRaisesRegex(WalletError, "below the request's floor"):
+            s.buy(TOKEN, 655_360, "buy-1", min_tokens_out=floor)
+        self.assertEqual(s.get("buy-1").state, "aborted")
+        self.assertEqual(s.planner.reserved(), {})
+        self.assertEqual(self.tools.sent, [])
+        # within the allowance it goes through
+        self.tools.pool_nock, self.tools.pool_tokens = 10_000_000, 60_000
+        self.assertEqual(s.buy(TOKEN, 655_360, "buy-2", slippage_bps=100).state, "sent")
+        s.close()
+
+    def test_sell_floor(self):
+        s = self.svc()
+        with self.assertRaisesRegex(WalletError, "below the request's floor"):
+            s.sell(TOKEN, 1000, "sell-1", min_nicks_out=10**9)
+        self.assertEqual(s.planner.reserved(), {})
+        s.close()
 
     def test_balances_split_total_available_pending_attached(self):
         s = self.svc()

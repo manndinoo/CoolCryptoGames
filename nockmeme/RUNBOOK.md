@@ -58,8 +58,12 @@ cargo build --release -p nockchain --bin nockchain \
 /path/to/nockmeme/scripts/link-into-workspace.sh "$PWD"
 cargo build -p nmeme-tx -p nmeme-index --bins
 cargo test  -p nmeme-core -p nmeme-tx -p nmeme-index
-# if that fails at LINK time (seen once, cause unknown), retry with:
-#   CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false cargo test ...
+# if that fails at LINK time with "undefined symbol: main" (an independent rerun of
+# pack 7 hit it in the default release build; the machine this work was done on did
+# not), turn link-time optimisation off for the profile you are testing:
+#   CARGO_PROFILE_RELEASE_LTO=false cargo test --release -p nmeme-core -p nmeme-tx -p nmeme-index
+#   CARGO_PROFILE_DEV_LTO=false CARGO_PROFILE_TEST_LTO=false cargo test -p nmeme-core -p nmeme-tx -p nmeme-index
+# The tests are the same either way; LTO changes code generation, not behaviour.
 bash /path/to/nockmeme/scripts/gate-selftest.sh          # 9 checks
 
 # 5. The seed cache, produced elsewhere (see above), installed into the
