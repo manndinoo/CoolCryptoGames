@@ -242,12 +242,15 @@ for P in "${POOL_DIR:-$RUN/pool}" "$RUN"/rules-attempt*; do
   # outputs; the pool's note stays at its opening state in this replay
 done
 sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
+# the suite's attack pools (fees 101-112) still hold their notes of token A:
+# their locks are read so the rebuild finds those outputs unspent
+ATTACK_LOCKS=""; for fee in $(seq 101 112); do ATTACK_LOCKS="$ATTACK_LOCKS --lock $(pool_lock "$TOKEN_A" "$fee")"; done
 while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
 # shellcheck disable=SC2086
 "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_A" --step "$GTX_A:${GFILE_A:-$RUN/genesis-A/final.jam}" --step "$XTX_A:${XFILE_A:-$RUN/xfer-A/final.jam}" \
   --step "$GTX_B:${GFILE_B:-$RUN/genesis-B/final.jam}" --step "$XTX_B:${XFILE_B:-$RUN/xfer-B/final.jam}" \
   $PRIOR $STEPS_A $PROOFS --scan-coinbase "$(node_height)" \
-  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$lock" --expect-total $((SUPPLY - 1)) > "$S/balances-A.txt" || die "rebuild A failed: $(tail -3 "$S/balances-A.txt")"
+  --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$lock" $ATTACK_LOCKS --expect-total $((SUPPLY - 1)) > "$S/balances-A.txt" || die "rebuild A failed: $(tail -3 "$S/balances-A.txt")"
 grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances-A.txt" | cut -c1-200
 grep -q "^ASSERT-OK" "$S/balances-A.txt" || die "rebuild: no ASSERT-OK"
 echo "REBUILD	token A	total=$((SUPPLY - 1))	(one unit burned by the 100->99 spend)	$(grep "^STEP	$SHORT_TXID" "$S/balances-A.txt" | cut -f3 | cut -c1-80)"
