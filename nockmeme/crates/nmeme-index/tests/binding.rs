@@ -143,3 +143,29 @@ fn equal_gifts_across_steps_never_collide_in_binding() {
     let keys: std::collections::BTreeSet<Vec<u8>> = all.iter().map(name_key).collect();
     assert_eq!(keys.len(), 4, "four outputs, four distinct identities");
 }
+
+#[test]
+fn an_output_of_another_token_or_none_may_be_consumed_outside_the_replay() {
+    // The rebuild is for one token. A canonical step's output that carries
+    // no claim, or a claim of another token, may have been spent by a
+    // transaction the replay never sees: it is reported, not fatal. An
+    // output carrying the rebuilt token is still required, or the token's
+    // history would be incomplete.
+    let (tx1, _) = two_step();
+    let other = TokenId(hash(4242));
+    let mut taken = Vec::new();
+    // nothing present at all, rebuilding a token none of the outputs carry
+    let bound = bind_outputs(&tx1.destinations, &[], &mut taken, Some(&other)).expect("tolerated");
+    assert!(bound.iter().all(|(_, _, present)| !present));
+    assert_eq!(bound.len(), tx1.destinations.len());
+    // the same, rebuilding the token the claimed output carries: refused
+    let carried = tx1.destinations.iter().find_map(|d| match &d.claim {
+        Some(Claim::Transfer { token, .. }) => Some(token.clone()),
+        _ => None,
+    });
+    if let Some(t) = carried {
+        let mut taken = Vec::new();
+        let err = bind_outputs(&tx1.destinations, &[], &mut taken, Some(&t)).expect_err("its own token must be traced");
+        assert!(err.contains("no chain note has the identity"), "{err}");
+    }
+}
