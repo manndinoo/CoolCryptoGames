@@ -77,13 +77,18 @@ fn refuses_to_overwrite_an_existing_meme_entry() {
 }
 
 #[test]
-fn refuses_two_seeds_sharing_one_lock_root() {
+fn two_seeds_sharing_one_lock_root_carry_one_claim() {
     // Consensus merges these into one note and unions their note-data,
-    // resolving key collisions destructively (tx-engine-1.hoon:2380-2386). One
-    // claim would silently overwrite the other, so this is refused rather than
-    // guessed at; the caller must sum into a single claim (SPEC R1).
+    // resolving key collisions destructively (tx-engine-1.hoon:2380-2386).
+    // The claim therefore goes on exactly one of the seeds: the merged note
+    // carries it, and there is no second entry to overwrite it. A wallet
+    // that builds two spends pays its change from each to the same lock.
     let mut seeds = Seeds(vec![seed(bob(), 400), seed(bob(), 600)]);
-    let err = attach_claim(&mut seeds, &bob(), &claim()).expect_err("ambiguous");
+    attach_claim(&mut seeds, &bob(), &claim()).expect("one claim on the merged note");
+    let carrying = seeds.0.iter().filter(|s| s.note_data.iter().any(|e| e.key == "meme")).count();
+    assert_eq!(carrying, 1);
+    // and a second claim for the same lock is still refused
+    let err = attach_claim(&mut seeds, &bob(), &claim()).expect_err("already carries the key");
     assert!(matches!(err, Error::DuplicateKey(_)));
 }
 

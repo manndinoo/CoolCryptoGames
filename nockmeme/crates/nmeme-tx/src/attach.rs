@@ -16,8 +16,10 @@ use crate::Error;
 /// note-data maps, resolving key collisions destructively
 /// (`tx-engine-1.hoon:2380-2386`), so a second `meme` entry for the same
 /// recipient would silently overwrite the first. Allocations to one recipient
-/// must be summed into a single claim before this is called, and attaching to a
-/// lock-root that already carries the key is refused rather than merged.
+/// must be summed into a single claim before this is called; the claim goes on
+/// the first seed paying the lock-root (several seeds become one note), and
+/// attaching to a lock-root that already carries the key is refused rather
+/// than merged.
 pub fn attach_claim(seeds: &mut Seeds, lock_root: &Hash, claim: &Claim) -> Result<(), Error> {
     attach_noun(seeds, lock_root, claim.to_noun()?)
 }
@@ -36,9 +38,13 @@ pub fn attach_noun(seeds: &mut Seeds, lock_root: &Hash, noun: OwnedBasedNoun) ->
             return Err(Error::DuplicateKey(NOTE_DATA_KEY.to_string()));
         }
         if attached {
-            // Two seeds to one lock-root already means a merge; adding the key
-            // to a second one would be the destructive-overwrite case above.
-            return Err(Error::DuplicateKey(NOTE_DATA_KEY.to_string()));
+            // Two seeds to one lock-root become one note (consensus unions
+            // their note-data). The one claim sits on the first seed; the
+            // merged note carries it, and no second entry is ever written,
+            // so nothing can overwrite it. (A wallet building two spends
+            // pays its change from each of them, to the same lock: seen
+            // live in the two-token transaction of the rules test.)
+            continue;
         }
         let mut entries: Vec<NoteDataEntry> = seed.note_data.iter().cloned().collect();
         entries.push(NoteDataEntry::new(NOTE_DATA_KEY.to_string(), value.clone()));

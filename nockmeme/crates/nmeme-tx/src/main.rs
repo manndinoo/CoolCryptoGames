@@ -560,10 +560,11 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
                 continue;
             }
             if found {
-                return Err(format!(
-                    "lock-root {} appears in more than one spend",
-                    lock.to_base58()
-                ));
+                // several spends pay this lock (a wallet's change from each
+                // of its spends): their seeds become one note, which carries
+                // the one claim attached above
+                println!("MERGED\t{}\tpaid by more than one spend; one claim on the merged note", lock.to_base58());
+                continue;
             }
             nmeme_tx::attach::attach_noun(&mut spend1.seeds, lock, payload.clone())
                 .map_err(|e: Error| format!("attach to {}: {e}", lock.to_base58()))?;
