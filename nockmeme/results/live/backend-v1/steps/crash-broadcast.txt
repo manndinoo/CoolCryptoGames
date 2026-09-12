@@ -1,0 +1,4 @@
+PLAN	crash-broadcast-r2	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 2o4ACyNFPhB7U1KjSGbYnBPc6WWuPBAHA17FLhRtUyh8b5EmnU8RjGZ']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	crash-broadcast-r2	txid=3apVdavn8NgF9yXgpKQ3vqWshEJEnESRF8oZ2gfFNuLQ9VD973tRL5C	file=/home/user/nmeme-run/wallets/dave/requests/crash-broadcast-r2/final.jam
+CRASH	broadcast	(test hook: exiting without cleanup)

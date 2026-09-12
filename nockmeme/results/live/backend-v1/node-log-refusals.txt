@@ -1,0 +1,5 @@
+2026-09-12T13:48:31.838239Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 5EPn5Jovaw6YoULnKywhk2h1eJsGLHz9ATcgtZE7yQcUrGm4pHXWWK7
+2026-09-12T13:48:31.841008Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Inputs not in heaviest balance, discarding transaction
+--
+2026-09-12T13:52:27.892181Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 7Rjxfaq9gjAGDAzRP9hGGoB22nzUVMLoXEixfTmULNCEQysX4aFfeab
+2026-09-12T13:52:27.894917Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Inputs not in heaviest balance, discarding transaction

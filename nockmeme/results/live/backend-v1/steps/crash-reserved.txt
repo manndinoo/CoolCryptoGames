@@ -1,0 +1,2 @@
+PLAN	crash-reserved-r2	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 4GsgfXCpMBtqgNW68yBS1sTgDzBkcG7D9A3yQ6USPVhJtKhTkuTA868']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+CRASH	reserved	(test hook: exiting without cleanup)

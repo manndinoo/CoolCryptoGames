@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=3535 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=171933126875	exec_e9=185391796322	impact_bps=782
+POOL-BEFORE	10659510	61998
+POOL-AFTER	11310589	58463
+POOL-SPEND	to_user=1000+3535t	successor=10655229+58463t	lore=3281+0t	fee=0
+PINNED	user	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	majJzvTBg29A44nxiCF8E8rdP33GXLxBJq3Mu7F746U2bZpDJquX9o
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/dave/requests/buy-dave-1/assembled.jam
+NEWSIGHASH	4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP.Ak829GmgAyaxDZQKHLN5SH8W36qA3N3Jcgrs5mXXjhsn1k8d5dwUSGg	6BWwEJfR2uMVnyYPS336aJxHw8HAufeQJCX7cmba1MR5Xer35mNYyrg
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.2G949PoZykbbxgFBC81eTpnRvXrvq8DfjYU9aQ2ZQzETfVeFndqNAHo	9xszJEy3v2vQHAQ92tX6tBQ9mnyo3GogAebbMB577SobJLUxG7VKkCK

@@ -1,0 +1,4 @@
+RESEND	crash-built	txid=ANSYZnb4dnHHD4xb91J1F7EGLWPe2AWeSDnYdeXU3MBfcGdfEAaaz7v	node: not in a block, not in the node's accepted set	state_was=sent
+SENT	crash-built	txid=ANSYZnb4dnHHD4xb91J1F7EGLWPe2AWeSDnYdeXU3MBfcGdfEAaaz7v	at_height=1991	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 8MrmYsU5SxJmAqP5Ntn5BXBFasP2GmAbrWcq9T6SKiY6MGSu4eqcTLd']
+ABORTED	crash-reserved-r2	restart before the transaction was built
+RECONCILED	dave	2 open request(s) checked	crash-built=sent crash-reserved-r2=aborted

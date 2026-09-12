@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=2209 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=278482013651	exec_e9=296677229515	impact_bps=653
+POOL-BEFORE	13586302	48787
+POOL-AFTER	14237381	46578
+POOL-SPEND	to_user=1000+2209t	successor=13582021+46578t	lore=3281+0t	fee=0
+PINNED	user	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	7XuHpRPXjqvxXbZ8hDMTa6CSH43Uevb5TRZz8v6NU3K7Y5dJ9Jjw9Ag
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/dave/requests/crash-broadcast-r2/assembled.jam
+NEWSIGHASH	4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP.2o4ACyNFPhB7U1KjSGbYnBPc6WWuPBAHA17FLhRtUyh8b5EmnU8RjGZ	7rS32bk8fNhmhz66yqhCn2SYuWf9gtCLuB9cEuWviLLJp67L7TAQ5Ap
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.dN8fUiHmseGhcA7u3KaSNbgHZcWfLKqK31N3K3wdfqVdCC1NVgGu4n	2r9zoZzJVLPU6L1NDoMquKethVZQxkX79qkc9WYgQcbFonY51s7jdGq

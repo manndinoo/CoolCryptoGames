@@ -1,0 +1,11 @@
+PLAN	sim-buy-A	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n']	required_plain=672744	plain_change=327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	sim-buy-A	txid=5EPn5Jovaw6YoULnKywhk2h1eJsGLHz9ATcgtZE7yQcUrGm4pHXWWK7	file=/home/user/nmeme-run/wallets/dave/requests/sim-buy-A/final.jam
+REFUSED	sim-buy-A	txid=5EPn5Jovaw6YoULnKywhk2h1eJsGLHz9ATcgtZE7yQcUrGm4pHXWWK7	MEMPOOL	not admitted	not in the node's accepted set
+RESULT	sim-buy-A	buy	refused	txid=5EPn5Jovaw6YoULnKywhk2h1eJsGLHz9ATcgtZE7yQcUrGm4pHXWWK7	height=-1	block=	
+DELTA	sim-buy-A	nock_total: 4622438 -> 3951694	nock_available: 3000000 -> 1000000	nock_attached: 1622438 -> 2951694	tokens: BvF8w6sh…: 1668 -> 5007
+BALANCES	dave	height=1709	nock_total=3951694	nock_available=1000000	nock_pending=0	nock_attached=2951694	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=5007/available=5007/reserved=0/notes=2	open_requests=1
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 3jHpNAH8dFfWVKBz9EDKkPWEgUo3tmHLz4rAGC2VnTremhCTAxeFAs5]	token	nicks=1329256	token=BvF8w6sh…	units=3339	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n]	plain	nicks=1000000	token=-	units=0	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 5NEBnugMScMugiqz4McTGT2zwyUi2zkd4vk5Vy3TU6E1bA66QYtBgWe]	token	nicks=1622438	token=BvF8w6sh…	units=1668	free
+  OPEN	sim-buy-B	buy	sent	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS

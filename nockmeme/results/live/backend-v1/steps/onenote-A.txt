@@ -1,0 +1,16 @@
+PLAN	onenote-A-r2	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n']	required_plain=672744	plain_change=327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	onenote-A-r2	txid=8fjDXm6PVxWNtoqTxoPpCv3zJPM7fNchpXVsFF9d5bt9vSQQMMVNzmL	file=/home/user/nmeme-run/wallets/dave/requests/onenote-A-r2/final.jam
+SENT	onenote-A-r2	txid=8fjDXm6PVxWNtoqTxoPpCv3zJPM7fNchpXVsFF9d5bt9vSQQMMVNzmL	at_height=2180	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n']
+MINED	onenote-A-r2	txid=8fjDXm6PVxWNtoqTxoPpCv3zJPM7fNchpXVsFF9d5bt9vSQQMMVNzmL	height=2194	block=454yWAwayMMMHyvTGk5hxf6QW5i83nyrRgPjH1Rmm9peXtreiPn9KTR	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n']
+RESULT	onenote-A-r2	buy	mined	txid=8fjDXm6PVxWNtoqTxoPpCv3zJPM7fNchpXVsFF9d5bt9vSQQMMVNzmL	height=2194	block=454yWAwayMMMHyvTGk5hxf6QW5i83nyrRgPjH1Rmm9peXtreiPn9KTR	in=655360	out_net=1849	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=334114135679	exec_e9=354440237966	impact_bps=608
+DELTA	onenote-A-r2	nock_total: 10597974 -> 9927230	nock_available: 1000000 -> 0	nock_attached: 9597974 -> 9927230	tokens: BvF8w6sh…: 17337 -> 19186
+BALANCES	dave	height=2220	nock_total=9927230	nock_available=0	nock_pending=0	nock_attached=9927230	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=19186/available=19186/reserved=0/notes=8	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP DgD1E26SrRaTGhxKqhXwaUp6iyu6sW714iB99y1BzW6r7T4Pk4GXNo9]	token	nicks=1329256	token=BvF8w6sh…	units=2017	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP BWJdCAbUPdStxrdwevHK5W7PVc3YQkNjUupwuvugt6J3s6EQzv1n8dk]	token	nicks=1329256	token=BvF8w6sh…	units=2431	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 3ATdmNnokaG3uoFDhT7g6zXN4gvzcDCczawkzqtcMF96GETt7H6qvdw]	token	nicks=329256	token=BvF8w6sh…	units=1849	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 5brdHEgJ6FGuUn5p7nrjuF2epj387dEaMCa1eWZnd7A4AkPMTPU9Gsm]	token	nicks=1329256	token=BvF8w6sh…	units=2986	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 8m5jA8twoc1Lk6N2mwKrpUKG5ii7aa9BYL8KHf9G9kfxKfN1JJPSGN]	token	nicks=1329256	token=BvF8w6sh…	units=2209	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 3jHpNAH8dFfWVKBz9EDKkPWEgUo3tmHLz4rAGC2VnTremhCTAxeFAs5]	token	nicks=1329256	token=BvF8w6sh…	units=3339	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 5NEBnugMScMugiqz4McTGT2zwyUi2zkd4vk5Vy3TU6E1bA66QYtBgWe]	token	nicks=1622438	token=BvF8w6sh…	units=1668	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 77wzBfpe7YurNW4w83FeUfBjWaTJNfVvubzY1vXMfyDgkoTdKXbcCuC]	token	nicks=1329256	token=BvF8w6sh…	units=2687	free

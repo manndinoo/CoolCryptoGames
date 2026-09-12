@@ -1,0 +1,1 @@
+ERROR	buy	dave	insufficient ordinary NOCK: need 672744 nicks for fee and payment, plain notes hold 0, token backing 0

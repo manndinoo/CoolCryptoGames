@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+ATTACHED	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	1668
+WROTE	/home/user/nmeme-run/wallets/dave/requests/xfer-dave-1/attached.jam
+NEWSIGHASH	4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP.6No7iPjfEVaZWkWf3WvKRMQ13sLQrhMrBUzzgNkefwiHnE8XH2i3Yrb	89RMaMXpHF38rSW6JCQmW5Y14L4uQyt2ziCsHkpmcM8VSqXhpAhXGti

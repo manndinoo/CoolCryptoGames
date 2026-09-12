@@ -1,0 +1,23 @@
+BALANCES	bob	height=1975	nock_total=9583627	nock_available=5235442	nock_pending=0	nock_attached=4348185	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=12070/available=12070/reserved=0/notes=9 26EG9u2V…:total=597/available=597/reserved=0/notes=6 6G9bZSkG…:total=9223372036854775807/available=9223372036854775807/reserved=0/notes=1	open_requests=0
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 2NkNvnSxFiJEakPXcRyfJCG8ak5mGvimhukze3abL2rVUmxyNmKWH9B]	token	nicks=300000	token=BvF8w6sh…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 5EKA9xCDukVVw4qAz7SU9WCG6UUPVZLkqmFFrtczHyEPsWE68r7rHd9]	token	nicks=282616	token=26EG9u2V…	units=99	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 32yRvXLMoP2TJmxTn37SEJsaXLbsbpHmCMer1vAEWALhhXjunZSreho]	token	nicks=300000	token=26EG9u2V…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 8EPSUcsTffqBDxfVz1N1m57fkbAtseBfq9gBVudc6Qo4K1DyVFiDgGS]	plain	nicks=2000000	token=-	units=0	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 9nNvBPhoLS7rn8qyDe2Bk4ZfkCpHfoNoQExzyL43PgxHXtyUBnfKfx9]	plain	nicks=612002	token=-	units=0	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK A5A6iigVP1xmKuiPLog73psD3d4TnKcdfbG8QoRaZszBZVnqMc1wgXD]	plain	nicks=1310720	token=-	units=0	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK CdMdw7zigCBYxWBtpt3zcP6g2Cvos6C58qAHq3omGCPACqtjXo3hDn5]	token	nicks=300000	token=BvF8w6sh…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK Bji1f5XMAMMN1vNsfDHGqwWDFcbAymj9ZW8A6FmyvRoMjw8Gb9Tkror]	token	nicks=300000	token=26EG9u2V…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK AP8kbGcTKecBqsSwwrbwV3XT2kqAyvUpkJn4EMW8oo32YVuGf15jm2B]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 56Mdv3f4MDpVdSZziFftfMsyzjTBgzQkZPYvtUSRvb2dpiABbqmw2yj]	token	nicks=282616	token=26EG9u2V…	units=99	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 6hnboSNtZnmkYdNoPciLiRmWPazuCb1Bw59HXA8Rq3oJhmyTvwv5JdL]	token	nicks=100000	token=6G9bZSkG…	units=9223372036854775807	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 2BBL94y7pRw4qJ4FdNHBWK1qVqnuX9iHo1sXN2N1E871G1uQFsCmgJs]	token	nicks=300000	token=BvF8w6sh…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 7JkpyxCCMB8LhgFavmU3mpDe3XHubfx8KQju8HLYr6KAYbDbNDunxpA]	token	nicks=956361	token=BvF8w6sh…	units=4477	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 9sZ1SBcvzhavbjGReTE4KAzbDLEcSDN37JEDrGeC9vPSfBYsX8kP2Ht]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 66Gy6PV4R2q1p8e1r3Wb7QedMKqC2uSGC8d9YLXVagYoamXS7kEo1Gv]	token	nicks=639976	token=BvF8w6sh…	units=6893	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 3qJDB7P7zuxLY8vSd9ikb6w23fCmFH3sR83njsLvHRit2mpm4kxrSFZ]	token	nicks=1000	token=26EG9u2V…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 2Wkh4K7gymeVun4BQWf2KdsNx63H4fgRgiSsJ7S3tcDVpUX8s63wGL5]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 31FZuU8wg74EiiaWUMvKejaSDxnkAwKZ4bSG6pf8yeXMMjf5gRAjySo]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK A6sXV2K3BDXNHjV1bR9H51naofQ7889gx4ZsvYnXLcNeUUFoMvoEMea]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 4bWxQB2Nok5ASvACVHoQBxWgHxSaP4TDNrMBUfEaFwxQZqEEwjdsaE7]	token	nicks=282616	token=26EG9u2V…	units=99	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 3GoA3jBq1RAhEpA7ica38yrRNpWP2PouQx7uKTNpzvUk8HVPpvS9tMC]	plain	nicks=1310720	token=-	units=0	free
+  NOTE	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 5mjJqjTaSbfmPCUpMeJkZGxX2qy8GMmJmCssLweYm2n3EvJ6efnyEGC]	token	nicks=300000	token=BvF8w6sh…	units=100	free

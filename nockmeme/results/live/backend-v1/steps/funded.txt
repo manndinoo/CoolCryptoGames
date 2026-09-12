@@ -1,0 +1,2 @@
+BALANCES	dave	height=1567	nock_total=2000000	nock_available=2000000	nock_pending=0	nock_attached=0	nock_attached_pending=0	nock_unknown=0	tokens=-	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP Ak829GmgAyaxDZQKHLN5SH8W36qA3N3Jcgrs5mXXjhsn1k8d5dwUSGg]	plain	nicks=2000000	token=-	units=0	free

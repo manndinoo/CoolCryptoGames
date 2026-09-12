@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=3339 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=182334152415	exec_e9=196274333632	impact_bps=764
+POOL-BEFORE	10981986	60230
+POOL-AFTER	11633065	56891
+POOL-SPEND	to_user=1000+3339t	successor=10977705+56891t	lore=3281+0t	fee=0
+PINNED	user	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	4y4Qif3g9Ct7mPHRntYKZn18LyFLRXmPu1S9Xv9kecwocG6BogAr5LV
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/dave/requests/sim-buy-B/assembled.jam
+NEWSIGHASH	4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP.6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN	5K7Vb5P2UoDvdAWnewymmM3S5mEGP399jUFA5s4s5CyRWW3W3AK6vSS
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.APJkXE9GbCDwTvYE8q7rrsF3iTwFWnoUhJE5rn7hyvi52UdCegzFouv	Be46JewMYJrvqGGxfCernRy2wgnvP3JiRNQSQ4mexEyxxSrtoTWrpFz

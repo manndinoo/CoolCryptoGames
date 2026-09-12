@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=2687 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=227885057044	exec_e9=243900260513	impact_bps=702
+POOL-BEFORE	12284144	53905
+POOL-AFTER	12935223	51218
+POOL-SPEND	to_user=1000+2687t	successor=12279863+51218t	lore=3281+0t	fee=0
+PINNED	user	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	2xNHcAgyqVQcuVyopko7SS7QxvM4eaLESjGnZs6fWTowzktf1WGCs6c
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/dave/requests/crash-built/assembled.jam
+NEWSIGHASH	4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP.8MrmYsU5SxJmAqP5Ntn5BXBFasP2GmAbrWcq9T6SKiY6MGSu4eqcTLd	7ZokVtS8TKVTws5ZjC1PT4ZvhcUq5MqgJsdNWrFjgZjGnwtnUMp2cBG
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.74HtkccC4GRFPa2KL3y47Q8ApVVhMJKes2SHvkaM9C5ZXXffjfHjVP2	BxFSg9pLSWCp1KsQWDpuMrxR1nYjvJsGKwxtVZP7w1URguemmVHeatA

@@ -1,0 +1,10 @@
+ATTACHED	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	1768
+QUOTE	sell	in=1767 tokens	out_net=327950 nicks	pool_fee=17 tokens	lore_fee=1653 nicks	nock_fees=1653 nicks	token_fees=17 tokens	network_fee=16384 nicks	spot_e9=193465764671	exec_e9=185597057159	impact_bps=423
+POOL-BEFORE	11310589	58463
+POOL-AFTER	10981986	60230
+POOL-SPEND	to_user=327950+0t	successor=10980986+60230t	lore=1653+0t	fee=0
+PINNED	user	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	AKtjBgFok2Lja47LeWJybayZvZ6GAo4puy5gSYCq8Vrk22Lhu6GNmV1
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/dave/requests/sell-dave-1/assembled.jam
+NEWSIGHASH	4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP.9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS	9AaJGBreZyoVWjpWkAiKBiwhofQMCY42bukVEdCV5WR6ts93JxtmUEn
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.2mZjyWq5dLbSSwxCtY4RTAL3awitBhZBgewMS4VdmfA4ECvUdmhdD3o	AxkcKYdkZj2mtqcNca1JynVHfNTpe6GJgba2XvVcPNPRM5ao31mFuiH

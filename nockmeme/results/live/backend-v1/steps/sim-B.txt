@@ -1,0 +1,11 @@
+PLAN	sim-buy-B	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	sim-buy-B	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	file=/home/user/nmeme-run/wallets/dave/requests/sim-buy-B/final.jam
+SENT	sim-buy-B	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	at_height=1688	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN']
+MINED	sim-buy-B	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	height=1702	block=3ngMoTt7iLvexdjLBWzAryte5mRHFsWbQqD2YSSMc5MAgRi26Zfa8ED	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN']
+RESULT	sim-buy-B	buy	mined	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	height=1702	block=3ngMoTt7iLvexdjLBWzAryte5mRHFsWbQqD2YSSMc5MAgRi26Zfa8ED	in=655360	out_net=3339	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=182334152415	exec_e9=196274333632	impact_bps=764
+DELTA	sim-buy-B	nock_total: 4622438 -> 3951694	nock_available: 3000000 -> 1000000	nock_attached: 1622438 -> 2951694	tokens: BvF8w6sh…: 1668 -> 5007
+BALANCES	dave	height=1716	nock_total=3951694	nock_available=1000000	nock_pending=0	nock_attached=2951694	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=5007/available=5007/reserved=0/notes=2	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 3jHpNAH8dFfWVKBz9EDKkPWEgUo3tmHLz4rAGC2VnTremhCTAxeFAs5]	token	nicks=1329256	token=BvF8w6sh…	units=3339	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n]	plain	nicks=1000000	token=-	units=0	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 5NEBnugMScMugiqz4McTGT2zwyUi2zkd4vk5Vy3TU6E1bA66QYtBgWe]	token	nicks=1622438	token=BvF8w6sh…	units=1668	free

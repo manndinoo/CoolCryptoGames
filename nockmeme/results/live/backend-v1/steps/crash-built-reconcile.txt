@@ -1,0 +1,3 @@
+RESEND	crash-built-r2	txid=5iHmZPJ3mqumccx18aLmoiVdYsJNaBygZVvncmGjSdYmDit8muyWv8q	node: not in a block, not in the node's accepted set	state_was=built
+SENT	crash-built-r2	txid=5iHmZPJ3mqumccx18aLmoiVdYsJNaBygZVvncmGjSdYmDit8muyWv8q	at_height=1991	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 4GsgfXCpMBtqgNW68yBS1sTgDzBkcG7D9A3yQ6USPVhJtKhTkuTA868']
+RECONCILED	dave	2 open request(s) checked	crash-built=sent crash-built-r2=sent

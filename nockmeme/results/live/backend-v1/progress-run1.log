@@ -1,0 +1,259 @@
+
+== 0. the pool and the funder ==
+BALANCES	alice	height=1540	nock_total=85777382536	nock_available=60105990272	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+BALANCES	bob	height=1534	nock_total=9582627	nock_available=5235442	nock_pending=0	nock_attached=4347185	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=11970/available=11970/reserved=0/notes=8 26EG9u2V…:total=597/available=597/reserved=0/notes=6 6G9bZSkG…:total=9223372036854775807/available=9223372036854775807/reserved=0/notes=1	open_requests=0
+BOB	address=7tk6CeaZC3UvTXrAthf7HpJtS9kiijfEfaebVbHEZHXqJ6sDHFj1kCz
+
+== 1. a completely fresh wallet: dave (zero NOCK, zero tokens) ==
+SKIP	dave exists (RESUME)
+BALANCES	dave	height=1534	nock_total=0	nock_available=0	nock_pending=0	nock_attached=0	nock_attached_pending=0	nock_unknown=0	tokens=-	open_requests=0
+ADDRESS	dave	6ADL6wo3t1hmWSFVpEPkrSKh5EFGEYVEsCATsVtPaFAJR7YWTyrFcfz
+
+== 2. funding: alice pays dave 2000000 nicks (a plain payment through the backend) ==
+PLAN	fund-dave-1	pay	inputs=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f ARLQqRzQA1fpi8ge9sRRuAVx9wUHBgisfmNq2zQ5A5Phs2TXCjPXMVv']	required_plain=2016384	plain_change=4292834528	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding alice's wallet arena (768 MB))
+  (rebuilding alice's wallet arena (768 MB))
+BUILT	fund-dave-1	txid=43E7iPcsTXpQkxntFkxMNgLogwH8SLp2z5ASFawicj8A3XmYVrjFHLj	file=/home/user/nmeme-run/wallets/alice/requests/fund-dave-1/final.jam
+SENT	fund-dave-1	txid=43E7iPcsTXpQkxntFkxMNgLogwH8SLp2z5ASFawicj8A3XmYVrjFHLj	at_height=1541	reserved=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f ARLQqRzQA1fpi8ge9sRRuAVx9wUHBgisfmNq2zQ5A5Phs2TXCjPXMVv']
+MINED	fund-dave-1	txid=43E7iPcsTXpQkxntFkxMNgLogwH8SLp2z5ASFawicj8A3XmYVrjFHLj	height=1555	block=5eeSfzBnSNifi7DQ9Ze3K4eS15HD2ZqZykkQJ4qrZ4KgvK1Q2sLFuMg	canonical=yes	released=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f ARLQqRzQA1fpi8ge9sRRuAVx9wUHBgisfmNq2zQ5A5Phs2TXCjPXMVv']
+RESULT	fund-dave-1	pay	mined	txid=43E7iPcsTXpQkxntFkxMNgLogwH8SLp2z5ASFawicj8A3XmYVrjFHLj	height=1555	block=5eeSfzBnSNifi7DQ9Ze3K4eS15HD2ZqZykkQJ4qrZ4KgvK1Q2sLFuMg	
+DELTA	fund-dave-1	nock_total: 85777382536 -> 85775366152	nock_available: 60105990272 -> 60103973888	nock_attached: 25671392264 -> 25671392264	tokens: BvF8w6sh…: 913573 -> 913573 26EG9u2V…: 869088 -> 869088
+BALANCES	alice	height=1567	nock_total=85775366152	nock_available=60103973888	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AFGERjQqVqvCK3Zzdb17rGmzfXZTrFmCCspUF58d7jNBR8moqiL7Yxo]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6gWmbjNeKABBvgmZjgj7Xas5qmAeS2nABQNqFJ8UA5VXyp144Dca88t]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3jGU5GB7zDh6iprmGfdmvB9BuNybuAsCTwrJJdomKodaqbXSegk33i2]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f DUtN78i4mrY6vTGvCF2cwAUADaw2Ft3px9ijBoqSAv1q96LFuc9Fmha]	plain	nicks=4293640192	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 66LZCVQXsF4h96U65E2CxqHqZ9VzraDmvxbo5dTT9rGHzjwPvCim6Q1]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f hdxN1RY63sqLq5F3QiM8FaFRS75aSQxpdgPp1MXN2RQrjzFAAGVNxN]	plain	nicks=4292834528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 52YnPZRXuG8uR1JYmzkCPHB4bz31YN2VnLynQvW8R9UqsQSTkrFju3n]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6GmteLFS9FcwzU3BShWqPjDyGA1f9KYEsZg9D8S1NLpPW5h4pqpNCDq]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9mQCzxv8CWuuKhq6GSL2AAbSsmxy1MVn9NRkMp1bBLF8viRR12c17NK]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f FqgfSo7dvquvaTK4o267G2zsNHHjccAeY91QrYCUcCcXXMMnFvYoYW]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aah97ktrDv3kXktP2PvdyuomWV4XCLmpKbk5bKzT2z2gSjo5SHt2a7]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f fWrGhHz7WtG3Qp3gEBeQFH53jR5Rn8UGbdo2bUuSdBEjCrszjKGLJs]	token	nicks=4294296552	token=BvF8w6sh…	units=8193	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2AQzypNxLHtZs1s2a6GYcii6iBrMKxf45WhvZYXVJpo5NQZBJUF3gnL]	token	nicks=4294296552	token=BvF8w6sh…	units=5880	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5pCaGGyhXiVVJ7x9sW6DDFy4ZFmsd8QqUv9UUg236NikBP1snyVZyyx]	token	nicks=4207408048	token=26EG9u2V…	units=867300	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6SF35SMEHuwaUviXcpr5uVhv9rESkawzdpthhXTEzPe5fR653Vp4LGm]	plain	nicks=4293640192	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3KfspPTqA5v1RRft1uVJgank1aaum7sNuYcsNsW6URGtrjadEMz2gEo]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4bGTw4uVbVx8iNQkt5TJtXtiQZJEBY6iLAZW3ZBMwAHLm2KvuiSZ8HL]	plain	nicks=4292967296	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 72EwUvDA5C5itN2Q4KsuX1RkVD7Stvz5jfitumXy6inU9vGrnV3B12F]	token	nicks=4286797008	token=BvF8w6sh…	units=899400	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 41n3i4mxsmAC9HXW52h6VeGyZpj1gZ4PDmDGrHkKbt4TcDt9FP2s6UW]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3WhGXcjjZNwjymLZBLDWu2GQ63yPPDgi5Xeg6G5VtCD1TAG35Epmz4X]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f A8LpWFwakSufUsCSx4i7pWNHZ9TBnKCgzyDJkL3t2D3pgCgM8gkLt7g]	plain	nicks=4293640192	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BqQJFnjHgJHxoPdNNnVx3Ftro4P2dxvaNxxA89Qx7PdJKoVQLkaNc2C]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f sYNJoWM9z5GVZEi245XrgfZ6HqY3Bpcb5nxJtXTjeLPRWJdYgK5Qo6]	plain	nicks=4293640192	token=-	units=0	free
+BALANCES	dave	height=1567	nock_total=2000000	nock_available=2000000	nock_pending=0	nock_attached=0	nock_attached_pending=0	nock_unknown=0	tokens=-	open_requests=0
+
+== 3. buy from the main pool with 655360 nicks ==
+PLAN	buy-dave-1	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP Ak829GmgAyaxDZQKHLN5SH8W36qA3N3Jcgrs5mXXjhsn1k8d5dwUSGg']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	buy-dave-1	txid=BsWJC6braBY1YdVqM4t3h7rvcynBEM9R65LFgvekS3FPGV3su1VyVh4	file=/home/user/nmeme-run/wallets/dave/requests/buy-dave-1/final.jam
+SENT	buy-dave-1	txid=BsWJC6braBY1YdVqM4t3h7rvcynBEM9R65LFgvekS3FPGV3su1VyVh4	at_height=1565	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP Ak829GmgAyaxDZQKHLN5SH8W36qA3N3Jcgrs5mXXjhsn1k8d5dwUSGg']
+MINED	buy-dave-1	txid=BsWJC6braBY1YdVqM4t3h7rvcynBEM9R65LFgvekS3FPGV3su1VyVh4	height=1574	block=4tPmLyPcZcqik8KEcA5YMhRg2Qf5tj987UGxbwhzmvvGBGYC2ekCwCQ	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP Ak829GmgAyaxDZQKHLN5SH8W36qA3N3Jcgrs5mXXjhsn1k8d5dwUSGg']
+RESULT	buy-dave-1	buy	mined	txid=BsWJC6braBY1YdVqM4t3h7rvcynBEM9R65LFgvekS3FPGV3su1VyVh4	height=1574	block=4tPmLyPcZcqik8KEcA5YMhRg2Qf5tj987UGxbwhzmvvGBGYC2ekCwCQ	in=655360	out_net=3535	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=171933126875	exec_e9=185391796322	impact_bps=782
+DELTA	buy-dave-1	nock_total: 2000000 -> 1329256	nock_available: 2000000 -> 0	nock_attached: 0 -> 1329256	tokens: BvF8w6sh…: 0 -> 3535
+BALANCES	dave	height=1591	nock_total=1329256	nock_available=0	nock_pending=0	nock_attached=1329256	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=3535/available=3535/reserved=0/notes=1	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS]	token	nicks=1329256	token=BvF8w6sh…	units=3535	free
+HELD	dave	3535 tokens
+
+== 4. sell half back (1767 tokens): the token note's own NOCK pays the fee, the change claim keeps the rest ==
+PLAN	sell-dave-1	sell	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS']	required_plain=0	plain_change=0	token_change=1768	backing=1329256	backing_spent=17384	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	sell-dave-1	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	file=/home/user/nmeme-run/wallets/dave/requests/sell-dave-1/final.jam
+SENT	sell-dave-1	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	at_height=1589	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS']
+MINED	sell-dave-1	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	height=1602	block=BJT2S1ZyJQv45QfMnxwbiXubD9fSJCsUHvLXJhT93WTiANghdh9VJ8n	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS']
+RESULT	sell-dave-1	sell	mined	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	height=1602	block=BJT2S1ZyJQv45QfMnxwbiXubD9fSJCsUHvLXJhT93WTiANghdh9VJ8n	in=1767	out_net=327950	pool_fee=17	lore_fee=1653	nock_fees=1653	token_fees=17	network_fee=16384	spot_e9=193465764671	exec_e9=185597057159	impact_bps=423
+DELTA	sell-dave-1	nock_total: 1329256 -> 1639822	nock_available: 0 -> 0	nock_attached: 1329256 -> 1639822	tokens: BvF8w6sh…: 3535 -> 1768
+BALANCES	dave	height=1616	nock_total=1639822	nock_available=0	nock_pending=0	nock_attached=1639822	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=1768/available=1768/reserved=0/notes=1	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6No7iPjfEVaZWkWf3WvKRMQ13sLQrhMrBUzzgNkefwiHnE8XH2i3Yrb]	token	nicks=1639822	token=BvF8w6sh…	units=1768	free
+
+== 5. transfer 100 tokens to bob ==
+PLAN	xfer-dave-1	transfer	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6No7iPjfEVaZWkWf3WvKRMQ13sLQrhMrBUzzgNkefwiHnE8XH2i3Yrb']	required_plain=0	plain_change=0	token_change=1668	backing=1639822	backing_spent=17384	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	xfer-dave-1	txid=BJwetf6XdC153vnY66zNCoSkkzQZagSzMAvfbHA2Q1ccXMboh4bCMEt	file=/home/user/nmeme-run/wallets/dave/requests/xfer-dave-1/final.jam
+SENT	xfer-dave-1	txid=BJwetf6XdC153vnY66zNCoSkkzQZagSzMAvfbHA2Q1ccXMboh4bCMEt	at_height=1615	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6No7iPjfEVaZWkWf3WvKRMQ13sLQrhMrBUzzgNkefwiHnE8XH2i3Yrb']
+MINED	xfer-dave-1	txid=BJwetf6XdC153vnY66zNCoSkkzQZagSzMAvfbHA2Q1ccXMboh4bCMEt	height=1623	block=A9ieiT4nVhceBnCmef61sSHup9mumEifsqEL5cegWubqHkNkdQMzNLe	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6No7iPjfEVaZWkWf3WvKRMQ13sLQrhMrBUzzgNkefwiHnE8XH2i3Yrb']
+RESULT	xfer-dave-1	transfer	mined	txid=BJwetf6XdC153vnY66zNCoSkkzQZagSzMAvfbHA2Q1ccXMboh4bCMEt	height=1623	block=A9ieiT4nVhceBnCmef61sSHup9mumEifsqEL5cegWubqHkNkdQMzNLe	
+DELTA	xfer-dave-1	nock_total: 1639822 -> 1622438	nock_available: 0 -> 0	nock_attached: 1639822 -> 1622438	tokens: BvF8w6sh…: 1768 -> 1668
+BALANCES	dave	height=1639	nock_total=1622438	nock_available=0	nock_pending=0	nock_attached=1622438	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=1668/available=1668/reserved=0/notes=1	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 5NEBnugMScMugiqz4McTGT2zwyUi2zkd4vk5Vy3TU6E1bA66QYtBgWe]	token	nicks=1622438	token=BvF8w6sh…	units=1668	free
+BALANCES	bob	height=1639	nock_total=9583627	nock_available=5235442	nock_pending=0	nock_attached=4348185	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=12070/available=12070/reserved=0/notes=9 26EG9u2V…:total=597/available=597/reserved=0/notes=6 6G9bZSkG…:total=9223372036854775807/available=9223372036854775807/reserved=0/notes=1	open_requests=0
+REQUEST	buy-dave-1	buy	mined	txid=BsWJC6braBY1YdVqM4t3h7rvcynBEM9R65LFgvekS3FPGV3su1VyVh4	sent_height=1565	mined_height=1574	block=4tPmLyPcZcqik8KEcA5YMhRg2Qf5tj987UGxbwhzmvvGBGYC2ekCwCQ	attempts=1	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP Ak829GmgAyaxDZQKHLN5SH8W36qA3N3Jcgrs5mXXjhsn1k8d5dwUSGg']
+REQUEST	sell-dave-1	sell	mined	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	sent_height=1589	mined_height=1602	block=BJT2S1ZyJQv45QfMnxwbiXubD9fSJCsUHvLXJhT93WTiANghdh9VJ8n	attempts=1	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS']
+REQUEST	xfer-dave-1	transfer	mined	txid=BJwetf6XdC153vnY66zNCoSkkzQZagSzMAvfbHA2Q1ccXMboh4bCMEt	sent_height=1615	mined_height=1623	block=A9ieiT4nVhceBnCmef61sSHup9mumEifsqEL5cegWubqHkNkdQMzNLe	attempts=1	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6No7iPjfEVaZWkWf3WvKRMQ13sLQrhMrBUzzgNkefwiHnE8XH2i3Yrb']
+
+== 6. simultaneous requests: two buys at once from one wallet holding two plain notes ==
+PLAN	fund-dave-2a	pay	inputs=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6SF35SMEHuwaUviXcpr5uVhv9rESkawzdpthhXTEzPe5fR653Vp4LGm']	required_plain=2016384	plain_change=4291623808	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+BUILT	fund-dave-2a	txid=2p2ssmMx7KXQFYgUddLHSg39svuD1m8ZeVXoufW18SmV9pdtMDTJBYE	file=/home/user/nmeme-run/wallets/alice/requests/fund-dave-2a/final.jam
+SENT	fund-dave-2a	txid=2p2ssmMx7KXQFYgUddLHSg39svuD1m8ZeVXoufW18SmV9pdtMDTJBYE	at_height=1638	reserved=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6SF35SMEHuwaUviXcpr5uVhv9rESkawzdpthhXTEzPe5fR653Vp4LGm']
+MINED	fund-dave-2a	txid=2p2ssmMx7KXQFYgUddLHSg39svuD1m8ZeVXoufW18SmV9pdtMDTJBYE	height=1646	block=4VDHJtUzC2SRtv1cutDATfqjHq4cdrsCYJa1TRbeWop66NGXnanFXLv	canonical=yes	released=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6SF35SMEHuwaUviXcpr5uVhv9rESkawzdpthhXTEzPe5fR653Vp4LGm']
+RESULT	fund-dave-2a	pay	mined	txid=2p2ssmMx7KXQFYgUddLHSg39svuD1m8ZeVXoufW18SmV9pdtMDTJBYE	height=1646	block=4VDHJtUzC2SRtv1cutDATfqjHq4cdrsCYJa1TRbeWop66NGXnanFXLv	
+DELTA	fund-dave-2a	nock_total: 85775366152 -> 85773349768	nock_available: 60103973888 -> 60101957504	nock_attached: 25671392264 -> 25671392264	tokens: BvF8w6sh…: 913573 -> 913573 26EG9u2V…: 869088 -> 869088
+BALANCES	alice	height=1664	nock_total=85773349768	nock_available=60101957504	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AFGERjQqVqvCK3Zzdb17rGmzfXZTrFmCCspUF58d7jNBR8moqiL7Yxo]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6gWmbjNeKABBvgmZjgj7Xas5qmAeS2nABQNqFJ8UA5VXyp144Dca88t]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3jGU5GB7zDh6iprmGfdmvB9BuNybuAsCTwrJJdomKodaqbXSegk33i2]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f DUtN78i4mrY6vTGvCF2cwAUADaw2Ft3px9ijBoqSAv1q96LFuc9Fmha]	plain	nicks=4293640192	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 66LZCVQXsF4h96U65E2CxqHqZ9VzraDmvxbo5dTT9rGHzjwPvCim6Q1]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f hdxN1RY63sqLq5F3QiM8FaFRS75aSQxpdgPp1MXN2RQrjzFAAGVNxN]	plain	nicks=4292834528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3nKghbnmUhKgWqBJveVZBFndjx3FFPsNxfb8s3NPNVcn3xPAhLg2JRX]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 52YnPZRXuG8uR1JYmzkCPHB4bz31YN2VnLynQvW8R9UqsQSTkrFju3n]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6GmteLFS9FcwzU3BShWqPjDyGA1f9KYEsZg9D8S1NLpPW5h4pqpNCDq]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9mQCzxv8CWuuKhq6GSL2AAbSsmxy1MVn9NRkMp1bBLF8viRR12c17NK]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f FqgfSo7dvquvaTK4o267G2zsNHHjccAeY91QrYCUcCcXXMMnFvYoYW]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aah97ktrDv3kXktP2PvdyuomWV4XCLmpKbk5bKzT2z2gSjo5SHt2a7]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f fWrGhHz7WtG3Qp3gEBeQFH53jR5Rn8UGbdo2bUuSdBEjCrszjKGLJs]	token	nicks=4294296552	token=BvF8w6sh…	units=8193	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2AQzypNxLHtZs1s2a6GYcii6iBrMKxf45WhvZYXVJpo5NQZBJUF3gnL]	token	nicks=4294296552	token=BvF8w6sh…	units=5880	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5pCaGGyhXiVVJ7x9sW6DDFy4ZFmsd8QqUv9UUg236NikBP1snyVZyyx]	token	nicks=4207408048	token=26EG9u2V…	units=867300	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3KfspPTqA5v1RRft1uVJgank1aaum7sNuYcsNsW6URGtrjadEMz2gEo]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4bGTw4uVbVx8iNQkt5TJtXtiQZJEBY6iLAZW3ZBMwAHLm2KvuiSZ8HL]	plain	nicks=4292967296	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 72EwUvDA5C5itN2Q4KsuX1RkVD7Stvz5jfitumXy6inU9vGrnV3B12F]	token	nicks=4286797008	token=BvF8w6sh…	units=899400	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 41n3i4mxsmAC9HXW52h6VeGyZpj1gZ4PDmDGrHkKbt4TcDt9FP2s6UW]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3WhGXcjjZNwjymLZBLDWu2GQ63yPPDgi5Xeg6G5VtCD1TAG35Epmz4X]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f A8LpWFwakSufUsCSx4i7pWNHZ9TBnKCgzyDJkL3t2D3pgCgM8gkLt7g]	plain	nicks=4293640192	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BqQJFnjHgJHxoPdNNnVx3Ftro4P2dxvaNxxA89Qx7PdJKoVQLkaNc2C]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f sYNJoWM9z5GVZEi245XrgfZ6HqY3Bpcb5nxJtXTjeLPRWJdYgK5Qo6]	plain	nicks=4293640192	token=-	units=0	free
+PLAN	fund-dave-2b	pay	inputs=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f A8LpWFwakSufUsCSx4i7pWNHZ9TBnKCgzyDJkL3t2D3pgCgM8gkLt7g']	required_plain=1016384	plain_change=4292623808	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding alice's wallet arena (720 MB))
+BUILT	fund-dave-2b	txid=7b9CwRYBsLHkNPhipqkztxB3WQ6oqKenTKmLWXPgRbWSp53ejkUFwQB	file=/home/user/nmeme-run/wallets/alice/requests/fund-dave-2b/final.jam
+SENT	fund-dave-2b	txid=7b9CwRYBsLHkNPhipqkztxB3WQ6oqKenTKmLWXPgRbWSp53ejkUFwQB	at_height=1662	reserved=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f A8LpWFwakSufUsCSx4i7pWNHZ9TBnKCgzyDJkL3t2D3pgCgM8gkLt7g']
+MINED	fund-dave-2b	txid=7b9CwRYBsLHkNPhipqkztxB3WQ6oqKenTKmLWXPgRbWSp53ejkUFwQB	height=1674	block=8XBU7jU6kFkci4MRwuGwEitBCHM5QyJxo9vy2r5UsZuiqmAHwXqjZYC	canonical=yes	released=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f A8LpWFwakSufUsCSx4i7pWNHZ9TBnKCgzyDJkL3t2D3pgCgM8gkLt7g']
+RESULT	fund-dave-2b	pay	mined	txid=7b9CwRYBsLHkNPhipqkztxB3WQ6oqKenTKmLWXPgRbWSp53ejkUFwQB	height=1674	block=8XBU7jU6kFkci4MRwuGwEitBCHM5QyJxo9vy2r5UsZuiqmAHwXqjZYC	
+DELTA	fund-dave-2b	nock_total: 85773349768 -> 85772333384	nock_available: 60101957504 -> 60100941120	nock_attached: 25671392264 -> 25671392264	tokens: BvF8w6sh…: 913573 -> 913573 26EG9u2V…: 869088 -> 869088
+BALANCES	alice	height=1690	nock_total=85772333384	nock_available=60100941120	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AFGERjQqVqvCK3Zzdb17rGmzfXZTrFmCCspUF58d7jNBR8moqiL7Yxo]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6gWmbjNeKABBvgmZjgj7Xas5qmAeS2nABQNqFJ8UA5VXyp144Dca88t]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3jGU5GB7zDh6iprmGfdmvB9BuNybuAsCTwrJJdomKodaqbXSegk33i2]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f DUtN78i4mrY6vTGvCF2cwAUADaw2Ft3px9ijBoqSAv1q96LFuc9Fmha]	plain	nicks=4293640192	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 66LZCVQXsF4h96U65E2CxqHqZ9VzraDmvxbo5dTT9rGHzjwPvCim6Q1]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f hdxN1RY63sqLq5F3QiM8FaFRS75aSQxpdgPp1MXN2RQrjzFAAGVNxN]	plain	nicks=4292834528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3nKghbnmUhKgWqBJveVZBFndjx3FFPsNxfb8s3NPNVcn3xPAhLg2JRX]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5oXogxcBYqAv5fJEUVt3AhAuR5B6g3xc7RgE352qE2QusLSiQ1tEtu4]	plain	nicks=4292623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 52YnPZRXuG8uR1JYmzkCPHB4bz31YN2VnLynQvW8R9UqsQSTkrFju3n]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6GmteLFS9FcwzU3BShWqPjDyGA1f9KYEsZg9D8S1NLpPW5h4pqpNCDq]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9mQCzxv8CWuuKhq6GSL2AAbSsmxy1MVn9NRkMp1bBLF8viRR12c17NK]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f FqgfSo7dvquvaTK4o267G2zsNHHjccAeY91QrYCUcCcXXMMnFvYoYW]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aah97ktrDv3kXktP2PvdyuomWV4XCLmpKbk5bKzT2z2gSjo5SHt2a7]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f fWrGhHz7WtG3Qp3gEBeQFH53jR5Rn8UGbdo2bUuSdBEjCrszjKGLJs]	token	nicks=4294296552	token=BvF8w6sh…	units=8193	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2AQzypNxLHtZs1s2a6GYcii6iBrMKxf45WhvZYXVJpo5NQZBJUF3gnL]	token	nicks=4294296552	token=BvF8w6sh…	units=5880	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5pCaGGyhXiVVJ7x9sW6DDFy4ZFmsd8QqUv9UUg236NikBP1snyVZyyx]	token	nicks=4207408048	token=26EG9u2V…	units=867300	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3KfspPTqA5v1RRft1uVJgank1aaum7sNuYcsNsW6URGtrjadEMz2gEo]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4bGTw4uVbVx8iNQkt5TJtXtiQZJEBY6iLAZW3ZBMwAHLm2KvuiSZ8HL]	plain	nicks=4292967296	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 72EwUvDA5C5itN2Q4KsuX1RkVD7Stvz5jfitumXy6inU9vGrnV3B12F]	token	nicks=4286797008	token=BvF8w6sh…	units=899400	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 41n3i4mxsmAC9HXW52h6VeGyZpj1gZ4PDmDGrHkKbt4TcDt9FP2s6UW]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3WhGXcjjZNwjymLZBLDWu2GQ63yPPDgi5Xeg6G5VtCD1TAG35Epmz4X]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BqQJFnjHgJHxoPdNNnVx3Ftro4P2dxvaNxxA89Qx7PdJKoVQLkaNc2C]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f sYNJoWM9z5GVZEi245XrgfZ6HqY3Bpcb5nxJtXTjeLPRWJdYgK5Qo6]	plain	nicks=4293640192	token=-	units=0	free
+BALANCES	dave	height=1690	nock_total=4622438	nock_available=3000000	nock_pending=0	nock_attached=1622438	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=1668/available=1668/reserved=0/notes=1	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n]	plain	nicks=1000000	token=-	units=0	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN]	plain	nicks=2000000	token=-	units=0	free
+SIM	A rc=1	B rc=0
+PLAN	sim-buy-A	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n']	required_plain=672744	plain_change=327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+BUILT	sim-buy-A	txid=5EPn5Jovaw6YoULnKywhk2h1eJsGLHz9ATcgtZE7yQcUrGm4pHXWWK7	file=/home/user/nmeme-run/wallets/dave/requests/sim-buy-A/final.jam
+REFUSED	sim-buy-A	txid=5EPn5Jovaw6YoULnKywhk2h1eJsGLHz9ATcgtZE7yQcUrGm4pHXWWK7	MEMPOOL	not admitted	not in the node's accepted set
+RESULT	sim-buy-A	buy	refused	txid=5EPn5Jovaw6YoULnKywhk2h1eJsGLHz9ATcgtZE7yQcUrGm4pHXWWK7	height=-1	block=	
+PLAN	sim-buy-B	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+BUILT	sim-buy-B	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	file=/home/user/nmeme-run/wallets/dave/requests/sim-buy-B/final.jam
+SENT	sim-buy-B	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	at_height=1688	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN']
+MINED	sim-buy-B	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	height=1702	block=3ngMoTt7iLvexdjLBWzAryte5mRHFsWbQqD2YSSMc5MAgRi26Zfa8ED	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6D7wK9YudSUY2JDmppu1H7NFZzNY5LtjR5v9hNxu9j5Gxoh3fBuNNxN']
+RESULT	sim-buy-B	buy	mined	txid=38ACnbQ6wPFgtLnqLskknKxQsyiBTYQtvXB9Cogm4HZAHB2c8bYxvHS	height=1702	block=3ngMoTt7iLvexdjLBWzAryte5mRHFsWbQqD2YSSMc5MAgRi26Zfa8ED	in=655360	out_net=3339	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=182334152415	exec_e9=196274333632	impact_bps=764
+BALANCES	dave	height=1716	nock_total=3951694	nock_available=1000000	nock_pending=0	nock_attached=2951694	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=5007/available=5007/reserved=0/notes=2	open_requests=0
+
+== 6b. simultaneous requests against ONE plain note: the second must be refused by the reservation, not by the node ==
+PLAN	fund-dave-3	pay	inputs=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f DUtN78i4mrY6vTGvCF2cwAUADaw2Ft3px9ijBoqSAv1q96LFuc9Fmha']	required_plain=2016384	plain_change=4291623808	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding alice's wallet arena (722 MB))
+BUILT	fund-dave-3	txid=DKR732TqJJCWpQksvNF4VYb8LM7K3utqm9fcjgX1hQZwRB3b3kWQ8sr	file=/home/user/nmeme-run/wallets/alice/requests/fund-dave-3/final.jam
+SENT	fund-dave-3	txid=DKR732TqJJCWpQksvNF4VYb8LM7K3utqm9fcjgX1hQZwRB3b3kWQ8sr	at_height=1715	reserved=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f DUtN78i4mrY6vTGvCF2cwAUADaw2Ft3px9ijBoqSAv1q96LFuc9Fmha']
+MINED	fund-dave-3	txid=DKR732TqJJCWpQksvNF4VYb8LM7K3utqm9fcjgX1hQZwRB3b3kWQ8sr	height=1723	block=AzwXazWswqRhYzDj9fEKkdKiJPGajY8Sc9gDsmpFnRqUgXCnoVQ1cBF	canonical=yes	released=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f DUtN78i4mrY6vTGvCF2cwAUADaw2Ft3px9ijBoqSAv1q96LFuc9Fmha']
+RESULT	fund-dave-3	pay	mined	txid=DKR732TqJJCWpQksvNF4VYb8LM7K3utqm9fcjgX1hQZwRB3b3kWQ8sr	height=1723	block=AzwXazWswqRhYzDj9fEKkdKiJPGajY8Sc9gDsmpFnRqUgXCnoVQ1cBF	
+DELTA	fund-dave-3	nock_total: 85772333384 -> 85770317000	nock_available: 60100941120 -> 60098924736	nock_attached: 25671392264 -> 25671392264	tokens: BvF8w6sh…: 913573 -> 913573 26EG9u2V…: 869088 -> 869088
+BALANCES	alice	height=1736	nock_total=85770317000	nock_available=60098924736	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AFGERjQqVqvCK3Zzdb17rGmzfXZTrFmCCspUF58d7jNBR8moqiL7Yxo]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6gWmbjNeKABBvgmZjgj7Xas5qmAeS2nABQNqFJ8UA5VXyp144Dca88t]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3jGU5GB7zDh6iprmGfdmvB9BuNybuAsCTwrJJdomKodaqbXSegk33i2]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 66LZCVQXsF4h96U65E2CxqHqZ9VzraDmvxbo5dTT9rGHzjwPvCim6Q1]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f hdxN1RY63sqLq5F3QiM8FaFRS75aSQxpdgPp1MXN2RQrjzFAAGVNxN]	plain	nicks=4292834528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3nKghbnmUhKgWqBJveVZBFndjx3FFPsNxfb8s3NPNVcn3xPAhLg2JRX]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5oXogxcBYqAv5fJEUVt3AhAuR5B6g3xc7RgE352qE2QusLSiQ1tEtu4]	plain	nicks=4292623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 65twh2GpL9gbM7dUadZG3PxdSGJu9KGF3gCc3LmjGjnD3JhxNBFTFWi]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 52YnPZRXuG8uR1JYmzkCPHB4bz31YN2VnLynQvW8R9UqsQSTkrFju3n]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6GmteLFS9FcwzU3BShWqPjDyGA1f9KYEsZg9D8S1NLpPW5h4pqpNCDq]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9mQCzxv8CWuuKhq6GSL2AAbSsmxy1MVn9NRkMp1bBLF8viRR12c17NK]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f FqgfSo7dvquvaTK4o267G2zsNHHjccAeY91QrYCUcCcXXMMnFvYoYW]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aah97ktrDv3kXktP2PvdyuomWV4XCLmpKbk5bKzT2z2gSjo5SHt2a7]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f fWrGhHz7WtG3Qp3gEBeQFH53jR5Rn8UGbdo2bUuSdBEjCrszjKGLJs]	token	nicks=4294296552	token=BvF8w6sh…	units=8193	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2AQzypNxLHtZs1s2a6GYcii6iBrMKxf45WhvZYXVJpo5NQZBJUF3gnL]	token	nicks=4294296552	token=BvF8w6sh…	units=5880	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5pCaGGyhXiVVJ7x9sW6DDFy4ZFmsd8QqUv9UUg236NikBP1snyVZyyx]	token	nicks=4207408048	token=26EG9u2V…	units=867300	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3KfspPTqA5v1RRft1uVJgank1aaum7sNuYcsNsW6URGtrjadEMz2gEo]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4bGTw4uVbVx8iNQkt5TJtXtiQZJEBY6iLAZW3ZBMwAHLm2KvuiSZ8HL]	plain	nicks=4292967296	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 72EwUvDA5C5itN2Q4KsuX1RkVD7Stvz5jfitumXy6inU9vGrnV3B12F]	token	nicks=4286797008	token=BvF8w6sh…	units=899400	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 41n3i4mxsmAC9HXW52h6VeGyZpj1gZ4PDmDGrHkKbt4TcDt9FP2s6UW]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3WhGXcjjZNwjymLZBLDWu2GQ63yPPDgi5Xeg6G5VtCD1TAG35Epmz4X]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BqQJFnjHgJHxoPdNNnVx3Ftro4P2dxvaNxxA89Qx7PdJKoVQLkaNc2C]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f sYNJoWM9z5GVZEi245XrgfZ6HqY3Bpcb5nxJtXTjeLPRWJdYgK5Qo6]	plain	nicks=4293640192	token=-	units=0	free
+SIM2	A rc=0	B rc=1
+PLAN	sim2-buy-A	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP CKQYRw7tqDqjdndvWKJHbaoCr6hmNTh7bxtMmfSzhmwacrQCPZ2KEFL']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+BUILT	sim2-buy-A	txid=4vUnkDg1GgTvkNw9DR51e9Thhp9vdPozwM793CiRHTVWt5rSJEeRq99	file=/home/user/nmeme-run/wallets/dave/requests/sim2-buy-A/final.jam
+SENT	sim2-buy-A	txid=4vUnkDg1GgTvkNw9DR51e9Thhp9vdPozwM793CiRHTVWt5rSJEeRq99	at_height=1735	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP CKQYRw7tqDqjdndvWKJHbaoCr6hmNTh7bxtMmfSzhmwacrQCPZ2KEFL']
+MINED	sim2-buy-A	txid=4vUnkDg1GgTvkNw9DR51e9Thhp9vdPozwM793CiRHTVWt5rSJEeRq99	height=1747	block=58XmQZWVbViHBBg3ccpx9b2gQ8MR1rCXpMJbZp79hx5wqgesvz5xKdB	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP CKQYRw7tqDqjdndvWKJHbaoCr6hmNTh7bxtMmfSzhmwacrQCPZ2KEFL']
+RESULT	sim2-buy-A	buy	mined	txid=4vUnkDg1GgTvkNw9DR51e9Thhp9vdPozwM793CiRHTVWt5rSJEeRq99	height=1747	block=58XmQZWVbViHBBg3ccpx9b2gQ8MR1rCXpMJbZp79hx5wqgesvz5xKdB	in=655360	out_net=2986	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=204479882582	exec_e9=219477561955	impact_bps=733
+PLAN	sim2-buy-B	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n']	required_plain=672744	plain_change=327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+BUILT	sim2-buy-B	txid=7Rjxfaq9gjAGDAzRP9hGGoB22nzUVMLoXEixfTmULNCEQysX4aFfeab	file=/home/user/nmeme-run/wallets/dave/requests/sim2-buy-B/final.jam
+REFUSED	sim2-buy-B	txid=7Rjxfaq9gjAGDAzRP9hGGoB22nzUVMLoXEixfTmULNCEQysX4aFfeab	MEMPOOL	not admitted	not in the node's accepted set
+RESULT	sim2-buy-B	buy	refused	txid=7Rjxfaq9gjAGDAzRP9hGGoB22nzUVMLoXEixfTmULNCEQysX4aFfeab	height=-1	block=	
+
+== 7. a restart during submission ==
+PLAN	fund-dave-4	pay	inputs=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f sYNJoWM9z5GVZEi245XrgfZ6HqY3Bpcb5nxJtXTjeLPRWJdYgK5Qo6']	required_plain=2016384	plain_change=4291623808	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+BUILT	fund-dave-4	txid=AZnZjrrK1TRhDuuwPK1TYn3DPMQUxZ2Z6i9e11jSqj6PLcBz4k47QQq	file=/home/user/nmeme-run/wallets/alice/requests/fund-dave-4/final.jam
+SENT	fund-dave-4	txid=AZnZjrrK1TRhDuuwPK1TYn3DPMQUxZ2Z6i9e11jSqj6PLcBz4k47QQq	at_height=1760	reserved=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f sYNJoWM9z5GVZEi245XrgfZ6HqY3Bpcb5nxJtXTjeLPRWJdYgK5Qo6']
+MINED	fund-dave-4	txid=AZnZjrrK1TRhDuuwPK1TYn3DPMQUxZ2Z6i9e11jSqj6PLcBz4k47QQq	height=1766	block=3RVNTa8y2g5rHdK2Wfb2ya76RJqki3PAX6RZRXxnDKR9z1mXTxfd3En	canonical=yes	released=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f sYNJoWM9z5GVZEi245XrgfZ6HqY3Bpcb5nxJtXTjeLPRWJdYgK5Qo6']
+RESULT	fund-dave-4	pay	mined	txid=AZnZjrrK1TRhDuuwPK1TYn3DPMQUxZ2Z6i9e11jSqj6PLcBz4k47QQq	height=1766	block=3RVNTa8y2g5rHdK2Wfb2ya76RJqki3PAX6RZRXxnDKR9z1mXTxfd3En	
+DELTA	fund-dave-4	nock_total: 85770317000 -> 85768300616	nock_available: 60098924736 -> 60096908352	nock_attached: 25671392264 -> 25671392264	tokens: BvF8w6sh…: 913573 -> 913573 26EG9u2V…: 869088 -> 869088
+BALANCES	alice	height=1783	nock_total=85768300616	nock_available=60096908352	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AFGERjQqVqvCK3Zzdb17rGmzfXZTrFmCCspUF58d7jNBR8moqiL7Yxo]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aWAEx46tA2f8F5UKrCo25LpQ9QPyXmBPXSyorzawgbQYXEWdQfdnux]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6gWmbjNeKABBvgmZjgj7Xas5qmAeS2nABQNqFJ8UA5VXyp144Dca88t]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3jGU5GB7zDh6iprmGfdmvB9BuNybuAsCTwrJJdomKodaqbXSegk33i2]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 66LZCVQXsF4h96U65E2CxqHqZ9VzraDmvxbo5dTT9rGHzjwPvCim6Q1]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f hdxN1RY63sqLq5F3QiM8FaFRS75aSQxpdgPp1MXN2RQrjzFAAGVNxN]	plain	nicks=4292834528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3nKghbnmUhKgWqBJveVZBFndjx3FFPsNxfb8s3NPNVcn3xPAhLg2JRX]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5oXogxcBYqAv5fJEUVt3AhAuR5B6g3xc7RgE352qE2QusLSiQ1tEtu4]	plain	nicks=4292623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 65twh2GpL9gbM7dUadZG3PxdSGJu9KGF3gCc3LmjGjnD3JhxNBFTFWi]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 52YnPZRXuG8uR1JYmzkCPHB4bz31YN2VnLynQvW8R9UqsQSTkrFju3n]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6GmteLFS9FcwzU3BShWqPjDyGA1f9KYEsZg9D8S1NLpPW5h4pqpNCDq]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9mQCzxv8CWuuKhq6GSL2AAbSsmxy1MVn9NRkMp1bBLF8viRR12c17NK]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f FqgfSo7dvquvaTK4o267G2zsNHHjccAeY91QrYCUcCcXXMMnFvYoYW]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aah97ktrDv3kXktP2PvdyuomWV4XCLmpKbk5bKzT2z2gSjo5SHt2a7]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f fWrGhHz7WtG3Qp3gEBeQFH53jR5Rn8UGbdo2bUuSdBEjCrszjKGLJs]	token	nicks=4294296552	token=BvF8w6sh…	units=8193	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2AQzypNxLHtZs1s2a6GYcii6iBrMKxf45WhvZYXVJpo5NQZBJUF3gnL]	token	nicks=4294296552	token=BvF8w6sh…	units=5880	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5pCaGGyhXiVVJ7x9sW6DDFy4ZFmsd8QqUv9UUg236NikBP1snyVZyyx]	token	nicks=4207408048	token=26EG9u2V…	units=867300	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3KfspPTqA5v1RRft1uVJgank1aaum7sNuYcsNsW6URGtrjadEMz2gEo]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4bGTw4uVbVx8iNQkt5TJtXtiQZJEBY6iLAZW3ZBMwAHLm2KvuiSZ8HL]	plain	nicks=4292967296	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 72EwUvDA5C5itN2Q4KsuX1RkVD7Stvz5jfitumXy6inU9vGrnV3B12F]	token	nicks=4286797008	token=BvF8w6sh…	units=899400	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 41n3i4mxsmAC9HXW52h6VeGyZpj1gZ4PDmDGrHkKbt4TcDt9FP2s6UW]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3WhGXcjjZNwjymLZBLDWu2GQ63yPPDgi5Xeg6G5VtCD1TAG35Epmz4X]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BqQJFnjHgJHxoPdNNnVx3Ftro4P2dxvaNxxA89Qx7PdJKoVQLkaNc2C]	plain	nicks=4292950912	token=-	units=0	free
+-- 7a. crash after the reservation (nothing built, nothing sent): the restart aborts it and releases the inputs
+PLAN	crash-reserved	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 8MrmYsU5SxJmAqP5Ntn5BXBFasP2GmAbrWcq9T6SKiY6MGSu4eqcTLd']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+CRASH	reserved	(test hook: exiting without cleanup)
+BALANCES	dave	height=1783	nock_total=7280950	nock_available=1000000	nock_pending=2000000	nock_attached=4280950	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=7993/available=7993/reserved=0/notes=3	open_requests=1
+  OPEN	crash-reserved	buy	planned	txid=
+ABORTED	crash-reserved	restart before the transaction was built
+RECONCILED	dave	1 open request(s) checked	crash-reserved=aborted
+-- 7b. crash after the build (a signed transaction on disk with its id, never sent): the restart sends it
+PLAN	crash-built	buy	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 8MrmYsU5SxJmAqP5Ntn5BXBFasP2GmAbrWcq9T6SKiY6MGSu4eqcTLd']	required_plain=672744	plain_change=1327256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	crash-built	txid=ANSYZnb4dnHHD4xb91J1F7EGLWPe2AWeSDnYdeXU3MBfcGdfEAaaz7v	file=/home/user/nmeme-run/wallets/dave/requests/crash-built/final.jam
+CRASH	built	(test hook: exiting without cleanup)
+SENT	crash-built	txid=ANSYZnb4dnHHD4xb91J1F7EGLWPe2AWeSDnYdeXU3MBfcGdfEAaaz7v	(found in the mempool after a restart)
+RECONCILED	dave	1 open request(s) checked	crash-built=sent

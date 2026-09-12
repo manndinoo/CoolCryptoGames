@@ -1,0 +1,10 @@
+BALANCES	dave	height=2069	nock_total=9939462	nock_available=1000000	nock_pending=2000000	nock_attached=6939462	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=13111/available=13111/reserved=0/notes=5	open_requests=2
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP BWJdCAbUPdStxrdwevHK5W7PVc3YQkNjUupwuvugt6J3s6EQzv1n8dk]	token	nicks=1329256	token=BvF8w6sh…	units=2431	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 5brdHEgJ6FGuUn5p7nrjuF2epj387dEaMCa1eWZnd7A4AkPMTPU9Gsm]	token	nicks=1329256	token=BvF8w6sh…	units=2986	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 3jHpNAH8dFfWVKBz9EDKkPWEgUo3tmHLz4rAGC2VnTremhCTAxeFAs5]	token	nicks=1329256	token=BvF8w6sh…	units=3339	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n]	plain	nicks=1000000	token=-	units=0	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 5NEBnugMScMugiqz4McTGT2zwyUi2zkd4vk5Vy3TU6E1bA66QYtBgWe]	token	nicks=1622438	token=BvF8w6sh…	units=1668	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 77wzBfpe7YurNW4w83FeUfBjWaTJNfVvubzY1vXMfyDgkoTdKXbcCuC]	token	nicks=1329256	token=BvF8w6sh…	units=2687	free
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 2o4ACyNFPhB7U1KjSGbYnBPc6WWuPBAHA17FLhRtUyh8b5EmnU8RjGZ]	plain	nicks=2000000	token=-	units=0	reserved_by=crash-broadcast-r2
+  OPEN	crash-built	buy	sent	txid=ANSYZnb4dnHHD4xb91J1F7EGLWPe2AWeSDnYdeXU3MBfcGdfEAaaz7v
+  OPEN	crash-broadcast-r2	buy	built	txid=3apVdavn8NgF9yXgpKQ3vqWshEJEnESRF8oZ2gfFNuLQ9VD973tRL5C

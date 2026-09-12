@@ -1,0 +1,3 @@
+# inputs read live at height 2018 block 8hGKM8TxsE93uG4dk7MU1odXrwTw39VHpusoKPJ3isA6EhSTcEa4Vga
+INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3WhGXcjjZNwjymLZBLDWu2GQ63yPPDgi5Xeg6G5VtCD1TAG35Epmz4X]	tokenfree (node shows no claim)
+INPUTS	1 verified live

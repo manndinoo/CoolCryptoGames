@@ -1,0 +1,9 @@
+PLAN	sell-dave-1	sell	inputs=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS']	required_plain=0	plain_change=0	token_change=1768	backing=1329256	backing_spent=17384	fee_per_note=16384
+  (rebuilding dave's wallet arena (718 MB))
+BUILT	sell-dave-1	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	file=/home/user/nmeme-run/wallets/dave/requests/sell-dave-1/final.jam
+SENT	sell-dave-1	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	at_height=1589	reserved=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS']
+MINED	sell-dave-1	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	height=1602	block=BJT2S1ZyJQv45QfMnxwbiXubD9fSJCsUHvLXJhT93WTiANghdh9VJ8n	canonical=yes	released=['4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 9YKLnbAAPidukusyeSe6tANSwBndjDerrVogAnGMquPwze8vjCToyMS']
+RESULT	sell-dave-1	sell	mined	txid=5MW3aQnRpY57zZ5MXHgFmtNy4wvQ1hzxmCZSxaBKcFZ5CzwTZ2hUJwy	height=1602	block=BJT2S1ZyJQv45QfMnxwbiXubD9fSJCsUHvLXJhT93WTiANghdh9VJ8n	in=1767	out_net=327950	pool_fee=17	lore_fee=1653	nock_fees=1653	token_fees=17	network_fee=16384	spot_e9=193465764671	exec_e9=185597057159	impact_bps=423
+DELTA	sell-dave-1	nock_total: 1329256 -> 1639822	nock_available: 0 -> 0	nock_attached: 1329256 -> 1639822	tokens: BvF8w6sh…: 3535 -> 1768
+BALANCES	dave	height=1616	nock_total=1639822	nock_available=0	nock_pending=0	nock_attached=1639822	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=1768/available=1768/reserved=0/notes=1	open_requests=0
+  NOTE	[4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP 6No7iPjfEVaZWkWf3WvKRMQ13sLQrhMrBUzzgNkefwiHnE8XH2i3Yrb]	token	nicks=1639822	token=BvF8w6sh…	units=1768	free

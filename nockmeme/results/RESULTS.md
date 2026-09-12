@@ -909,6 +909,62 @@ mined — which the retry phase below does. The case where the *second*
 request is refused by the reservation itself, before anything is built,
 is `onenote` below.
 
+**A restart during submission** (`progress-run2.log`; the request ids carry
+`-r2`, the first run's ids being taken — a request id is never planned
+twice). Each case is a buy of 655,360 nicks started with the test hook that
+exits the process at one point, then `reconcile` from a new process:
+
+| crash after | what the record held | what the restart did | outcome |
+|---|---|---|---|
+| the reservation (`crash-reserved-r2`) | `planned`, inputs reserved (`nock_pending=4,000,000`, two open requests at the time) | nothing was ever broadcast (the record precedes the send): aborted, inputs released | `aborted`; the note free again |
+| the build (`crash-built-r2`) | `built`, the signed file and its id `5iHmZP…` on disk, never sent | `tx-status`: not in a block, not in the node's accepted set → the stored file sent, `sent` at 1991 | mined at 2002, `89fnv9…`, canonical |
+| the broadcast, before the record of it (`crash-broadcast-r2`) | `built`, the node holding `3apVda…` (`nock_pending=2,000,000` while the record said built) | `tx-status`: pending *in the accepted set* → `sent`, not sent again | mined at 2070, `BbEtcR…`, canonical |
+
+The first run's `crash-built` (`ANSYZn…`) is the case that found a gap in
+the tool: the node's block lookup answers "pending" for *any* id not in a
+block, including one it has never seen, so the first `tx-status` read the
+never-sent transaction as pending and the record moved to `sent` without a
+broadcast (the `wait` in that run never ended; the run was stopped there).
+`tx-status` now asks the node's accepted set as well, the question `send`
+asks after a broadcast; on the re-run's first reconcile the same record
+read `not in a block, not in the node's accepted set`, the file was sent
+(`RESEND … state_was=sent`), and it was mined at 1995 (`6Cibs2…`). A
+refused id (`5EPn5J…`) and a never-sent id read `unknown` now, a mined one
+its block.
+
+**The retry, and the reservation refusing a second request.** After the
+simultaneous phase, the refused trade was made again as a new request
+(`sim-buy-retry-r2`): a new quote against the pool as it stood, 2,017
+tokens for the same 655,360 nicks, mined at 2152 (`9ocPWK…`). Then, with
+exactly one free plain note (1,000,000 nicks), two buys at once
+(`onenote-A-r2`, `onenote-B-r2`): A reserved the note, built and sent
+(`8fjDXm…`, mined at 2194); B was refused by the reservation before
+anything was built — `insufficient ordinary NOCK: need 672744 nicks for
+fee and payment, plain notes hold 0, token backing 0` — with no
+transaction, no wallet call and no node answer involved. At the end the
+wallet held 9,927,230 nicks, all of it attached to eight token notes
+holding 19,186 tokens, no plain note, no reservation, no open request
+(`dave-submissions.tsv`: 14 requests, 10 mined, 2 refused by the node, 2
+aborted by the restart; the one refused by the reservation was never
+recorded as a submission, and alice's eight funding payments are in her
+own database).
+
+**What this round showed about the wallet side.** (1) A wallet that trades
+ends up with all its NOCK inside token notes (`nock_available=0`,
+`nock_attached=9,927,230`): the balance is right, and a sell or transfer
+can spend it, but a further *buy* cannot — a buy is funded from plain
+notes only, because its token seed and a spent token note's change claim
+would be two claims at one lock. Whether a buy may be funded from a token
+note of the same token (one merged claim) is a design choice for the next
+round; the backend refuses it today rather than guessing. (2) Two trades
+against one pool cannot both stand; the second is refused by the node at
+admission (`Inputs not in heaviest balance`) and must be re-quoted after
+the first is mined. A backend that queues trades per pool would avoid the
+refusal; this one reports it and releases the inputs at once. (3) "Not in
+a block" is not "in the mempool": the node's block lookup cannot tell an
+unknown id from a pending one, and a backend that settled on it would
+believe a never-sent transaction was in flight forever.
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |

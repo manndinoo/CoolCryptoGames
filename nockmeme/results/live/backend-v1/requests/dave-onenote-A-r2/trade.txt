@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=1849 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=334114135679	exec_e9=354440237966	impact_bps=608
+POOL-BEFORE	14888460	44561
+POOL-AFTER	15539539	42712
+POOL-SPEND	to_user=1000+1849t	successor=14884179+42712t	lore=3281+0t	fee=0
+PINNED	user	4mvzY7LVmg2RYVx5aFaJsMXHthPybeTuKiqSYA8BSBe1L4vXWNhWdzn	2GfUGWfwZoUumePmjdFYQV5ocqsJY6wHMdpdvoBz2Lcto6HAeSGJ8ZA
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/dave/requests/onenote-A-r2/assembled.jam
+NEWSIGHASH	4LcurNcTXZtExFLhZA7mAbCyF3nTRTeJ1F22wBPsAf8d4BAFEo1oSBP.6jDuzs999ZDqp1yKbAdbt5yRXYY4PAPAd36WcMb5tzqbyUbt53kg35n	2qcVRVuUQoCqz2R6WRa4RCBqd1gthr7gwxpkb8bbDjVbMAorfD9tiSD
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.CrjehEit4uPFaEQMND6FfC6e63XtCrKTeHCgpGhR33mdtUWF7gktHZM	67RwGFE5nDASkxiYnY2FoF4idovRaWvKgPMhhYCVCZL2z2DMGgPAkJY
