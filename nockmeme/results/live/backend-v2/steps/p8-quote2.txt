@@ -1,0 +1,1 @@
+QUOTE	in=655360	out_net=1570	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=394787203433	exec_e9=417426751592	impact_bps=573	pool_after=(16841697, 39441)

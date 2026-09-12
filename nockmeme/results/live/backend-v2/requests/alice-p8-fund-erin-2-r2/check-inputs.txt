@@ -1,0 +1,3 @@
+# inputs read live at height 2496 block b9CHUogfZHEnZfAC2me8LtnbakCKswrpCKQeSeAn79ARdhT9NGXPJB
+INPUT-OK	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw]	tokenfree (node shows no claim)
+INPUTS	1 verified live

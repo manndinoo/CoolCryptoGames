@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+ATTACHED	2d99i9AfVAbaMNtzxDfeYqiYXiToAN37L4KxzBvKxpNuvjdLBfmvAd5	1536
+WROTE	/home/user/nmeme-run/wallets/erin/requests/p8-xfer-erin-1/attached.jam
+NEWSIGHASH	4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa.DBxtgPX9PKS3bWPXwVjCGQ74BSW66NFxcxAD9Nsedi6dKrw8nWnd7gA	73PFxeC9eTxYa9e9Gkh5Ez6nHUJMUodrFdLkv59jzE4WBPvBSJoejXk

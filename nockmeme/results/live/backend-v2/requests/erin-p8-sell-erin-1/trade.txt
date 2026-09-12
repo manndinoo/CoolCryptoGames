@@ -1,0 +1,10 @@
+ATTACHED	2d99i9AfVAbaMNtzxDfeYqiYXiToAN37L4KxzBvKxpNuvjdLBfmvAd5	1636
+QUOTE	sell	in=1635 tokens	out_net=661602 nicks	pool_fee=16 tokens	lore_fee=3329 nicks	nock_fees=3329 nicks	token_fees=16 tokens	network_fee=16384 nicks	spot_e9=427009888187	exec_e9=404649541284	impact_bps=552
+POOL-BEFORE	16841697	39441
+POOL-AFTER	16177766	41076
+POOL-SPEND	to_user=661602+0t	successor=16176766+41076t	lore=3329+0t	fee=0
+PINNED	user	2d99i9AfVAbaMNtzxDfeYqiYXiToAN37L4KxzBvKxpNuvjdLBfmvAd5	82RFNA4rQ9TWf3be2m6tNfuVPPpK2EdVqZsW3tYJ3yLZsunQbFiUXpf
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/erin/requests/p8-sell-erin-1/assembled.jam
+NEWSIGHASH	4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa.8Qbj87eRCXMNrgvzsgTb5mtsnYfFAHCpbDth7BF45NaeYQTyK7buJif	2Lt5cKTefA4U1EnWRRxF7SY1TUkzYskZuUsEtfddqbN1VrpJcNVxP9a
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.5sFR4AiKsc5L7du4KKSqtAjVRqKvewLaUagg51sTDp9zoKTikdYPtY	32v9TCc4MR4x79T6tf3Jz7wCdXn9XKYf8VMEJN9qXh1vNoXdRWrx7tS

@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=1701 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=363821385090	exec_e9=385279247501	impact_bps=589
+POOL-BEFORE	15539539	42712
+POOL-AFTER	16190618	41011
+POOL-SPEND	to_user=1000+1701t	successor=15535258+41011t	lore=3281+0t	fee=0
+PINNED	user	2d99i9AfVAbaMNtzxDfeYqiYXiToAN37L4KxzBvKxpNuvjdLBfmvAd5	6dUMFQ454Rt2XrncEtSKQVTCvW3zgSWsSpj1VF4QKNSqnW3PhZia1rD
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/erin/requests/p8-buy-erin-1/assembled.jam
+NEWSIGHASH	4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa.3Yn5zrhtxGkUe4rCHdz2ruH49Y3Uvk3X3h8mJ5FMP4ogtLjXshqU3tn	ArYNGtjd52cr9AFDsEhKDNP2LUrCcnN4RGsGRfzsnjfzVk6PGoZmQJ
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.ADJMQ1FeLjN431MUfNdo8Qhyj9dwiQQsg3iCtU9k68SvtoBBXfNrUBR	CTRLYqseBZt2jiLaHw1r6zPKGm77BvBWtiTvmQqJiPbEDXz8DBQitjk

@@ -1029,12 +1029,41 @@ job: the request said 3 %, the pool moved more. A third pair with a 10 %
 allowance is `-r3` (below). A floor no pool can meet (`--min-out 999999999`)
 was refused the same way, before the build, and the balances did not move.
 
+**The same pair with a 10 % allowance** (`progress-p8-run3.log`, ids
+`-r3`): both quoted 1,353 tokens (floor 1,218); A took the turn and was
+mined at 2849 (`7EkQ6r…`, 1,353 tokens); B waited 50 s for the lock and
+seven polls for A to leave the mempool, then quoted the pool as it stood —
+1,259 tokens, within its allowance — built, and was mined at 2900
+(`91zS5R…`). Two competing requests, each with a fresh quote against the
+pool at its turn, no node refusal, each floor respected. erin ended the
+queue phases with 7,178 tokens in five notes and 6,602,370 nicks, all of it
+attached (`erin-submissions.tsv`: 11 requests, 8 mined, 3 aborted by a
+floor, no reservation left; `pools.sqlite`: the pool's last trade).
+
 **A restart after the broadcast** (`p8-crash-broadcast-r2`): the process
 exited right after the node admitted the buy, before the record of the
 broadcast; the balance read `nock_pending=2,000,000, open_requests=1`; the
 restart's reconcile found the id pending in the node's accepted set and
 moved the record to `sent` without sending again; mined at 2672
 (`86ezaE…`), canonical, inputs released.
+
+**What this round showed.** (1) A wallet whose NOCK sits inside a token
+note can buy again with it; the second buy's plan reserved the note alone,
+and one merged claim kept every token (3,271 in one note, none burned).
+The remaining limit is by design: a buy of token X cannot be funded from a
+note of token Y (two claims at one lock). (2) The queue turns "two trades,
+one refused by the node" (§A23) into "two trades, the second quoted fresh
+at its turn": a 3 % allowance refused it after a 7.4 % move, a 10 %
+allowance let it through at 1,259 against 1,353 quoted at first. The
+price of the queue is waiting: a trade's turn lasts until the previous
+trade is mined (about 30–50 s here). (3) A buy's dust comes out of the
+pool's reserves, not from the buyer; the plan no longer reserves it. (4)
+Fakenet versus mainnet, once more: every transaction here was accepted by
+the fork's consensus (the `%amm` covenant, the token-claim rule); the
+shipped node would refuse a pool trade at admission and would spend a
+token note as plain NOCK. The independent rerun of pack 7 covered the
+offline tests (136 Rust, 26 backend, 15 shell); the live demonstrations are
+this environment's only.
 
 ### A18. What is implemented, what passed live, what needs a network change
 
@@ -1110,6 +1139,9 @@ backend, integrated, ran a second wallet from zero through the same flow
 with inputs reserved before the build, settlement by transaction id in
 the canonical block, balances split into available and attached NOCK,
 two simultaneous requests never sharing an input, and a restart at each
-point of a submission resumed from the record. None of this runs on the
+point of a submission resumed from the record; a third wallet bought,
+bought again from the NOCK inside its token note with every token kept in
+one claim, and two competing trades went through a per-pool queue with a
+fresh quote each and their slippage floors respected. None of this runs on the
 shipped node: the fork is a prototype for an upstream proposal, not a
 deployment.

@@ -1,0 +1,137 @@
+
+== 0. the pool and the funder ==
+BALANCES	alice	height=2496	nock_total=85760235080	nock_available=60088842816	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+BALANCES	bob	height=2496	nock_total=9584627	nock_available=5235442	nock_pending=0	nock_attached=4349185	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=12170/available=12170/reserved=0/notes=10 26EG9u2V…:total=597/available=597/reserved=0/notes=6 6G9bZSkG…:total=9223372036854775807/available=9223372036854775807/reserved=0/notes=1	open_requests=0
+BOB	address=7tk6CeaZC3UvTXrAthf7HpJtS9kiijfEfaebVbHEZHXqJ6sDHFj1kCz
+
+== P8-7. two buys at once through the per-pool queue: the second waits for the first to be mined and is quoted against the pool as it stands ==
+PLAN	p8-fund-erin-2-r2	pay	inputs=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw']	required_plain=2016384	plain_change=4290934528	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding alice's wallet arena (722 MB))
+BUILT	p8-fund-erin-2-r2	txid=2cuxFbn8SUp3yJwKnPFSTiUxbS4osDaTE4ZzS4uyrtjbhPoh1jtgC6j	file=/home/user/nmeme-run/wallets/alice/requests/p8-fund-erin-2-r2/final.jam
+SENT	p8-fund-erin-2-r2	txid=2cuxFbn8SUp3yJwKnPFSTiUxbS4osDaTE4ZzS4uyrtjbhPoh1jtgC6j	at_height=2496	reserved=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw']
+MINED	p8-fund-erin-2-r2	txid=2cuxFbn8SUp3yJwKnPFSTiUxbS4osDaTE4ZzS4uyrtjbhPoh1jtgC6j	height=2511	block=5JYVrKzkEGumTEMnJdtMBHrcn6J3E9ggCHetofLHtDUKTksC6dkfGaZ	canonical=yes	released=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 7ZbLAkGNGLXkJ7SwJUxgupZuKu9GPFPdX7VrV1FAsb7d2VLRZ5fKYmw']
+RESULT	p8-fund-erin-2-r2	pay	mined	txid=2cuxFbn8SUp3yJwKnPFSTiUxbS4osDaTE4ZzS4uyrtjbhPoh1jtgC6j	height=2511	block=5JYVrKzkEGumTEMnJdtMBHrcn6J3E9ggCHetofLHtDUKTksC6dkfGaZ	
+DELTA	p8-fund-erin-2-r2	nock_total: 85760235080 -> 85758218696	nock_available: 60088842816 -> 60086826432	nock_attached: 25671392264 -> 25671392264	tokens: BvF8w6sh…: 913573 -> 913573 26EG9u2V…: 869088 -> 869088
+BALANCES	alice	height=2519	nock_total=85758218696	nock_available=60086826432	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AFGERjQqVqvCK3Zzdb17rGmzfXZTrFmCCspUF58d7jNBR8moqiL7Yxo]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aWAEx46tA2f8F5UKrCo25LpQ9QPyXmBPXSyorzawgbQYXEWdQfdnux]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6gWmbjNeKABBvgmZjgj7Xas5qmAeS2nABQNqFJ8UA5VXyp144Dca88t]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3jGU5GB7zDh6iprmGfdmvB9BuNybuAsCTwrJJdomKodaqbXSegk33i2]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f hdxN1RY63sqLq5F3QiM8FaFRS75aSQxpdgPp1MXN2RQrjzFAAGVNxN]	plain	nicks=4292834528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3nKghbnmUhKgWqBJveVZBFndjx3FFPsNxfb8s3NPNVcn3xPAhLg2JRX]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5oXogxcBYqAv5fJEUVt3AhAuR5B6g3xc7RgE352qE2QusLSiQ1tEtu4]	plain	nicks=4292623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 65twh2GpL9gbM7dUadZG3PxdSGJu9KGF3gCc3LmjGjnD3JhxNBFTFWi]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 52YnPZRXuG8uR1JYmzkCPHB4bz31YN2VnLynQvW8R9UqsQSTkrFju3n]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6GmteLFS9FcwzU3BShWqPjDyGA1f9KYEsZg9D8S1NLpPW5h4pqpNCDq]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9mQCzxv8CWuuKhq6GSL2AAbSsmxy1MVn9NRkMp1bBLF8viRR12c17NK]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f FqgfSo7dvquvaTK4o267G2zsNHHjccAeY91QrYCUcCcXXMMnFvYoYW]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aah97ktrDv3kXktP2PvdyuomWV4XCLmpKbk5bKzT2z2gSjo5SHt2a7]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f fWrGhHz7WtG3Qp3gEBeQFH53jR5Rn8UGbdo2bUuSdBEjCrszjKGLJs]	token	nicks=4294296552	token=BvF8w6sh…	units=8193	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f B7McZM3WXyw7yYNzE1oJ569M9yuRzaEw7xErsH3XKcqBzVoQFpmLjsR]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9ppBKfQEj4qL3dSUnfEUdnoZRCa43jMaqq1XtuzCEUPpdTG4F3NRkXM]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2AQzypNxLHtZs1s2a6GYcii6iBrMKxf45WhvZYXVJpo5NQZBJUF3gnL]	token	nicks=4294296552	token=BvF8w6sh…	units=5880	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5pCaGGyhXiVVJ7x9sW6DDFy4ZFmsd8QqUv9UUg236NikBP1snyVZyyx]	token	nicks=4207408048	token=26EG9u2V…	units=867300	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3KfspPTqA5v1RRft1uVJgank1aaum7sNuYcsNsW6URGtrjadEMz2gEo]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 72EwUvDA5C5itN2Q4KsuX1RkVD7Stvz5jfitumXy6inU9vGrnV3B12F]	token	nicks=4286797008	token=BvF8w6sh…	units=899400	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4vW1yKVGzSPXhPPUZ4Ezb6UsQrWzzp8jVebJPupQLehH3GiNsAjtAso]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BqQJFnjHgJHxoPdNNnVx3Ftro4P2dxvaNxxA89Qx7PdJKoVQLkaNc2C]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9fzeFLcxC5H7FRwtS9vHnD6doxsu7Nb8T5hQcisSMifBsgphPb6Mcfe]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AMgwz6hHEcpj8wzxcBCQJPC2Ee5in5MKtjcw91a9grq9V3RdFpWtAWK]	plain	nicks=4290950912	token=-	units=0	free
+PLAN	p8-fund-erin-3-r2	pay	inputs=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip']	required_plain=2016384	plain_change=4290934528	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+  (rebuilding alice's wallet arena (724 MB))
+BUILT	p8-fund-erin-3-r2	txid=B8BXRthfDSQe9aBa2heZKGExDZp6TZAGZ14HCwarh1FZiKAxqFHtR5L	file=/home/user/nmeme-run/wallets/alice/requests/p8-fund-erin-3-r2/final.jam
+SENT	p8-fund-erin-3-r2	txid=B8BXRthfDSQe9aBa2heZKGExDZp6TZAGZ14HCwarh1FZiKAxqFHtR5L	at_height=2516	reserved=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip']
+MINED	p8-fund-erin-3-r2	txid=B8BXRthfDSQe9aBa2heZKGExDZp6TZAGZ14HCwarh1FZiKAxqFHtR5L	height=2535	block=3nT8JLgyFxF4hbquvRPE8cnty4z56RbYp4HWdMKytCa8t4JLF4vc92W	canonical=yes	released=['2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 8WAXHpKtbuCURcAYm6g3KMcZ5FJiwUEgGG9LhZjMsDWKJDLGzkxoaip']
+RESULT	p8-fund-erin-3-r2	pay	mined	txid=B8BXRthfDSQe9aBa2heZKGExDZp6TZAGZ14HCwarh1FZiKAxqFHtR5L	height=2535	block=3nT8JLgyFxF4hbquvRPE8cnty4z56RbYp4HWdMKytCa8t4JLF4vc92W	
+DELTA	p8-fund-erin-3-r2	nock_total: 85758218696 -> 85756202312	nock_available: 60086826432 -> 60084810048	nock_attached: 25671392264 -> 25671392264	tokens: BvF8w6sh…: 913573 -> 913573 26EG9u2V…: 869088 -> 869088
+BALANCES	alice	height=2568	nock_total=85756202312	nock_available=60084810048	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AFGERjQqVqvCK3Zzdb17rGmzfXZTrFmCCspUF58d7jNBR8moqiL7Yxo]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aWAEx46tA2f8F5UKrCo25LpQ9QPyXmBPXSyorzawgbQYXEWdQfdnux]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6gWmbjNeKABBvgmZjgj7Xas5qmAeS2nABQNqFJ8UA5VXyp144Dca88t]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3jGU5GB7zDh6iprmGfdmvB9BuNybuAsCTwrJJdomKodaqbXSegk33i2]	token	nicks=1000	token=BvF8w6sh…	units=100	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BzB41g3H3RcQzkudXsHCt7P4byyLpbuPUKNAWPCwZuJF3XkzoRK2uis]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f hdxN1RY63sqLq5F3QiM8FaFRS75aSQxpdgPp1MXN2RQrjzFAAGVNxN]	plain	nicks=4292834528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3nKghbnmUhKgWqBJveVZBFndjx3FFPsNxfb8s3NPNVcn3xPAhLg2JRX]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5oXogxcBYqAv5fJEUVt3AhAuR5B6g3xc7RgE352qE2QusLSiQ1tEtu4]	plain	nicks=4292623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 65twh2GpL9gbM7dUadZG3PxdSGJu9KGF3gCc3LmjGjnD3JhxNBFTFWi]	plain	nicks=4291623808	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 52YnPZRXuG8uR1JYmzkCPHB4bz31YN2VnLynQvW8R9UqsQSTkrFju3n]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 6GmteLFS9FcwzU3BShWqPjDyGA1f9KYEsZg9D8S1NLpPW5h4pqpNCDq]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9mQCzxv8CWuuKhq6GSL2AAbSsmxy1MVn9NRkMp1bBLF8viRR12c17NK]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f FqgfSo7dvquvaTK4o267G2zsNHHjccAeY91QrYCUcCcXXMMnFvYoYW]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2aah97ktrDv3kXktP2PvdyuomWV4XCLmpKbk5bKzT2z2gSjo5SHt2a7]	plain	nicks=1000	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f fWrGhHz7WtG3Qp3gEBeQFH53jR5Rn8UGbdo2bUuSdBEjCrszjKGLJs]	token	nicks=4294296552	token=BvF8w6sh…	units=8193	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f B7McZM3WXyw7yYNzE1oJ569M9yuRzaEw7xErsH3XKcqBzVoQFpmLjsR]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9ppBKfQEj4qL3dSUnfEUdnoZRCa43jMaqq1XtuzCEUPpdTG4F3NRkXM]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 2AQzypNxLHtZs1s2a6GYcii6iBrMKxf45WhvZYXVJpo5NQZBJUF3gnL]	token	nicks=4294296552	token=BvF8w6sh…	units=5880	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 5pCaGGyhXiVVJ7x9sW6DDFy4ZFmsd8QqUv9UUg236NikBP1snyVZyyx]	token	nicks=4207408048	token=26EG9u2V…	units=867300	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 3KfspPTqA5v1RRft1uVJgank1aaum7sNuYcsNsW6URGtrjadEMz2gEo]	token	nicks=4294296552	token=26EG9u2V…	units=894	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 72EwUvDA5C5itN2Q4KsuX1RkVD7Stvz5jfitumXy6inU9vGrnV3B12F]	token	nicks=4286797008	token=BvF8w6sh…	units=899400	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 4vW1yKVGzSPXhPPUZ4Ezb6UsQrWzzp8jVebJPupQLehH3GiNsAjtAso]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f BqQJFnjHgJHxoPdNNnVx3Ftro4P2dxvaNxxA89Qx7PdJKoVQLkaNc2C]	plain	nicks=4292950912	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f 9fzeFLcxC5H7FRwtS9vHnD6doxsu7Nb8T5hQcisSMifBsgphPb6Mcfe]	plain	nicks=4290934528	token=-	units=0	free
+  NOTE	[2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f AMgwz6hHEcpj8wzxcBCQJPC2Ee5in5MKtjcw91a9grq9V3RdFpWtAWK]	plain	nicks=4290950912	token=-	units=0	free
+BALANCES	erin	height=2569	nock_total=5285346	nock_available=4000000	nock_pending=0	nock_attached=1285346	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=1536/available=1536/reserved=0/notes=1	open_requests=0
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP]	plain	nicks=2000000	token=-	units=0	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy]	plain	nicks=2000000	token=-	units=0	free
+SIMQ	A rc=2	B rc=0
+FLOOR	p8-simq-A-r2	quote_now out=1573 tokens	slippage=300 bps	min_out=1526
+PLAN	p8-simq-A-r2	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	waited 33s for the pool's turn
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-B-r2 (93nf7zNtBd…) is mined: the pool is free
+ABORTED	p8-simq-A-r2	quote delivers 1457 tokens, below the request's floor 1526
+ERROR	buy	erin	quote delivers 1457 tokens, below the request's floor 1526
+FLOOR	p8-simq-B-r2	quote_now out=1573 tokens	slippage=300 bps	min_out=1526
+PLAN	p8-simq-B-r2	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-sell-erin-1 (3MuYZ4NU76…) is mined: the pool is free
+BUILT	p8-simq-B-r2	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	file=/home/user/nmeme-run/wallets/erin/requests/p8-simq-B-r2/final.jam
+SENT	p8-simq-B-r2	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	at_height=2567	reserved=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']
+MINED	p8-simq-B-r2	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	height=2583	block=BdjgcSZY6Sg485c1gMSJBXQz6SmUGC8WF7NCpEkWN9QbnHv2n533CkJ	canonical=yes	released=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']
+RESULT	p8-simq-B-r2	buy	mined	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	height=2583	block=BdjgcSZY6Sg485c1gMSJBXQz6SmUGC8WF7NCpEkWN9QbnHv2n533CkJ	in=655360	out_net=1573	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=393849595871	exec_e9=416630642085	impact_bps=578
+BALANCES	erin	height=2633	nock_total=4614602	nock_available=2000000	nock_pending=0	nock_attached=2614602	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=3109/available=3109/reserved=0/notes=2	open_requests=0
+
+== P8-7b. a floor the pool cannot meet: refused before the build, nothing reserved afterwards ==
+PLAN	p8-floor-r2	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-B-r2 (93nf7zNtBd…) is mined: the pool is free
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+ABORTED	p8-floor-r2	quote delivers 1457 tokens, below the request's floor 999999999
+ERROR	buy	erin	quote delivers 1457 tokens, below the request's floor 999999999
+BALANCES	erin	height=2647	nock_total=4614602	nock_available=2000000	nock_pending=0	nock_attached=2614602	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=3109/available=3109/reserved=0/notes=2	open_requests=0
+
+== P8-8. a restart after the broadcast, reconciled by transaction id ==
+PLAN	p8-crash-broadcast-r2	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-B-r2 (93nf7zNtBd…) is mined: the pool is free
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+BUILT	p8-crash-broadcast-r2	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	file=/home/user/nmeme-run/wallets/erin/requests/p8-crash-broadcast-r2/final.jam
+CRASH	broadcast	(test hook: exiting without cleanup)
+BALANCES	erin	height=2670	nock_total=4614602	nock_available=0	nock_pending=2000000	nock_attached=2614602	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=3109/available=3109/reserved=0/notes=2	open_requests=1
+  OPEN	p8-crash-broadcast-r2	buy	built	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w
+SENT	p8-crash-broadcast-r2	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	(found in the mempool after a restart)
+RECONCILED	erin	1 open request(s) checked	p8-crash-broadcast-r2=sent
+MINED	p8-crash-broadcast-r2	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	height=2672	block=4AEoAh5ode3TUWrY7UZrkKa96QXwShtCiG6o8bGFH8MbvrMfVN25ccC	canonical=yes	released=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']
+SETTLED	p8-crash-broadcast-r2	mined	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	height=2672	block=4AEoAh5ode3TUWrY7UZrkKa96QXwShtCiG6o8bGFH8MbvrMfVN25ccC
+BALANCES	erin	height=2724	nock_total=3943858	nock_available=0	nock_pending=0	nock_attached=3943858	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=4566/available=4566/reserved=0/notes=3	open_requests=0
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 3merPhSPHgMcgvYXyNp1UqJ58pdGybDN1DjHAy4oPvWRmrGbcyLRdCo]	token	nicks=1285346	token=BvF8w6sh…	units=1536	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa BCXRCUgeyC3tLecqVR3gTd2YKnhkqhGUkAhVut7QgNgMayPYJs7NVcv]	token	nicks=1329256	token=BvF8w6sh…	units=1457	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa ALEZkknnqvJf43aHtt1iYosz5tTqLmWuufP7AYFrWtkeENDuezBSHU9]	token	nicks=1329256	token=BvF8w6sh…	units=1573	free
+REQUEST	p8-buy-erin-1	buy	mined	txid=8BPxkVdfeeZNWmKF2cLpgYB6reHr8jpGACWiyohEJRsUVAwrKKCRs7z	sent_height=2274	mined_height=2287	block=7jgF8o8D9BWiN9QZUn2HhfdPPMmEXvuJmK1Nb8pgX2xuK3DVDBfyT3P	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 3Yn5zrhtxGkUe4rCHdz2ruH49Y3Uvk3X3h8mJ5FMP4ogtLjXshqU3tn']
+REQUEST	p8-buy-erin-2	buy	mined	txid=6j1MTXLgFjqB3skt4o6ciJXFMfEtf4wqb7BRhaGH2M3C9mzg5WZN2HL	sent_height=2327	mined_height=2345	block=DQ7vnqC6MBaQWPxapEd6PVXBM9MR4GcenLwJANeyUuNEKmtHFUSZM4h	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa PamDiiPQLVPEx2CNd9RuEXKzSpTdGC5R5vLRCxtFzNQBQRAoQLq2m3']
+REQUEST	p8-sell-erin-1	sell	mined	txid=3MuYZ4NU76g2DffG4XxNeDefVYeav8u2fY2MqmRiYCwrrcB5smyxi1F	sent_height=2382	mined_height=2398	block=C1XcfVVEDYx4qCNv8aVgC1nVEPY6NfTtPvMSmwJ1WS8KPeEWvXAEjPa	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 8Qbj87eRCXMNrgvzsgTb5mtsnYfFAHCpbDth7BF45NaeYQTyK7buJif']
+REQUEST	p8-xfer-erin-1	transfer	mined	txid=CoBirpFo3JcFwACAnirAsKZRAN5zUoCTbDaxAYQ8RnyfqS3aoh3WbsK	sent_height=2433	mined_height=2451	block=63TtZeRD9EAGUGzuv8FCcesNzL6rM9cAr7EbhUi6kFcp9pov8gcgsof	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa DBxtgPX9PKS3bWPXwVjCGQ74BSW66NFxcxAD9Nsedi6dKrw8nWnd7gA']
+REQUEST	p8-simq-B-r2	buy	mined	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	sent_height=2567	mined_height=2583	block=BdjgcSZY6Sg485c1gMSJBXQz6SmUGC8WF7NCpEkWN9QbnHv2n533CkJ	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']
+REQUEST	p8-simq-A-r2	buy	aborted	txid=	sent_height=-1	mined_height=-1	block=	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']
+REQUEST	p8-floor-r2	buy	aborted	txid=	sent_height=-1	mined_height=-1	block=	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']
+REQUEST	p8-crash-broadcast-r2	buy	mined	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	sent_height=2669	mined_height=2672	block=4AEoAh5ode3TUWrY7UZrkKa96QXwShtCiG6o8bGFH8MbvrMfVN25ccC	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']
+#### backend demo complete

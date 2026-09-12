@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=1353 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=459441833569	exec_e9=484375461936	impact_bps=542
+POOL-BEFORE	17479924	38046
+POOL-AFTER	18131003	36693
+POOL-SPEND	to_user=1000+1353t	successor=17475643+36693t	lore=3281+0t	fee=0
+PINNED	user	2d99i9AfVAbaMNtzxDfeYqiYXiToAN37L4KxzBvKxpNuvjdLBfmvAd5	BgozkzHkhU8fB6DNtaWw1KVb8rY3WcgdbGYeqD89Ca5ciaVJxuBchXL
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/erin/requests/p8-simq-A-r3/assembled.jam
+NEWSIGHASH	4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa.4ytGKKmookD1CiJSgY5nUgWnV9WGsoqL6VxvAk83WFDmukbAgPmsvAY	7PQnauP92EC6nSJyWeewLPUhgthNEBRRBd7abo6eUtuVJjjEonNzm2w
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.9Ht1iovtj9bSC8hVEj473bp7av8CgLvfyoUNKghKDL94ojiPDDky4hh	Bfaz32ccKWayTmNtg4eKVMfe4doFjL2T1a7bCrHmLqdHj7eQrRuynDK

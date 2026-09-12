@@ -1,0 +1,14 @@
+FLOOR	p8-simq-B-r2	quote_now out=1573 tokens	slippage=300 bps	min_out=1526
+PLAN	p8-simq-B-r2	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-sell-erin-1 (3MuYZ4NU76…) is mined: the pool is free
+  (rebuilding erin's wallet arena (718 MB))
+BUILT	p8-simq-B-r2	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	file=/home/user/nmeme-run/wallets/erin/requests/p8-simq-B-r2/final.jam
+SENT	p8-simq-B-r2	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	at_height=2567	reserved=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']
+MINED	p8-simq-B-r2	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	height=2583	block=BdjgcSZY6Sg485c1gMSJBXQz6SmUGC8WF7NCpEkWN9QbnHv2n533CkJ	canonical=yes	released=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']
+RESULT	p8-simq-B-r2	buy	mined	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	height=2583	block=BdjgcSZY6Sg485c1gMSJBXQz6SmUGC8WF7NCpEkWN9QbnHv2n533CkJ	in=655360	out_net=1573	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=393849595871	exec_e9=416630642085	impact_bps=578
+DELTA	p8-simq-B-r2	nock_total: 5285346 -> 4614602	nock_available: 4000000 -> 0	nock_attached: 1285346 -> 2614602	tokens: BvF8w6sh…: 1536 -> 3109
+BALANCES	erin	height=2623	nock_total=4614602	nock_available=0	nock_pending=2000000	nock_attached=2614602	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=3109/available=3109/reserved=0/notes=2	open_requests=1
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP]	plain	nicks=2000000	token=-	units=0	reserved_by=p8-simq-A-r2
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 3merPhSPHgMcgvYXyNp1UqJ58pdGybDN1DjHAy4oPvWRmrGbcyLRdCo]	token	nicks=1285346	token=BvF8w6sh…	units=1536	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa ALEZkknnqvJf43aHtt1iYosz5tTqLmWuufP7AYFrWtkeENDuezBSHU9]	token	nicks=1329256	token=BvF8w6sh…	units=1573	free
+  OPEN	p8-simq-A-r2	buy	planned	txid=

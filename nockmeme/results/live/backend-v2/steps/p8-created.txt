@@ -1,0 +1,2 @@
+WALLET	erin	address=3VzUr11ZEXh6q3tgCG5qj5pAVuyah7peg6r9z8e6pRnT7fqgKVn881p	lock=2d99i9AfVAbaMNtzxDfeYqiYXiToAN37L4KxzBvKxpNuvjdLBfmvAd5	keys=/home/user/nmeme-run/keys/erin.export
+BALANCES	erin	height=2233	nock_total=0	nock_available=0	nock_pending=0	nock_attached=0	nock_attached_pending=0	nock_unknown=0	tokens=-	open_requests=0

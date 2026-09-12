@@ -1,0 +1,6 @@
+PLAN	p8-floor-r3	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 7F3bjg1cr3GP3K9cmofZUaUpsNbs56n3cc7ixjG9FEFP3zFynaFB8UN']	required_plain=0	plain_change=0	token_change=1259	backing=1329256	backing_spent=671744	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-B-r3 (91zS5RhZRy…) is mined: the pool is free
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+ABORTED	p8-floor-r3	quote delivers 1175 tokens, below the request's floor 999999999
+ERROR	buy	erin	quote delivers 1175 tokens, below the request's floor 999999999

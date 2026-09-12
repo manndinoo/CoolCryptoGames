@@ -1,0 +1,16 @@
+FLOOR	p8-simq-A-r2	quote_now out=1573 tokens	slippage=300 bps	min_out=1526
+PLAN	p8-simq-A-r2	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	waited 33s for the pool's turn
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-B-r2 (93nf7zNtBd…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-B-r2 (93nf7zNtBd…) is mined: the pool is free
+  (rebuilding erin's wallet arena (718 MB))
+ABORTED	p8-simq-A-r2	quote delivers 1457 tokens, below the request's floor 1526
+ERROR	buy	erin	quote delivers 1457 tokens, below the request's floor 1526

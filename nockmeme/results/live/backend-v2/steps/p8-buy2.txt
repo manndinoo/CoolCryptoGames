@@ -1,0 +1,11 @@
+FLOOR	p8-buy-erin-2	quote_now out=1570 tokens	slippage=100 bps	min_out=1555
+PLAN	p8-buy-erin-2	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa PamDiiPQLVPEx2CNd9RuEXKzSpTdGC5R5vLRCxtFzNQBQRAoQLq2m3']	required_plain=0	plain_change=0	token_change=1701	backing=1329256	backing_spent=672744	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-buy-erin-1 (8BPxkVdfee…) is mined: the pool is free
+  (rebuilding erin's wallet arena (718 MB))
+BUILT	p8-buy-erin-2	txid=6j1MTXLgFjqB3skt4o6ciJXFMfEtf4wqb7BRhaGH2M3C9mzg5WZN2HL	file=/home/user/nmeme-run/wallets/erin/requests/p8-buy-erin-2/final.jam
+SENT	p8-buy-erin-2	txid=6j1MTXLgFjqB3skt4o6ciJXFMfEtf4wqb7BRhaGH2M3C9mzg5WZN2HL	at_height=2327	reserved=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa PamDiiPQLVPEx2CNd9RuEXKzSpTdGC5R5vLRCxtFzNQBQRAoQLq2m3']
+MINED	p8-buy-erin-2	txid=6j1MTXLgFjqB3skt4o6ciJXFMfEtf4wqb7BRhaGH2M3C9mzg5WZN2HL	height=2345	block=DQ7vnqC6MBaQWPxapEd6PVXBM9MR4GcenLwJANeyUuNEKmtHFUSZM4h	canonical=yes	released=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa PamDiiPQLVPEx2CNd9RuEXKzSpTdGC5R5vLRCxtFzNQBQRAoQLq2m3']
+RESULT	p8-buy-erin-2	buy	mined	txid=6j1MTXLgFjqB3skt4o6ciJXFMfEtf4wqb7BRhaGH2M3C9mzg5WZN2HL	height=2345	block=DQ7vnqC6MBaQWPxapEd6PVXBM9MR4GcenLwJANeyUuNEKmtHFUSZM4h	in=655360	out_net=1570	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=394787203433	exec_e9=417426751592	impact_bps=573
+DELTA	p8-buy-erin-2	nock_total: 1329256 -> 658512	nock_available: 0 -> 0	nock_attached: 1329256 -> 658512	tokens: BvF8w6sh…: 1701 -> 3271
+BALANCES	erin	height=2385	nock_total=658512	nock_available=0	nock_pending=0	nock_attached=658512	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=3271/available=3271/reserved=0/notes=1	open_requests=0
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 8Qbj87eRCXMNrgvzsgTb5mtsnYfFAHCpbDth7BF45NaeYQTyK7buJif]	token	nicks=658512	token=BvF8w6sh…	units=3271	free

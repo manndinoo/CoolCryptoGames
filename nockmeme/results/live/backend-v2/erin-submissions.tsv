@@ -1,0 +1,12 @@
+request	side	state	txid	sent_height	mined_height	mined_block	attempts
+p8-buy-erin-1	buy	mined	8BPxkVdfeeZNWmKF2cLpgYB6reHr8jpGACWiyohEJRsUVAwrKKCRs7z	2274	2287	7jgF8o8D9BWiN9QZUn2HhfdPPMmEXvuJmK1Nb8pgX2xuK3DVDBfyT3P	1
+p8-buy-erin-2	buy	mined	6j1MTXLgFjqB3skt4o6ciJXFMfEtf4wqb7BRhaGH2M3C9mzg5WZN2HL	2327	2345	DQ7vnqC6MBaQWPxapEd6PVXBM9MR4GcenLwJANeyUuNEKmtHFUSZM4h	1
+p8-sell-erin-1	sell	mined	3MuYZ4NU76g2DffG4XxNeDefVYeav8u2fY2MqmRiYCwrrcB5smyxi1F	2382	2398	C1XcfVVEDYx4qCNv8aVgC1nVEPY6NfTtPvMSmwJ1WS8KPeEWvXAEjPa	1
+p8-xfer-erin-1	transfer	mined	CoBirpFo3JcFwACAnirAsKZRAN5zUoCTbDaxAYQ8RnyfqS3aoh3WbsK	2433	2451	63TtZeRD9EAGUGzuv8FCcesNzL6rM9cAr7EbhUi6kFcp9pov8gcgsof	1
+p8-simq-B-r2	buy	mined	93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	2567	2583	BdjgcSZY6Sg485c1gMSJBXQz6SmUGC8WF7NCpEkWN9QbnHv2n533CkJ	1
+p8-simq-A-r2	buy	aborted		-1	-1		0
+p8-floor-r2	buy	aborted		-1	-1		0
+p8-crash-broadcast-r2	buy	mined	86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	2669	2672	4AEoAh5ode3TUWrY7UZrkKa96QXwShtCiG6o8bGFH8MbvrMfVN25ccC	0
+p8-simq-A-r3	buy	mined	7EkQ6rSsz7ydACisBNctEj9QwRVvQTX1Wy3zsptjf1zQtXJ9Dqec9sf	2825	2849	2x2TZFAood3Fdt8ebGHR3Y52BVLs3iEfVQR8ESmbWwGW5tdR8vkYFBW	1
+p8-simq-B-r3	buy	mined	91zS5RhZRyYMDuqsFJm2eos6n6pPojYoykyjYPaVPUZNpbXSs22h3bs	2875	2900	AiUdENppayRaDRjso5PNZGE344cE5QDimjQTMf1VCNqqcyZkkn7rw2K	1
+p8-floor-r3	buy	aborted		-1	-1		0

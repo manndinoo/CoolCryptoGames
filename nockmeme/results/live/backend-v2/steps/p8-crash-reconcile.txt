@@ -1,0 +1,2 @@
+SENT	p8-crash-broadcast-r2	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	(found in the mempool after a restart)
+RECONCILED	erin	1 open request(s) checked	p8-crash-broadcast-r2=sent

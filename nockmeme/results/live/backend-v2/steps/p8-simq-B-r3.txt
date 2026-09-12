@@ -1,0 +1,25 @@
+FLOOR	p8-simq-B-r3	quote_now out=1353 tokens	slippage=1000 bps	min_out=1218
+PLAN	p8-simq-B-r3	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 56fREGYJF6rjWThdXKLd8rckiKZzyDXzrsCDqYoEpTd1XnnoPprYby8']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	waited 50s for the pool's turn
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-A-r3 (7EkQ6rSsz7…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-A-r3 (7EkQ6rSsz7…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-A-r3 (7EkQ6rSsz7…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-A-r3 (7EkQ6rSsz7…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-A-r3 (7EkQ6rSsz7…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-A-r3 (7EkQ6rSsz7…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p8-simq-A-r3 (7EkQ6rSsz7…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-A-r3 (7EkQ6rSsz7…) is mined: the pool is free
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+BUILT	p8-simq-B-r3	txid=91zS5RhZRyYMDuqsFJm2eos6n6pPojYoykyjYPaVPUZNpbXSs22h3bs	file=/home/user/nmeme-run/wallets/erin/requests/p8-simq-B-r3/final.jam
+SENT	p8-simq-B-r3	txid=91zS5RhZRyYMDuqsFJm2eos6n6pPojYoykyjYPaVPUZNpbXSs22h3bs	at_height=2875	reserved=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 56fREGYJF6rjWThdXKLd8rckiKZzyDXzrsCDqYoEpTd1XnnoPprYby8']
+MINED	p8-simq-B-r3	txid=91zS5RhZRyYMDuqsFJm2eos6n6pPojYoykyjYPaVPUZNpbXSs22h3bs	height=2900	block=AiUdENppayRaDRjso5PNZGE344cE5QDimjQTMf1VCNqqcyZkkn7rw2K	canonical=yes	released=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 56fREGYJF6rjWThdXKLd8rckiKZzyDXzrsCDqYoEpTd1XnnoPprYby8']
+RESULT	p8-simq-B-r3	buy	mined	txid=91zS5RhZRyYMDuqsFJm2eos6n6pPojYoykyjYPaVPUZNpbXSs22h3bs	height=2900	block=AiUdENppayRaDRjso5PNZGE344cE5QDimjQTMf1VCNqqcyZkkn7rw2K	in=655360	out_net=1259	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=494127026953	exec_e9=520540111199	impact_bps=534
+DELTA	p8-simq-B-r3	nock_total: 7943858 -> 6602370	nock_available: 4000000 -> 0	nock_attached: 3943858 -> 6602370	tokens: BvF8w6sh…: 4566 -> 7178
+BALANCES	erin	height=2929	nock_total=6602370	nock_available=0	nock_pending=0	nock_attached=6602370	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=7178/available=7178/reserved=0/notes=5	open_requests=0
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 3merPhSPHgMcgvYXyNp1UqJ58pdGybDN1DjHAy4oPvWRmrGbcyLRdCo]	token	nicks=1285346	token=BvF8w6sh…	units=1536	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa BSXcitPYSW213MGFLoQFVVqqTWYtou87N3qsA7admv2hnJ9M8YBrYVo]	token	nicks=1329256	token=BvF8w6sh…	units=1353	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa BCXRCUgeyC3tLecqVR3gTd2YKnhkqhGUkAhVut7QgNgMayPYJs7NVcv]	token	nicks=1329256	token=BvF8w6sh…	units=1457	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa ALEZkknnqvJf43aHtt1iYosz5tTqLmWuufP7AYFrWtkeENDuezBSHU9]	token	nicks=1329256	token=BvF8w6sh…	units=1573	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 7F3bjg1cr3GP3K9cmofZUaUpsNbs56n3cc7ixjG9FEFP3zFynaFB8UN]	token	nicks=1329256	token=BvF8w6sh…	units=1259	free

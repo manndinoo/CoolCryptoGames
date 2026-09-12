@@ -1,0 +1,6 @@
+BALANCES	erin	height=2826	nock_total=7943858	nock_available=4000000	nock_pending=0	nock_attached=3943858	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=4566/available=4566/reserved=0/notes=3	open_requests=0
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 3merPhSPHgMcgvYXyNp1UqJ58pdGybDN1DjHAy4oPvWRmrGbcyLRdCo]	token	nicks=1285346	token=BvF8w6sh…	units=1536	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 56fREGYJF6rjWThdXKLd8rckiKZzyDXzrsCDqYoEpTd1XnnoPprYby8]	plain	nicks=2000000	token=-	units=0	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa BCXRCUgeyC3tLecqVR3gTd2YKnhkqhGUkAhVut7QgNgMayPYJs7NVcv]	token	nicks=1329256	token=BvF8w6sh…	units=1457	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa ALEZkknnqvJf43aHtt1iYosz5tTqLmWuufP7AYFrWtkeENDuezBSHU9]	token	nicks=1329256	token=BvF8w6sh…	units=1573	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 4ytGKKmookD1CiJSgY5nUgWnV9WGsoqL6VxvAk83WFDmukbAgPmsvAY]	plain	nicks=2000000	token=-	units=0	free
