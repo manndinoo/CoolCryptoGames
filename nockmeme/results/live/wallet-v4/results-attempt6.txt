@@ -1,0 +1,8 @@
+== 1. a new wallet: carol ==
+WALLET	carol	address=7tk6CeaZC3UvTXrAthf7HpJtS9kiijfEfaebVbHEZHXqJ6sDHFj1kCz	lock=CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	keys=/home/user/nmeme-run/keys/carol.export
+BALANCES	created	carol_nock=2623440	carol_tokens=11570	bob_tokens=11570	pool=8823465/74557
+== 2. funding: alice pays carol 2000000 nicks ==
+PENDING	fund	txid=9kqAYyfdkZAc17EWG6uCFbWXTjndU6sfpJvKxrwu1BT1t4935infYPE	sent_at=765	reserved:[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax BBcx4o4owEHza6HTswRRgsFxSkF8GX5bpQBwsCuyxGSVKznbtKwGVif]
+FUND	txid=9kqAYyfdkZAc17EWG6uCFbWXTjndU6sfpJvKxrwu1BT1t4935infYPE	height=775	from=alice	to=carol	nicks=2000000	carol_nock: 2623440 -> 4623440	(4623440 plain-nicks, 7 token-notes)
+BALANCES	funded	carol_nock=4623440	carol_tokens=11570	bob_tokens=11570	pool=8823465/74557
+== 3. buy from the main pool of token B with 655360 nicks ==

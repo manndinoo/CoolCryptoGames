@@ -1,0 +1,10 @@
+ATTACHED	8Jam9FwZsKZBV3FQtoLVkVGWcVHb7h7bbjWjiy2UPAoqJPmCk1KNiq5	1977
+QUOTE	sell	in=1976 tokens	out_net=346668 nicks	pool_fee=19 tokens	lore_fee=1747 nicks	nock_fees=1747 nicks	token_fees=19 tokens	network_fee=16384 nicks	spot_e9=183381510112	exec_e9=175439271255	impact_bps=452
+POOL-BEFORE	11006925	60022
+POOL-AFTER	10659510	61998
+POOL-SPEND	to_user=346668+0t	successor=10658510+61998t	lore=1747+0t	fee=0
+PINNED	user	8Jam9FwZsKZBV3FQtoLVkVGWcVHb7h7bbjWjiy2UPAoqJPmCk1KNiq5	BGfTDrz7XZjvNHVhZ2sFBfmbhkJpWcXN8cuvdRqD1Qc6oi4Xr1vP9oX
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/walletdemo/sell/assembled.jam
+NEWSIGHASH	CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw.At53Ec7HsUGu3JTA7FmgaP4w73Y91HDt2tucWyurTQrwDAFEaZ1r9o5	CbNGQDwpd66oZEwhqAE85wa95iHi9CGRzNa2hhk8rCTkkxyqfaBcFin
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.9WjQjiFq5fxx3dFF8zSgQ7MkZCRHEmD54aAgENwSLcUHaJSvBHga3L	4Uhc3Q4rjByM13qwwRSDp78FVhKfPWrtLdUr9sKAhkgeo44L7xTV1Vi

@@ -1,0 +1,16 @@
+== 1. a new wallet: carol ==
+WALLET	carol	address=AF9QXYVckAWgST9vUwwWrEFNieE2xU1ZpjZXJMaBp6hRj2SQrZfgnsV	lock=8Jam9FwZsKZBV3FQtoLVkVGWcVHb7h7bbjWjiy2UPAoqJPmCk1KNiq5	keys=/home/user/nmeme-run/keys/carol.export
+BALANCES	created	carol_nock=2000000	carol_tokens=8942	bob_tokens=11870	pool=10053094/65615
+== 2. funding: alice pays carol 2000000 nicks ==
+PENDING	fund	txid=4PJeeFXFUxyamz95kbw5JQ4YuniatN2WC3mnskxeTGvvvAVriwvdx5i	sent_at=1323	reserved:[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 3hcJbofLjgbD8W5SJ92ar9ZJwAfgAfZUNnnZ5fivt7xjNusANDGixw5]
+FUND	txid=4PJeeFXFUxyamz95kbw5JQ4YuniatN2WC3mnskxeTGvvvAVriwvdx5i	height=1325	from=alice	to=carol	nicks=2000000	carol_nock: 2000000 -> 4000000	(4000000 plain-nicks, 3 token-notes)
+BALANCES	funded	carol_nock=4000000	carol_tokens=8942	bob_tokens=11870	pool=10053094/65615
+== 3. buy from the main pool of token B with 655360 nicks ==
+PENDING	buy	txid=3ecKUK8vrRdS86TV4mMh7ijVxYFHYZZoTk1viLBErJov3Nidf9EFeug	sent_at=1334	reserved:[2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp 6QezyjgbzUS2wvYfQ2nSrYdrHva24kEbbLYgRejN6vDbW2f9VSbE4op][ CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw][ 3HD37M3PH4Hxsw33Xx8zfdai6PzcurSzNu5uYhB2cqWt6bDGWnMi6KS]
+BUY	txid=3ecKUK8vrRdS86TV4mMh7ijVxYFHYZZoTk1viLBErJov3Nidf9EFeug	height=1348	buy in=655360 nicks out_net=3953 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=153213350605 exec_e9=165788009107 impact_bps=820	carol_nock: 4000000 -> 2000000	carol_tokens: 8942 -> 12895
+BALANCES	after buy	carol_nock=2000000	carol_tokens=12895	bob_tokens=11870	pool=10704173/61662
+== 4. sell half back ==
+PENDING	sell	txid=56wvUuioPycYxkvqbXNrSPT19YfFdBBB7t1CnXPkA4v69s3catAZ5n3	sent_at=1360	reserved:[CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw 2Qw7x22ZTnKTtkPhKqn8xKrQcPeWDkSxbmqDYEhV1V5o3zv4y7vYpnd][ 2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp][ 2nq3a6GUtuFwmQe3DtchKQqnjk4NRam2aQvDNo2kYSbCZW2CaeJ3vJb][ CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw][ D1YtHJgfXJJK3U9X5k6YpWHx19vZh7kQ7YiRvUs5CZgMeJnnJ1t2nCh]
+SELL	txid=56wvUuioPycYxkvqbXNrSPT19YfFdBBB7t1CnXPkA4v69s3catAZ5n3	height=1363	sell in=2095 tokens out_net=347576 nicks pool_fee=20 tokens lore_fee=1751 nicks nock_fees=1751 nicks token_fees=20 tokens network_fee=16384 nicks spot_e9=173594320651 exec_e9=165907398568 impact_bps=463	carol_nock: 2000000 -> 0	carol_tokens: 12895 -> 10800	(change claim 2096 kept)
+BALANCES	after sell	carol_nock=0	carol_tokens=10800	bob_tokens=11870	pool=10355846/63757
+== 5. transfer 100 tokens to bob ==

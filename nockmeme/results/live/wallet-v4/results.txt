@@ -1,0 +1,23 @@
+== 1. a new wallet: carol ==
+WALLET	carol	address=AF9QXYVckAWgST9vUwwWrEFNieE2xU1ZpjZXJMaBp6hRj2SQrZfgnsV	lock=8Jam9FwZsKZBV3FQtoLVkVGWcVHb7h7bbjWjiy2UPAoqJPmCk1KNiq5	keys=/home/user/nmeme-run/keys/carol.export
+BALANCES	created	carol_nock=0	carol_tokens=10800	bob_tokens=11870	pool=10355846/63757
+== 2. funding: alice pays carol 2000000 nicks ==
+PENDING	fund	txid=2vGwiYFCiRXY6N3K52xuFwGjhAZJr6syyKHfcnvXdYHqQ4uZz2EMw2c	sent_at=1377	reserved:[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax BVNJLB8vAXZY3HkJpGrCdsjWAwV8K1g2aFUsMthCRUmeYXp63U8nVZs]
+FUND	txid=2vGwiYFCiRXY6N3K52xuFwGjhAZJr6syyKHfcnvXdYHqQ4uZz2EMw2c	height=1383	from=alice	to=carol	nicks=2000000	carol_nock: 0 -> 2000000	(2000000 plain-nicks, 4 token-notes)
+BALANCES	funded	carol_nock=2000000	carol_tokens=10800	bob_tokens=11870	pool=10355846/63757
+== 3. buy from the main pool of token B with 655360 nicks ==
+PENDING	buy	txid=6oN1t7J6QbgXNVDTD7M5dW8ChgbBjxpG5eWPLqZjg5phh3dyGmtgY8T	sent_at=1391	reserved:[2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp 41VXimL7huBQJPQii9PfY1z2yqMYMBkZRxFRfGbCYhLxrN2u5au9HLf][ CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw][ 6fxdqaJxMJdmoci7YmcTicaJbAgdEizqAKkx7RWwefxygi6aFRmGT6H]
+BUY	txid=6oN1t7J6QbgXNVDTD7M5dW8ChgbBjxpG5eWPLqZjg5phh3dyGmtgY8T	height=1407	buy in=655360 nicks out_net=3735 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=162426808036 exec_e9=175464524765 impact_bps=802	carol_nock: 2000000 -> 0	carol_tokens: 10800 -> 14535
+BALANCES	after buy	carol_nock=0	carol_tokens=14535	bob_tokens=11870	pool=11006925/60022
+== 4. sell half back ==
+NOTE	sell	no plain note left: the token note's own NOCK pays the fee (spent with its change claim)
+PENDING	sell	txid=3wxnv4VQRqL3YDfZYxJimpmWW7mru6YwWDPpGUsLkXYQ18E4ALL5rAg	sent_at=1417	reserved:[CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw At53Ec7HsUGu3JTA7FmgaP4w73Y91HDt2tucWyurTQrwDAFEaZ1r9o5][ 2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp][ 9WjQjiFq5fxx3dFF8zSgQ7MkZCRHEmD54aAgENwSLcUHaJSvBHga3L]
+SELL	txid=3wxnv4VQRqL3YDfZYxJimpmWW7mru6YwWDPpGUsLkXYQ18E4ALL5rAg	height=1420	sell in=1976 tokens out_net=346668 nicks pool_fee=19 tokens lore_fee=1747 nicks nock_fees=1747 nicks token_fees=19 tokens network_fee=16384 nicks spot_e9=183381510112 exec_e9=175439271255 impact_bps=452	carol_nock: 0 -> 0	carol_tokens: 14535 -> 12559	(change claim 1977 kept)
+BALANCES	after sell	carol_nock=0	carol_tokens=12559	bob_tokens=11870	pool=10659510/61998
+== 5. transfer 100 tokens to bob ==
+NOTE	transfer	no plain note left: the token note's own NOCK pays the fee (spent with its change claim)
+PENDING	xfer	txid=6ctUCNCsAPwcEd8RoLDHcy6hVyB9epUxroAwi8pCgGPzm4Ta1bA9xoy	sent_at=1427	reserved:[CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw A4JCu9CbMJ7b3wYM6aREixScNiFT2bxgMGsj5uksH8URF3c84XxVig3]
+TRANSFER	txid=6ctUCNCsAPwcEd8RoLDHcy6hVyB9epUxroAwi8pCgGPzm4Ta1bA9xoy	height=1429	tokens=100	from=carol	to=bob	carol_tokens: 12559 -> 12459	bob_tokens: 11870 -> 11970	carol_nock: 0 -> 0	(dust 1000 and the network fee)
+BALANCES	after transfer	carol_nock=0	carol_tokens=12459	bob_tokens=11970	pool=10659510/61998
+LEDGER	carol	pending now: 0 (every sent transaction was mined and released)
+#### wallet demo complete

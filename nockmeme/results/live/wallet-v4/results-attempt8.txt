@@ -1,0 +1,13 @@
+== 1. a new wallet: carol ==
+WALLET	carol	address=AF9QXYVckAWgST9vUwwWrEFNieE2xU1ZpjZXJMaBp6hRj2SQrZfgnsV	lock=8Jam9FwZsKZBV3FQtoLVkVGWcVHb7h7bbjWjiy2UPAoqJPmCk1KNiq5	keys=/home/user/nmeme-run/keys/carol.export
+BALANCES	created	carol_nock=6000000	carol_tokens=5075	bob_tokens=11770	pool=9474544/69482
+== 2. funding: alice pays carol 2000000 nicks ==
+PENDING	fund	txid=Nc3SA7uTGqG18rWai6Y5xppTocxwVNjgaGMun3FEoRNzQH7kXM1DDG	sent_at=910	reserved:[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax 4pJvNyYcQoewNYqKH3dwqkDArR3euUdDTYDUqiFE1XyZ2M9F7sBEcP9]
+FUND	txid=Nc3SA7uTGqG18rWai6Y5xppTocxwVNjgaGMun3FEoRNzQH7kXM1DDG	height=922	from=alice	to=carol	nicks=2000000	carol_nock: 6000000 -> 8000000	(8000000 plain-nicks, 1 token-notes)
+BALANCES	funded	carol_nock=8000000	carol_tokens=5075	bob_tokens=11770	pool=9474544/69482
+== 3. buy from the main pool of token B with 655360 nicks ==
+PENDING	buy	txid=DAJJ2TTzEXLNSMsVocTGR82dAJQQiyPjmSdizTU4TJc8EJyxeg7nHs	sent_at=932	reserved:[2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp 9AGe7hdt6hwU3Dt47eQSK1a2BQsfvib7kLUTteJDbeSeMFgK1kyegvQ][ CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw][ 5mDCLj3bvNznfoYymAwDDdQkncRUXJthnhXLbfK6weV3ij2sL3Gppct]
+BUY	txid=DAJJ2TTzEXLNSMsVocTGR82dAJQQiyPjmSdizTU4TJc8EJyxeg7nHs	height=936	buy in=655360 nicks out_net=4425 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=136359690279 exec_e9=148103954802 impact_bps=861	carol_nock: 8000000 -> 6000000	carol_tokens: 5075 -> 9500
+BALANCES	after buy	carol_nock=6000000	carol_tokens=9500	bob_tokens=11770	pool=10125623/65057
+== 4. sell half back ==
+PENDING	sell	txid=5VXuZDnBFmRDepXGPN7B4TfRW3zntM46UT3cqasfnzyYVvb7TTik7z5	sent_at=952	reserved:[CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw AWHZGF8Hbi8QtwPLA86DLThkR7jdmniScngtMgWUmkDYnT8AgeRJs4Y][ CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw][ 7fEyM51AdFpb7UNCRCXFjJPnVAqUXLUDCEHxvhVqJdg8J9jityrr2JQ][ 2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp][ 6ChiYdeus2gJDi7PK5WosSpx3PQeVyhMXNoks9371fq4ZremDhHcxpV]

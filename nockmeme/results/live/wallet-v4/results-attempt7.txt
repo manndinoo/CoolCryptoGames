@@ -1,0 +1,12 @@
+== 1. a new wallet: carol ==
+WALLET	carol	address=AF9QXYVckAWgST9vUwwWrEFNieE2xU1ZpjZXJMaBp6hRj2SQrZfgnsV	lock=8Jam9FwZsKZBV3FQtoLVkVGWcVHb7h7bbjWjiy2UPAoqJPmCk1KNiq5	keys=/home/user/nmeme-run/keys/carol.export
+BALANCES	created	carol_nock=6000000	carol_tokens=0	bob_tokens=11670	pool=8823465/74557
+== 2. funding: alice pays carol 2000000 nicks ==
+PENDING	fund	txid=9xjNGXzgvqxKAwi4Gqj8BVf4wLB8cwMyHfeZSsHvjNJ2PersSReTHam	sent_at=833	reserved:[4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax CicyDAvyAc1LoyhJUsFoQRdhmf7m7A4SkX1TPEZe7mTfbnRSRuuwadn]
+FUND	txid=9xjNGXzgvqxKAwi4Gqj8BVf4wLB8cwMyHfeZSsHvjNJ2PersSReTHam	height=847	from=alice	to=carol	nicks=2000000	carol_nock: 6000000 -> 8000000	(8000000 plain-nicks, 0 token-notes)
+BALANCES	funded	carol_nock=8000000	carol_tokens=0	bob_tokens=11670	pool=8823465/74557
+== 3. buy from the main pool of token B with 655360 nicks ==
+PENDING	buy	txid=4N5Eq19MaLWzJe27F9gfNWei9wSHtysjuSzU8HefoGrU5ZJTdrB71bV	sent_at=854	reserved:[CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw 2GxYX1uNy7QJsKnQGHYJsU78cDf9P59gQirDZkBVMAfnr37dtKEV3nP][ 2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp][ D2wdbAmYkWMDf4CSPphGgpPLyPVU2NbNNomxzXEo5vazdRQZkHCvdqv]
+BUY	txid=4N5Eq19MaLWzJe27F9gfNWei9wSHtysjuSzU8HefoGrU5ZJTdrB71bV	height=857	buy in=655360 nicks out_net=5075 tokens pool_fee=6510 nicks lore_fee=3281 nicks nock_fees=9791 nicks token_fees=0 tokens network_fee=16384 nicks spot_e9=118345225800 exec_e9=129134975369 impact_bps=911	carol_nock: 8000000 -> 6000000	carol_tokens: 0 -> 5075
+BALANCES	after buy	carol_nock=6000000	carol_tokens=5075	bob_tokens=11670	pool=9474544/69482
+== 4. sell half back ==

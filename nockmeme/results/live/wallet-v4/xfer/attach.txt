@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	100
+ATTACHED	8Jam9FwZsKZBV3FQtoLVkVGWcVHb7h7bbjWjiy2UPAoqJPmCk1KNiq5	3635
+WROTE	/home/user/nmeme-run/walletdemo/xfer/attached.jam
+NEWSIGHASH	CtQgWJuE2wDcqtfqEErMz6J2NNFzToXqwsXUfrMKQRb5WRNQKsYZ2nw.A4JCu9CbMJ7b3wYM6aREixScNiFT2bxgMGsj5uksH8URF3c84XxVig3	4AZuRUcD3d7MvzaaspfuE5F3FMPms1kGxtsvUcG59GbefNQb6QZkRZv

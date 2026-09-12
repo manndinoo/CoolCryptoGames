@@ -1,0 +1,8 @@
+2026-09-12T06:09:00.656243Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 2vGwiYFCiRXY6N3K52xuFwGjhAZJr6syyKHfcnvXdYHqQ4uZz2EMw2c
+2026-09-12T06:09:00.667855Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Heard new valid transaction
+2026-09-12T06:12:02.461476Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3wxnv4VQRqL3YDfZYxJimpmWW7mru6YwWDPpGUsLkXYQ18E4ALL5rAg
+2026-09-12T06:12:02.481797Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Heard new valid transaction
+2026-09-12T06:12:44.545205Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6ctUCNCsAPwcEd8RoLDHcy6hVyB9epUxroAwi8pCgGPzm4Ta1bA9xoy
+2026-09-12T06:12:44.559118Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Heard new valid transaction
+2026-09-12T06:10:18.079825Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6oN1t7J6QbgXNVDTD7M5dW8ChgbBjxpG5eWPLqZjg5phh3dyGmtgY8T
+2026-09-12T06:10:18.110379Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Heard new valid transaction
