@@ -34,8 +34,10 @@ BOB=$(wallet bob list-master-addresses | strip | grep -oE '^- Address: [A-Za-z0-
 MINER_PID=$!; trap 'kill "$MINER_PID" 2>/dev/null || true' EXIT
 for who in alice bob; do wallet "$who" list-notes >/dev/null 2>&1 || true; done
 pool_state() { quiet "$NMEME_INDEX" pool --addr "$PUB" --token "$1" --fee-bps "$2" $PP 2>/dev/null | awk -F'\t' '$1=="POOL"{print $2" "$3" "$4" "$5" "$6}'; }
-tokens_at() { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null | awk -F'\t' '$1=="NOTE"{s+=$4} END{print s+0}'; }
-token_note_at() { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'; }
+# (a lock holding none of the token makes the indexer exit non-zero: that is
+# a balance of zero here, not an error, hence the `|| true` under pipefail)
+tokens_at() { { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null || true; } | awk -F'\t' '$1=="NOTE"{s+=$4} END{print s+0}'; }
+token_note_at() { { quiet "$NMEME_INDEX" token-note --addr "$PUB" --lock "$1" --token "$2" 2>/dev/null || true; } | awk -F'\t' '$1=="NOTE" {gsub(/[][]/,"",$2); print $4" "$2}' | sort -rn | head -1 | awk '{print $2" "$3" "$1}'; }
 nock_at() { quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$1" 2>/dev/null | awk -F'\t' '$1=="FUNDING" && ($4=="plain"||$4=="coinbase") {s+=$5} END{print s+0}'; }
 balances() { echo "BALANCES	$1	${WHO}_nock=$(nock_at "$MY_LOCK")	${WHO}_tokens=$(tokens_at "$MY_LOCK" "$TOKEN_B")	bob_tokens=$(tokens_at "$BOB_LOCK" "$TOKEN_B")	pool=$(pool_state "$TOKEN_B" "$FEE_BPS" | cut -d' ' -f4,5 | tr ' ' '/')"; }
 prepared() { # <who> <label> <names> <to> <amount> [token-note] -> "<file> <sighash>"
