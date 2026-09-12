@@ -134,8 +134,11 @@ A transaction is a valid NMEME genesis for `token-id` when all of:
 - **G2.** At least one input exists, so an anchor exists.
 - **G3.** Every output note carrying `meme` carries a `%c` claim with the
   identical `ticker` and `decimals`.
-- **G4.** Every claimed `amount` is a positive integer.
+- **G4.** Every claimed `amount` is a positive integer, and the amounts sum
+  to at most `MAX_SUPPLY`.
 - **G5.** `token-id` has never been created before in canonical order.
+- **G6.** Every `%c` claim names `token-id`, the id derived from the anchor
+  (§2a).
 
 Total supply is defined as the sum of the `%c` amounts, and is fixed forever —
 there is no mint operation in v0.
@@ -143,37 +146,46 @@ there is no mint operation in v0.
 ## 6. Transfer
 
 Let `consumed` be the multiset of `(token-id, amount)` carried by the
-transaction's input notes.
+transaction's input notes, summed per `token-id`.
 
-- **T1.** v0 supports exactly one distinct `token-id` in `consumed`. A
-  transaction consuming two different tokens is invalid as an NMEME operation.
-- **T2.** Every output note carrying `meme` MUST carry a `%t` claim naming that
-  same `token-id`.
-- **T3.** The sum of output claim amounts MUST equal the sum of consumed
-  amounts. Exact conservation — no partial burn, no implicit change.
+- **T1.** A transaction may consume several token ids; each is accounted for
+  on its own.
+- **T2.** For every `token-id` named by a `%t` claim on an output, the
+  outputs' `%t` claims of that id sum to at most the consumed amount of that
+  id. A claim of an id the inputs do not carry is invalid.
+- **T3.** For every consumed `token-id`, the outputs' claims become holdings
+  and the shortfall, `consumed − claimed`, is destroyed. Exact conservation is
+  the normal case; less is a partial burn, never an error.
 
-If any of T1–T3 fails, the transaction is **not** a valid NMEME operation, and
-the consumed token weight is destroyed (§7).
+So change is still the sender's responsibility: a sender who forgets to
+colour their change note burns the remainder, and a token-unaware wallet that
+spends a coloured note as plain funds burns everything on it. A conforming
+wallet MUST construct the change claim automatically.
 
-Note that T3 makes the change output the sender's own responsibility: a sender
-who forgets to color their change note burns the remainder. A conforming wallet
-MUST construct the change claim automatically.
+## 7. Burn-on-invalid, and the one rule
 
-## 7. Burn-on-invalid
+> **B1.** A confirmed base-chain spend is never rolled back by the overlay.
+> Token weight on an input that no output claims is destroyed.
 
-> **B1.** A confirmed base-chain spend is never rolled back by the overlay. If a
-> transaction's token payload is absent, malformed, or violates §5/§6, the token
-> weight on its inputs is destroyed and no output receives weight.
+On the shipped node these are reading conventions: consensus mines anything,
+and an indexer that meets a transaction breaking T2 (claiming more than went
+in, or a token the inputs do not carry) or G1–G6 records the consumed weight
+as burned and assigns nothing — an overlay that "rejected" the action while
+leaving the inputs spent would resurrect tokens on the next rebuild.
 
-This is not a choice. The base chain has already spent the inputs; an overlay
-that "rejected" the action while leaving the inputs spent would resurrect
-tokens on the next rebuild. The earlier simulation reached the same conclusion
-and it carries over unchanged.
+On the fork (`docs/ENFORCEMENT.md` §3, `++  meme`) the same rules are
+consensus: a transaction breaking any of them, or carrying an entry under
+`meme` on an output that is not a well-formed claim (§2's bounds), is refused
+before it reaches a block. The indexer applies exactly the rule consensus
+applies (`crates/nmeme-core/src/consensus.rs` is the rule in Rust;
+`tests/oracle.rs` holds the indexer to it), so node acceptance and indexer
+balances agree on every transaction: a spend of 100 claiming 99 is accepted by
+both and leaves 99 held and 1 burned on both.
 
-The practical consequence is severe and must be stated plainly to users:
+The practical consequence is still severe and must be stated plainly to users:
 **spending a token note with an ordinary, token-unaware wallet burns the
 tokens.** Token-aware note selection is a hard requirement for any wallet that
-touches NMEME notes, not a nicety.
+touches NMEME notes, not a nicety (`docs/WALLET.md`).
 
 ## 8. Reorganizations
 

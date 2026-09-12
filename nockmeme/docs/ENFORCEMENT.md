@@ -117,10 +117,12 @@ and, in the same transaction:
   lock no party to the transaction pays);
 - the output at the treasury lock holds at least `⌊lore · N / B⌋` nicks,
   where `N` is the NOCK paid into the pool lock by the other spends plus
-  the NOCK the pool spends pay to anyone but the pool and the treasury —
-  every nick that crosses the pool's boundary other than the treasury
-  payment itself — and that output carries no `meme` entry: the treasury
-  is paid in NOCK and nothing else;
+  the NOCK the pool spend pays to anyone but the pool and the treasury,
+  plus — on a sell, `x1 < X` — the treasury payment itself, so that `N` is
+  the dust in plus the gross proceeds; on a buy (`x1 > X`) `N` is the
+  payment plus the dust out. This is exactly what the client's quote pays
+  in both directions (`docs/FEES.md` §1). That output carries no `meme`
+  entry: the treasury is paid in NOCK and nothing else;
 - every `meme` entry on every input and every output is a transfer claim
   of `T` (no genesis claims, no other tokens: the token standard would
   otherwise reject the whole transfer while consensus had already moved
@@ -135,19 +137,37 @@ was mined, because consensus never validated claims, and selling it into
 the pool released real NOCK. The fix is that consensus validates every
 claim on every transaction (`++  meme` in the patch):
 
-- a genesis claim is `[%0 %c ticker decimals amount tid]`, valid only if
-  no input carries a `meme` entry and `tid` equals the id derived from the
-  transaction's anchor input, the ticker and the decimals (the same
-  derivation the indexer uses, transcribed to Hoon);
-- for every token id, the transfer claims on a transaction's outputs may
-  not exceed the transfer and genesis claims of that id on its inputs;
-- a malformed entry counts for nothing.
+- **well-formed**: every `meme` entry on an output note is a claim the
+  standard admits — `[%0 %t tid amount]` with `1 ≤ amount ≤ 2^63 − 1`, or
+  `[%0 %c ticker decimals amount tid]` with a ticker of one to four limbs
+  of uppercase letters and digits (seven bytes each but the last), decimals
+  at most 18 and the same bound on the amount. Anything else under the key
+  refuses the transaction; it is not ignored;
+- **genesis**: if any output carries a genesis claim, no input carries a
+  `meme` entry, every genesis claim in the transaction has the same ticker
+  and decimals, each names the id derived from the transaction's anchor
+  input (its smallest input name), that ticker and those decimals (the
+  derivation the indexer uses, transcribed to Hoon), and the claimed
+  amounts sum to at most `2^63 − 1`;
+- **transfer**: for every token id named by a transfer claim on an output,
+  the transfer claims of that id on the outputs sum to at most the transfer
+  and genesis claims of that id on the inputs. Less is allowed: the
+  shortfall is destroyed (a partial burn), and a note holder can always
+  spend a token note as plain NOCK — which burns the tokens, as with a
+  token-unaware wallet — because the rule never forces a claim onto an
+  output. Several token ids in one transaction are accounted for
+  separately.
 
-A transaction breaking either rule is refused (`v1-token-claims`). So a
+A transaction breaking any of these is refused (`v1-token-claims`). So a
 claim on a mined note is backed by an unbroken history to a genesis, and
-the covenant's count is a count of real tokens. This makes the token
-standard's no-inflation rule a consensus rule for every transaction, not
-only for pool trades.
+the covenant's count is a count of real tokens. The indexer
+(`crates/nmeme-core/src/indexer.rs`) applies the same rule to accepted
+transactions, and `crates/nmeme-core/src/consensus.rs` is the rule in
+Rust with tests holding the two to each other (`tests/oracle.rs`): the
+node's acceptance and the indexer's balances agree on every case,
+including a spend of 100 that claims 99 (99 held, 1 burned, on both
+sides), a transaction carrying two tokens, and every genesis bound. Review
+of pack 5 found the earlier disagreement (the indexer wrote off all 100).
 
 The inequality is the constant product with the fee charged on the input
 side: the fee share of whatever comes in does not count towards the

@@ -71,12 +71,15 @@ pool's boundary; they are 0.5 % of 1,000 = 5 nicks.
 | reserves after | `x1 = x + d − G`, `y1 = y + T` | nicks, tokens |
 | network fee | as above | nicks, separate |
 
-The chain's own floor for `L` is `⌊(gin + gout) · lore / B⌋` with `gin` the
-nicks paid into the pool by the trader's spend and `gout` the nicks the
-pool pays to anyone but the treasury: on a buy that is `P + d`, exactly
-the client's `L`; on a sell it is `d + (G − L)`, 0.25 bps under the
-client's figure. The client pays its figure; the replay checks it; the
-chain checks the floor.
+The chain's floor for `L` is the same formula: `⌊base · lore / B⌋` with
+`base = gin + gout` on a buy (`gin` the nicks paid into the pool by the
+trader's spend, `gout` the nicks the pool pays to anyone but the
+treasury: `P + d`) and `base = gin + gout + L` on a sell (`d + (G − L) + L
+= d + G`). Quote, covenant and replay share one calculation
+(`nmeme_core::pool::lore_due`, `++  amm` in the patch); the replay reports
+`paid` and `due_floor` per trade and they are equal on every trade of the
+live runs. (The first prototype's floor excluded `L` from a sell's base and
+sat 0.25 bps under the quote; review of pack 5 asked for identity.)
 
 ## 2. What the quote shows
 
@@ -142,18 +145,17 @@ pool share, the spend of a pool note is valid only if:
 
 - the merged output at the Lore lock in the same transaction holds at
   least `⌊lore · N / 10000⌋` nicks, where `N` is every nick that crosses the
-  pool's boundary in the transaction other than the Lore payment itself —
-  the NOCK paid in by the trader's spend plus the NOCK the pool pays to
-  anyone but the Lore Wallet;
+  pool's boundary in the transaction: the NOCK paid in by the trader's
+  spend plus the NOCK the pool pays to anyone but the Lore Wallet, and on
+  a sell the Lore payment itself (it comes out of the gross proceeds);
 - that output carries no `meme` entry (NOCK only);
 - the pool's seeds go only to the pool lock, the Lore lock, or a lock the
   trader's spend also pays.
 
-`N` is exactly the NOCK paid on a buy (plus the nicks that travel with the
-tokens) and the seller's net proceeds on a sell, so the on-chain minimum
-is the full share on buys and the share of the *net* proceeds on sells —
-0.25 bps under the share of the gross. The client always pays the share of
-the gross (§1), which is above the minimum; the replay checks the client's
-figure, the chain checks the floor. Both rates and the Lore lock are in
-the pool's lock root: they cannot be changed, and no key exists that could
-move reserves or redirect the share.
+`N` is the NOCK paid on a buy plus the nicks that travel with the tokens,
+and on a sell the dust paid in plus the gross proceeds (the seller's net
+plus the Lore payment): the covenant tells the direction from the
+reserves (`x1 < X` is a sell). The quote pays exactly `N`'s share in both
+directions (§1). Both rates and the Lore lock are in the pool's lock root:
+they cannot be changed, and no key exists that could move reserves or
+redirect the share.

@@ -186,4 +186,11 @@ ALICE_FIRSTS="<first-names of alice's coinbase notes>" FEE_BPS=100 LORE_BPS=50 F
 # treasury's address from `list-master-addresses`.
 # The counterfeit regression, before the suite on the same chain:
 REPO=... RUN=... TOKEN=<TOKEN_A> ... bash /path/to/nockmeme/scripts/counterfeit-test.sh
+# After the suite, on the same chain (LORE_LOCK from the suite's LORE-WALLET line):
+# one rule for node and indexer (a 100 -> 99 spend, two tokens in one transaction,
+# a sell's treasury floor, the genesis bounds refused on arrival, rebuild and replay)
+REPO=... RUN=... ... LORE_LOCK=... GFILE_A=$RUN/genesis-A/final.jam XFILE_A=$RUN/xfer-A/final.jam \
+  bash /path/to/nockmeme/scripts/rules-test.sh 2>"$RUN/rules-progress.log" | tee "$RUN/rules-results.txt"
+# a new wallet's whole flow: creation, funding, buy, sell, transfer, with ids and balances
+REPO=... RUN=... ... LORE_LOCK=... bash /path/to/nockmeme/scripts/wallet-demo.sh 2>"$RUN/wallet-progress.log" | tee "$RUN/wallet-results.txt"
 ```
