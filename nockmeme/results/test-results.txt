@@ -1,5 +1,25 @@
 # nmeme test results
 
+## 2026-09-12 14:30 UTC: the wallet backend integrated
+
+Unit: 136 passed, 0 failed across nmeme-core, nmeme-tx and nmeme-index
+(cargo test --release with NOCKCHAIN_REPO set; unchanged in count — the
+new commands tx-status, key-lock and token-note --all were checked live:
+key-lock against carol's and bob's known lock roots, tx-status on a mined,
+a refused and a never-sent id). Backend: 26 passed, 0 failed
+(backend/tests, python3 -m unittest discover -s tests): the 15 supplied
+tests, two of them updated to the adapted fee rule (the token note a sell
+spends pays the fee from its own NOCK; a note too thin to pay is refused
+without a plain note and split evenly with one), and 11 lifecycle tests
+against a scripted chain (settlement never by inputs having been spent
+and never by a non-canonical block; a crash after the reservation aborts
+and releases on restart, after the build re-sends the stored file, after
+the broadcast finds it without re-sending; a node that forgets a sent
+transaction gets the same id again; two services on one database and one
+note: one sent, one refused by the reservation; balances split into
+total / available / pending / attached). Live: results/RESULTS.md §A23
+(results/live/backend-v1).
+
 ## 2026-09-12 06:40 UTC: one rule for node and indexer; the wallet flow
 
 Unit: 136 passed, 0 failed across nmeme-core, nmeme-tx and nmeme-index
