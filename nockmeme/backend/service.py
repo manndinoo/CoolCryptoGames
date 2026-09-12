@@ -269,7 +269,11 @@ class WalletService:
             q = self.quote_now(token, "buy", nicks)
             min_tokens_out = self.floor_from_slippage(q["out_net"], slippage_bps)
             self.log(f"FLOOR\t{request_id}\tquote_now out={q['out_net']} tokens\tslippage={slippage_bps} bps\tmin_out={min_tokens_out}")
-        req = Request(request_id, "buy", token, min_tokens_out, nicks, self.network_fee, self.dust)
+        # a buy's dust (the NOCK the bought token note carries) comes out of
+        # the pool's reserves in the quote (`nock_to_taker`), not from the
+        # buyer: the wallet pays exactly `nicks` and the fee (seen live, §A24:
+        # the change was 1,000 above the plan while `extra_nicks` was the dust)
+        req = Request(request_id, "buy", token, min_tokens_out, nicks, self.network_fee, 0)
         return self._execute(req, self.placeholder_address, nicks, self._finish_trade)
 
     def sell(self, token, units, request_id, min_nicks_out=0, slippage_bps=None):
