@@ -156,6 +156,7 @@ fn partial_burn_then_carry_on() {
             assert_eq!((effects[0].transferred, effects[0].burned), (99, 1));
         }
         Verdict::Refused(r) => panic!("refused: {r:?}"),
+        Verdict::Inactive => panic!("the always-active fork"),
     }
     assert!(matches!(o, Some(Outcome::Settled(ref e)) if e[0].transferred == 99 && e[0].burned == 1));
     agree(&w, &[&t]);
@@ -381,6 +382,7 @@ fn generated_transactions_agree_on_every_case() {
                     }
                     Outcome::Settled(e) => e.iter().map(|e| (e.token.clone(), (e.transferred, e.burned))).collect(),
                     Outcome::Created(_) => unreachable!("no genesis generated"),
+                    Outcome::Inactive => unreachable!("the always-active fork"),
                 };
                 assert_eq!(want, got, "effects differ for inputs {inputs:?} outputs {outputs:?}");
                 // and the live weight moved by exactly the burn
