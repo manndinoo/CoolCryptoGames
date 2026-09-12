@@ -330,7 +330,7 @@ fn cmd_rebuild(args: &[String]) -> Result<ExitCode, String> {
         .enable_all()
         .build()
         .map_err(|e| format!("tokio: {e}"))?;
-    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total, records, scan_max))
+    runtime.block_on(rebuild(addr, token, steps, addresses, expectations, expect_total, records, scan_max, activation))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -343,6 +343,7 @@ async fn rebuild(
     expect_total: Option<u64>,
     records: Vec<nmeme_index::FundingRecord>,
     scan_max: Option<u64>,
+    activation: Option<u64>,
 ) -> Result<ExitCode, String> {
     let mut client = NockchainServiceClient::connect(format!("http://{addr}"))
         .await
