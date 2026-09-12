@@ -1,0 +1,4 @@
+FEE	current=16384	required=6464	seed_words=35	witness_words=62
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	9223372036854775808
+WROTE	/home/user/nmeme-run/rules/huge-transfer/attached.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax.5yTPcjYdTVsRdsxUSmczEpc5oU3gtNYnmxYSh4RBcF5QrwHkKqfRNtc	DTWi9WYuN8nuotZ8XwceW8q2Kga762hDZe7vqu2HDmsD1Eb722k8SHT

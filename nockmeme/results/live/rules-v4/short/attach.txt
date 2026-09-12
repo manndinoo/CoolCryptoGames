@@ -1,0 +1,4 @@
+FEE	current=16384	required=6144	seed_words=34	witness_words=56
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	99
+WROTE	/home/user/nmeme-run/rules/short/attached.jam
+NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK.8xPRJgzjT4QHtgDqyyyMsTU627EyyqJxJc6PmkWZpsiEpDRAS5UTeXs	93ydjwtWULK1D6T1FrM1LvVNhxFajSiyKQWYcwkBD37HKJ8At8pC3HJ

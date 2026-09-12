@@ -791,6 +791,67 @@ mined — and was resumed for the rebuild and replay after the fix. Rebuild
 with provenance: pool 74,557, Alice 913,973, Bob 11,470, total 1,000,000,
 `ASSERT-OK`; replay equal to the live state.
 
+### A22. Node and indexer under one rule, live: partial burn, two tokens, genesis bounds
+
+`scripts/rules-test.sh` on the phase-four chain, after the suite
+(`live/rules-v4/`: every transaction file, the node's answer and log line
+for each, the rebuild, the replay; the earlier attempts' results are kept
+as `results-attempt*.txt`). The review of pack 5 found that spending 100
+tokens and claiming 99 passed the node's rule while the indexer wrote off
+all 100; this is the test of the fix (§A17's rule completed:
+`docs/ENFORCEMENT.md` §3, `crates/nmeme-core/src/consensus.rs`,
+`tests/oracle.rs`).
+
+| stage | txid | block | node | indexer |
+|---|---|---|---|---|
+| 0. alice hands bob 100 A and 100 B in notes carrying 300,000 nicks each | `AfW3Vi…`, `2CffAb…` | 1084, 1094 | accepted | two transfers |
+| A. bob spends the 100 A and claims 99 | `AEmQR8…` | 1103 | **accepted** (`outputs ≤ inputs`) | **bob's A 697 → 696: 99 held, 1 burned** (`Settled`) |
+| B. one transaction, two tokens: 99 A kept by bob, 100 B to alice | `DQ5jRq…` | 1122 | accepted | alice's B +100, bob's B −100, bob's A unchanged, nothing burned (`Settled`, two effects) |
+| C. a pool of A opened (fee 120 bps, 10,000 tokens), the 99 sold into it | `CMzhyN…`, `HLTNvx…` | 1136, 1151 | accepted | 99 tokens in, 64,154 nicks out net, pool share 1 token, Lore share 327 nicks; the Lore Wallet 34,848 → 35,175, all plain |
+| D. genesis bounds and malformed claims | eight transactions | — | **refused on arrival, every one `v1-token-claims`**, inputs unspent | never seen |
+| D. the edge accepted: ticker `LONGTICKER` (two limbs), 18 decimals, supply 2^63 − 1 | `DZPtMU…` | 1294 | accepted | bob holds 9,223,372,036,854,775,807 of `6G9bZS…` |
+
+The eight refusals: a lowercase ticker (`doge`), decimals 19, an amount of
+2^63, an amount of zero, a genesis naming the wrong id, two tickers in one
+genesis, a zero transfer claim, a transfer claim of 2^63. Each was built
+with `nmeme-tx attach`'s raw claim specs (the codec would never produce
+them), sent, and refused at admission with the node's log saying
+`heard-tx: Transaction context invalid: v1-token-claims`
+(`live/rules-v4/node-log-verdicts.txt`, `verdicts/`).
+
+**Rebuild with provenance** (`live/rules-v4/balances-A.txt`): 42 steps —
+both genesis and transfer transactions, the main pool's opening, every
+attack pool's opening, both donations, the honest merge, the neutralized
+inflate-claim trade, and this test's transactions across its attempts —
+with 1,513 coinbase records re-verified against block parents. Token A
+totals **999,996 = 1,000,000 − 4**: one unit burned per 100 → 99 spend
+mined on this chain (this run's and three earlier attempts'), each shown
+as `Settled` with `transferred: 99, burned: 1`; `ASSERT-OK`. Three
+outputs of other tokens or of no token were consumed by transactions
+outside the replay (the main pool's note by the wallet demo's trades) and
+are reported as `OUTSIDE`; every note of token A is traced.
+
+**Replay of the pool** (`live/rules-v4/replay-A.txt`): the sell's
+treasury payment equals the covenant's floor, `paid=327 due=327`; the
+invariant holds; the replayed state equals the live pool note.
+
+**What it took.** The stock wallet cannot spend a 1,000-nick token note
+(its planner floors the fee around 3,500 nicks and spreads it evenly over
+the notes named), so stage 0 exists. A wallet building two spends pays its
+change from each to the same lock, and consensus merges those seeds: the
+attach tool now puts the one claim on the merged note, and the re-signing
+helper leaves an untouched spend's signature alone. Two claims at one lock
+(the neutralized inflate-claim trades) are merged by the indexer as
+consensus merges them — the seed first in the decoded transaction wins,
+because Hoon's `tap` walks a tree right to left — a rule checked against
+the three such transactions this work produced (phase two and four mined
+with the pool's claim, phase three refused with the fabricated one): it
+picks the chain's choice in each. A rebuild over 1,500 blocks reads one
+chain state: it needs the miner paused after the node's page caches
+settle, and a token-scoped tolerance for outputs of *other* tokens spent
+outside the replay. Each of these is in the tooling and the docs now, and
+each cost an attempt (`results-attempt*.txt`).
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |
@@ -798,10 +859,11 @@ with provenance: pool 74,557, Alice 913,973, Bob 11,470, total 1,000,000,
 | note-data token standard: genesis, transfer, indexer verification, provenance | yes | yes (§A1–A13) | no: works on the shipped node |
 | two-party atomic settlement by output-source pins | yes | yes (§A14) | no |
 | `%amm` pool covenant: keyless reserves, constant product, pool share retained | yes (fork) | yes (§A15–A16, again under the claim rule §A19) | **yes**: the primitive is not in the shipped engine |
-| treasury share to the Lore Wallet, NOCK only, in the same transaction | yes (fork) | yes (§A16, §A19) | **yes** |
-| consensus validation of token claims (genesis id, per-token conservation) | yes (fork) | yes: the counterfeit regression (§A17) and the full suite (§A19) on a node carrying the rule | **yes** |
+| treasury share to the Lore Wallet, NOCK only, in the same transaction, the floor equal to the quote in both directions | yes (fork) | yes (§A16, §A19; `paid == due_floor` on every trade incl. sells, §A21, §A22) | **yes** |
+| consensus validation of token claims (genesis id and bounds, well-formed claims, per-token outputs ≤ inputs with the shortfall burned, several tokens per transaction) | yes (fork), and the indexer applies the same rule (`consensus.rs` oracle, `tests/oracle.rs`) | yes: the counterfeit regression (§A17), the suites (§A19, §A21), the 100 → 99 spend, the two-token transaction and the genesis bounds (§A22) | **yes** |
 | exact quotes: net amount, both shares with units, impact, network fee | yes | yes (§A16, §A19: quotes equal to the nick across two chains) | no |
-| Lore Wallet: held by a key, receipts verifiable on chain | yes | yes (18,087 nicks in 6 plain notes on the phase-three chain, read from the node and from the replay) | no |
+| Lore Wallet: held by a key, receipts verifiable on chain | yes | yes (35,175 nicks in plain notes on the phase-four chain, read from the node and from the replays) | no |
+| wallet flow: creation, funding, buy, sell, transfer, with the wallet-side rules (`docs/WALLET.md`) | yes (scripts and helpers; no backend was supplied) | yes (§A20, ids and balances) | no |
 | batching many trades per block | no | — | no |
 | reorganisations | argued (§A16) | not exercised: one node, one miner | — |
 | Hoon unit tests, activation height, wallet support for the keyless spend | no | — | part of the upstream path (`docs/ENFORCEMENT.md` §8) |
@@ -852,9 +914,13 @@ token-free status re-derived from consensus data: 999,900 / 100 of
 1,000,000 each. On a fork of the node carrying two consensus rules (the
 `%amm` covenant and token-claim validation), a pool per token traded at
 automatic prices with 1 % retained by the pool and 0.5 % paid to the Lore
-Wallet in NOCK, every one of eleven attack cases was refused before it
-reached a block, a counterfeit input an outside review asked about drained
-a pool on the first prototype and is refused on arrival by the second, and
-the whole suite ran again under the fixed rule with figures equal to the
-nick. None of this runs on the shipped node: the fork is a prototype for an
-upstream proposal, not a deployment.
+Wallet in NOCK, the payment equal to the covenant's floor in both
+directions; every one of eleven attack cases was refused before it reached
+a block; a counterfeit input an outside review asked about drained a pool
+on the first prototype and is refused on arrival by the second; node and
+indexer apply one token rule, shown live on a 100 → 99 spend (99 held, 1
+burned on both), a two-token transaction and eight genesis-bound
+refusals; and a new wallet was created, funded, bought, sold and
+transferred with every id and balance recorded. None of this runs on the
+shipped node: the fork is a prototype for an upstream proposal, not a
+deployment.

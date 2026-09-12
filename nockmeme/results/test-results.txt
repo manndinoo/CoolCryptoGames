@@ -1,5 +1,30 @@
 # nmeme test results
 
+## 2026-09-12 06:40 UTC: one rule for node and indexer; the wallet flow
+
+Unit: 136 passed, 0 failed across nmeme-core, nmeme-tx and nmeme-index
+(cargo test --release with NOCKCHAIN_REPO set), among them the new
+tests/oracle.rs (5: the indexer against the consensus rule, hand-written
+and 3,000 generated transactions), the ticker limb strictness, the
+multi-token and partial-burn indexer tests, the treasury-floor parity
+property (2,000 quotes both directions), and the rebuild's tolerance of
+other tokens' outputs. Live, on a fresh chain with the rebuilt node
+(results/live/pool-v4, wallet-v4, rules-v4): the demo and the counterfeit
+regression (refused, v1-token-claims); the pool suite with every trade's
+treasury payment equal to the covenant's floor (sells included), ten
+attacks refused and inflate-claim neutralized, rebuild ASSERT-OK and
+replay equal to the live state; the wallet flow (creation, funding, buy,
+sell, transfer, ids and balances, the reservation ledger empty at the
+end); the rules test (100 -> 99 accepted by the node and held as 99 with
+1 burned by the indexer, a two-token transaction, eight genesis-bound
+refusals all v1-token-claims, the edge genesis at the cap accepted, a
+42-step rebuild with provenance to 999,996 = 1,000,000 - 4 burned units,
+the pool replay with paid == due). The suite stopped once (the
+neutralized trade's treasury share) and was resumed; the rules test and
+the wallet demo took several attempts each, the causes fixed in the
+tooling and recorded in RESULTS §A20 and §A22 with the earlier attempts'
+results kept in the evidence directories.
+
 ## 2026-09-11 23:10 UTC: phase three, the suite under the claim rule
 
 Unit: unchanged since the previous entry (the Rust crates did not change

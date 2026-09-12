@@ -94,8 +94,14 @@ and reserve those).
 
 ## 4. What the fakenet showed
 
-`results/RESULTS.md` §A20: the wallet flow, with ids and balances. And
-from the earlier runs, the facts a backend must design around: the
+`results/RESULTS.md` §A20: the wallet flow, with ids and balances. The
+facts a backend must design around, from this and the earlier runs: the
+stock wallet's planner floors any spend's fee around 3,500 nicks and
+spreads the fee evenly over the notes named, so a token note holding 1,000
+nicks cannot be spent by it; a wallet building two spends pays its change
+from each to the same lock, and consensus merges those seeds into one
+note; the planner left to itself picks the smallest notes first, so a lock
+full of trade dust cannot pay a fee unless a note is named. And: the
 wallet's arena grows by hundreds of megabytes per call (rebuild it from
 its exported keys; §A7), a wallet rebuilt from keys lists no active child
 addresses (read `list-master-addresses`), a fresh wallet knows no notes

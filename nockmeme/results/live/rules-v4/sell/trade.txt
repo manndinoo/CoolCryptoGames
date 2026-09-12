@@ -1,0 +1,9 @@
+QUOTE	sell	in=99 tokens	out_net=64154 nicks	pool_fee=1 tokens	lore_fee=327 nicks	nock_fees=327 nicks	token_fees=1 tokens	network_fee=16384 nicks	spot_e9=655360000000	exec_e9=648020202020	impact_bps=113
+POOL-BEFORE	6553600	10000
+POOL-AFTER	6490119	10099
+POOL-SPEND	to_user=64154+0t	successor=6489119+10099t	lore=327+0t	fee=0
+PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	2pqqER9iYBixJ1LvEFCU8nagAsq43ovwZNxxqcdD534zsh14KExBz3A
+FEE	current=16384	required=7168	seed_words=35	witness_words=84
+WROTE	/home/user/nmeme-run/rules/sell/assembled.jam
+NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK.2eaMLULBsHNFqtPhtNZo8Rdr9QtKWZFQYvuuGRJGa2mrw1uzuxGwWxj	3k3RZnCqcsWLtopRJ7bVQ6LPYN8LFWrURmbsEgVUoBzQ4b9aibcY7Uc
+NEWSIGHASH	Bfhydhk3tauTM2YPuADc1Qt6LYwcoc9aqPooiKd6JpfsFiU9dq3Ljis.BmLrecRAZQTh4qWNKymrjjYPSe5MArMQFBnWsTRbaqAUNJCTZUK2p9C	CHB3WLpfJECzJTjj4ffg2B2VuMs6ToCUMjZCq9G34Dzc9rzco4mraXz

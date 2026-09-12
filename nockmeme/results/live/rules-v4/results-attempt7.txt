@@ -1,0 +1,4 @@
+== 0. alice hands bob 100 A and 100 B in notes that carry NOCK ==
+PREP	prep-A	txid=DbVMTKne9LCkaEGQ6QHWsa8Bbt9Q9cfGuU8YnDSPiY9kkr2xhPXmB16	height=879	bob_note=[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK Bji1f5XMAMMN1vNsfDHGqwWDFcbAymj9ZW8A6FmyvRoMjw8Gb9Tkror]	100 of 26EG9u2Vs3rU7vvsiBSVBDtD2Tv4XnzdDvspsD4fBAGVMvzn4kT3as8 with 300000 nicks
+PREP	prep-B	txid=BAgQ2g1zEDrjBgKz1TsWaxXs77k59eDzewJiTAo8UMRauLYBty977h4	height=893	bob_note=[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 5mjJqjTaSbfmPCUpMeJkZGxX2qy8GMmJmCssLweYm2n3EvJ6efnyEGC]	100 of BvF8w6shohCTADMyVLcVhej4CHjyqXNHsDzGDA6F2xnH7oKKXXSPCha with 300000 nicks
+== A. spend 100 of token A, claim 99 ==

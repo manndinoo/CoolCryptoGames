@@ -1,0 +1,3 @@
+# inputs read live at height 1098 block 6xcp52upszQkoBHBDTMaSnHtKnkW5gei1HWJqULnVTrZ3PsHHxFFrvJ
+INPUT-OK	[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 8xPRJgzjT4QHtgDqyyyMsTU627EyyqJxJc6PmkWZpsiEpDRAS5UTeXs]	named token note
+INPUTS	1 verified live

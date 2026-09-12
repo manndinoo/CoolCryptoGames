@@ -1,0 +1,4 @@
+FEE	current=16384	required=6336	seed_words=34	witness_words=62
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	0
+WROTE	/home/user/nmeme-run/rules/zero-transfer/attached.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax.8WUuGA5QrN2HaGs9HcgGhBreKUVTqwQXharJ4fZZ1bN3qjWieofx7HQ	7Xhb4Pnv39H9ufWbrTzKxntwtZHn1f6mzxzHGb6teS1ujvRK9osCM5Q

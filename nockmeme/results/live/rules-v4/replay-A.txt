@@ -1,0 +1,4 @@
+OPEN	CMzhyNCymYr6jJb4zdiKVs4DSPqFHGWVkC1PwggHQAXQ4QPjcFPzN2X	6553600	10000
+LORE	HLTNvxCMRtRvn4rA4FfriKbu5EyaD88UHLeREpqXes8cUW3LU6cRZV	nock_in=1000	nock_out=64154	due_floor=327	paid=327	tokens_to_lore=0	ok
+TRADE	HLTNvxCMRtRvn4rA4FfriKbu5EyaD88UHLeREpqXes8cUW3LU6cRZV	sell	nock_delta=-63481	token_delta=+99	fee_retained=1	k_before=0:65536000000	k_after=0:65543711781	invariant=holds
+STATE	6490119	10099	K	0:65543711781	fees_retained_nock=0	fees_retained_tokens=1	lore_paid_total=327

@@ -1,0 +1,5 @@
+FEE	current=16384	required=7616	seed_words=44	witness_words=62
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	1000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	1000
+WROTE	/home/user/nmeme-run/rules/two-tickers/attached.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax.3cN7vfu2YbBKY7pC8ejrBtC2hP3XXCpj1UBqvRRkUzBYF29jMinKGFf	4H1geEmpJ6deQ9av7siwXp4Z31UUF7XnCLhEWpPuQh5qWfxQ9so64mW

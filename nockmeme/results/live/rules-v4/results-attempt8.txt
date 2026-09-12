@@ -1,0 +1,6 @@
+== 0. alice hands bob 100 A and 100 B in notes that carry NOCK ==
+PREP	prep-A	txid=2qC9ti6YJ7JAggP6ehaHa3b6KDwvPNc1o4KmU1CxtRjPFdnisBVdTZb	height=976	bob_note=[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 5WLCrcNBqqTUsSDffrJ8xGSGA9wJeibw2dqEsRBJUV9y45YiUxpGvYD]	100 of 26EG9u2Vs3rU7vvsiBSVBDtD2Tv4XnzdDvspsD4fBAGVMvzn4kT3as8 with 300000 nicks
+PREP	prep-B	txid=6VXjy6pQpZLZKPbmiZF4iHHtd9JoBjc2EnFqtfmYva5EyGxZTmzcTGV	height=995	bob_note=[AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 2NkNvnSxFiJEakPXcRyfJCG8ak5mGvimhukze3abL2rVUmxyNmKWH9B]	100 of BvF8w6shohCTADMyVLcVhej4CHjyqXNHsDzGDA6F2xnH7oKKXXSPCha with 300000 nicks
+== A. spend 100 of token A, claim 99 ==
+SHORT	txid=DgDXojca7uzb9CJqRohJLiV8SaQRLoXDujtnCjchXKDMz3FPHSS4M4o	height=1005	spent=100	claimed=99	node=accepted	indexer=bob's A 598 -> 597 (99 held, 1 burned)
+== B. one transaction, two tokens: 99 A kept, 100 B to alice ==
