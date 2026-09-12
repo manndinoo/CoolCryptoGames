@@ -78,12 +78,15 @@ plain_note_at() {
   return 1
 }
 FEE_NEED=$(( ${FEE_NICKS:-16384} + DUST + 20000 ))
-# prepared <who> <label> <names> <to> <amount> [token-note]: wallet-built spend, gate, sighash -> "<file> <sighash>"
+# prepared <who> <label> <names> <to> <amount> [token-note ...]: wallet-built spend, gate, sighash -> "<file> <sighash>"
+# (every input that carries a claim is named to the gate: an unnamed one would be a burn)
 prepared() {
-  local who="$1" d="$S/$2"; mkdir -p "$d"
+  local who="$1" label="$2" d="$S/$2"; mkdir -p "$d"
   local tx; tx=$(create_tx "$who" "$d" "$3" "$4" "$5")
-  quiet "$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$tx" ${6:+--token-note "$6"} > "$d/check-inputs.txt" 2>&1 || die "$2: input gate refused (see $d/check-inputs.txt)"
-  "$NMEME_TX" sighash "$tx" "$d" > "$d/sighash.txt" || die "$2: sighash"; verify_all "$who" "$d/sighash.txt" "$2-wallet"
+  shift 5; local tn gate=()
+  for tn in "$@"; do gate+=(--token-note "$tn"); done
+  quiet "$NMEME_INDEX" check-inputs --addr "$PUB" --tx "$tx" "${gate[@]}" > "$d/check-inputs.txt" 2>&1 || die "$label: input gate refused (see $d/check-inputs.txt)"
+  "$NMEME_TX" sighash "$tx" "$d" > "$d/sighash.txt" || die "$label: sighash"; verify_all "$who" "$d/sighash.txt" "$label-wallet"
   echo "$tx $d/sighash.txt"
 }
 # finish <who> <label> <sighash> <attached.jam> <attach.txt>: re-sign, send, confirm; sets TXID FILE
@@ -133,7 +136,7 @@ echo "SHORT	txid=$SHORT_TXID	height=$(cut -d= -f2 "$S/short.env")	spent=100	clai
 
 echo "== B. one transaction, two tokens: 99 A kept, 100 B to alice =="
 alice_b0=$(token_total_at "$ALICE_LOCK" "$TOKEN_B"); bob_b0=$(token_total_at "$BOB_LOCK" "$TOKEN_B")
-r=$(prepared bob multi "[$A_NOTE],[$B_NOTE]" "$ALICE" "$DUST")
+r=$(prepared bob multi "[$A_NOTE],[$B_NOTE]" "$ALICE" "$DUST" "$A_NOTE" "$B_NOTE")
 "$NMEME_TX" attach "${r%% *}" "$S/multi/attached.jam" "$BOB_LOCK=transfer:$TOKEN_A:99" "$ALICE_LOCK=transfer:$TOKEN_B:100" > "$S/multi/attach.txt" || die "multi: attach: $(tail -1 "$S/multi/attach.txt")"
 finish bob multi "${r#* }" "$S/multi/attached.jam" "$S/multi/attach.txt"
 MULTI_TXID="$TXID"; MULTI_FILE="$FILE"; STEPS_A="$STEPS_A --step $MULTI_TXID:$MULTI_FILE"
@@ -209,19 +212,20 @@ PROOFS="--funding $S/funding0-bob.txt"; for f in "$S"/funding0.txt.* "$S"/fundin
 # by the main pool (token B), each leaving her change note: those transactions
 # are steps here too, in the order they were mined, so that every input of the
 # transactions above is an output of an earlier step
-PRIOR=""
-if [ -d "${POOL_DIR:-$RUN/pool}" ]; then
-  P="${POOL_DIR:-$RUN/pool}"
+PRIOR=""; : > "$S/prior-steps.txt"
+for P in "${POOL_DIR:-$RUN/pool}" "$RUN"/rules-attempt*; do
+  [ -d "$P" ] || continue
   for e in "$P"/*.env; do
     [ -f "$e" ] || continue; l=$(basename "$e" .env); f="$P/$l/final.jam"
-    case "$l" in main|pool-*|donate-*|merge-ok|inflate-claim) [ -f "$f" ] && echo "$(cut -d= -f2 "$e") $l $f";; esac
-  done | sort -n > "$S/prior-steps.txt"
+    case "$l" in main|pool-*|donate-*|merge-ok|inflate-claim|prep-*|short|multi|open|sell) [ -f "$f" ] && echo "$(cut -d= -f2 "$e") $l $f" >> "$S/prior-steps.txt";; esac
+  done
   # a neutralized inflate-claim trade has no .env: it follows its pool
   if [ -f "$P/inflate-claim.neutralized" ] && ! grep -q " inflate-claim " "$S/prior-steps.txt"; then
-    h=$(grep " pool-inflate-claim " "$S/prior-steps.txt" | cut -d' ' -f1); echo "$h inflate-claim $P/inflate-claim/final.jam" >> "$S/prior-steps.txt"; sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
+    h=$(grep " pool-inflate-claim " "$S/prior-steps.txt" | cut -d' ' -f1); echo "$h inflate-claim $P/inflate-claim/final.jam" >> "$S/prior-steps.txt"
   fi
-  while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
-fi
+done
+sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
+while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
 # shellcheck disable=SC2086
 "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_A" --step "$GTX_A:${GFILE_A:-$RUN/genesis-A/final.jam}" --step "$XTX_A:${XFILE_A:-$RUN/xfer-A/final.jam}" \
   --step "$GTX_B:${GFILE_B:-$RUN/genesis-B/final.jam}" --step "$XTX_B:${XFILE_B:-$RUN/xfer-B/final.jam}" \
