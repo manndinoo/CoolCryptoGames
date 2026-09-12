@@ -127,7 +127,8 @@ resign "$WHO" "${r#* }" "$S/sell/assembled.jam" "$S/sell/trade.txt" "$S/sell/fin
 send_tracked "$WHO" sell "$S/sell/final.jam"
 want=$(awk -F'\t' '$1=="POOL-AFTER"{print $2" "$3}' "$S/sell/trade.txt"); st2=$(pool_state "$TOKEN_B" "$FEE_BPS")
 [ "$(cut -d' ' -f4,5 <<<"$st2")" = "$want" ] || die "sell: pool state $(cut -d' ' -f4,5 <<<"$st2") != quoted $want"
-[ "$(tokens_at "$MY_LOCK" "$TOKEN_B")" = $((held - half)) ] || die "sell: $WHO's change claim"
+# the wallet may hold other token notes (earlier buys): the total drops by exactly the half sold
+[ "$(tokens_at "$MY_LOCK" "$TOKEN_B")" = $((tok0 - half)) ] || die "sell: $WHO's tokens $tok0 -> $(tokens_at "$MY_LOCK" "$TOKEN_B"), expected $((tok0 - half)) (change claim $((held - half)))"
 echo "SELL	txid=$TXID	height=$HEIGHT	$(grep '^QUOTE' "$S/sell/trade.txt" | cut -f2- | tr '\t' ' ')	${WHO}_nock: $nock0 -> $(nock_at "$MY_LOCK")	${WHO}_tokens: $tok0 -> $(tokens_at "$MY_LOCK" "$TOKEN_B")	(change claim $((held - half)) kept)"
 balances "after sell"
 
