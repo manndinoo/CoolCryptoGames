@@ -721,6 +721,76 @@ floor. The replayed final state equals the live pool note (`REPLAY-OK`).
 **Reorganisations** were again not exercised (one node, one miner);
 §A16 has the argument.
 
+### A20. A new wallet's whole flow: creation, funding, buy, sell, transfer
+
+`scripts/wallet-demo.sh` on the phase-four chain (`live/wallet-v4/`: every
+transaction file, quote, node answer, the reservation ledger's state at
+each send). The wallet-side rules of `docs/WALLET.md` apply throughout. No
+wallet backend was supplied to this work; the rules are implemented in
+`scripts/lib-wallet.sh` and the contract a backend integrates against is
+in that document.
+
+| step | txid | block | what moved | carol's NOCK (plain) | carol's tokens | bob's tokens |
+|---|---|---|---|---|---|---|
+| wallet created | — | — | keys generated and exported; lock root `8Jam9F…` read from a throwaway payment | 0 | 10,800 (earlier attempts' buys) | 11,870 |
+| funded by alice | `2vGwiY…` | 1383 | 2,000,000 nicks | 0 → 2,000,000 | 10,800 | 11,870 |
+| buy from the main pool | `6oN1t7…` | 1407 | 655,360 nicks in, 3,735 tokens out, pool share 6,510 nicks, Lore share 3,281 nicks, network fee 16,384, impact 8.02 % | 2,000,000 → 0 (the change merged into the token note) | 10,800 → 14,535 | 11,870 |
+| sell half back | `3wxnv4…` | 1420 | 1,976 tokens in, 346,668 nicks out net, pool share 19 tokens, Lore share 1,747 nicks, network fee 16,384, impact 4.52 % | 0 → 0 (proceeds and change inside the token note) | 14,535 → 12,559 | 11,870 |
+| transfer to bob | `6ctUCN…` | 1429 | 100 tokens, with the change claim of 12,459 | 0 | 12,559 → 12,459 | 11,870 → 11,970 |
+
+The pool went 10,355,846 / 63,757 → 11,006,925 / 60,022 → 10,659,510 /
+61,998, each state equal to the quote. The ledger reserved every sent
+transaction's inputs at the send (the `PENDING` lines name them) and
+released them when the inputs left the unspent set; it was empty at the
+end.
+
+**What the run taught about the wallet side.** The stock wallet's planner
+floors the fee of any spend around 3,500 nicks and spreads the fee evenly
+over the notes named, so a 1,000-nick token note (the demo's transfers to
+Bob) cannot be spent by it at all — a token note needs NOCK of its own. It
+gets it: consensus merges a spend's change seed with a token seed to the
+same lock into one note, so after the buy Carol's 1.3 million nicks of
+change sat *inside* her token note, and after the sell her proceeds did
+too. "Funds from plain notes only" would have stranded that NOCK; the rule
+is that a token note is never spent *without its claim*, and when it is
+spent with its change claim its NOCK pays the fee (the `NOTE` lines).
+Three tooling bugs surfaced on the way and are fixed: signature files and
+digest lines were keyed by a note's first name, which two notes of one
+wallet share (the second spend's signature overwrote the first's); a
+lock-root paid by two spends was refused instead of carrying one claim on
+the merged note; and an untouched second spend was required to have a new
+digest. The attempts before the passing one are kept
+(`live/wallet-v4/results-attempt*.txt`).
+
+### A21. Phase four: the suite under the unified rule and the direction-aware floor
+
+The node was rebuilt with the token rule of §A17 completed (well-formed
+claims, genesis bounds and consistency, per-token outputs ≤ inputs with
+the shortfall burned; `docs/ENFORCEMENT.md` §3) and the treasury floor
+computed by direction (`docs/FEES.md` §1). A fresh chain ran the demo
+(both genesis transactions with their derived ids, blocks 30 and 92,
+rebuilt to 999,900 / 100), the counterfeit regression (refused on arrival,
+`v1-token-claims`), and `pool-suite.sh`. Evidence in
+[`live/pool-v4/`](./live/pool-v4/).
+
+The five trades of the main pool (token B, opened at 209) mined at 217,
+235, 247, ~265 and 277 with figures equal to phases two and three to the
+nick. **The sell's treasury payment now equals the covenant's floor:** the
+replay reports `due_floor=1682 paid=1682` where phase three had 1,673 and
+1,682. Every trade's `paid` equals its `due_floor`. The Lore Wallet held
+14,806 nicks after the main pool's five trades, 21,368 at the end (the
+honest merge on pool 110 and the neutralized inflate-claim trade each paid
+3,281), all in plain notes.
+
+Attacks: ten refused at admission (`v1-spend-1-lock-failed`), and
+inflate-claim mined as an honest trade this time (the pool's own claim
+survived the merge, as in phase two; §A19 saw the other outcome). The
+suite's accounting missed that mined trade's treasury share on a straight
+run and stopped once at the honest merge's check — the merge itself had
+mined — and was resumed for the rebuild and replay after the fix. Rebuild
+with provenance: pool 74,557, Alice 913,973, Bob 11,470, total 1,000,000,
+`ASSERT-OK`; replay equal to the live state.
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |

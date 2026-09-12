@@ -89,11 +89,11 @@ fn each_step_binds_to_its_own_note_and_only_that_note() {
     // Step 1 candidates: later inputs + unspent.
     let mut c1 = tx2.inputs.clone();
     c1.extend(unspent.iter().cloned());
-    let b1 = bind_outputs(&tx1.destinations, &c1, &mut taken).expect("step 1 binds");
+    let b1 = bind_outputs(&tx1.destinations, &c1, &mut taken, None).expect("step 1 binds");
     assert_eq!(b1[0].0, tx2.inputs[0], "tx1's Alice output is exactly tx2's input");
 
     // Step 2 candidates: unspent only.
-    let b2 = bind_outputs(&tx2.destinations, &unspent, &mut taken).expect("step 2 binds");
+    let b2 = bind_outputs(&tx2.destinations, &unspent, &mut taken, None).expect("step 2 binds");
     assert_eq!(b2[0].0, tx2.destinations[0].name);
     assert_ne!(b1[0].0, b2[0].0, "the two Alice notes are different notes");
 }
@@ -109,7 +109,7 @@ fn a_note_with_the_right_recipient_but_wrong_identity_is_refused() {
 
     let candidates = vec![impostor, tx1.destinations[1].name.clone()];
     let mut taken = Vec::new();
-    let err = bind_outputs(&tx1.destinations, &candidates, &mut taken).expect_err("must refuse");
+    let err = bind_outputs(&tx1.destinations, &candidates, &mut taken, None).expect_err("must refuse");
     assert!(err.contains("no chain note has the identity"), "{err}");
     let _ = tx2;
 }
@@ -119,7 +119,7 @@ fn a_note_cannot_be_claimed_by_two_steps() {
     let (tx1, _) = two_step();
     let candidates: Vec<Name> = tx1.destinations.iter().map(|d| d.name.clone()).collect();
     let mut taken = vec![name_key(&tx1.destinations[0].name)]; // already produced earlier
-    let err = bind_outputs(&tx1.destinations, &candidates, &mut taken).expect_err("must refuse");
+    let err = bind_outputs(&tx1.destinations, &candidates, &mut taken, None).expect_err("must refuse");
     assert!(err.contains("already produced"), "{err}");
 }
 
@@ -129,7 +129,7 @@ fn a_missing_output_fails_rather_than_binding_partially() {
     // Bob's note is absent from the chain's view.
     let candidates = vec![tx1.destinations[0].name.clone()];
     let mut taken = Vec::new();
-    assert!(bind_outputs(&tx1.destinations, &candidates, &mut taken).is_err());
+    assert!(bind_outputs(&tx1.destinations, &candidates, &mut taken, None).is_err());
 }
 
 #[test]

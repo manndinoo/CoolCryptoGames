@@ -6,7 +6,7 @@
 //! (`NoteDataEntry.blob` in `nockchain/common/v2/blockchain.proto`), which has
 //! to cue, satisfy the based-atom rule, and parse as a claim.
 
-use nmeme_core::Claim;
+use nmeme_core::{Claim, TokenId};
 use nockapp::noun::slab::{NockJammer, NounSlab};
 use nockchain_math::owned_based_noun::OwnedBasedNoun;
 use nockvm::noun::NounAllocator;
@@ -197,11 +197,21 @@ pub fn first_name_of(lock_root: &Hash) -> Hash {
 /// Every failure is an error. A destination whose computed name is absent
 /// means either the transaction file does not describe what was mined, or the
 /// note was spent by something not in the replay; both invalidate the rebuild.
+///
+/// `token`: the token being rebuilt. An output absent from the candidates
+/// is fatal when it carries a claim of that token (its history would be
+/// incomplete). One carrying no claim, or a claim of another token, is
+/// accepted and reported (`present == false`): the step is canonical — the
+/// caller has bound its id to a block, and the id commits to its outputs —
+/// so the output existed; that it was spent by a transaction outside the
+/// replay changes nothing about this token's accounting. Without `token`
+/// every output must be found, as before.
 pub fn bind_outputs(
     destinations: &[Destination],
     candidates: &[Name],
     taken: &mut Vec<Vec<u8>>,
-) -> Result<Vec<(Name, Destination)>, String> {
+    token: Option<&TokenId>,
+) -> Result<Vec<(Name, Destination, bool)>, String> {
     let mut out = Vec::new();
     for dest in destinations {
         let key = name_key(&dest.name);
@@ -213,7 +223,12 @@ pub fn bind_outputs(
             ));
         }
         let present = candidates.iter().any(|c| name_key(c) == key);
-        if !present {
+        let carries_token = match (&dest.claim, token) {
+            (Some(Claim::Transfer { token: t, .. }), Some(want)) | (Some(Claim::Genesis { token: t, .. }), Some(want)) => t == want,
+            (Some(_), None) => true,
+            (None, _) => false,
+        };
+        if !present && (carries_token || token.is_none()) {
             return Err(format!(
                 "no chain note has the identity computed for lock-root {}: first {} last {}. \
                  The transaction file does not describe a mined output, or the note was \
@@ -224,7 +239,7 @@ pub fn bind_outputs(
             ));
         }
         taken.push(key);
-        out.push((dest.name.clone(), dest.clone()));
+        out.push((dest.name.clone(), dest.clone(), present));
     }
     Ok(out)
 }

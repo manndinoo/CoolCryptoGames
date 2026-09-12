@@ -381,13 +381,20 @@ async fn rebuild(
         println!("CANONICAL\t{txid}\theight={height}\tblock={block}");
         println!("PROVENANCE\t{txid}\t{} input(s) known", plan.inputs.len());
 
-        let paired = nmeme_index::bind_outputs(&plan.destinations, &candidates, &mut taken)?;
-        for (name, _) in &paired {
+        let paired = nmeme_index::bind_outputs(&plan.destinations, &candidates, &mut taken, Some(&token))?;
+        for (name, dest, present) in &paired {
             known_outputs.insert(nmeme_index::name_key(name));
+            if !present {
+                println!(
+                    "OUTSIDE\t{txid}\t{}\t{}.{}\tconsumed outside the replay ({}); the step is canonical, this token's history is unaffected",
+                    dest.lock_root.to_base58(), name.first.to_base58(), name.last.to_base58(),
+                    match &dest.claim { None => "no claim".to_string(), Some(_) => "a claim of another token".to_string() }
+                );
+            }
         }
         let outputs: Vec<NoteView> = paired
             .into_iter()
-            .map(|(name, dest)| NoteView {
+            .map(|(name, dest, _)| NoteView {
                 name,
                 lock_root: dest.lock_root,
                 claim: dest.claim,
