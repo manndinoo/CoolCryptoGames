@@ -39,9 +39,23 @@ class PoolQueue:
     takes the pool's turn — a file lock per pool lock root — and, before it
     reads the pool and quotes, waits until the previous trade on that pool
     is no longer pending (mined, or gone from the node); then it reads the
-    pool AS IT STANDS, quotes, checks the request's slippage floor, builds
-    and broadcasts, and records its id for the next in line. The registry
-    is a small SQLite file shared by every wallet (`<wallets>/pools.sqlite`).
+    pool AS IT STANDS, quotes, checks the request's slippage floor, builds,
+    CLAIMS the pool for its transaction id (durably, before the broadcast),
+    and broadcasts. The registry is a small SQLite file shared by every
+    wallet (`<wallets>/pools.sqlite`).
+
+    Pack 9 (review): the claim is written at build time, so a crash anywhere
+    after the build leaves the pool owned by that transaction and the next
+    request waits for it as long as the node holds it; a resend of a built
+    or dropped transaction goes through the same turn (as its own owner);
+    the wait bounds the lock acquisition as well as the polling, from a
+    monotonic clock; and any failure while entering the turn — the node
+    unreachable, the registry unreadable — releases the lock before it is
+    raised. What the turn does with the previous trade, by the node's answer:
+    pending → wait; mined and canonical → free; mined but not canonical →
+    wait (a reorganisation may bring it back); unknown → free (never sent,
+    or dropped: its owner's reconcile resends it through this queue and the
+    node refuses it if the pool has moved on).
     """
 
     def __init__(self, tools, log=None):
@@ -54,47 +68,92 @@ class PoolQueue:
     def close(self):
         self.db.close()
 
+    def owner(self, pool_lock):
+        return self.db.execute("SELECT txid, request, wallet FROM pool_trades WHERE pool=?", (pool_lock,)).fetchone()
+
+    def forget(self, txid):
+        """A transaction the node refused, or that was aborted before it was
+        sent, no longer owns any pool."""
+        self.db.execute("DELETE FROM pool_trades WHERE txid=?", (txid,))
+
     class Turn:
-        def __init__(self, queue, pool_lock, wait, poll):
+        def __init__(self, queue, pool_lock, wait, poll, own_txid=""):
             self.queue, self.pool_lock, self.wait, self.poll = queue, pool_lock, wait, poll
+            self.own_txid = own_txid  # a resend: the pool's owner may be this very transaction
             self.fh = None
+            self.previous = None
+
+        def _release(self):
+            fh, self.fh = self.fh, None
+            if fh is not None:
+                try:
+                    fcntl.flock(fh, fcntl.LOCK_UN)
+                except OSError:
+                    pass
+                fh.close()
 
         def __enter__(self):
             q = self.queue
+            t0 = time.monotonic()
+            deadline = t0 + self.wait
             self.fh = open(q.dir / f"pool-{self.pool_lock}.lock", "w")
-            t0 = time.time()
-            fcntl.flock(self.fh, fcntl.LOCK_EX)
-            waited = time.time() - t0
-            if waited > 1:
-                q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\twaited {waited:.0f}s for the pool's turn")
-            # the previous trade on this pool must be out of the way
-            row = q.db.execute("SELECT txid, request, wallet FROM pool_trades WHERE pool=?", (self.pool_lock,)).fetchone()
-            if row and row[0]:
-                deadline = time.time() + self.wait
+            try:
+                # the lock, without blocking: the wait bounds this too
                 while True:
-                    st = q.tools.tx_status(row[0])
-                    if st.state != "pending":
-                        q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\tprevious trade {row[1]} ({row[0][:10]}…) is {st.state}: the pool is free")
+                    try:
+                        fcntl.flock(self.fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
                         break
-                    if time.time() > deadline:
-                        fcntl.flock(self.fh, fcntl.LOCK_UN)
-                        self.fh.close()
-                        raise WalletError(f"pool busy: {row[1]} ({row[0]}) still pending after {self.wait}s")
-                    q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\twaiting for {row[1]} ({row[0][:10]}…) to leave the mempool")
-                    time.sleep(self.poll)
-            return self
+                    except BlockingIOError:
+                        if time.monotonic() >= deadline:
+                            raise WalletError(f"pool busy: another trade holds the pool's turn after {self.wait}s")
+                        time.sleep(max(0.0, min(self.poll, 0.5, deadline - time.monotonic())))
+                waited = time.monotonic() - t0
+                if waited > 1:
+                    q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\twaited {waited:.0f}s for the pool's turn")
+                self.previous = self._await_previous(deadline)
+                return self
+            except BaseException:
+                self._release()  # __exit__ is not called when __enter__ raises
+                raise
 
-        def record(self, txid, request, wallet):
+        def _await_previous(self, deadline):
+            q = self.queue
+            row = q.owner(self.pool_lock)
+            if not row or not row[0]:
+                return None
+            if row[0] == self.own_txid:
+                q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\tthe pool's last trade is this one ({row[0][:10]}…): resending as its owner")
+                return row
+            while True:
+                st = q.tools.tx_status(row[0])
+                if st.state == "mined" and st.canonical == "yes":
+                    q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\tprevious trade {row[1]} ({row[0][:10]}…) is mined: the pool is free")
+                    return row
+                if st.state not in ("pending", "mined"):
+                    q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\tprevious trade {row[1]} ({row[0][:10]}…) is unknown to the node: "
+                          "the pool is free (a resend of it goes through this queue and is refused if the pool has moved)")
+                    return row
+                if time.monotonic() >= deadline:
+                    raise WalletError(f"pool busy: {row[1]} ({row[0]}) still {st.state} after {self.wait}s")
+                why = "to leave the mempool" if st.state == "pending" else f"in a non-canonical block ({st.block}) to settle"
+                q.log(f"QUEUE\tpool={self.pool_lock[:10]}…\twaiting for {row[1]} ({row[0][:10]}…) {why}")
+                time.sleep(max(0.0, min(self.poll, deadline - time.monotonic())))
+
+        def claim(self, txid, request, wallet):
+            """The pool is this transaction's from here on: written before the
+            broadcast, so a crash after it leaves the next request waiting
+            for this id as long as the node holds it."""
             self.queue.db.execute("INSERT OR REPLACE INTO pool_trades VALUES (?, ?, ?, ?, ?)",
                                   (self.pool_lock, txid, request, wallet, time.time()))
 
+        record = claim  # the pack 8 name
+
         def __exit__(self, *exc):
-            fcntl.flock(self.fh, fcntl.LOCK_UN)
-            self.fh.close()
+            self._release()
             return False
 
-    def turn(self, pool_lock, wait=900, poll=10):
-        return PoolQueue.Turn(self, pool_lock, wait, poll)
+    def turn(self, pool_lock, wait=900, poll=10, own_txid=""):
+        return PoolQueue.Turn(self, pool_lock, wait, poll, own_txid)
 
 STATES = ("planned", "built", "sent", "mined", "refused", "aborted")
 ACTIVE = ("planned", "built", "sent")
@@ -315,13 +374,14 @@ class WalletService:
                 turn = self.queue.turn(self.pool_lock_of(req.token), self.queue_wait)
                 with turn:
                     sub = self._build(sub, plan, req, to_address, gift, finish, work)
+                    # the pool is this transaction's before anything is sent
+                    turn.claim(sub.txid, sub.request, self.who)
                     self._crash("built")
                     sub = self.broadcast(sub)
-                    if sub.state == "sent":
-                        turn.record(sub.txid, sub.request, self.who)
                 return sub
-            except WalletError as e:
-                if sub.state == "planned":  # the queue refused before anything was built
+            except Exception as e:
+                if sub.state == "planned":
+                    # the queue refused, or the node could not be asked, before anything was built
                     sub.state, sub.detail = "aborted", f"{e}"[:800]
                     self._put(sub)
                     self.planner.release(req.request_id)
@@ -375,6 +435,7 @@ class WalletService:
             sub.state, sub.detail = "aborted", f"send returned id {result.txid!r} for {sub.txid}"
             self._put(sub)
             self.planner.release(sub.request)
+            self.queue.forget(sub.txid)
             raise WalletError(sub.detail)
         if result.admitted:
             sub.state, sub.sent_height = "sent", tip
@@ -384,6 +445,7 @@ class WalletService:
             sub.state, sub.detail = "refused", result.detail[-800:]
             self._put(sub)
             self.planner.release(sub.request)
+            self.queue.forget(sub.txid)  # a refused trade owns no pool
             self.log(f"REFUSED\t{sub.request}\ttxid={sub.txid}\t{result.detail.splitlines()[-1] if result.detail else ''}")
         return sub
 
@@ -497,7 +559,22 @@ class WalletService:
         # the node no longer holds (its mempool is not durable) — send the
         # stored file; the id is its content hash, so this is the same transaction
         self.log(f"RESEND\t{sub.request}\ttxid={sub.txid}\tnode: {st.detail or 'unknown'}\tstate_was={sub.state}")
-        return self.broadcast(sub)
+        if sub.side not in ("buy", "sell"):
+            return self.broadcast(sub)
+        # a trade is resent through the pool's queue, as the owner of its own
+        # claim: if another trade has taken the pool meanwhile the turn waits
+        # for it, and the node then refuses this one (its pool note is spent)
+        try:
+            turn = self.queue.turn(self.pool_lock_of(sub.token), self.queue_wait, own_txid=sub.txid)
+            with turn:
+                turn.claim(sub.txid, sub.request, self.who)
+                return self.broadcast(sub)
+        except WalletError as e:
+            if sub.state in ACTIVE:
+                # the pool is busy (or the node unreachable): the record stands, the next reconcile tries again
+                self.log(f"DEFERRED\t{sub.request}\ttxid={sub.txid}\t{e}")
+                return sub
+            raise
 
     def reconcile(self):
         return [self.settle(s) for s in self.submissions(ACTIVE)]

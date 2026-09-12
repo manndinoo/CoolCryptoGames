@@ -21,6 +21,7 @@ PHASES="${PHASES:-flow,sim,restart,retry}"   # which phases run (a later phase o
 # pack 8 phases (a second fresh wallet, WHO=erin): flow2 (fund -> buy -> buy again from the
 # token note's NOCK -> sell -> transfer), simq (two buys at once through the per-pool queue),
 # restart2 (a crash after the broadcast, reconciled by id)
+# xwallet (pack 9: a crash after the broadcast while ANOTHER wallet trades on the same pool)
 T="${TAG:-}"   # appended to the request ids of the restart and retry phases (a request id is never planned twice)   # which phases run (a later phase on the wallet the earlier ones left)
 phase() { case ",$PHASES," in *",$1,"*) return 0;; *) return 1;; esac; }
 MINER="$REPO/target/release/zk-pow-mine"
@@ -168,6 +169,30 @@ $CLI buy "$WHO" "$BUY" --request-id "p8-crash-broadcast$T" --crash-after broadca
 run p8-crash-balances balances "$WHO" | grep -E "^BALANCES|OPEN"
 run p8-crash-reconcile reconcile "$WHO"
 run p8-crash-wait wait "$WHO" "p8-crash-broadcast$T"
+fi
+
+if phase xwallet; then
+step "P9-1. a trade of $WHO crashes right after its broadcast while bob starts a trade on the same pool: bob waits for $WHO's transaction, $WHO's restart reconciles it by id, bob is quoted against the pool after it"
+run p9-before-$WHO balances "$WHO" | grep -E "^BALANCES"
+run p9-before-bob balances bob | grep -E "^BALANCES"
+$CLI buy "$WHO" "$BUY" --request-id "p9-crash$T" --crash-after broadcast > "$S/p9-crash$T.txt" 2>&1 &
+PA=$!
+sleep 1   # bob starts while $WHO holds the pool's turn (or just after its crash)
+$CLI buy bob "$BUY" --slippage-bps 1000 --request-id "p9-bob$T" > "$S/p9-bob$T.txt" 2>&1 &
+PB=$!
+wait $PA; RA=$?
+echo "CRASHED	p9-crash$T	rc=$RA"; grep -hE "^(PLAN|BUILT|SENT|CRASH|QUEUE)" "$S/p9-crash$T.txt"
+run p9-crash-balances balances "$WHO" | grep -E "^BALANCES|OPEN"
+run p9-reconcile reconcile "$WHO"
+wait $PB; RB=$?
+echo "BOB	p9-bob$T	rc=$RB"; grep -hE "^(FLOOR|PLAN|QUEUE|BUILT|SENT|MINED|REFUSED|ABORTED|ERROR|RESULT)" "$S/p9-bob$T.txt"
+run p9-crash-wait wait "$WHO" "p9-crash$T"
+run p9-after-$WHO balances "$WHO" | grep -E "^BALANCES"
+run p9-after-bob balances bob | grep -E "^BALANCES"
+python3 - "$RUN/wallets/pools.sqlite" <<'PY'
+import sqlite3, sys
+print("REGISTRY", sqlite3.connect(sys.argv[1]).execute("select pool, txid, request, wallet from pool_trades").fetchall())
+PY
 fi
 
 run final balances "$WHO"

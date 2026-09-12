@@ -85,7 +85,9 @@ class FakeTools:
         # once (the real wallet's calls are serialised per wallet by flock)
         p = self.wallets / who / "txs" / f"{uuid.uuid4().hex}.tx"
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps({"inputs": list(self.created_inputs or names), "to": to, "amount": amount, "fee": fee}))
+        # the wallet's name is part of the content: two wallets spending the same fake
+        # note must not share a transaction id (the id is the content's hash)
+        p.write_text(json.dumps({"who": who, "inputs": list(self.created_inputs or names), "to": to, "amount": amount, "fee": fee}))
         return p
 
     def inputs_of(self, path):
