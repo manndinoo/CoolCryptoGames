@@ -23,6 +23,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import threading
 import time
 
 from wallet_backend import Note, Snapshot, Request, Plan, Planner, WalletError
@@ -151,7 +152,7 @@ class WalletService:
             address = self.tools.address(self.who)
             lock, first = self.tools.key_lock(address)
             d = {"address": address, "lock": lock, "first": first}
-            tmp = ident.with_suffix(f".{os.getpid()}.tmp")
+            tmp = ident.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
             tmp.write_text(json.dumps(d))
             os.replace(tmp, ident)  # atomic: a reader sees the old file or the whole new one
         self.address, self.lock, self.first = d["address"], d["lock"], d["first"]
