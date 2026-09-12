@@ -1100,7 +1100,11 @@ async fn read_snapshot_firsts(
     client: &mut NockchainServiceClient<tonic::transport::Channel>,
     firsts: &[Hash],
 ) -> Result<nmeme_index::Snapshot, String> {
-    const ATTEMPTS: usize = 12;
+    // The node's per-page caches refresh on their own schedule: over a
+    // long chain a page can sit a block or two behind its neighbour for
+    // longer than a block interval (seen live at 1,300+ blocks: 12 tries
+    // two seconds apart never agreed). Wait out several block intervals.
+    const ATTEMPTS: usize = 60;
     let mut last_err = String::new();
     for attempt in 1..=ATTEMPTS {
         match read_snapshot_firsts_once(client, firsts).await {
@@ -1108,7 +1112,7 @@ async fn read_snapshot_firsts(
             Err(e) if e.contains("pages disagree") => {
                 eprintln!("# snapshot attempt {attempt}/{ATTEMPTS}: {e}; retrying");
                 last_err = e;
-                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
             }
             Err(e) => return Err(e),
         }

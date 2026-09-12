@@ -220,8 +220,9 @@ edge_held=$(token_note_at "$BOB_LOCK" "$EDGE_ID" | awk '{print $3}')
 echo "GENESIS	edge	txid=$EDGE_TXID	height=$(cut -d= -f2 "$S/edge.env")	token=$EDGE_ID	ticker=LONGTICKER (two limbs)	decimals=18	supply=9223372036854775807 (the cap)	node=accepted	indexer=bob holds the supply"
 
 echo "== E. rebuild token A with provenance; replay the pool =="
-# (the miner is paused for the reads: a rebuild over 1,300 blocks reads many
-# pages, and a block mined mid-read is a snapshot mismatch, seen live)
+# (the miner keeps running: the node's page caches refresh with new blocks,
+# and a rebuild over 1,300 blocks waits out a few of them for a consistent
+# snapshot; with the miner paused a lagging page never caught up, seen live)
 PROOFS="--funding $S/funding0-bob.txt"; for f in "$S"/funding0.txt.* "$S"/funding.txt.*; do [ -f "$f" ] && PROOFS="$PROOFS --funding $f"; done
 [ -n "${LIVE_PROOFS:-}" ] && PROOFS="$PROOFS $LIVE_PROOFS"
 # alice's token notes were spent by every pool the suite opened (token A) and
@@ -243,14 +244,14 @@ done
 sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
 while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
 # shellcheck disable=SC2086
-quiet "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_A" --step "$GTX_A:${GFILE_A:-$RUN/genesis-A/final.jam}" --step "$XTX_A:${XFILE_A:-$RUN/xfer-A/final.jam}" \
+"$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_A" --step "$GTX_A:${GFILE_A:-$RUN/genesis-A/final.jam}" --step "$XTX_A:${XFILE_A:-$RUN/xfer-A/final.jam}" \
   --step "$GTX_B:${GFILE_B:-$RUN/genesis-B/final.jam}" --step "$XTX_B:${XFILE_B:-$RUN/xfer-B/final.jam}" \
   $PRIOR $STEPS_A $PROOFS --scan-coinbase "$(node_height)" \
   --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$lock" --expect-total $((SUPPLY - 1)) > "$S/balances-A.txt" || die "rebuild A failed: $(tail -3 "$S/balances-A.txt")"
 grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances-A.txt" | cut -c1-200
 grep -q "^ASSERT-OK" "$S/balances-A.txt" || die "rebuild: no ASSERT-OK"
 echo "REBUILD	token A	total=$((SUPPLY - 1))	(one unit burned by the 100->99 spend)	$(grep "^STEP	$SHORT_TXID" "$S/balances-A.txt" | cut -f3 | cut -c1-80)"
-quiet "$NMEME_INDEX" pool-replay --token "$TOKEN_A" --fee-bps "$POOL_FEE" $PP --open "$OPEN_TXID:$OPEN_FILE" --step "$SELL_TXID:$SELL_FILE" > "$S/replay-A.txt" || die "replay: $(tail -1 "$S/replay-A.txt")"
+"$NMEME_INDEX" pool-replay --token "$TOKEN_A" --fee-bps "$POOL_FEE" $PP --open "$OPEN_TXID:$OPEN_FILE" --step "$SELL_TXID:$SELL_FILE" > "$S/replay-A.txt" || die "replay: $(tail -1 "$S/replay-A.txt")"
 cat "$S/replay-A.txt"
 due=$(awk -F'\t' '$1=="LORE"{for(i=1;i<=NF;i++) if ($i ~ /^due_floor=/) print substr($i,11)}' "$S/replay-A.txt"); paid=$(awk -F'\t' '$1=="LORE"{for(i=1;i<=NF;i++) if ($i ~ /^paid=/) print substr($i,6)}' "$S/replay-A.txt")
 [ "$due" = "$paid" ] || die "replay: the sell paid $paid, the floor is $due; they must be equal"
