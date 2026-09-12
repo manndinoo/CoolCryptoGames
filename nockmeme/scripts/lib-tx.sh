@@ -152,7 +152,9 @@ resign() {
   while IFS=$'\t' read -r tag name digest pubkey pkh sigfile; do
     [ "$tag" = "SIGHASH" ] || continue
     newd=$(awk -F'\t' -v n="$name" '$1=="NEWSIGHASH" && $2==n {print $3}' "$src" | head -1)
-    [ -n "$newd" ] || die "resign: no NEWSIGHASH for spend $name in $src"
+    # a spend the rewrite did not touch (a wallet's second spend whose seeds
+    # gained no claim) keeps its digest, and its signature stands
+    if [ -z "$newd" ]; then log "  resign: spend $name untouched, its signature stands"; continue; fi
     i=$((i+1))
     sign_hash "$who" "$newd" "$out.$i.sig"
     "$NMEME_TX" set-sig "$cur" "$name" "$pkh" "$pubkey" "$out.$i.sig" "$out.$i.jam" >/dev/null || die "resign: set-sig $name"
