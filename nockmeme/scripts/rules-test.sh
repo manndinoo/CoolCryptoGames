@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # Node and indexer under one token rule (review of pack 5, points 1 and 2).
 #
-#   A  bob spends his 100 of token A and claims 99: the node accepts
+#   0  alice hands bob 100 A and 100 B in notes carrying 300,000 nicks each
+#      (the demo's 100-token notes hold 1,000 nicks: the stock wallet's
+#      planner floors the fee of any spend around 3,500 nicks and spreads
+#      the fee evenly over the notes named, so such a note cannot be spent
+#      by it at all — a wallet-side fact, recorded in docs/WALLET.md)
+#   A  bob spends the 100 of token A and claims 99: the node accepts
 #      (outputs <= inputs), the indexer holds 99 and records 1 burned
 #   B  one transaction carrying two tokens: bob's 99 A and 100 B, A kept,
 #      B to alice: accepted, both accounted
@@ -97,51 +102,60 @@ STEPS_A=""
 funding_alice "$S/funding0.txt"
 quiet "$NMEME_INDEX" funding --addr "$PUB" --lock "$BOB_LOCK" > "$S/funding0-bob.txt" || die "funding read at bob's lock"
 
+# note_out <tx.jam> <lock> -> "first last": the transaction's output note at the lock
+note_out() { "$NMEME_INDEX" outputs --tx "$1" | awk -F'\t' -v l="$2" '$1=="OUTPUT" && $2==l {print $3" "$4; exit}'; }
+
+echo "== 0. alice hands bob 100 A and 100 B in notes that carry NOCK =="
+prep() { # <label> <token> -> PREP_NOTE (bob's new note), step appended
+  local label="$1" token="$2"
+  local tn; tn=$(token_note_at "$ALICE_LOCK" "$token"); [ -n "$tn" ] || die "$label: alice holds no note of $token"
+  local tf="${tn%% *}" r1="${tn#* }"; local tl="${r1%% *}" held="${r1#* }"
+  local r; r=$(prepared alice "$label" "[$tf $tl]" "$BOB" 300000 "$tf $tl")
+  "$NMEME_TX" attach "${r%% *}" "$S/$label/attached.jam" "$BOB_LOCK=transfer:$token:100" "$ALICE_LOCK=transfer:$token:$((held - 100))" > "$S/$label/attach.txt" || die "$label: attach: $(tail -1 "$S/$label/attach.txt")"
+  finish alice "$label" "${r#* }" "$S/$label/attached.jam" "$S/$label/attach.txt"
+  PREP_NOTE=$(note_out "$FILE" "$BOB_LOCK"); [ -n "$PREP_NOTE" ] || die "$label: no output at bob's lock"
+  STEPS_A="$STEPS_A --step $TXID:$FILE"
+  echo "PREP	$label	txid=$TXID	height=$(cut -d= -f2 "$S/$label.env")	bob_note=[$PREP_NOTE]	100 of $token with 300000 nicks"
+}
+prep prep-A "$TOKEN_A"; A_NOTE="$PREP_NOTE"
+prep prep-B "$TOKEN_B"; B_NOTE="$PREP_NOTE"
+
 echo "== A. spend 100 of token A, claim 99 =="
-bn=$(token_note_at "$BOB_LOCK" "$TOKEN_A"); [ -n "$bn" ] || die "bob holds no note of token A"
-bf="${bn%% *}"; rest="${bn#* }"; bl="${rest%% *}"; held="${rest#* }"
-[ "$held" = 100 ] || die "bob holds $held of token A, expected the demo's 100"
-pn=$(plain_note_at "$BOB_LOCK" "$FEE_NEED") || die "short: bob has no plain note for the fee"
-r=$(prepared bob short "[$bf $bl],[$pn]" "$ALICE" "$DUST" "$bf $bl")
+bob_a0=$(token_total_at "$BOB_LOCK" "$TOKEN_A")
+r=$(prepared bob short "[$A_NOTE]" "$ALICE" "$DUST" "$A_NOTE")
 "$NMEME_TX" attach "${r%% *}" "$S/short/attached.jam" "$BOB_LOCK=transfer:$TOKEN_A:99" > "$S/short/attach.txt" || die "short: attach: $(tail -1 "$S/short/attach.txt")"
 finish bob short "${r#* }" "$S/short/attached.jam" "$S/short/attach.txt"
 SHORT_TXID="$TXID"; SHORT_FILE="$FILE"; STEPS_A="$STEPS_A --step $SHORT_TXID:$SHORT_FILE"
-now=$(token_total_at "$BOB_LOCK" "$TOKEN_A")
-[ "$now" = 99 ] || die "short: the indexer sees bob holding $now of token A, expected 99"
-echo "SHORT	txid=$SHORT_TXID	height=$(cut -d= -f2 "$S/short.env")	spent=100	claimed=99	node=accepted	indexer=bob holds 99, 1 burned"
+A_NOTE=$(note_out "$SHORT_FILE" "$BOB_LOCK")
+bob_a1=$(token_total_at "$BOB_LOCK" "$TOKEN_A")
+[ "$bob_a1" = $((bob_a0 - 1)) ] || die "short: the indexer sees bob's A go $bob_a0 -> $bob_a1, expected one unit less"
+echo "SHORT	txid=$SHORT_TXID	height=$(cut -d= -f2 "$S/short.env")	spent=100	claimed=99	node=accepted	indexer=bob's A $bob_a0 -> $bob_a1 (99 held, 1 burned)"
 
 echo "== B. one transaction, two tokens: 99 A kept, 100 B to alice =="
-an=$(token_note_at "$BOB_LOCK" "$TOKEN_A"); bn=$(token_note_at "$BOB_LOCK" "$TOKEN_B")
-[ -n "$an" ] && [ -n "$bn" ] || die "multi: bob's notes of A and B"
-af="${an%% *}"; r1="${an#* }"; al="${r1%% *}"; bf="${bn%% *}"; r2="${bn#* }"; bl="${r2%% *}"; bheld="${r2#* }"
-[ "$bheld" = 100 ] || die "bob holds $bheld of token B, expected the demo's 100"
-alice_b0=$(token_total_at "$ALICE_LOCK" "$TOKEN_B")
-pn=$(plain_note_at "$BOB_LOCK" "$FEE_NEED") || die "multi: bob has no plain note for the fee"
-r=$(prepared bob multi "[$af $al],[$bf $bl],[$pn]" "$ALICE" "$DUST")
+alice_b0=$(token_total_at "$ALICE_LOCK" "$TOKEN_B"); bob_b0=$(token_total_at "$BOB_LOCK" "$TOKEN_B")
+r=$(prepared bob multi "[$A_NOTE],[$B_NOTE]" "$ALICE" "$DUST")
 "$NMEME_TX" attach "${r%% *}" "$S/multi/attached.jam" "$BOB_LOCK=transfer:$TOKEN_A:99" "$ALICE_LOCK=transfer:$TOKEN_B:100" > "$S/multi/attach.txt" || die "multi: attach: $(tail -1 "$S/multi/attach.txt")"
 finish bob multi "${r#* }" "$S/multi/attached.jam" "$S/multi/attach.txt"
 MULTI_TXID="$TXID"; MULTI_FILE="$FILE"; STEPS_A="$STEPS_A --step $MULTI_TXID:$MULTI_FILE"
-[ "$(token_total_at "$BOB_LOCK" "$TOKEN_A")" = 99 ] || die "multi: bob's A"
-[ "$(token_total_at "$BOB_LOCK" "$TOKEN_B")" = 0 ] || die "multi: bob's B"
+A_NOTE=$(note_out "$MULTI_FILE" "$BOB_LOCK")
+[ "$(token_total_at "$BOB_LOCK" "$TOKEN_A")" = "$bob_a1" ] || die "multi: bob's A changed"
+[ "$(token_total_at "$BOB_LOCK" "$TOKEN_B")" = $((bob_b0 - 100)) ] || die "multi: bob's B"
 alice_b1=$(token_total_at "$ALICE_LOCK" "$TOKEN_B"); [ "$alice_b1" = $((alice_b0 + 100)) ] || die "multi: alice's B $alice_b0 -> $alice_b1"
-echo "MULTI	txid=$MULTI_TXID	height=$(cut -d= -f2 "$S/multi.env")	in=99A+100B	out=99A(bob)+100B(alice)	node=accepted	indexer=both accounted, nothing burned"
+echo "MULTI	txid=$MULTI_TXID	height=$(cut -d= -f2 "$S/multi.env")	in=99A+100B	out=99A(bob)+100B(alice)	node=accepted	indexer=alice's B $alice_b0 -> $alice_b1, bob's B $bob_b0 -> $((bob_b0 - 100)), bob's A unchanged, nothing burned"
 
 echo "== C. the 99 sold into a pool of token A (fee $POOL_FEE) =="
 tn=$(token_note_at "$ALICE_LOCK" "$TOKEN_A"); [ -n "$tn" ] || die "alice holds no note of token A"
 tf="${tn%% *}"; r1="${tn#* }"; tl="${r1%% *}"; theld="${r1#* }"; [ "$theld" -gt "$POOL_TOKENS" ] || die "alice holds $theld of A"
 lock=$(pool_lock "$TOKEN_A" "$POOL_FEE")
-funding_alice "$S/funding-open.txt"; cbo=$(coinbase_note "$S/funding-open.txt" $((POOL_NOCK + FEE_NEED))); [ -n "$cbo" ] || die "open: no coinbase note"
-r=$(prepared alice open "[$tf $tl],[$cbo]" "$BOB" "$POOL_NOCK" "$tf $tl")
+r=$(prepared alice open "[$tf $tl]" "$BOB" "$POOL_NOCK" "$tf $tl")
 "$NMEME_TX" retarget "${r%% *}" "$S/open/retargeted.jam" "$BOB_LOCK" "$lock" > "$S/open/retarget.txt" || die "open: retarget"
 "$NMEME_TX" attach "$S/open/retargeted.jam" "$S/open/attached.jam" "$lock=transfer:$TOKEN_A:$POOL_TOKENS" "$ALICE_LOCK=transfer:$TOKEN_A:$((theld - POOL_TOKENS))" > "$S/open/attach.txt" || die "open: attach: $(tail -1 "$S/open/attach.txt")"
 finish alice open "${r#* }" "$S/open/attached.jam" "$S/open/attach.txt"
 OPEN_TXID="$TXID"; OPEN_FILE="$FILE"; STEPS_A="$STEPS_A --step $OPEN_TXID:$OPEN_FILE"
 st=$(pool_state "$TOKEN_A" "$POOL_FEE"); [ "$(wc -l <<<"$st")" -eq 1 ] || die "open: pool state: $st"
 echo "OPEN	txid=$OPEN_TXID	height=$(cut -d= -f2 "$S/open.env")	lock=$lock	pool=$(cut -d' ' -f4,5 <<<"$st" | tr ' ' '/')"
-an=$(token_note_at "$BOB_LOCK" "$TOKEN_A"); af="${an%% *}"; r1="${an#* }"; al="${r1%% *}"
-lore0=$(lore_balance)
-pn=$(plain_note_at "$BOB_LOCK" "$FEE_NEED") || die "sell: bob has no plain note for the fee"
-r=$(prepared bob sell "[$af $al],[$pn]" "$ALICE" "$DUST" "$af $al")
+lore0=$(lore_balance); bob_a2=$(token_total_at "$BOB_LOCK" "$TOKEN_A")
+r=$(prepared bob sell "[$A_NOTE]" "$ALICE" "$DUST" "$A_NOTE")
 "$NMEME_TX" pool-trade "${r%% *}" "$S/sell/assembled.jam" --pool "$st" --token "$TOKEN_A" --fee-bps "$POOL_FEE" $PP --side sell --placeholder "$ALICE_LOCK" --dust "$DUST" --tokens-in 99 > "$S/sell/trade.txt" 2>&1 || die "sell: pool-trade: $(tail -1 "$S/sell/trade.txt")"
 sed 's/^/  /' "$S/sell/trade.txt" >&2
 finish bob sell "${r#* }" "$S/sell/assembled.jam" "$S/sell/trade.txt"
@@ -151,8 +165,8 @@ st2=$(pool_state "$TOKEN_A" "$POOL_FEE"); want=$(awk -F'\t' '$1=="POOL-AFTER"{pr
 lf=$(grep '^QUOTE' "$S/sell/trade.txt" | grep -oE 'lore_fee=[0-9]+' | cut -d= -f2)
 lore1=$(lore_balance); [ "${lore1%% *}" = $(( ${lore0%% *} + lf )) ] || die "sell: the Lore Wallet holds ${lore1%% *}, expected $(( ${lore0%% *} + lf ))"
 [ "${lore1##* }" = 0 ] || die "sell: a non-plain note at the Lore Wallet"
-[ "$(token_total_at "$BOB_LOCK" "$TOKEN_A")" = 0 ] || die "sell: bob still holds A"
-echo "SELL	txid=$SELL_TXID	height=$(cut -d= -f2 "$S/sell.env")	$(grep '^QUOTE' "$S/sell/trade.txt" | cut -f2- | tr '\t' ' ')	pool_after=$(tr ' ' '/' <<<"$want")"
+[ "$(token_total_at "$BOB_LOCK" "$TOKEN_A")" = $((bob_a2 - 99)) ] || die "sell: bob's A"
+echo "SELL	txid=$SELL_TXID	height=$(cut -d= -f2 "$S/sell.env")	$(grep '^QUOTE' "$S/sell/trade.txt" | cut -f2- | tr '\t' ' ')	pool_after=$(tr ' ' '/' <<<"$want")	bob's A $bob_a2 -> $((bob_a2 - 99))"
 echo "LORE	sell	+$lf nicks	balance=${lore1%% *}	notes=$(cut -d' ' -f2 <<<"$lore1")	all_plain=yes"
 
 echo "== D. genesis bounds and malformed claims, refused on arrival =="
@@ -191,12 +205,27 @@ echo "GENESIS	edge	txid=$EDGE_TXID	height=$(cut -d= -f2 "$S/edge.env")	token=$ED
 echo "== E. rebuild token A with provenance; replay the pool =="
 PROOFS="--funding $S/funding0-bob.txt"; for f in "$S"/funding0.txt.* "$S"/funding.txt.*; do [ -f "$f" ] && PROOFS="$PROOFS --funding $f"; done
 [ -n "${LIVE_PROOFS:-}" ] && PROOFS="$PROOFS $LIVE_PROOFS"
-# token B's genesis and transfer are steps too: the two-token transaction
-# spends bob's note of B, whose provenance is that transfer
+# alice's token notes were spent by every pool the suite opened (token A) and
+# by the main pool (token B), each leaving her change note: those transactions
+# are steps here too, in the order they were mined, so that every input of the
+# transactions above is an output of an earlier step
+PRIOR=""
+if [ -d "${POOL_DIR:-$RUN/pool}" ]; then
+  P="${POOL_DIR:-$RUN/pool}"
+  for e in "$P"/*.env; do
+    [ -f "$e" ] || continue; l=$(basename "$e" .env); f="$P/$l/final.jam"
+    case "$l" in main|pool-*|donate-*|merge-ok|inflate-claim) [ -f "$f" ] && echo "$(cut -d= -f2 "$e") $l $f";; esac
+  done | sort -n > "$S/prior-steps.txt"
+  # a neutralized inflate-claim trade has no .env: it follows its pool
+  if [ -f "$P/inflate-claim.neutralized" ] && ! grep -q " inflate-claim " "$S/prior-steps.txt"; then
+    h=$(grep " pool-inflate-claim " "$S/prior-steps.txt" | cut -d' ' -f1); echo "$h inflate-claim $P/inflate-claim/final.jam" >> "$S/prior-steps.txt"; sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
+  fi
+  while read -r h l f; do PRIOR="$PRIOR --step $("$NMEME_INDEX" tx-id --tx "$f"):$f"; done < "$S/prior-steps.txt"
+fi
 # shellcheck disable=SC2086
 "$NMEME_INDEX" rebuild --addr "$PUB" --token "$TOKEN_A" --step "$GTX_A:${GFILE_A:-$RUN/genesis-A/final.jam}" --step "$XTX_A:${XFILE_A:-$RUN/xfer-A/final.jam}" \
   --step "$GTX_B:${GFILE_B:-$RUN/genesis-B/final.jam}" --step "$XTX_B:${XFILE_B:-$RUN/xfer-B/final.jam}" \
-  $STEPS_A $PROOFS --scan-coinbase "$(node_height)" \
+  $PRIOR $STEPS_A $PROOFS --scan-coinbase "$(node_height)" \
   --lock "$ALICE_LOCK" --lock "$BOB_LOCK" --lock "$lock" --expect-total $((SUPPLY - 1)) > "$S/balances-A.txt" || die "rebuild A failed: $(tail -3 "$S/balances-A.txt")"
 grep -E "^(EVIDENCE|STEP|BALANCE|TOTAL|ASSERT)" "$S/balances-A.txt" | cut -c1-200
 grep -q "^ASSERT-OK" "$S/balances-A.txt" || die "rebuild: no ASSERT-OK"
