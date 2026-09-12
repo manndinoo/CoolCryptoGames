@@ -148,12 +148,14 @@ step "P8-7. two buys at once through the per-pool queue: the second waits for th
 run p8-fund2 pay alice "$DAVE_ADDR" "$FUND" --request-id "p8-fund-$WHO-2$T" || exit 1
 run p8-fund3 pay alice "$DAVE_ADDR" "$FUND" --request-id "p8-fund-$WHO-3$T" || exit 1
 run p8-before-simq balances "$WHO" | grep -E "^BALANCES|NOTE.*plain"
-$CLI buy "$WHO" "$BUY" --slippage-bps 300 --request-id "p8-simq-A$T" > "$S/p8-simq-A.txt" 2>&1 &
+# SIMQ_SLIP: the pair's slippage allowance in bps (300: the second is refused by its floor
+# after the first moves the pool ~7 %; 1000: the second goes through on a fresh quote)
+$CLI buy "$WHO" "$BUY" --slippage-bps "${SIMQ_SLIP:-300}" --request-id "p8-simq-A$T" > "$S/p8-simq-A$T.txt" 2>&1 &
 PA=$!
-$CLI buy "$WHO" "$BUY" --slippage-bps 300 --request-id "p8-simq-B$T" > "$S/p8-simq-B.txt" 2>&1 &
+$CLI buy "$WHO" "$BUY" --slippage-bps "${SIMQ_SLIP:-300}" --request-id "p8-simq-B$T" > "$S/p8-simq-B$T.txt" 2>&1 &
 PB=$!
 wait $PA; RA=$?; wait $PB; RB=$?
-echo "SIMQ	A rc=$RA	B rc=$RB"; grep -hE "^(FLOOR|PLAN|QUEUE|BUILT|SENT|MINED|REFUSED|ABORTED|ERROR|RESULT)" "$S/p8-simq-A.txt" "$S/p8-simq-B.txt"
+echo "SIMQ	A rc=$RA	B rc=$RB"; grep -hE "^(FLOOR|PLAN|QUEUE|BUILT|SENT|MINED|REFUSED|ABORTED|ERROR|RESULT)" "$S/p8-simq-A$T.txt" "$S/p8-simq-B$T.txt"
 run p8-after-simq balances "$WHO" | grep -E "^BALANCES"
 step "P8-7b. a floor the pool cannot meet: refused before the build, nothing reserved afterwards"
 run p8-floor buy "$WHO" "$BUY" --min-out 999999999 --request-id "p8-floor$T"

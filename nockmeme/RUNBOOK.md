@@ -208,7 +208,11 @@ REPO=... RUN=... ... LORE_LOCK=... bash /path/to/nockmeme/scripts/wallet-demo.sh
 cd /path/to/nockmeme/backend && python3 -m unittest discover -s tests -v      # 26 tests, no chain needed
 REPO=... RUN=... TOKEN_B=... LORE_LOCK=... PLACEHOLDER_ADDR=<alice's address> MINING_PKH=<alice's address> \
   bash /path/to/nockmeme/scripts/backend-demo.sh | tee "$RUN/backend-results.txt"
-# the same commands one at a time: python3 backend/cli.py {create|balances|pay|buy|sell|transfer|reconcile|wait|status} <wallet> ...
+# pack 8 phases on a second fresh wallet: PHASES=flow2,simq,restart2 WHO=erin (fund -> buy -> buy again from the
+# token note's NOCK -> sell -> transfer; two buys at once through the per-pool queue, SIMQ_SLIP=<bps>; a crash
+# after the broadcast). TAG=-rN makes the request ids unique when a phase is run again on the same wallet.
+# the same commands one at a time: python3 backend/cli.py {create|balances|pay|buy|sell|transfer|quote|reconcile|wait|status} <wallet> ...
+# (buy/sell take --slippage-bps N or --min-out N; a trade waits for the pool's turn)
 # (the environment as above; --crash-after reserved|built|broadcast is the restart test's hook).
 # The node needs vm.overcommit_memory=1 (its 32 GiB Nock stack is mapped, not used); a container
 # restart resets it, and the node then dies at boot with "Failed to map memory for stack".

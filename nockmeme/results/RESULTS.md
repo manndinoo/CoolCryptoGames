@@ -1014,6 +1014,28 @@ The plan had reserved 1,000 nicks more than the wallet paid on the buys
 The queue's turn is visible on each trade (`QUEUE … previous trade … is
 mined: the pool is free`).
 
+**Two buys at once through the queue** (`progress-p8-run2.log`, request ids
+`-r2`). erin held two plain notes of 2,000,000; two buys of 655,360 with a
+3 % allowance were started at once from two processes. Both took a quote
+first (1,573 tokens, floor 1,526) and reserved different notes. B took the
+pool's turn, built, and was sent at 2567; A waited 33 s for the lock, then
+polled nine times while B's transaction was in the mempool (`waiting for
+p8-simq-B-r2 … to leave the mempool`), and when B was mined (2583, `93nf7z…`)
+re-read the pool and quoted against it: 1,457 tokens, below its floor of
+1,526 (B moved the pool 7.4 %). A was aborted before signing and its note
+released — `nock_available` went 4,000,000 → 2,000,000, one note spent by
+B, A's free, no node answer involved. That is the slippage limit doing its
+job: the request said 3 %, the pool moved more. A third pair with a 10 %
+allowance is `-r3` (below). A floor no pool can meet (`--min-out 999999999`)
+was refused the same way, before the build, and the balances did not move.
+
+**A restart after the broadcast** (`p8-crash-broadcast-r2`): the process
+exited right after the node admitted the buy, before the record of the
+broadcast; the balance read `nock_pending=2,000,000, open_requests=1`; the
+restart's reconcile found the id pending in the node's accepted set and
+moved the record to `sent` without sending again; mined at 2672
+(`86ezaE…`), canonical, inputs released.
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |
