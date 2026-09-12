@@ -1,0 +1,9 @@
+QUOTE	buy	in=655360 nicks	out_net=1099 tokens	pool_fee=6510 nicks	lore_fee=3281 nicks	nock_fees=9791 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=567242505618	exec_e9=596323930846	impact_bps=512
+POOL-BEFORE	19433161	34259
+POOL-AFTER	20084240	33160
+POOL-SPEND	to_user=1000+1099t	successor=19428880+33160t	lore=3281+0t	fee=0
+PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	2dVjZe75Ry9ykhRuKGhpyRbiN9dzQU1SwvVLnHG6Qx282Lw91UuftDV
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/wallets/bob/requests/p9-bob-r1/assembled.jam
+NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK.8EPSUcsTffqBDxfVz1N1m57fkbAtseBfq9gBVudc6Qo4K1DyVFiDgGS	9nqm4CXCKdNjvWHUBbMBnAbCVpayNPbm4F6E249M1iapei35pnoRUwW
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp.ZCGoj8NhEuDeDwaLiecb4kDU6LVmG7Hpqrbxs2vhrnYP1BnNeGwz26	DMXgaZKmCXbSwxWdbMPFrjhyb6fk3aChKi3KMpKMmzHig5LQid4X5X8

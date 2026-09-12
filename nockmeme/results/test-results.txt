@@ -1,5 +1,26 @@
 # nmeme test results
 
+## 2026-09-12 19:45 UTC: pack 9 (the queue after the pack 8 review)
+
+Unit, in CI (runs 43 and 44 on 0e11976 / 0013370, the hosted runner): 136
+Rust tests passed, 0 failed; the 15 shell self-checks passed. Backend: 41
+passed, 0 failed (backend/tests) — the 32 of pack 8 plus tests/test_queue.py:
+the reviewer's three regressions unchanged in what they assert (pending
+pool ownership survives a crash after the send and a restart; the queue's
+deadline covers the file lock; a node error while entering the turn leaves
+the lock free), two wallets on one node with one crashing after the build
+(the other proceeds, the stale resend is deferred while the pool is busy and
+refused once it has moved), one crashing after the broadcast (the other
+waits and is quoted against the moved pool; the crashed trade is settled by
+id, never sent twice), a pool that stays busy (the other gives up within
+the wait and releases), a node error on entry (request aborted, released,
+lock free), a refused trade (owns no pool, lock free), and the lock held by
+another process (given up within the wait, request released). One change to
+the fake node: a transaction's content carries the wallet's name, so two
+wallets spending the same fake note do not share an id. Also run locally
+(the same 41 backend tests, twice). Live: results/RESULTS.md §A25
+(results/live/backend-v3), on the modified fakenet node only.
+
 ## 2026-09-12 18:10 UTC: pack 8 (repeat buying, the per-pool queue, slippage floors)
 
 Unit, in CI (run 40 on f36940a, the hosted runner; the local release

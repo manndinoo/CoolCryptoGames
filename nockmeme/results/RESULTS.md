@@ -1065,6 +1065,52 @@ token note as plain NOCK. The independent rerun of pack 7 covered the
 offline tests (136 Rust, 26 backend, 15 shell); the live demonstrations are
 this environment's only.
 
+### A25. Pack 9 on the fakenet: the queue after the review — a crash after the broadcast while another wallet trades on the same pool
+
+On the modified fakenet node only (the fork with the `%amm` covenant and
+the token-claim rule). Evidence: `live/backend-v3/` (`progress-p9.log`,
+each step's output, both wallets' request directories and submission
+records, the pool registry).
+
+**What the review found and what changed (backend/README.md).** The pack 8
+queue recorded a pool's last trade only after the broadcast returned, so a
+crash between the node's admission and that record left the pool unowned:
+the next request built against a pool note that a pending transaction was
+already spending, and the node's refusal at admission — the very thing the
+queue exists to prevent — could recur. Two more: the wait bounded only the
+polling, not the file lock (a request could block on the lock forever,
+holding its reservations), and an exception while entering the turn left
+the lock held (`__exit__` is not run when `__enter__` raises). Now the pool
+is claimed for the built transaction's id before anything is sent; a built
+or dropped transaction is resent by its owner's reconcile through the same
+turn; the deadline is monotonic and covers the lock; every failure on entry
+releases the lock and, if nothing was built, aborts and releases the
+request. The reviewer's three regressions are in the suite unchanged
+(`tests/test_queue.py`), with two-wallet crash tests (after the build, after
+the broadcast, a pool that stays busy), a node error on entry, the lock
+held elsewhere, and a refused trade owning no pool: 41 backend tests.
+
+**Live: erin crashes right after her broadcast, bob trades on the same pool
+at once.** erin (all her NOCK inside token notes) buys 655,360 nicks with
+the process exiting the instant the node admits the transaction
+(`--crash-after broadcast`); one second later bob starts a buy on the same
+pool with a 10 % allowance.
+
+| | erin `p9-crash-r1` | bob `p9-bob-r1` |
+|---|---|---|
+| quote at first | — (funded from a token note holding 1,259 units) | 1,175 tokens (floor 1,058) |
+| the turn | took the pool, built, **claimed** it, sent, exited (rc 3); record `built`, node `pending`, `open_requests=1` | waited 68 s for the lock, then seven polls for erin's transaction `7Y8BHX…` to leave the mempool |
+| the trade | mined at 2970 (`24j2uJ…`), canonical | quoted the pool **after** erin's trade: 1,099 tokens (6.5 % less), sent at 3000, mined at 3026 (`5XcU4k…`) |
+| erin's restart | `reconcile`: found in the mempool → `sent`, not sent twice; `wait` → mined, inputs released | — |
+| balances | tokens 7,178 → 8,353 (+1,175, still five notes: the held units re-claimed with the bought ones); NOCK 6,602,370 → 5,931,626 = −655,360 −16,384 +1,000 | tokens 12,170 → 13,269 (+1,099); NOCK 9,584,627 → 8,913,883 = −655,360 −16,384 +1,000 |
+| registry after | | `pool_trades`: bob's `dYAGyf…` |
+
+The point: bob's turn found the pool owned by a transaction whose process
+was gone, asked the node, and waited for it — the ownership was written at
+build time, so the crash after the broadcast lost nothing. No stale build,
+no refusal at admission, and erin's transaction was settled by its id
+without a second send. Both wallets ended with no reservation held.
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |
@@ -1142,6 +1188,9 @@ two simultaneous requests never sharing an input, and a restart at each
 point of a submission resumed from the record; a third wallet bought,
 bought again from the NOCK inside its token note with every token kept in
 one claim, and two competing trades went through a per-pool queue with a
-fresh quote each and their slippage floors respected. None of this runs on the
+fresh quote each and their slippage floors respected; after the review of
+the queue, a wallet crashing right after its broadcast while another traded
+on the same pool cost nothing: the pool was owned from the build, the other
+waited, and the crashed trade was settled by id. None of this runs on the
 shipped node: the fork is a prototype for an upstream proposal, not a
 deployment.

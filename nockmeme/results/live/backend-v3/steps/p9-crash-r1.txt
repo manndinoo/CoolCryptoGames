@@ -1,0 +1,7 @@
+PLAN	p9-crash-r1	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 7F3bjg1cr3GP3K9cmofZUaUpsNbs56n3cc7ixjG9FEFP3zFynaFB8UN']	required_plain=0	plain_change=0	token_change=1259	backing=1329256	backing_spent=671744	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-B-r3 (91zS5RhZRy…) is mined: the pool is free
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+  (rebuilding erin's wallet arena (532 MB))
+BUILT	p9-crash-r1	txid=7Y8BHXew2AfFsVNBRiZbEsub2F7scNKenMsbpxVDUjw9eFis4WTDUci	file=/home/user/nmeme-run/wallets/erin/requests/p9-crash-r1/final.jam
+CRASH	broadcast	(test hook: exiting without cleanup)

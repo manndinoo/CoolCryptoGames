@@ -210,7 +210,8 @@ REPO=... RUN=... TOKEN_B=... LORE_LOCK=... PLACEHOLDER_ADDR=<alice's address> MI
   bash /path/to/nockmeme/scripts/backend-demo.sh | tee "$RUN/backend-results.txt"
 # pack 8 phases on a second fresh wallet: PHASES=flow2,simq,restart2 WHO=erin (fund -> buy -> buy again from the
 # token note's NOCK -> sell -> transfer; two buys at once through the per-pool queue, SIMQ_SLIP=<bps>; a crash
-# after the broadcast). TAG=-rN makes the request ids unique when a phase is run again on the same wallet.
+# after the broadcast). PHASES=xwallet WHO=erin (pack 9): WHO crashes right after its broadcast while bob trades on
+# the same pool. TAG=-rN makes the request ids unique when a phase is run again on the same wallet.
 # the same commands one at a time: python3 backend/cli.py {create|balances|pay|buy|sell|transfer|quote|reconcile|wait|status} <wallet> ...
 # (buy/sell take --slippage-bps N or --min-out N; a trade waits for the pool's turn)
 # (the environment as above; --crash-after reserved|built|broadcast is the restart test's hook).

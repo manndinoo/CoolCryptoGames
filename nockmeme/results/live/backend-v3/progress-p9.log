@@ -1,0 +1,58 @@
+
+== 0. the pool and the funder ==
+BALANCES	alice	height=2944	nock_total=85752169544	nock_available=60080777280	nock_pending=0	nock_attached=25671392264	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=913573/available=913573/reserved=0/notes=4 26EG9u2V…:total=869088/available=869088/reserved=0/notes=3	open_requests=0
+BALANCES	bob	height=2944	nock_total=9584627	nock_available=5235442	nock_pending=0	nock_attached=4349185	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=12170/available=12170/reserved=0/notes=10 26EG9u2V…:total=597/available=597/reserved=0/notes=6 6G9bZSkG…:total=9223372036854775807/available=9223372036854775807/reserved=0/notes=1	open_requests=0
+BOB	address=7tk6CeaZC3UvTXrAthf7HpJtS9kiijfEfaebVbHEZHXqJ6sDHFj1kCz
+
+== P9-1. a trade of erin crashes right after its broadcast while bob starts a trade on the same pool: bob waits for erin's transaction, erin's restart reconciles it by id, bob is quoted against the pool after it ==
+BALANCES	erin	height=2944	nock_total=6602370	nock_available=0	nock_pending=0	nock_attached=6602370	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=7178/available=7178/reserved=0/notes=5	open_requests=0
+BALANCES	bob	height=2944	nock_total=9584627	nock_available=5235442	nock_pending=0	nock_attached=4349185	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=12170/available=12170/reserved=0/notes=10 26EG9u2V…:total=597/available=597/reserved=0/notes=6 6G9bZSkG…:total=9223372036854775807/available=9223372036854775807/reserved=0/notes=1	open_requests=0
+CRASHED	p9-crash-r1	rc=3
+PLAN	p9-crash-r1	buy	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 7F3bjg1cr3GP3K9cmofZUaUpsNbs56n3cc7ixjG9FEFP3zFynaFB8UN']	required_plain=0	plain_change=0	token_change=1259	backing=1329256	backing_spent=671744	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	previous trade p8-simq-B-r3 (91zS5RhZRy…) is mined: the pool is free
+BUILT	p9-crash-r1	txid=7Y8BHXew2AfFsVNBRiZbEsub2F7scNKenMsbpxVDUjw9eFis4WTDUci	file=/home/user/nmeme-run/wallets/erin/requests/p9-crash-r1/final.jam
+CRASH	broadcast	(test hook: exiting without cleanup)
+BALANCES	erin	height=2970	nock_total=5931626	nock_available=0	nock_pending=0	nock_attached=5931626	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=8353/available=8353/reserved=0/notes=5	open_requests=1
+  OPEN	p9-crash-r1	buy	built	txid=7Y8BHXew2AfFsVNBRiZbEsub2F7scNKenMsbpxVDUjw9eFis4WTDUci
+SENT	p9-crash-r1	txid=7Y8BHXew2AfFsVNBRiZbEsub2F7scNKenMsbpxVDUjw9eFis4WTDUci	(found in the mempool after a restart)
+RECONCILED	erin	1 open request(s) checked	p9-crash-r1=sent
+BOB	p9-bob-r1	rc=0
+FLOOR	p9-bob-r1	quote_now out=1175 tokens	slippage=1000 bps	min_out=1058
+PLAN	p9-bob-r1	buy	inputs=['AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 8EPSUcsTffqBDxfVz1N1m57fkbAtseBfq9gBVudc6Qo4K1DyVFiDgGS']	required_plain=671744	plain_change=1328256	token_change=0	backing=0	backing_spent=0	fee_per_note=16384
+QUEUE	pool=33JT9yFiVW…	waited 68s for the pool's turn
+QUEUE	pool=33JT9yFiVW…	waiting for p9-crash-r1 (7Y8BHXew2A…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p9-crash-r1 (7Y8BHXew2A…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p9-crash-r1 (7Y8BHXew2A…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p9-crash-r1 (7Y8BHXew2A…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p9-crash-r1 (7Y8BHXew2A…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p9-crash-r1 (7Y8BHXew2A…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	waiting for p9-crash-r1 (7Y8BHXew2A…) to leave the mempool
+QUEUE	pool=33JT9yFiVW…	previous trade p9-crash-r1 (7Y8BHXew2A…) is mined: the pool is free
+BUILT	p9-bob-r1	txid=dYAGyfNNcsdbgPV6hojuZJ2yrMgGXvoMBPpqLmJq1fMfo1QmgKRtLw	file=/home/user/nmeme-run/wallets/bob/requests/p9-bob-r1/final.jam
+SENT	p9-bob-r1	txid=dYAGyfNNcsdbgPV6hojuZJ2yrMgGXvoMBPpqLmJq1fMfo1QmgKRtLw	at_height=3000	reserved=['AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 8EPSUcsTffqBDxfVz1N1m57fkbAtseBfq9gBVudc6Qo4K1DyVFiDgGS']
+MINED	p9-bob-r1	txid=dYAGyfNNcsdbgPV6hojuZJ2yrMgGXvoMBPpqLmJq1fMfo1QmgKRtLw	height=3026	block=5XcU4kB1dRnNxGq3UsQuyk18fJtwXXeuw5mbEV927EbYeHWpvCoNbNd	canonical=yes	released=['AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK 8EPSUcsTffqBDxfVz1N1m57fkbAtseBfq9gBVudc6Qo4K1DyVFiDgGS']
+RESULT	p9-bob-r1	buy	mined	txid=dYAGyfNNcsdbgPV6hojuZJ2yrMgGXvoMBPpqLmJq1fMfo1QmgKRtLw	height=3026	block=5XcU4kB1dRnNxGq3UsQuyk18fJtwXXeuw5mbEV927EbYeHWpvCoNbNd	in=655360	out_net=1099	pool_fee=6510	lore_fee=3281	nock_fees=9791	token_fees=0	network_fee=16384	spot_e9=567242505618	exec_e9=596323930846	impact_bps=512
+MINED	p9-crash-r1	txid=7Y8BHXew2AfFsVNBRiZbEsub2F7scNKenMsbpxVDUjw9eFis4WTDUci	height=2970	block=24j2uJinhVBbBEhr9nH4t4LGmXNTNUmPRpZufomrmT1rSd3erogZ1MR	canonical=yes	released=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 7F3bjg1cr3GP3K9cmofZUaUpsNbs56n3cc7ixjG9FEFP3zFynaFB8UN']
+SETTLED	p9-crash-r1	mined	txid=7Y8BHXew2AfFsVNBRiZbEsub2F7scNKenMsbpxVDUjw9eFis4WTDUci	height=2970	block=24j2uJinhVBbBEhr9nH4t4LGmXNTNUmPRpZufomrmT1rSd3erogZ1MR
+BALANCES	erin	height=3051	nock_total=5931626	nock_available=0	nock_pending=0	nock_attached=5931626	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=8353/available=8353/reserved=0/notes=5	open_requests=0
+BALANCES	bob	height=3053	nock_total=8913883	nock_available=3235442	nock_pending=0	nock_attached=5678441	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=13269/available=13269/reserved=0/notes=11 26EG9u2V…:total=597/available=597/reserved=0/notes=6 6G9bZSkG…:total=9223372036854775807/available=9223372036854775807/reserved=0/notes=1	open_requests=0
+REGISTRY [('33JT9yFiVWnKBJwt3fWZKAUL7QfRJ1di3X6gPiiRCSuHQLcR1ASTaDS', 'dYAGyfNNcsdbgPV6hojuZJ2yrMgGXvoMBPpqLmJq1fMfo1QmgKRtLw', 'p9-bob-r1', 'bob')]
+BALANCES	erin	height=3053	nock_total=5931626	nock_available=0	nock_pending=0	nock_attached=5931626	nock_attached_pending=0	nock_unknown=0	tokens=BvF8w6sh…:total=8353/available=8353/reserved=0/notes=5	open_requests=0
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 3merPhSPHgMcgvYXyNp1UqJ58pdGybDN1DjHAy4oPvWRmrGbcyLRdCo]	token	nicks=1285346	token=BvF8w6sh…	units=1536	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa DHHn6Z7S7drxGQLSJaiFWnpvjGXRaDJmbwETmNQS6uGj1saxBjK8N11]	token	nicks=658512	token=BvF8w6sh…	units=2434	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa BSXcitPYSW213MGFLoQFVVqqTWYtou87N3qsA7admv2hnJ9M8YBrYVo]	token	nicks=1329256	token=BvF8w6sh…	units=1353	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa BCXRCUgeyC3tLecqVR3gTd2YKnhkqhGUkAhVut7QgNgMayPYJs7NVcv]	token	nicks=1329256	token=BvF8w6sh…	units=1457	free
+  NOTE	[4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa ALEZkknnqvJf43aHtt1iYosz5tTqLmWuufP7AYFrWtkeENDuezBSHU9]	token	nicks=1329256	token=BvF8w6sh…	units=1573	free
+REQUEST	p8-buy-erin-1	buy	mined	txid=8BPxkVdfeeZNWmKF2cLpgYB6reHr8jpGACWiyohEJRsUVAwrKKCRs7z	sent_height=2274	mined_height=2287	block=7jgF8o8D9BWiN9QZUn2HhfdPPMmEXvuJmK1Nb8pgX2xuK3DVDBfyT3P	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 3Yn5zrhtxGkUe4rCHdz2ruH49Y3Uvk3X3h8mJ5FMP4ogtLjXshqU3tn']
+REQUEST	p8-buy-erin-2	buy	mined	txid=6j1MTXLgFjqB3skt4o6ciJXFMfEtf4wqb7BRhaGH2M3C9mzg5WZN2HL	sent_height=2327	mined_height=2345	block=DQ7vnqC6MBaQWPxapEd6PVXBM9MR4GcenLwJANeyUuNEKmtHFUSZM4h	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa PamDiiPQLVPEx2CNd9RuEXKzSpTdGC5R5vLRCxtFzNQBQRAoQLq2m3']
+REQUEST	p8-sell-erin-1	sell	mined	txid=3MuYZ4NU76g2DffG4XxNeDefVYeav8u2fY2MqmRiYCwrrcB5smyxi1F	sent_height=2382	mined_height=2398	block=C1XcfVVEDYx4qCNv8aVgC1nVEPY6NfTtPvMSmwJ1WS8KPeEWvXAEjPa	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 8Qbj87eRCXMNrgvzsgTb5mtsnYfFAHCpbDth7BF45NaeYQTyK7buJif']
+REQUEST	p8-xfer-erin-1	transfer	mined	txid=CoBirpFo3JcFwACAnirAsKZRAN5zUoCTbDaxAYQ8RnyfqS3aoh3WbsK	sent_height=2433	mined_height=2451	block=63TtZeRD9EAGUGzuv8FCcesNzL6rM9cAr7EbhUi6kFcp9pov8gcgsof	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa DBxtgPX9PKS3bWPXwVjCGQ74BSW66NFxcxAD9Nsedi6dKrw8nWnd7gA']
+REQUEST	p8-simq-B-r2	buy	mined	txid=93nf7zNtBdpXFVv4BPLD4b7JXAvVxmn7arYYkh7pbxHy8aKMNxRbiRe	sent_height=2567	mined_height=2583	block=BdjgcSZY6Sg485c1gMSJBXQz6SmUGC8WF7NCpEkWN9QbnHv2n533CkJ	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 54oXFgtPXXtPtca3aRJjNcVAdvTzVi9NkuVyQvisyqhymtdwLGA1Axy']
+REQUEST	p8-simq-A-r2	buy	aborted	txid=	sent_height=-1	mined_height=-1	block=	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']
+REQUEST	p8-floor-r2	buy	aborted	txid=	sent_height=-1	mined_height=-1	block=	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']
+REQUEST	p8-crash-broadcast-r2	buy	mined	txid=86ezaE2b4fQ3FGxuChmXFEgMPjbNWL442XkXHTyuq6JhYQRsoT2nE3w	sent_height=2669	mined_height=2672	block=4AEoAh5ode3TUWrY7UZrkKa96QXwShtCiG6o8bGFH8MbvrMfVN25ccC	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 9n83mngyghpomVnCuwaHNNuh32EX3GqwRVbQr1CKmLEmDXU45TTJWoP']
+REQUEST	p8-simq-A-r3	buy	mined	txid=7EkQ6rSsz7ydACisBNctEj9QwRVvQTX1Wy3zsptjf1zQtXJ9Dqec9sf	sent_height=2825	mined_height=2849	block=2x2TZFAood3Fdt8ebGHR3Y52BVLs3iEfVQR8ESmbWwGW5tdR8vkYFBW	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 4ytGKKmookD1CiJSgY5nUgWnV9WGsoqL6VxvAk83WFDmukbAgPmsvAY']
+REQUEST	p8-simq-B-r3	buy	mined	txid=91zS5RhZRyYMDuqsFJm2eos6n6pPojYoykyjYPaVPUZNpbXSs22h3bs	sent_height=2875	mined_height=2900	block=AiUdENppayRaDRjso5PNZGE344cE5QDimjQTMf1VCNqqcyZkkn7rw2K	attempts=1	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 56fREGYJF6rjWThdXKLd8rckiKZzyDXzrsCDqYoEpTd1XnnoPprYby8']
+REQUEST	p8-floor-r3	buy	aborted	txid=	sent_height=-1	mined_height=-1	block=	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 7F3bjg1cr3GP3K9cmofZUaUpsNbs56n3cc7ixjG9FEFP3zFynaFB8UN']
+REQUEST	p9-crash-r1	buy	mined	txid=7Y8BHXew2AfFsVNBRiZbEsub2F7scNKenMsbpxVDUjw9eFis4WTDUci	sent_height=2949	mined_height=2970	block=24j2uJinhVBbBEhr9nH4t4LGmXNTNUmPRpZufomrmT1rSd3erogZ1MR	attempts=0	inputs=['4Mywpeg4KZU3f1ZeFVvpuX3grqJ921WMtKzcUtUCkMHgRvamXZgrKGa 7F3bjg1cr3GP3K9cmofZUaUpsNbs56n3cc7ixjG9FEFP3zFynaFB8UN']
+#### backend demo complete
