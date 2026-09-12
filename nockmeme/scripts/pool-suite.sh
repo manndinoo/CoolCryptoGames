@@ -63,7 +63,10 @@ LORE=$(wallet lore list-master-addresses | strip | grep -oE '^- Address: [A-Za-z
 [ -n "$LORE" ] || die "lore address"
 if [ -z "${LORE_LOCK:-}" ]; then
   mkdir -p "$S/lore-probe"; list_tx_files alice > "$S/lore-probe/before.txt"
-  wallet alice create-tx --recipient "{\"kind\":\"p2pkh\",\"address\":\"$LORE\",\"amount\":1000}" --fee-nicks "${FEE_NICKS:-8192}" --allow-low-fee >"$S/lore-probe/create.txt" 2>&1 || die "lore probe create-tx"
+  # from a named coinbase note: the planner's own pick is the smallest notes, which may be dust
+  f=$(echo "$ALICE_FIRSTS" | awk '{print $1}'); "$NMEME_INDEX" funding --addr "$PUB" --first "$f" > "$S/lore-probe/funding.txt" || die "funding read"
+  pcb=$(awk -F'\t' '$1=="FUNDING" && $4=="coinbase" && $5+0>=100000 {print $2" "$3; exit}' "$S/lore-probe/funding.txt"); [ -n "$pcb" ] || die "lore probe: no coinbase note"
+  wallet alice create-tx --names "[$pcb]" --recipient "{\"kind\":\"p2pkh\",\"address\":\"$LORE\",\"amount\":1000}" --fee-nicks "${FEE_NICKS:-8192}" --allow-low-fee >"$S/lore-probe/create.txt" 2>&1 || die "lore probe create-tx"
   list_tx_files alice > "$S/lore-probe/after.txt"; comm -13 "$S/lore-probe/before.txt" "$S/lore-probe/after.txt" > "$S/lore-probe/new.txt"
   PROBE=$(head -1 "$S/lore-probe/new.txt"); [ -s "$PROBE" ] || die "lore probe produced no transaction"
   "$NMEME_TX" seeds "$PROBE" > "$S/lore-probe/seeds.txt" || die "lore probe seeds"

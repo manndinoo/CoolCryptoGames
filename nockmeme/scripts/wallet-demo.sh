@@ -74,8 +74,13 @@ fi
 MY=$(wallet "$WHO" list-master-addresses | strip | grep -oE '^- Address: [A-Za-z0-9]+' | head -1 | sed 's/^- Address: //'); [ -n "$MY" ] || die "$WHO: address"
 # the lock root: read from a throwaway transaction paying the address (its
 # smallest seed is the payment), never sent
+# (from a named coinbase note: left to itself the wallet's planner picks the
+# smallest notes first, and alice's lock holds many 1,000-nick dust notes from
+# trades, which cannot pay the fee: "Insufficient funds to pay fee and gift")
 mkdir -p "$S/probe"; list_tx_files alice > "$S/probe/before.txt"
-wallet alice create-tx --recipient "{\"kind\":\"p2pkh\",\"address\":\"$MY\",\"amount\":1000}" --fee-nicks "${FEE_NICKS:-8192}" --allow-low-fee >"$S/probe/create.txt" 2>&1 || die "probe create-tx"
+f=$(echo "$ALICE_FIRSTS" | awk '{print $1}'); quiet "$NMEME_INDEX" funding --addr "$PUB" --first "$f" > "$S/probe/funding.txt" || die "funding read"
+pcb=$(awk -F'\t' '$1=="FUNDING" && $4=="coinbase" && $5+0>=100000 {print $2" "$3; exit}' "$S/probe/funding.txt"); [ -n "$pcb" ] || die "probe: no coinbase note"
+wallet alice create-tx --names "[$pcb]" --recipient "{\"kind\":\"p2pkh\",\"address\":\"$MY\",\"amount\":1000}" --fee-nicks "${FEE_NICKS:-8192}" --allow-low-fee >"$S/probe/create.txt" 2>&1 || die "probe create-tx"
 list_tx_files alice > "$S/probe/after.txt"; comm -13 "$S/probe/before.txt" "$S/probe/after.txt" > "$S/probe/new.txt"
 PROBE=$(head -1 "$S/probe/new.txt"); [ -s "$PROBE" ] || die "probe produced no transaction"
 "$NMEME_TX" seeds "$PROBE" > "$S/probe/seeds.txt" || die "probe seeds"
