@@ -89,7 +89,7 @@ class Tools:
     run: Path
     port: int = 25655
     public_addr: str = "127.0.0.1:5556"
-    arena_limit_mb: int = 700
+    arena_limit_mb: int = 500
     wallet_timeout: int = 900
     log: object = None  # callable(str) for progress lines
 
@@ -347,6 +347,12 @@ class Tools:
                     if self.log:
                         self.log(f"rebuilding {who}'s wallet arena ({mb} MB)")
                     self.wallet_fresh_locked(who)
+            elif (self.keys / f"{who}.export").is_file() or (self.wallet_dir(who) / "keys.export").is_file():
+                # an arena thrown away (disk) is rebuilt from the exported keys:
+                # the keys are the wallet, the arena is disposable
+                if self.log:
+                    self.log(f"rebuilding {who}'s wallet arena from its keys")
+                self.wallet_fresh_locked(who)
             return self._wallet_raw(who, *args, ok=ok, timeout=timeout)
 
     def keygen(self, who):

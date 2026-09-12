@@ -965,6 +965,55 @@ a block" is not "in the mempool": the node's block lookup cannot tell an
 unknown id from a pending one, and a backend that settled on it would
 believe a never-sent transaction was in flight forever.
 
+### A24. Pack 8 on the fakenet: buying again from a token note's NOCK, the per-pool queue, slippage floors
+
+Everything in this section ran on the modified fakenet node (the fork with
+the `%amm` covenant and the token-claim rule); none of it runs on mainnet
+or on the shipped node. Evidence: `live/backend-v2/` (`progress-p8-run1.log`
+is the flow, `progress-p8-run2.log` the queue and restart phases; every
+request's plan, transaction file, quote and node answer; erin's database).
+
+**What changed (backend/README.md).** A buy may now draw on token notes of
+the token it buys, after plain notes: `nmeme-tx pool-trade --held <units>`
+puts one merged claim, `held + bought`, on the buyer's seed from the pool's
+spend, so the spent note's units are re-claimed and nothing is burned (a
+change claim on the buyer's own change seed would have been a second claim
+at that lock, and consensus keeps one). Trades on one pool go through a
+queue (`service.PoolQueue`: a file lock per pool lock root and a registry
+of the last trade sent on each pool, shared by every wallet and process on
+the node): a request's turn waits until the previous trade is mined or gone
+from the node, then quotes the pool as it stands. `--slippage-bps N` takes
+a quote now (`nmeme-tx quote`, new: the function `pool-trade` applies) and
+sets the floor to that output less the allowance; `--min-out` sets it
+directly; the built transaction's quote must meet the floor or the request
+is aborted before signing and its inputs released.
+
+**A fresh wallet, buying twice.** `erin`, created at zero:
+
+| step | txid | block (canonical) | quote / plan | erin's NOCK total / available / attached | erin's tokens |
+|---|---|---|---|---|---|
+| funded by alice | `4jMfD7…` | 2249 | 2,000,000 nicks | 0 → 2,000,000 / 2,000,000 / 0 | 0 |
+| buy 1 (floor 1 %: quote now 1,701, min 1,684) | `8BPxkV…` | 2287 | 655,360 nicks → 1,701 tokens, pool share 6,510, Lore 3,281, network 16,384, impact 5.89 %; plan: the plain note | 1,329,256 / **0** / 1,329,256 | 1,701 (one note) |
+| buy 2 from what is left (floor: quote now 1,570, min 1,555) | `6j1MTX…` | 2345 | 655,360 nicks → 1,570 tokens, impact 5.73 %; plan: **the token note** (`backing=1329256 backing_spent=672744 token_change=1701`), `--held 1701` | 658,512 / 0 / 658,512 | 1,701 → **3,271, still one note** |
+| sell half (floor 1 %: quote now 661,602, min 654,986) | `3MuYZ4…` | 2398 | 1,635 tokens → 661,602 nicks, pool share 16 tokens, Lore 3,329; change claim 1,636 | 1,302,730 / 0 / 1,302,730 | 1,636 |
+| transfer 100 to bob | `CoBirp…` | 2451 | change claim 1,536; bob 12,070 → 12,170 | 1,285,346 / 0 / 1,285,346 | 1,536 |
+
+The second buy is the point: with no plain note left, the plan reserved the
+token note alone, the wallet paid 655,360 + 16,384 from the note's NOCK, and
+the bought output carried `1701 + 1570 = 3271` as one claim — the balance
+reads 3,271 tokens in **one** note, and the indexer's per-token accounting
+(§A22) holds, nothing burned. Every NOCK figure reconciles once one fact
+is known: a buy's dust (the 1,000 nicks the bought note carries) comes out
+of the pool's reserves in the quote, not from the buyer — 2,000,000 −
+655,360 − 16,384 + 1,000 = 1,329,256; 1,329,256 − 655,360 − 16,384 + 1,000
+= 658,512; 658,512 − 16,384 − 1,000 + 661,602 = 1,302,730; 1,302,730 −
+16,384 − 1,000 = 1,285,346 (a sell's and a transfer's dust *is* paid by the
+wallet: it is the payment the pool trade or the recipient's seed carries).
+The plan had reserved 1,000 nicks more than the wallet paid on the buys
+(`extra_nicks` set to the dust); the backend now reserves a buy without it.
+The queue's turn is visible on each trade (`QUEUE … previous trade … is
+mined: the pool is free`).
+
 ### A18. What is implemented, what passed live, what needs a network change
 
 | item | implemented | passed live (fakenet) | needs a network change |
