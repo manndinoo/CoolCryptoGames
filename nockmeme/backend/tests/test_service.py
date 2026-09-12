@@ -9,6 +9,7 @@ import sys
 import tempfile
 import threading
 import unittest
+import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from chain import ChainView, FundingRow, TokenRow, TxStatus, SendResult, Tools  # noqa: E402
@@ -69,7 +70,9 @@ class FakeTools:
 
     # building
     def create_tx(self, who, names, to, amount, fee):
-        p = self.wallets / who / "txs" / f"{len(list((self.wallets / who / 'txs').glob('*')) if (self.wallets / who / 'txs').is_dir() else [])}.tx"
+        # a unique file per call: two threads of the concurrency test build at
+        # once (the real wallet's calls are serialised per wallet by flock)
+        p = self.wallets / who / "txs" / f"{uuid.uuid4().hex}.tx"
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps({"inputs": list(self.created_inputs or names), "to": to, "amount": amount, "fee": fee}))
         return p
@@ -271,6 +274,8 @@ class ServiceTests(unittest.TestCase):
                 results[name] = s.buy(TOKEN, 655_360, name).state
             except WalletError as e:
                 results[name] = f"refused: {e}"
+            except Exception as e:  # noqa: BLE001 - make a broken thread visible in the assertion
+                results[name] = f"error: {e!r}"
             finally:
                 s.close()
         a, b = threading.Thread(target=go, args=("A",)), threading.Thread(target=go, args=("B",))
