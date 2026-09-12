@@ -1,0 +1,12 @@
+OPEN	3wEwYTsMBeNTPxVs3ByiPRQDYinmP4LJ88si1WcYY6pAFkMgLnVukPW	6553600	100000
+LORE	4pfeoaF1wDjaAa63McSD5zx3osUXLUqoVzHBGMSMK6ypPxidwefYES6	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	4pfeoaF1wDjaAa63McSD5zx3osUXLUqoVzHBGMSMK6ypPxidwefYES6	buy	nock_delta=+651079	token_delta=-8954	fee_retained=6510	k_before=0:655360000000	k_after=0:655957204234	invariant=holds
+LORE	48KLTvDBtp7vi3WCjmxkQj7jNmyqvRAjTVDnSi4hdHP5Ja4Vr4fZnuZ	nock_in=1000	nock_out=333769	due_floor=1682	paid=1682	tokens_to_lore=0	ok
+TRADE	48KLTvDBtp7vi3WCjmxkQj7jNmyqvRAjTVDnSi4hdHP5Ja4Vr4fZnuZ	sell	nock_delta=-334451	token_delta=+4477	fee_retained=44	k_before=0:655957204234	k_after=0:656264789244	invariant=holds
+LORE	9Cew6yxUBCpU39zzGxqALPBeUVeaxpnpp811yYEAxLhquGTbb1UvfDV	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	9Cew6yxUBCpU39zzGxqALPBeUVeaxpnpp811yYEAxLhquGTbb1UvfDV	buy	nock_delta=+651079	token_delta=-8193	fee_retained=6510	k_before=0:656264789244	k_after=0:656835740310	invariant=holds
+LORE	3ggUy1iGCndKRb9eLqvBP8sGG5ookXVW47CRGSmCnytYsFKwfjN4SyQ	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	3ggUy1iGCndKRb9eLqvBP8sGG5ookXVW47CRGSmCnytYsFKwfjN4SyQ	buy	nock_delta=+651079	token_delta=-6893	fee_retained=6510	k_before=0:656835740310	k_after=0:657362212682	invariant=holds
+LORE	CPX9TAzYAfjqohys1wHNRjMb394Tp6oxk4gkTqfqjoJXdrg2YR9rJc5	nock_in=655360	nock_out=1000	due_floor=3281	paid=3281	tokens_to_lore=0	ok
+TRADE	CPX9TAzYAfjqohys1wHNRjMb394Tp6oxk4gkTqfqjoJXdrg2YR9rJc5	buy	nock_delta=+651079	token_delta=-5880	fee_retained=6510	k_before=0:657362212682	k_after=0:657851080005	invariant=holds
+STATE	8823465	74557	K	0:657851080005	fees_retained_nock=26040	fees_retained_tokens=44	lore_paid_total=14806

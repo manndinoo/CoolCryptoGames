@@ -1,0 +1,10 @@
+ATTACHED	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	4477
+QUOTE	sell	in=4477 tokens	out_net=333769 nicks	pool_fee=44 tokens	lore_fee=1682 nicks	nock_fees=1682 nicks	token_fees=44 tokens	network_fee=16384 nicks	spot_e9=79132295762	exec_e9=74551932097	impact_bps=614
+POOL-BEFORE	7204679	91046
+POOL-AFTER	6870228	95523
+POOL-SPEND	to_user=333769+0t	successor=6869228+95523t	lore=1682+0t	fee=0
+PINNED	user	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	4pN3Xw1djtg5Kk62wCicsHoj8Nymmukt3YaiHejUmkp1oAV7Q2ZHGvN
+FEE	current=16384	required=8192	seed_words=43	witness_words=84
+WROTE	/home/user/nmeme-run/pool/sell1/assembled.jam
+NEWSIGHASH	AWSg3Hy1jcrNXG8Q5uH7nBufS8E16puBSJZesNPRTL4z3A66duBmgK	C1o15up2g7PJgjN6v2Y4jifJrQ1dweq7FDYYtYHJesFwJ1HJUwRjxDz
+NEWSIGHASH	2mZjFX8GRKid4Qx4ERPRKaJXkEVKWHYHc9VWK6XpGxeYRsZNSpYh9Pp	DEHcV5dc9ERw9r9xwTDT9XH1Z62Tx1VXpNKdZtkZ1m8N2i729EaRoyr

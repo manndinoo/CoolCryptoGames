@@ -1,0 +1,3 @@
+RETARGETED	1	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	4cppowQEuNY75ubnCQNw6sHQEYs293AWuty7KRXfL5jNxMKuRxsUjrj
+WROTE	/home/user/nmeme-run/pool/donate-merge/retargeted.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	59xFrxeeUfZ1Qce26SiGGL2kchSXSrti18e6CfR2EicwLNoM9XK9fsv

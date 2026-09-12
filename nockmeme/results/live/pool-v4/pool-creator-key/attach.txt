@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	B18DV7nfAmNwdyWWgPpvPvrf9r1fJUQRaZqpBkFYwuUJvR5twUah9o7	10000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	899900
+WROTE	/home/user/nmeme-run/pool/pool-creator-key/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	6Yf4hjT4oubAf4j67ebWNfH9Uq9FgEj3k7jLXCr9K6cJdsos5JAfCUB

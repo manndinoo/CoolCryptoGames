@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	7KXKyAktyabH9QCbxGrhjKz5X4hMCJXSbPo1ukxEH59fzaMjUJrFsm6	10000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	989900
+WROTE	/home/user/nmeme-run/pool/pool-withdraw/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	D8N8hkL6GGmzW1JrdwD8qPiSon8fDB9KUYbmTvYFz9eWUngRNNBb79P

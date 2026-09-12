@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	9rUunKeUo3dGNXPwvhWHo75MJtpyKTCvfaPnXmxjHn3iFYmDxuwgLda	10000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	969900
+WROTE	/home/user/nmeme-run/pool/pool-pool-fee/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	99nRS8RPZJbejRw6bWFbWAxHrDFNAbQaPkWvwKhMzuH4UQo9yNEPRra

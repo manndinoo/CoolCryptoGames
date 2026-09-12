@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	AyWPVqt7fksHYqztpWjPytyR2LULru7VCihP5e6iTaXgqsEG74nSyP3	10000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	919900
+WROTE	/home/user/nmeme-run/pool/pool-lore-short/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	AUmzd1cCKh2DPfhUfNeZn1JaNoi6P4bxPrEi2NwjT822Mk7q63so72u

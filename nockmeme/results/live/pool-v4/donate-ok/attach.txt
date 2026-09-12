@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	C8aQZbocbDMajxrPgezyVtwKSaoZXioNz21X2TmXCSgAiqL8HAtjpZK	1000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	877900
+WROTE	/home/user/nmeme-run/pool/donate-ok/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	9auJoQ5F1zdsFpFifVALT6z1JsiJxkYbFkY6qVBJvgFCp4MqAZ7H2Vb

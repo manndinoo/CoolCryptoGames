@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	22AMU6xGBgtfUwV8sMKTbk3sTXs53HW1WcC86xswPJGs7P8a9BLwqfZ	10000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	929900
+WROTE	/home/user/nmeme-run/pool/pool-mint/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	3g7ttCe9kFbn8XA7XCe6rRZ3xQCwnV8vzF4eiJtbV8kWSKQFtfgNMHQ

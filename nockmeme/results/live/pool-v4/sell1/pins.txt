@@ -1,0 +1,2 @@
+PIN	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	matches the seed set at this lock
+PINS	all 1 match

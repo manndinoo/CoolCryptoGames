@@ -1,0 +1,70 @@
+2026-09-12T04:10:46.134245Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 326Niuy5pZk4KxufSAsv8hb2qqHpgjuYnvdkqVaKu6pJfK8ACnhQ4H1
+2026-09-12T04:19:58.756691Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3ERJLUGGb9VxUWPYvGLZFo2eS8xhLbWkni1igtqcLcyBRc58uxP1yUU
+2026-09-12T04:21:00.323957Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3YVKvFC7HiAzg6ZiVGj6mnR15kkMxboJ7aVBf6Dkwt4d1YgDuHUuGRw
+2026-09-12T04:36:57.717389Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3gU3hBaySLbbKxFUGac1CD3BqvwQjGAUVsR4y8wfkPcAMbsVswaS1mX
+2026-09-12T04:30:33.055461Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3ub17Eh6zSPKtZFdWZMqT9uid5x99gXEComEe22qFfuNV9xjYJytbAJ
+2026-09-12T04:14:32.316998Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3wEwYTsMBeNTPxVs3ByiPRQDYinmP4LJ88si1WcYY6pAFkMgLnVukPW
+2026-09-12T04:15:54.955225Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 48KLTvDBtp7vi3WCjmxkQj7jNmyqvRAjTVDnSi4hdHP5Ja4Vr4fZnuZ
+2026-09-12T04:29:51.464194Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4CEZztuVRCQEP18fN22SaSZ9SmxvCPSkf3rPcL61Mwtn5RKtuF6pAku
+2026-09-12T04:33:13.079382Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4CQWCqfYsP37W8ZyLWoe2WBEapHzsRNgBiSD6XmV3FLEHn1B1EiUqbT
+2026-09-12T04:25:51.263734Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4YKmAdx151VHFbu6WWhfzRkKskEEAtECfP9yhDazwerLc4aLfKcexaQ
+2026-09-12T04:15:13.465283Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 4pfeoaF1wDjaAa63McSD5zx3osUXLUqoVzHBGMSMK6ypPxidwefYES6
+2026-09-12T04:12:18.927709Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 5EDiUgR9wwYfC1651FZhU7UaFNvDwrknGge3TbqHfTZS1dF65Kb7EqM
+2026-09-12T04:40:59.127584Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 5EZZMGr7tw7GdtQoif1XLqW2XQvepBfrXDznZzeXNoX6TamVM1J31UG
+2026-09-12T04:43:20.863523Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 69jHWeDft8ZXBwL9p7NM6EsZqPSkrscjMdkK4JpDiFLdMyNxcvYWT3b
+2026-09-12T04:33:57.514730Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6Foqb9K1t88mEXbWdf2Uo6Uvj8sk9Y3NQCZAgQUERqKRnx2PYRVbEkh
+2026-09-12T04:42:36.112724Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 83ZwgehjN3dwMscKDXjnAsrF5bW5kDR28JSA65fzvnYSJHVPhA4wv21
+2026-09-12T04:39:00.345277Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 87CrmBxEhMT9w6uunCRyCpZAAF9ARcKaJMmU7W5ytaWGF9EDhKWjVEn
+2026-09-12T04:35:12.020003Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 88LQqrvByufjqMD6YBjep9kAnXanx2XxYUVApm7AvLiMntVU9GCt7NY
+2026-09-12T04:13:30.601602Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 8FgDXqLLLxRxQNpdLMEjYDE19jrAfzmUc8ek8Sxv3Fd6Fj3W72zt7Nf
+2026-09-12T04:39:34.758041Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 8NozMh5yfC2MxaDhjoDHR7RpyNRtJ1bjwT5WAGpbTLgo3FgAeR139Dx
+2026-09-12T04:24:07.562643Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 8gs5Watpb66f3ydPdfNGHri1hV8VLkowjeoASkQSv9nFSovE8k2GUQj
+2026-09-12T04:11:50.069549Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 8nESFYAyV5R238hsrvDzdMk5LYPDaCq8NXuSH926pquCiNXzym4i7ki
+2026-09-12T04:26:52.305678Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 959LEuUfUiDz9L74adp2MU7YAhrRXAnqna3Chk1dhKRF4BswgwFsQ8K
+2026-09-12T04:27:50.232305Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 973NAVjz7wgbnutaRmyzbLbAGkgS6TmDHxBmhHprZP9cHoa9gwX9B1d
+2026-09-12T04:17:00.405438Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9Cew6yxUBCpU39zzGxqALPBeUVeaxpnpp811yYEAxLhquGTbb1UvfDV
+2026-09-12T04:28:32.202184Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9SSFs5iRn9VmrYSKjcF5mEvADXfTgqKZ9fjro8P9AKwm8hBjUiHqjEm
+2026-09-12T04:22:01.606689Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9dneuEtoCdyeubxXhrQeQBGYHA6B96i9roVsSfhVmLW7Ke784UgkJwf
+2026-09-12T04:42:13.548133Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: BfU7Nnepfixvpprb1WqGHnzypEPWXoqt7N86C7cbF6DCLFwJ7DRdNWk
+2026-09-12T04:24:50.052995Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CFzAoMkvWGf1AoNro3QZGDR2ipo2dxBZoBd4bdnqRTKzDihkNzxayr4
+2026-09-12T04:22:53.703941Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CMUWQLoW6JPKLbPWuDMWxBRvvwDFuF4hQjt8qybtR498mFVY6r4YtmB
+2026-09-12T04:19:09.748610Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CPX9TAzYAfjqohys1wHNRjMb394Tp6oxk4gkTqfqjoJXdrg2YR9rJc5
+2026-09-12T04:08:42.216097Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CiM7Gw99dhfas4zfdcawSw4svPkNkeD6aoDW4t6DT5nkqYXMXjfAecW
+2026-09-12T04:35:55.371616Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: DZ9JWFGSyKcxVDj3XUVVtEJcyJWjyocEGKHDPbe7aJ4fLcQYqL7cgxP
+2026-09-12T04:32:12.415966Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: F8HKtf2gVpJUVGDXd4oqxvMT7jLawaWX4UzJDpPxkL99mCPUnFfVMP
+2026-09-12T04:31:29.313141Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: hcVcSRm2jt8PETBSmVeZg6GeU9MKWHTpDbsSMgwF7dT5MYMEMyrSA5
+2026-09-12T04:37:47.123476Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: kjnGJXwggo1KSRAtCN36SEd4PokqkN1JFVMPNMcthK2YEKacD6zYj5
+== withdraw 3YVKvFC7HiAzg6ZiVGj6mnR15kkMxboJ7aVBf6Dkwt4d1YgDuHUuGRw
+2026-09-12T04:21:00.323957Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3YVKvFC7HiAzg6ZiVGj6mnR15kkMxboJ7aVBf6Dkwt4d1YgDuHUuGRw
+2026-09-12T04:21:00.342577Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== over-payout CMUWQLoW6JPKLbPWuDMWxBRvvwDFuF4hQjt8qybtR498mFVY6r4YtmB
+2026-09-12T04:22:53.703941Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CMUWQLoW6JPKLbPWuDMWxBRvvwDFuF4hQjt8qybtR498mFVY6r4YtmB
+2026-09-12T04:22:53.722414Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== pool-fee CFzAoMkvWGf1AoNro3QZGDR2ipo2dxBZoBd4bdnqRTKzDihkNzxayr4
+2026-09-12T04:24:50.052995Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: CFzAoMkvWGf1AoNro3QZGDR2ipo2dxBZoBd4bdnqRTKzDihkNzxayr4
+2026-09-12T04:24:50.063288Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== third-lock 959LEuUfUiDz9L74adp2MU7YAhrRXAnqna3Chk1dhKRF4BswgwFsQ8K
+2026-09-12T04:26:52.305678Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 959LEuUfUiDz9L74adp2MU7YAhrRXAnqna3Chk1dhKRF4BswgwFsQ8K
+2026-09-12T04:26:52.324627Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== drop-claim 9SSFs5iRn9VmrYSKjcF5mEvADXfTgqKZ9fjro8P9AKwm8hBjUiHqjEm
+2026-09-12T04:28:32.202184Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 9SSFs5iRn9VmrYSKjcF5mEvADXfTgqKZ9fjro8P9AKwm8hBjUiHqjEm
+2026-09-12T04:28:32.218870Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== inflate-claim 3ub17Eh6zSPKtZFdWZMqT9uid5x99gXEComEe22qFfuNV9xjYJytbAJ
+2026-09-12T04:30:33.055461Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 3ub17Eh6zSPKtZFdWZMqT9uid5x99gXEComEe22qFfuNV9xjYJytbAJ
+2026-09-12T04:30:33.076994Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Heard new valid transaction
+2026-09-12T04:30:33.077821Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-new-tx: Miner received new transaction: 3ub17Eh6zSPKtZFdWZMqT9uid5x99gXEComEe22qFfuNV9xjYJytbAJ
+== mint F8HKtf2gVpJUVGDXd4oqxvMT7jLawaWX4UzJDpPxkL99mCPUnFfVMP
+2026-09-12T04:32:12.415966Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: F8HKtf2gVpJUVGDXd4oqxvMT7jLawaWX4UzJDpPxkL99mCPUnFfVMP
+2026-09-12T04:32:12.426357Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== lore-short 6Foqb9K1t88mEXbWdf2Uo6Uvj8sk9Y3NQCZAgQUERqKRnx2PYRVbEkh
+2026-09-12T04:33:57.514730Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 6Foqb9K1t88mEXbWdf2Uo6Uvj8sk9Y3NQCZAgQUERqKRnx2PYRVbEkh
+2026-09-12T04:33:57.529211Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== lore-tokens DZ9JWFGSyKcxVDj3XUVVtEJcyJWjyocEGKHDPbe7aJ4fLcQYqL7cgxP
+2026-09-12T04:35:55.371616Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: DZ9JWFGSyKcxVDj3XUVVtEJcyJWjyocEGKHDPbe7aJ4fLcQYqL7cgxP
+2026-09-12T04:35:55.388796Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== creator-key kjnGJXwggo1KSRAtCN36SEd4PokqkN1JFVMPNMcthK2YEKacD6zYj5
+2026-09-12T04:37:47.123476Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: kjnGJXwggo1KSRAtCN36SEd4PokqkN1JFVMPNMcthK2YEKacD6zYj5
+2026-09-12T04:37:47.137447Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed
+== take-donation 5EZZMGr7tw7GdtQoif1XLqW2XQvepBfrXDznZzeXNoX6TamVM1J31UG
+2026-09-12T04:40:59.127584Z  INFO poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Raw transaction id: 5EZZMGr7tw7GdtQoif1XLqW2XQvepBfrXDznZzeXNoX6TamVM1J31UG
+2026-09-12T04:40:59.146730Z  WARN poke{src="grpc"}:do_poke:slam: slogger: heard-tx: Transaction context invalid: v1-spend-1-lock-failed

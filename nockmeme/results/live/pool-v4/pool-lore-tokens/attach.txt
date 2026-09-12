@@ -1,0 +1,5 @@
+FEE	current=16384	required=7168	seed_words=42	witness_words=56
+ATTACHED	9P7WBmD9Zc7VDHFeESAt3XpQCy6xYK8mKJgpM9Rjoi5zWr1GCQFeLzb	10000
+ATTACHED	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	909900
+WROTE	/home/user/nmeme-run/pool/pool-lore-tokens/attached.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	Dfi6uP5m1Ek4UctCkreYLg5KAJgyjVcgREfLnYnTaTx7jkfcRyM6spv

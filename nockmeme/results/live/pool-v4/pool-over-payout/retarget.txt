@@ -1,0 +1,3 @@
+RETARGETED	1	CyjTA9Bz6oiepyYL4L4kyk3KPAtJRipnxkNZ7oDZSeygrevcLocA7wV	AzF7FComaoJ1xAbZZvuMpxsGB6wHrudf3QmkrrCN5wvRbnrETQkw8vN
+WROTE	/home/user/nmeme-run/pool/pool-over-payout/retargeted.jam
+NEWSIGHASH	2tqeQQXSWe5U7qCy4jprnGqrDEVrq4bK5669ShFSjRPzM1PuEFSr11f	92VvzLVvY9z3VQrh1zMjUWwV3hFyfxfA7891sEvHeVQ3wyTCiadLV5G

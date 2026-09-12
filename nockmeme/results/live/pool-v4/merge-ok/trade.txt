@@ -1,0 +1,11 @@
+QUOTE	buy	in=655360 nicks	out_net=894 tokens	pool_fee=7161 nicks	lore_fee=3281 nicks	nock_fees=10442 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=655360000000	exec_e9=733064876957	impact_bps=1185
+POOL-BEFORE	6553600	10000
+POOL-AFTER	7204679	9106
+ALSO-SPEND	merge	100000	1000
+POOL-SPEND	to_user=1000+894t	successor=6549319+10106t	lore=3281+0t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	55ZuiXkDQs72qi4s6Vhgv849Fsbt776wh8cCJ8Y8R55FmG7RdHRWFzD
+FEE	current=16384	required=9280	seed_words=43	witness_words=118
+WROTE	/home/user/nmeme-run/pool/merge-ok/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	7dKD1QwnMsKfxb1SVrgRCqnpe2p6V4HLpPbGmVpBw7JMpxGUif4TPfS
+NEWSIGHASH	91L8zGpXjpmSgGjxxw8vuJVdB1jjFc6rnGbUqXdyp8ddhyG8zsuSvJV	2ppPWmKibChYWBTJJ6t4jSMLhqkThU3BYDH9y6DuqaX7z1wB2QU7EWS
+NEWSIGHASH	91L8zGpXjpmSgGjxxw8vuJVdB1jjFc6rnGbUqXdyp8ddhyG8zsuSvJV	78hSJp2tRZSXnfgHXo6k7iFU4yBNNMvvGpT1dFRT8DrrjqobZk6gXHh

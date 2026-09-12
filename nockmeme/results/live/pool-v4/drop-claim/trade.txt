@@ -1,0 +1,10 @@
+QUOTE	buy	in=655360 nicks	out_net=895 tokens	pool_fee=6836 nicks	lore_fee=3281 nicks	nock_fees=10117 nicks	token_fees=0 tokens	network_fee=16384 nicks	spot_e9=655360000000	exec_e9=732245810055	impact_bps=1173
+POOL-BEFORE	6553600	10000
+POOL-AFTER	7204679	9105
+ATTACK	drop-claim
+POOL-SPEND	to_user=1000+895t	successor=6549319+9105t	lore=3281+0t	fee=0
+PINNED	user	6Gn3zaAVYhto5qpVL84CpBQNGGokBxssUtZmw5879BESZVMdTmpEhfw	5wX63QYqvt4AcbQ9kmU6kTkW4HSSjn44J7KzdfiWqwBVpGPRFxFa328
+FEE	current=16384	required=7360	seed_words=35	witness_words=90
+WROTE	/home/user/nmeme-run/pool/drop-claim/assembled.jam
+NEWSIGHASH	4mWu8uLjC6W9BgWVzTW9r4qJ3ZPMNgP28xDnKfy1QYz14mkjyF4b8Ax	6PbxrASBg86qXGzJzFbqRuwgtjMNMTEEQMfwNHL5A1K9AjHoqwQtxfK
+NEWSIGHASH	8px6CinizTHzLUrT8yVHyCJsm2YJB3Z8KxjizCH3aBYT1k7NDkhRTjs	omHQrpHX8tuyZm9wZqHy3cLVuFVDsnMWjjnLPLTUnACcxk4sG7Lb8T
