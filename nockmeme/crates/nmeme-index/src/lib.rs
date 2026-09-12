@@ -153,8 +153,22 @@ pub fn read_tx_plan(path: &std::path::Path) -> Result<TxPlan, String> {
                 let claim = Claim::from_noun(value)
                     .map_err(|e| format!("claim on {}: {e}", seed.lock_root.to_base58()))?;
                 if entry.claim.is_some() {
-                    // Two claims on one lock-root: consensus would union the
-                    // maps and one would silently win (SPEC R1).
+                    // Two claims on one lock-root. Consensus unions the seeds'
+                    // note-data maps in its fold order (`build-outputs`:
+                    // spends in z-map `tap` order, each spend's seeds in
+                    // z-set `tap` order, `uni:by` letting the later map's
+                    // entry win). Hoon's `tap` walks a tree right-to-left,
+                    // the decoder here walks it left-to-right, so the seed
+                    // that comes *first* in the decoded transaction is the
+                    // one consensus folds last: its claim is the merged
+                    // note's. Checked against the three mined or evaluated
+                    // cases with two claims at one lock (the inflate-claim
+                    // trades of phases two, three and four): the rule picks
+                    // the chain's choice in each. A builder never does this
+                    // on purpose (SPEC R1).
+                    continue;
+                }
+                if false {
                     return Err(format!(
                         "two meme claims target lock-root {}",
                         seed.lock_root.to_base58()

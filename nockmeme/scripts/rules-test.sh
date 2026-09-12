@@ -236,10 +236,12 @@ for P in "${POOL_DIR:-$RUN/pool}" "$RUN"/rules-attempt*; do
     [ -f "$e" ] || continue; l=$(basename "$e" .env); f="$P/$l/final.jam"
     case "$l" in main|pool-*|donate-*|merge-ok|prep-*|short|multi|open|sell) [ -f "$f" ] && echo "$(cut -d= -f2 "$e") $l $f" >> "$S/prior-steps.txt";; esac
   done
-  # a neutralized inflate-claim trade (two claims at the pool lock, consensus
-  # kept one) is not a step: the indexer's replay does not model the merge
-  # order (`two meme claims target lock-root`), and nothing here spends its
-  # outputs; the pool's note stays at its opening state in this replay
+  # a neutralized inflate-claim trade has no .env: it follows its pool. Its
+  # two claims at the pool lock are merged by the indexer as consensus merged
+  # them (the first in the decoded transaction wins; nmeme-index lib.rs)
+  if [ -f "$P/inflate-claim.neutralized" ] && ! grep -q " inflate-claim " "$S/prior-steps.txt"; then
+    h=$(grep " pool-inflate-claim " "$S/prior-steps.txt" | cut -d' ' -f1); echo "$h inflate-claim $P/inflate-claim/final.jam" >> "$S/prior-steps.txt"
+  fi
 done
 sort -n -s -o "$S/prior-steps.txt" "$S/prior-steps.txt"
 # the suite's attack pools (fees 101-114, and room) still hold their notes of token A:
