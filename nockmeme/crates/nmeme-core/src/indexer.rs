@@ -9,11 +9,21 @@
 //!
 //! This layer assumes signatures, double-spends and canonical ordering were
 //! settled by the node. It does not re-verify them.
+//!
+//! The rule applied here is the consensus rule of the fork, stated in
+//! [`crate::consensus`]: per token, a transaction's outputs may claim at most
+//! what its inputs carried, and the shortfall is destroyed; a genesis names
+//! its derived id, agrees on ticker and decimals across its claims, consumes
+//! no tokens and fits the supply cap. Consensus refuses what breaks the rule;
+//! the indexer, which reads transactions a node already accepted, records the
+//! same effects — and for a chain without the rule (the shipped node), it
+//! records the refusable cases as burns, never as weight (SPEC §7).
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use nockchain_types::tx_engine::common::{Hash as NockHash, Name};
 
+use crate::consensus::Effect;
 use crate::{Claim, Ticker, TokenId};
 
 /// One output note as the chain produced it, after merging.
@@ -52,9 +62,13 @@ pub enum Outcome {
     /// No token weight was consumed and none was created.
     Untouched,
     Created(TokenId),
+    /// One token consumed, every unit carried on to the outputs.
     Transferred(TokenId),
-    /// Consumed weight was destroyed. Carries why, for auditability.
+    /// Every unit consumed was destroyed. Carries why, for auditability.
     Burned { units: u64, reason: &'static str },
+    /// The general case: several tokens consumed, or some units carried on
+    /// and the rest destroyed (a partial burn), per token.
+    Settled(Vec<Effect>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -141,17 +155,13 @@ impl Indexer {
     }
 
     fn interpret(&mut self, tx: &TxView, consumed: &[(TokenId, u64)]) -> Outcome {
-        // Holdings are conserved and capped, so this cannot legitimately
-        // overflow; treating a failure as "everything is burned" keeps the
-        // burn path total rather than panicking on impossible input.
-        let consumed_units: u64 =
-            checked_total(consumed.iter().map(|(_, amount)| *amount)).unwrap_or(0);
-        let burn = |reason: &'static str| {
+        let consumed_units: u128 = consumed.iter().map(|(_, amount)| u128::from(*amount)).sum();
+        let burn = move |reason: &'static str| {
             if consumed_units == 0 {
                 Outcome::Untouched
             } else {
                 Outcome::Burned {
-                    units: consumed_units,
+                    units: consumed_units.min(u128::from(u64::MAX)) as u64,
                     reason,
                 }
             }
@@ -163,29 +173,27 @@ impl Indexer {
             .filter_map(|note| note.claim.as_ref().map(|claim| (note, claim)))
             .collect();
 
-        if claimed.is_empty() {
-            return burn("no token claim on any output");
-        }
-
         let genesis = claimed
             .iter()
             .filter(|(_, claim)| matches!(claim, Claim::Genesis { .. }))
             .count();
-        if genesis != 0 && genesis != claimed.len() {
-            return burn("mixed genesis and transfer claims");
-        }
-
         if genesis > 0 {
+            // Consensus: a genesis consumes nothing and carries no transfer
+            // claim (nothing went in for one to be backed by). Either way the
+            // weight consumed, if any, is destroyed.
+            if genesis != claimed.len() {
+                return burn("mixed genesis and transfer claims");
+            }
             self.interpret_genesis(tx, consumed_units, &claimed, burn)
         } else {
-            self.interpret_transfer(tx, consumed, &claimed, burn)
+            self.interpret_transfer(tx, consumed, &claimed)
         }
     }
 
     fn interpret_genesis(
         &mut self,
         tx: &TxView,
-        consumed_units: u64,
+        consumed_units: u128,
         claimed: &[(&NoteView, &Claim)],
         burn: impl Fn(&'static str) -> Outcome,
     ) -> Outcome {
@@ -268,56 +276,65 @@ impl Indexer {
         _tx: &TxView,
         consumed: &[(TokenId, u64)],
         claimed: &[(&NoteView, &Claim)],
-        burn: impl Fn(&'static str) -> Outcome,
     ) -> Outcome {
-        if consumed.is_empty() {
-            // Claiming weight that was never consumed would mint from nothing.
+        // What went in, per token (T: the inputs' claims, summed per id).
+        let mut going_in: BTreeMap<TokenId, u128> = BTreeMap::new();
+        for (token, amount) in consumed {
+            *going_in.entry(token.clone()).or_default() += u128::from(*amount);
+        }
+        if going_in.is_empty() {
+            // Claiming weight that was never consumed would mint from
+            // nothing; consensus refuses it, the indexer assigns nothing.
             return Outcome::Untouched;
         }
-
-        // T1: v0 carries exactly one token per transaction.
-        let mut distinct: BTreeSet<&TokenId> = BTreeSet::new();
-        for (token, _) in consumed {
-            distinct.insert(token);
+        // What the outputs claim, per token.
+        let mut going_out: BTreeMap<TokenId, u128> = BTreeMap::new();
+        for (_, claim) in claimed {
+            if let Claim::Transfer { token, amount } = claim {
+                *going_out.entry(token.clone()).or_default() += u128::from(*amount);
+            }
         }
-        if distinct.len() != 1 {
-            return burn("mixed token inputs are unsupported in v0");
+        // Per token: outputs at most inputs, else the rule refuses the
+        // transaction. A node carrying the rule never mines one; on a
+        // chain without it, the weight of that token is destroyed rather
+        // than inflated (SPEC §7), and a claim of a token the inputs do
+        // not carry mints nothing.
+        let mut effects: Vec<Effect> = Vec::with_capacity(going_in.len());
+        for (token, inn) in &going_in {
+            let out = going_out.get(token).copied().unwrap_or(0);
+            if out > *inn {
+                effects.push(Effect { token: token.clone(), transferred: 0, burned: *inn as u64 });
+            } else {
+                effects.push(Effect { token: token.clone(), transferred: out as u64, burned: (*inn - out) as u64 });
+            }
         }
-        let token = consumed[0].0.clone();
-
-        // T2: every claim must name the token actually consumed.
-        let all_match = claimed.iter().all(|(_, claim)| match claim {
-            Claim::Transfer { token: t, .. } => *t == token,
-            Claim::Genesis { .. } => false,
-        });
-        if !all_match {
-            return burn("output claims a token the inputs do not carry");
-        }
-
-        // T3: exact conservation. A sender who forgets to colour their change
-        // burns the remainder — the wallet must build the change claim.
-        let Some(consumed_units) = checked_total(consumed.iter().map(|(_, amount)| *amount))
-        else {
-            return burn("consumed amounts overflowed");
-        };
-        // This is the sum an attacker controls. Wrapping it is the inflation
-        // vector: consume one unit, claim two outputs summing to 2^64 + 1, and
-        // an unchecked total would read as 1 and conserve.
-        let Some(claimed_units) = checked_total(claimed.iter().map(|(_, claim)| claim.amount()))
-        else {
-            return burn("claimed amounts overflowed");
-        };
-        if claimed_units != consumed_units {
-            return burn("supply not conserved");
-        }
-
         for (note, claim) in claimed {
-            self.holdings.insert(
-                name_key(&note.name),
-                (token.clone(), claim.amount(), note.lock_root.clone()),
-            );
+            if let Claim::Transfer { token, amount } = claim {
+                let kept = effects.iter().any(|e| &e.token == token && e.transferred > 0);
+                if kept {
+                    self.holdings.insert(
+                        name_key(&note.name),
+                        (token.clone(), *amount, note.lock_root.clone()),
+                    );
+                }
+            }
         }
-        Outcome::Transferred(token)
+        let total_kept: u128 = effects.iter().map(|e| u128::from(e.transferred)).sum();
+        let total_burned: u128 = effects.iter().map(|e| u128::from(e.burned)).sum();
+        if total_kept == 0 {
+            let reason = if going_out.is_empty() {
+                "no token claim on any output"
+            } else if going_out.keys().any(|t| !going_in.contains_key(t)) {
+                "output claims a token the inputs do not carry"
+            } else {
+                "outputs claim more than the inputs carry"
+            };
+            return Outcome::Burned { units: total_burned.min(u128::from(u64::MAX)) as u64, reason };
+        }
+        if effects.len() == 1 && total_burned == 0 {
+            return Outcome::Transferred(effects[0].token.clone());
+        }
+        Outcome::Settled(effects)
     }
 
     /// Balances for one token, keyed by controlling lock-root.

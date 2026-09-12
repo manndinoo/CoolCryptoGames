@@ -47,6 +47,21 @@ fn every_ticker_limb_is_a_field_element() {
 }
 
 #[test]
+fn ticker_limbs_with_a_zero_byte_below_a_letter_are_refused() {
+    // 0x41_00_42: bytes [0x42, 0x00, 0x41]. Consensus reads every
+    // significant byte and refuses the zero; the decoder used to stop at
+    // the zero and read "B", which would have made the two sides disagree.
+    assert!(Ticker::from_limbs(&[0x41_00_42]).is_err());
+    // a short limb that is not the last one
+    assert!(Ticker::from_limbs(&[0x41, 0x42]).is_err());
+    // a lowercase byte, an eight-byte limb, five limbs
+    assert!(Ticker::from_limbs(&[0x61]).is_err());
+    assert!(Ticker::from_limbs(&[0x4141414141414141]).is_err());
+    assert!(Ticker::from_limbs(&[0x41414141414141; 5]).is_err());
+    assert_eq!(Ticker::from_limbs(&[0x41414141414141, 0x42]).unwrap().as_str(), "AAAAAAAB");
+}
+
+#[test]
 fn ticker_rejects_bad_input() {
     assert!(Ticker::new("").is_err());
     assert!(Ticker::new("doge").is_err(), "lowercase would render as a distinct token");
@@ -339,7 +354,10 @@ fn one_claim_per_lock_root_after_merging() {
 }
 
 #[test]
-fn mixed_token_inputs_are_rejected_in_v0() {
+fn a_transaction_may_carry_several_tokens_each_accounted_on_its_own() {
+    // The consensus rule is per token id: a transaction consuming A and B
+    // and claiming both carries both on; claiming more of A than went in is
+    // refused by a node carrying the rule, and burns A on a chain without it.
     let (genesis_a, token_a) = genesis_tx();
     let mut indexer = Indexer::new();
     indexer.apply(&genesis_a);
@@ -362,18 +380,85 @@ fn mixed_token_inputs_are_rejected_in_v0() {
         }],
     });
 
-    let mixed = TxView {
+    // both tokens spent, both carried on: A to bob, B stays with alice
+    let both = TxView {
         id: hash(1300),
         inputs: vec![name(10), name(80)],
+        outputs: vec![
+            NoteView {
+                name: name(90),
+                lock_root: bob(),
+                claim: Some(Claim::Transfer { token: token_a.clone(), amount: SUPPLY }),
+            },
+            NoteView {
+                name: name(91),
+                lock_root: alice(),
+                claim: Some(Claim::Transfer { token: token_b.clone(), amount: 500 }),
+            },
+        ],
+    };
+    let outcome = indexer.apply(&both);
+    let Outcome::Settled(effects) = outcome else { panic!("expected per-token effects, got {outcome:?}") };
+    assert_eq!(effects.len(), 2);
+    assert!(effects.iter().all(|e| e.burned == 0));
+    assert_eq!(indexer.circulating(&token_a), SUPPLY);
+    assert_eq!(indexer.circulating(&token_b), 500);
+    assert_eq!(indexer.balances(&token_a).get(&bob().to_be_bytes().to_vec()).copied(), Some(SUPPLY));
+
+    // more of A claimed than went in: A is destroyed, B (no claim) too
+    let over = TxView {
+        id: hash(1301),
+        inputs: vec![name(90), name(91)],
         outputs: vec![NoteView {
-            name: name(90),
+            name: name(92),
             lock_root: bob(),
             claim: Some(Claim::Transfer { token: token_a.clone(), amount: SUPPLY + 500 }),
         }],
     };
-    assert!(matches!(indexer.apply(&mixed), Outcome::Burned { .. }));
+    assert!(matches!(indexer.apply(&over), Outcome::Burned { .. }));
     assert_eq!(indexer.circulating(&token_a), 0);
     assert_eq!(indexer.circulating(&token_b), 0);
+}
+
+#[test]
+fn a_shortfall_is_a_partial_burn_and_the_rest_carries_on() {
+    // Spending 100 and claiming 99 passes the rule (outputs <= inputs): the
+    // 99 are a holding, the 1 is destroyed. Node and indexer agree; before
+    // this the indexer wrote off all 100 (review of pack 5).
+    let (genesis, token) = genesis_tx();
+    let mut indexer = Indexer::new();
+    indexer.apply(&genesis);
+    indexer.apply(&transfer_tx(&token)); // bob holds 100 at name(30)
+
+    let short = TxView {
+        id: hash(1400),
+        inputs: vec![name(30)],
+        outputs: vec![NoteView {
+            name: name(95),
+            lock_root: bob(),
+            claim: Some(Claim::Transfer { token: token.clone(), amount: 99 }),
+        }],
+    };
+    let outcome = indexer.apply(&short);
+    assert_eq!(
+        outcome,
+        Outcome::Settled(vec![nmeme_core::Effect { token: token.clone(), transferred: 99, burned: 1 }])
+    );
+    assert_eq!(indexer.balances(&token).get(&bob().to_be_bytes().to_vec()).copied(), Some(99));
+    assert_eq!(indexer.circulating(&token), SUPPLY - 1);
+
+    // and the 99 spend on as an ordinary, exactly conserving transfer
+    let on = TxView {
+        id: hash(1401),
+        inputs: vec![name(95)],
+        outputs: vec![NoteView {
+            name: name(96),
+            lock_root: alice(),
+            claim: Some(Claim::Transfer { token: token.clone(), amount: 99 }),
+        }],
+    };
+    assert_eq!(indexer.apply(&on), Outcome::Transferred(token.clone()));
+    assert_eq!(indexer.circulating(&token), SUPPLY - 1);
 }
 
 #[test]

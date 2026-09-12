@@ -976,7 +976,10 @@ fn cmd_pool_replay(args: &[String]) -> Result<ExitCode, String> {
         let ok = nmeme_core::pool::invariant_holds(state, after, params.fee_bps);
         // the treasury: what crossed the boundary, what it was owed, what it got
         let (gin, gout, lore_got, lore_tokens) = boundary(&params, &first, &lore_first, &spends);
-        let lore_due = nmeme_core::pool::lore_due(&params, gin, gout);
+        // the floor by direction, as the covenant computes it: a sell's
+        // base includes the treasury's own payment (the gross proceeds)
+        let lore_side = if x1 < state.nock { nmeme_core::Side::Sell } else { nmeme_core::Side::Buy };
+        let lore_due = nmeme_core::pool::lore_due(&params, lore_side, gin, gout, lore_got);
         let lore_ok = lore_got >= lore_due && lore_tokens == 0;
         lore_total += lore_got;
         println!(

@@ -186,6 +186,46 @@ fn list_atoms(noun: &OwnedBasedNoun) -> Result<Vec<u64>, Error> {
     }
 }
 
+/// A genesis payload encoded *without* the standard's checks, for tests and
+/// for the live attack cases that show consensus refusing what the codec
+/// would never produce: any ticker limbs, any decimals, any amount.
+pub fn raw_genesis_noun(
+    ticker_limbs: &[u64],
+    decimals: u64,
+    amount: u64,
+    token: &TokenId,
+) -> Result<OwnedBasedNoun, Error> {
+    let limbs = ticker_limbs
+        .iter()
+        .map(|limb| OwnedBasedNoun::try_atom(*limb).map_err(Error::from))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(OwnedBasedNoun::cell(
+        OwnedBasedNoun::try_atom(VERSION)?,
+        OwnedBasedNoun::cell(
+            OwnedBasedNoun::try_atom(TAG_CREATE)?,
+            OwnedBasedNoun::cell(
+                OwnedBasedNoun::list(limbs),
+                OwnedBasedNoun::cell(
+                    OwnedBasedNoun::try_atom(decimals)?,
+                    OwnedBasedNoun::cell(OwnedBasedNoun::try_atom(amount)?, token.to_noun()),
+                ),
+            ),
+        ),
+    ))
+}
+
+/// A transfer payload encoded without the standard's checks (see
+/// [`raw_genesis_noun`]).
+pub fn raw_transfer_noun(token: &TokenId, amount: u64) -> Result<OwnedBasedNoun, Error> {
+    Ok(OwnedBasedNoun::cell(
+        OwnedBasedNoun::try_atom(VERSION)?,
+        OwnedBasedNoun::cell(
+            OwnedBasedNoun::try_atom(TAG_TRANSFER)?,
+            OwnedBasedNoun::cell(token.to_noun(), OwnedBasedNoun::try_atom(amount)?),
+        ),
+    ))
+}
+
 /// Convenience: the `Hash` a `TokenId` wraps.
 pub fn token_hash(token: &TokenId) -> &Hash {
     &token.0

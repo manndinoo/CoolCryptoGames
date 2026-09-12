@@ -2,6 +2,7 @@
 
 use nmeme_core::claim::NOTE_DATA_KEY;
 use nmeme_core::Claim;
+use nockchain_math::owned_based_noun::OwnedBasedNoun;
 use nockchain_types::tx_engine::common::Hash;
 use nockchain_types::tx_engine::v1::note::{NoteData, NoteDataEntry, NoteDataValue};
 use nockchain_types::tx_engine::v1::tx::Seeds;
@@ -18,7 +19,13 @@ use crate::Error;
 /// must be summed into a single claim before this is called, and attaching to a
 /// lock-root that already carries the key is refused rather than merged.
 pub fn attach_claim(seeds: &mut Seeds, lock_root: &Hash, claim: &Claim) -> Result<(), Error> {
-    let value = NoteDataValue::Noun(claim.to_noun()?);
+    attach_noun(seeds, lock_root, claim.to_noun()?)
+}
+
+/// [`attach_claim`] for a payload built without the codec's checks (the
+/// live cases that show consensus refusing what the codec never produces).
+pub fn attach_noun(seeds: &mut Seeds, lock_root: &Hash, noun: OwnedBasedNoun) -> Result<(), Error> {
+    let value = NoteDataValue::Noun(noun);
 
     let mut attached = false;
     for seed in seeds.0.iter_mut() {

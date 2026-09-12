@@ -217,7 +217,7 @@ index b9b588a..fa5856a 100644
              %brn
            '\0a  - Unspendable (burn) condition'
 diff --git a/hoon/common/tx-engine-1.hoon b/hoon/common/tx-engine-1.hoon
-index a687f27..05c0652 100644
+index a687f27..ad86b61 100644
 --- a/hoon/common/tx-engine-1.hoon
 +++ b/hoon/common/tx-engine-1.hoon
 @@ -1235,6 +1235,7 @@
@@ -273,7 +273,7 @@ index a687f27..05c0652 100644
          %brn  [leaf+%brn leaf+~]
      ==
    ++  hash
-@@ -2211,6 +2222,339 @@
+@@ -2211,6 +2222,412 @@
      [pk sig-hash sig]
    --
  ::
@@ -291,24 +291,76 @@ index a687f27..05c0652 100644
 +++  meme
 +  |%
 +  ++  prime  18.446.744.069.414.584.321
++  ::  the standard's bounds (nockmeme/docs/SPEC.md §2): the indexer applies
++  ::  the same ones, so a claim consensus counts is a claim the indexer counts
++  ++  max-supply  9.223.372.036.854.775.807
++  ++  max-decimals  18
 +  ++  entry
 +    |=  nd=note-data
 +    ^-  (unit *)
 +    (~(get z-by nd) %meme)
++  ++  amount-ok
++    |=  a=@
++    ^-  ?
++    &((gth a 0) (lte a max-supply))
++  ++  byte-ok
++    |=  b=@
++    ^-  ?
++    ?|  &((gte b '0') (lte b '9'))
++        &((gte b 'A') (lte b 'Z'))
++    ==
++  ::  a ticker: a proper list of one to four limbs, each the little-endian
++  ::  bytes of uppercase letters and digits; every limb but the last is
++  ::  exactly seven bytes, the last one to seven
++  ++  ticker-ok
++    |=  t=*
++    ^-  ?
++    =/  n=@  0
++    |-
++    ?@  t  &(=(0 t) (gth n 0))
++    ?.  ?=([@ *] t)  %.n
++    =/  limb=@  -.t
++    =/  len=@  (met 3 limb)
++    ?:  =(len 0)  %.n
++    ?:  (gth len 7)  %.n
++    ?:  &(?!(=(0 +.t)) ?!(=(len 7)))  %.n
++    ?:  (gte n 4)  %.n
++    =/  bytes=(list @)  (rip 3 limb)
++    |-
++    ?^  bytes
++      ?.  (byte-ok i.bytes)  %.n
++      $(bytes t.bytes)
++    ^$(t +.t, n +(n))
++  ::  a well-formed transfer claim, or nothing
 +  ++  transfer
 +    |=  nd=note-data
 +    ^-  (unit [tid=hash amt=@])
 +    =/  v=(unit *)  (entry nd)
 +    ?~  v  ~
 +    ?.  ?=([%0 %t [@ @ @ @ @] @] u.v)  ~
-+    `[+>-.u.v +>+.u.v]
++    =/  amt=@  +>+.u.v
++    ?.  (amount-ok amt)  ~
++    `[+>-.u.v amt]
++  ::  a well-formed genesis claim, or nothing
 +  ++  genesis
 +    |=  nd=note-data
 +    ^-  (unit [ticker=* decimals=@ amt=@ tid=hash])
 +    =/  v=(unit *)  (entry nd)
 +    ?~  v  ~
 +    ?.  ?=([%0 %c * @ @ [@ @ @ @ @]] u.v)  ~
-+    `[+>-.u.v +>+<.u.v +>+>-.u.v +>+>+.u.v]
++    =/  ticker=*  +>-.u.v
++    =/  decimals=@  +>+<.u.v
++    =/  amt=@  +>+>-.u.v
++    ?.  (ticker-ok ticker)  ~
++    ?.  (lte decimals max-decimals)  ~
++    ?.  (amount-ok amt)  ~
++    `[ticker decimals amt +>+>+.u.v]
++  ::  an output may carry no entry, or a well-formed claim; nothing else
++  ++  well-formed
++    |=  nd=note-data
++    ^-  ?
++    ?~  (entry nd)  %.y
++    |(?=(^ (transfer nd)) ?=(^ (genesis nd)))
 +  ::  the atom a hash is, as the Rust side orders them (little-endian in
 +  ::  the field prime), and lexicographic order on its big-endian bytes
 +  ++  atom-of
@@ -369,6 +421,13 @@ index a687f27..05c0652 100644
 +      ^-  (unit nnote-1)
 +      ?^  -.note.o  ~
 +      `note.o
++    ::  every entry on an output is a well-formed claim
++    =/  wf-ok=?
++      =/  l=(list nnote-1)  outs
++      |-
++      ?~  l  %.y
++      ?.  (well-formed note-data.i.l)  %.n
++      $(l t.l)
 +    =/  in-claims=(list [tid=hash amt=@])
 +      %+  murn  ins
 +      |=  n=nnote-1
@@ -387,18 +446,26 @@ index a687f27..05c0652 100644
 +      `[tid.u.t amt.u.t]
 +    =/  out-g=(list [ticker=* decimals=@ amt=@ tid=hash])
 +      (murn outs |=(n=nnote-1 (genesis note-data.n)))
-+    ::  a genesis: no input carries an entry, and every claim names the derived id
++    ::  a genesis: no input carries an entry; every claim agrees on the
++    ::  ticker and decimals and names the derived id; the supply fits the cap
 +    =/  gen-ok=?
 +      ?~  out-g  %.y
 +      ?:  (lien ins |=(n=nnote-1 ?=(^ (entry note-data.n))))  %.n
 +      =/  anc=(unit nname)  (anchor sps)
 +      ?~  anc  %.n
++      =/  ticker=*  ticker.i.out-g
++      =/  decimals=@  decimals.i.out-g
++      =/  tid=hash  (derive u.anc ticker decimals)
 +      =/  l=(list [ticker=* decimals=@ amt=@ tid=hash])  out-g
++      =/  total=@  0
 +      |-
-+      ?~  l  %.y
-+      ?.  =(tid.i.l (derive u.anc ticker.i.l decimals.i.l))  %.n
-+      $(l t.l)
-+    ::  transfers: per id, the outputs never exceed the inputs
++      ?~  l  (lte total max-supply)
++      ?.  =(ticker.i.l ticker)  %.n
++      ?.  =(decimals.i.l decimals)  %.n
++      ?.  =(tid.i.l tid)  %.n
++      $(l t.l, total (add total amt.i.l))
++    ::  transfers: per id, the outputs never exceed the inputs (the
++    ::  shortfall is destroyed; the indexer records it as a burn)
 +    =/  sum
 +      |=  [want=hash l=(list [tid=hash amt=@])]
 +      ^-  @
@@ -408,7 +475,7 @@ index a687f27..05c0652 100644
 +      %+  levy  out-t
 +      |=  [tid=hash amt=@]
 +      (lte (sum tid out-t) (sum tid in-claims))
-+    &(gen-ok xfer-ok)
++    &(wf-ok gen-ok xfer-ok)
 +  --
 +::
 +::  $amm: constant-product pool covenant over one token, with a treasury
@@ -570,7 +637,13 @@ index a687f27..05c0652 100644
 +      ?~  lore-out  %.y
 +      ?^  -.note.i.lore-out  %.n
 +      ?=(~ (~(get z-by note-data.note.i.lore-out) %meme))
-+    =/  lore-due=@  (div (mul lore.form (add gin gout)) 10.000)
++    ::  the treasury's share is taken from the NOCK paid in on a buy (x1 > x)
++    ::  and from the gross proceeds on a sell (x1 < x): the gross is what the
++    ::  seller receives plus the treasury's own payment
++    =/  lore-base=@
++      ?:  (lth x1 x)  (add (add gin gout) lore-got)
++      (add gin gout)
++    =/  lore-due=@  (div (mul lore.form lore-base) 10.000)
 +    ::  seeds of the pool spend go only to this lock, the treasury, or a lock
 +    ::  that another spend of this transaction also pays: a counterparty
 +    ::  shows itself by paying its own lock (its change), and nothing leaves
@@ -613,7 +686,7 @@ index a687f27..05c0652 100644
  ::  $check-context: Context provided for validating locks
  ::
  ::    .now: current page height
-@@ -2218,15 +2562,23 @@
+@@ -2218,15 +2635,23 @@
  ::    .sig-hash: signature to be hashed for a spend
  ::    .witness: witness to spend conditions
  ::    .bythos-phase: height at which bythos activates (for full LMP gating)
@@ -637,7 +710,7 @@ index a687f27..05c0652 100644
      ==
    ::
    ++  check
-@@ -2264,6 +2616,7 @@
+@@ -2264,6 +2689,7 @@
          %tim  (check:tim +.p form)
          %hax  (check:hax +.p form)
          %pkh  (check:pkh +.p form)
@@ -645,7 +718,7 @@ index a687f27..05c0652 100644
          %brn  %|
        ==
      ==
-@@ -2299,6 +2652,7 @@
+@@ -2299,6 +2725,7 @@
          %pkh  (check:pkh +.p form)
          %tim  (check:tim +.p form)
          %hax  (check:hax +.p form)
@@ -653,7 +726,7 @@ index a687f27..05c0652 100644
          %brn  %|
        ==
      ==
-@@ -2334,19 +2688,19 @@
+@@ -2334,19 +2761,19 @@
    ++  new
      |=  [=raw-tx =page-number]
      ^-  form
@@ -686,7 +759,7 @@ index a687f27..05c0652 100644
        =|  children=(z-map hash output)
        |-  ^-  outputs
        ?~  spends-list
-@@ -2403,7 +2757,6 @@
+@@ -2403,7 +2830,6 @@
          =/  out=output  [note1 single]
          (~(put z-by acc) key out)
        $(spends-list t.spends-list)

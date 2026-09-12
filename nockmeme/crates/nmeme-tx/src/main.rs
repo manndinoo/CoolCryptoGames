@@ -528,13 +528,13 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
     let tx_path = &args[2];
     let out_path = &args[3];
 
-    let mut wanted: Vec<(Hash, Claim)> = Vec::new();
+    let mut wanted: Vec<(Hash, nmeme_tx::cli::ClaimSpec)> = Vec::new();
     for spec in &args[4..] {
         let (lock, claim) = spec
             .split_once('=')
             .ok_or_else(|| format!("expected <lock-root>=<claim-spec>, got {spec:?}"))?;
         let lock = Hash::from_base58(lock).map_err(|e| format!("lock-root {lock}: {e}"))?;
-        wanted.push((lock, parse_claim(claim)?));
+        wanted.push((lock, nmeme_tx::cli::parse_claim_spec(claim)?));
     }
     if wanted.is_empty() {
         return Err("at least one <lock-root>=<claim-spec> is required".to_string());
@@ -552,7 +552,7 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
     // a genesis claim names the id it creates, derived from these inputs
     let input_names: Vec<Name> = spends.0.iter().map(|(n, _)| n.clone()).collect();
     for (lock, claim) in &wanted {
-        let claim = &nmeme_tx::cli::with_genesis_id(claim.clone(), &input_names)?;
+        let payload = claim.to_noun(&input_names)?;
         let mut found = false;
         for (name, spend) in spends.0.iter_mut() {
             let Spend::Witness(spend1) = spend else { continue };
@@ -565,7 +565,7 @@ fn cmd_attach(args: &[String]) -> Result<ExitCode, String> {
                     lock.to_base58()
                 ));
             }
-            attach_claim(&mut spend1.seeds, lock, claim)
+            nmeme_tx::attach::attach_noun(&mut spend1.seeds, lock, payload.clone())
                 .map_err(|e: Error| format!("attach to {}: {e}", lock.to_base58()))?;
             if !touched.contains(name) {
                 touched.push(name.clone());

@@ -331,9 +331,25 @@ pub fn quote_sell(before: Reserves, tokens_in: u64, nock_in: u64, params: &PoolP
     })
 }
 
-/// The covenant's floor for the treasury payment: `floor(lore * (gin + gout) / B)`.
-pub fn lore_due(params: &PoolParams, nock_in: u64, nock_out_not_lore: u64) -> u64 {
-    params.lore_share(nock_in.saturating_add(nock_out_not_lore))
+/// The covenant's floor for the treasury payment, which is also exactly
+/// what the quotes pay (`quote_buy`, `quote_sell`) and what the replay
+/// checks: `floor(lore * base / B)` where `base` is every nick crossing the
+/// pool boundary, the treasury's own payment counted on a sell (it comes
+/// out of the gross proceeds) and not on a buy (it comes off the NOCK paid
+/// in, before pricing).
+///
+/// `nock_in`: paid into the pool lock by other spends; `nock_out_not_lore`:
+/// paid by the pool spend to anyone but the pool and the treasury;
+/// `lore_got`: paid by the pool spend to the treasury. On a buy the base is
+/// `nock_in + nock_out_not_lore` (the payment plus the dust that leaves with
+/// the tokens); on a sell it is `nock_in + nock_out_not_lore + lore_got`
+/// (the dust that came in plus the gross proceeds).
+pub fn lore_due(params: &PoolParams, side: Side, nock_in: u64, nock_out_not_lore: u64, lore_got: u64) -> u64 {
+    let base = match side {
+        Side::Buy => nock_in.saturating_add(nock_out_not_lore),
+        Side::Sell => nock_in.saturating_add(nock_out_not_lore).saturating_add(lore_got),
+    };
+    params.lore_share(base)
 }
 
 fn max_nock_out_from(before: Reserves, nock_pool_after_in: u64, tokens_after: u64, fee_bps: u64) -> Result<u64, PoolError> {
@@ -432,6 +448,37 @@ mod tests {
     }
 
     #[test]
+    fn the_treasury_share_quoted_is_the_covenant_floor_in_both_directions() {
+        // The quote pays exactly what the covenant demands, buy and sell,
+        // across many reserves and sizes: floor(lore * base / B) with the
+        // base by direction (`lore_due`). No overpayment, no shortfall.
+        let p = params(100, 50);
+        let mut x: u64 = 0x2545_F491_4F6C_DD1D;
+        let mut next = || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut checked = 0;
+        for _ in 0..2000 {
+            let before = Reserves::new(1_000_000 + next() % 10_000_000_000, 1_000 + next() % 100_000_000);
+            let dust = 1 + next() % 5_000;
+            if let Ok(q) = quote_buy(before, 1_000 + next() % 100_000_000, dust, &p, 0) {
+                assert_eq!(q.lore_fee, lore_due(&p, Side::Buy, q.amount_in, dust, q.lore_fee));
+                checked += 1;
+            }
+            if let Ok(s) = quote_sell(before, 1 + next() % before.tokens, dust, &p, 0) {
+                assert_eq!(s.lore_fee, lore_due(&p, Side::Sell, dust, s.amount_out, s.lore_fee));
+                // and the sell's share is the share of the gross: net + share
+                assert_eq!(s.lore_fee, p.lore_share(s.amount_out + s.lore_fee + dust));
+                checked += 1;
+            }
+        }
+        assert!(checked > 1000);
+    }
+
+    #[test]
     fn quotes_round_trip_the_covenant() {
         let p = params(100, 50);
         let before = r(50_000_000, 2_000_000);
@@ -442,14 +489,14 @@ mod tests {
         // the treasury's share is 0.5% of what was paid (plus the dust), off the top
         assert_eq!(q.lore_fee, (1_000_000 + 1000) * 50 / 10_000);
         assert_eq!(q.after.nock, before.nock + 1_000_000 - q.lore_fee - 1000);
-        assert!(q.lore_fee >= lore_due(&p, 1_000_000, 1000));
+        assert_eq!(q.lore_fee, lore_due(&p, Side::Buy, 1_000_000, 1000, q.lore_fee));
         let s = quote_sell(q.after, q.amount_out, 1000, &p, 8192).unwrap();
         assert!(invariant_holds(q.after, s.after, 100));
         assert!(!invariant_holds(q.after, r(s.after.nock - 1, s.after.tokens), 100));
         // the seller's net is the gross less the treasury's share of the gross
         let gross = q.after.nock + 1000 - s.after.nock;
         assert_eq!(s.amount_out, gross - s.lore_fee);
-        assert!(s.lore_fee >= lore_due(&p, 1000, s.amount_out));
+        assert_eq!(s.lore_fee, lore_due(&p, Side::Sell, 1000, s.amount_out, s.lore_fee));
         assert!(s.amount_out < q.amount_in);
     }
 

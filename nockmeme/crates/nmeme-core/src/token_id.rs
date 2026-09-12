@@ -49,14 +49,24 @@ impl TokenId {
     /// the smallest by canonical byte order, so every party derives the same id
     /// regardless of how the input set is ordered in transit.
     pub fn derive(inputs: &[Name], ticker: &Ticker, decimals: u64) -> Result<Self, Error> {
+        Self::derive_limbs(inputs, &ticker.limbs(), decimals)
+    }
+
+    /// [`Self::derive`] over ticker limbs as they will sit in the payload,
+    /// valid or not: what consensus hashes is the noun, and the tests that
+    /// show it refusing a bad ticker need the id it would have derived.
+    pub fn derive_limbs(inputs: &[Name], ticker_limbs: &[u64], decimals: u64) -> Result<Self, Error> {
         let anchor = inputs
             .iter()
             .min_by_key(|name| (name.first.to_be_bytes(), name.last.to_be_bytes()))
             .ok_or(Error::NoAnchor)?;
-
+        let limbs = ticker_limbs
+            .iter()
+            .map(|limb| OwnedBasedNoun::try_atom(*limb).map_err(Error::from))
+            .collect::<Result<Vec<_>, _>>()?;
         let noun = OwnedBasedNoun::cell(
             name_noun(anchor)?,
-            OwnedBasedNoun::cell(ticker.to_noun()?, OwnedBasedNoun::try_atom(decimals)?),
+            OwnedBasedNoun::cell(OwnedBasedNoun::list(limbs), OwnedBasedNoun::try_atom(decimals)?),
         );
         Ok(Self(NockHash::from_limbs(&hash_owned_based_noun_varlen(&noun))))
     }

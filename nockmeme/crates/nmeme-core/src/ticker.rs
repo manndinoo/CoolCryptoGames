@@ -58,30 +58,28 @@ impl Ticker {
 
     /// Rebuilds a ticker from its limbs, rejecting anything that does not
     /// round-trip to a valid ticker.
+    ///
+    /// This is the rule consensus applies on the fork (`++  ticker-ok` in
+    /// `upstream/amm-covenant.patch`), stated the same way: a limb's bytes
+    /// are its significant little-endian bytes (`(rip 3 limb)`), every limb
+    /// but the last has exactly seven, the last one to seven, every byte is
+    /// an uppercase letter or a digit, and there are one to four limbs. A
+    /// zero byte below a nonzero one is not "the end of the limb": it is a
+    /// byte that is not a letter or a digit, and the limb is refused.
     pub fn from_limbs(limbs: &[u64]) -> Result<Self, Error> {
         if limbs.is_empty() || limbs.len() > MAX_TICKER_BYTES / LIMB_BYTES {
             return Err(Error::TickerLength(limbs.len() * LIMB_BYTES));
         }
         let mut bytes = Vec::with_capacity(limbs.len() * LIMB_BYTES);
         for (index, &limb) in limbs.iter().enumerate() {
-            // Only the final limb may be short; a zero byte anywhere else would
-            // make two different tickers encode to the same limb sequence.
-            let mut limb_bytes = Vec::with_capacity(LIMB_BYTES);
-            for i in 0..LIMB_BYTES {
-                let byte = ((limb >> (8 * i)) & 0xff) as u8;
-                if byte == 0 {
-                    break;
-                }
-                limb_bytes.push(byte);
-            }
+            let len = (64 - limb.leading_zeros() as usize).div_ceil(8);
             let is_last = index + 1 == limbs.len();
-            if !is_last && limb_bytes.len() != LIMB_BYTES {
+            if len == 0 || len > LIMB_BYTES || (!is_last && len != LIMB_BYTES) {
                 return Err(Error::TickerEncoding);
             }
-            if limb_bytes.is_empty() {
-                return Err(Error::TickerEncoding);
+            for i in 0..len {
+                bytes.push(((limb >> (8 * i)) & 0xff) as u8);
             }
-            bytes.extend_from_slice(&limb_bytes);
         }
         let text = String::from_utf8(bytes).map_err(|_| Error::TickerEncoding)?;
         Self::new(&text)

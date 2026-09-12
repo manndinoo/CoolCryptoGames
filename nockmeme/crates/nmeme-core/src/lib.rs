@@ -9,13 +9,15 @@
 //! consumes notes that a node has already accepted.
 
 pub mod claim;
+pub mod consensus;
 pub mod indexer;
 pub mod pool;
 pub mod ticker;
 pub mod token_id;
 
 pub use claim::{Claim, NOTE_DATA_KEY, VERSION};
-pub use indexer::{Indexer, NoteView, TxView};
+pub use consensus::{Effect, Refusal, Verdict};
+pub use indexer::{Indexer, NoteView, Outcome, TxView};
 pub use pool::{PoolParams, Quote, Reserves, Side};
 pub use ticker::Ticker;
 pub use token_id::TokenId;
