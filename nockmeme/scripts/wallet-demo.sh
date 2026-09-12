@@ -69,6 +69,8 @@ if [ ! -f "$W/$WHO/.done" ]; then
   [ -s "$W/$WHO/keys.export" ] || die "$WHO: keygen left no keys.export"
   cp "$W/$WHO/keys.export" "$RUN/keys/$WHO.export"; touch "$W/$WHO/.done"
 fi
+# a wallet whose arena was thrown away (disk) still has its keys
+[ -d "$W/$WHO/wallet" ] || wallet_fresh "$WHO"
 MY=$(wallet "$WHO" list-master-addresses | strip | grep -oE '^- Address: [A-Za-z0-9]+' | head -1 | sed 's/^- Address: //'); [ -n "$MY" ] || die "$WHO: address"
 # the lock root: read from a throwaway transaction paying the address (its
 # smallest seed is the payment), never sent
