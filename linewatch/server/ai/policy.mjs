@@ -2,7 +2,7 @@
 // both providers send the same instructions and must return this schema.
 import { GRADES, RANK, VIEWS } from '../../web/js/grades.js';
 
-export const PROMPT_VERSION = 'linewatch-v2.1';
+export const PROMPT_VERSION = 'linewatch-v2.2';
 const AI_GRADES = [...GRADES, 'inconclusive'];
 const VIEW_IDS = [...VIEWS.map(v => v.id), 'other'];
 
@@ -35,6 +35,7 @@ Always: woodpecker, insect, impact or fire damage; erosion, washout or exposed f
 
 ## Photo views
 Classify each photo's view as one of: ${VIEW_IDS.join(', ')}. Report which applicable views are missing for a confident grade.
+camera_facing, when present, is the phone compass direction the camera pointed. Use it to relate photos to each other and to describe sides (for example "the north side of the pole" or "photos from the south and east only"). It is approximate and can be thrown off by nearby steel; do not treat it as a survey bearing.
 
 ## Output
 Return each supplied photo_id exactly once in photos. Every finding must reference only supplied photo_ids that visibly support it. Keep text short, concrete and understandable in the field. Do not pad the report.`;
@@ -57,6 +58,17 @@ export const SCHEMA = obj({
   additional_photos: strings,
   field_verification: strings,
 });
+
+const POINTS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+// Per-photo metadata sent beside each image.
+export function photoMeta(p) {
+  return {
+    photo_id: p.id,
+    operator_view_label: p.view || null,
+    camera_facing: p.heading == null ? null : `${POINTS[Math.round(p.heading / 45) % 8]} (${Math.round(p.heading)}° magnetic)`,
+    taken_at: p.taken_at || null,
+  };
+}
 
 export class InspectionError extends Error {
   constructor(code, message, status = 502) { super(message); this.code = code; this.status = status; }

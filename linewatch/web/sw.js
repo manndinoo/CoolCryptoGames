@@ -4,7 +4,7 @@
 const VERSION = 'lw-2.0.0';
 const SHELL = [
   '/', '/index.html', '/style.css', '/manifest.webmanifest', '/icons/icon-192.png',
-  '/js/app.js', '/js/store.js', '/js/gps.js', '/js/camera.js', '/js/map.js', '/js/ui.js', '/js/geo.js', '/js/grades.js',
+  '/js/app.js', '/js/store.js', '/js/gps.js', '/js/camera.js', '/js/map.js', '/js/ui.js', '/js/geo.js', '/js/compass.js', '/js/grades.js',
   '/js/views/inspect.js', '/js/views/review.js', '/js/views/pole.js', '/js/views/learning.js', '/js/views/work.js', '/js/views/admin.js',
   '/vendor/leaflet/leaflet-src.esm.js', '/vendor/leaflet/leaflet.css',
 ];

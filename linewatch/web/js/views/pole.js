@@ -4,6 +4,7 @@ import * as gps from '../gps.js';
 import { $, esc, toast, panel, gradeChip, confirmDialog, timeAgo, viewPhotos } from '../ui.js';
 import { GRADE_INFO, STRUCTURES, MATERIALS } from '../grades.js';
 import { distanceM, fmtDistance } from '../geo.js';
+import { describe } from '../compass.js';
 import { openInspect } from './inspect.js';
 import { openReview } from './review.js';
 import { startMoveOnMap, continueLineFrom, statusText, newLineDialog, canReview } from '../app.js';
@@ -81,7 +82,7 @@ export async function openPole(id) {
     else if (t.closest('[data-continue]')) { p.close(); setTimeout(() => continueLineFrom(id), 50); }
     else if (t.closest('[data-move]')) { p.close(); setTimeout(() => startMoveOnMap(id), 50); }
     else if (t.closest('[data-relock]')) relock();
-    else if (t.closest('[data-photo]')) viewPhotos(urls, Number(t.closest('[data-photo]').dataset.photo));
+    else if (t.closest('[data-photo]')) viewPhotos(urls, Number(t.closest('[data-photo]').dataset.photo), photos.map(ph => [new Date(ph.taken_at).toLocaleDateString(), ph.heading != null && `facing ${describe(ph.heading)}`].filter(Boolean).join(' · ')));
     else if (t.closest('[data-insp]')) {
       if (!store.state.online) return toast('Opening an inspection needs a connection.', 'error');
       openReview(t.closest('[data-insp]').dataset.insp);

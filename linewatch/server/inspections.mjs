@@ -88,7 +88,7 @@ export function startAiWorker({ db, provider, dataDir, log = console, intervalMs
     const photoRows = db.prepare('SELECT * FROM photos WHERE inspection_id = ? ORDER BY taken_at, created_at').all(row.id);
     const chosen = choosePhotos(photoRows, MAX_AI_PHOTOS);
     try {
-      const photos = chosen.map(p => ({ id: p.id, view: p.view, mime: p.mime, taken_at: p.taken_at, base64: fs.readFileSync(path.join(dataDir, 'photos', p.file)).toString('base64') }));
+      const photos = chosen.map(p => ({ id: p.id, view: p.view, heading: p.heading, mime: p.mime, taken_at: p.taken_at, base64: fs.readFileSync(path.join(dataDir, 'photos', p.file)).toString('base64') }));
       const request = {
         structure_tag: pole.tag,
         recorded_structure_type: pole.structure,

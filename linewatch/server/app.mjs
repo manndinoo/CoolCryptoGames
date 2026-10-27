@@ -47,6 +47,7 @@ export function createApp({ dataDir, env = process.env, provider = selectProvide
   const rows = (sql, ...a) => db.prepare(sql).all(...a);
   const str = (v, max = 2000, d = '') => (v == null ? d : String(v).slice(0, max));
   const numOrNull = v => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Number(v));
+  const heading = v => { const n = numOrNull(v); return n != null && n >= 0 && n <= 360 ? n % 360 : null; };
   const checkId = id => { if (!ID_RE.test(id)) fail(400, 'Invalid id.'); return id; };
   const pole = id => row('SELECT * FROM poles WHERE id = ?', id) || fail(404, 'Pole not found.');
   const publicUser = u => u && { id: u.id, email: u.email, name: u.name, role: u.role, active: u.active ?? 1 };
@@ -292,7 +293,7 @@ export function createApp({ dataDir, env = process.env, provider = selectProvide
     fs.writeFileSync(path.join(dataDir, 'photos', file), buf);
     db.prepare(`INSERT INTO photos (id, inspection_id, pole_id, file, mime, bytes, view, lat, lng, accuracy_m, heading, taken_at, uploaded_by, created_at)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-      .run(id, ins.id, ins.pole_id, file, mime, buf.length, VIEWS.some(v => v.id === query.view) ? query.view : '', numOrNull(query.lat), numOrNull(query.lng), numOrNull(query.acc), numOrNull(query.heading), str(query.taken, 40) || now(), user.id, now());
+      .run(id, ins.id, ins.pole_id, file, mime, buf.length, VIEWS.some(v => v.id === query.view) ? query.view : '', numOrNull(query.lat), numOrNull(query.lng), numOrNull(query.acc), heading(query.heading), str(query.taken, 40) || now(), user.id, now());
     db.prepare('UPDATE inspections SET updated_at = ? WHERE id = ?').run(now(), ins.id);
     return { ok: true };
   });
@@ -321,7 +322,7 @@ export function createApp({ dataDir, env = process.env, provider = selectProvide
       inspections: rows(`SELECT i.*, u.name AS inspector_name, r.name AS reviewer_name,
           (SELECT COUNT(*) FROM photos WHERE inspection_id = i.id) AS photo_count FROM inspections i
         LEFT JOIN users u ON u.id = i.inspector_id LEFT JOIN users r ON r.id = i.reviewer_id WHERE i.pole_id = ? ORDER BY i.created_at DESC`, p.id).map(parseInspection),
-      photos: rows('SELECT id, inspection_id, view, taken_at FROM photos WHERE pole_id = ? ORDER BY taken_at DESC', p.id),
+      photos: rows('SELECT id, inspection_id, view, heading, taken_at FROM photos WHERE pole_id = ? ORDER BY taken_at DESC', p.id),
       workOrders: rows('SELECT * FROM work_orders WHERE pole_id = ? ORDER BY created_at DESC', p.id),
       spans: rows('SELECT * FROM spans WHERE (from_pole = ? OR to_pole = ?) AND deleted = 0', p.id, p.id),
       history: rows(`SELECT a.at, a.action, a.detail, u.name AS user_name FROM audit a LEFT JOIN users u ON u.id = a.user_id WHERE a.entity = 'pole' AND a.entity_id = ? ORDER BY a.id DESC LIMIT 50`, p.id),

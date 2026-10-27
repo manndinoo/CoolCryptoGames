@@ -4,6 +4,7 @@ import * as store from '../store.js';
 import { $, $$, esc, toast, panel, gradeChip, pct, timeAgo, viewPhotos } from '../ui.js';
 import { GRADES, GRADE_INFO, VIEWS } from '../grades.js';
 import { session, showPoleOnMap } from '../app.js';
+import { describe } from '../compass.js';
 
 export async function renderReviewQueue(el) {
   if (!el.dataset.loaded) el.innerHTML = '<div class="pad"><h1>Review</h1><p class="muted">Loading…</p></div>';
@@ -38,7 +39,7 @@ export async function openReview(id, onDone) {
   const rep = ins.ai_report;
   const photoIndex = new Map(photos.map((ph, i) => [ph.id, i]));
   const urls = photos.map(ph => `/api/photos/${ph.id}`);
-  const captions = photos.map(ph => VIEWS.find(v => v.id === ph.view)?.label || '');
+  const captions = photos.map(ph => [VIEWS.find(v => v.id === ph.view)?.label, ph.heading != null && `facing ${describe(ph.heading)}`].filter(Boolean).join(' · '));
   const done = ins.status === 'complete';
   let grade = ins.final_grade || ins.ai_grade || null;
   const feedback = (rep?.findings || []).map(() => 'agree');

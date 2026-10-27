@@ -301,3 +301,18 @@ test('a reviewer grading before the AI finishes keeps their grade', async () => 
   assert.equal(ins.final_source, 'human');
   assert.equal(ins.ai_grade, 'monitor');
 });
+
+test('photo compass headings are stored, validated and sent to the AI', async () => {
+  const p = await makePole(inspector, 90);
+  const insId = id(), good = id(), bad = id();
+  await inspector('PUT', `/api/inspections/${insId}`, { pole_id: p });
+  await inspector('PUT', `/api/photos/${good}?inspection=${insId}&view=top&heading=92`, undefined, { raw: JPEG });
+  await inspector('PUT', `/api/photos/${bad}?inspection=${insId}&heading=900`, undefined, { raw: JPEG });
+  aiAnswers.push({ grade: 'monitor', confidence: 0.6 });
+  await inspector('POST', `/api/inspections/${insId}/submit`, {});
+  await waitFor(async () => (await getIns(insId)).ai_status === 'done');
+  const photos = (await admin('GET', `/api/inspections/${insId}`)).data.photos;
+  assert.equal(photos.find(x => x.id === good).heading, 92);
+  assert.equal(photos.find(x => x.id === bad).heading, null);
+  assert.equal(aiCalls.at(-1).photos.find(x => x.id === good).heading, 92);
+});

@@ -1,6 +1,6 @@
 // OpenAI provider, kept so a utility that already holds an OpenAI key (as the
 // v1 prototype did) can keep using it. Same policy and schema as Claude.
-import { INSTRUCTIONS, SCHEMA, InspectionError, classifyHttpError } from './policy.mjs';
+import { INSTRUCTIONS, SCHEMA, InspectionError, classifyHttpError, photoMeta } from './policy.mjs';
 
 export const DEFAULT_OPENAI_MODEL = 'gpt-5.4-mini';
 
@@ -10,7 +10,7 @@ export function createOpenAIProvider(env, fetcher = fetch) {
   async function inspect({ context, request, photos }) {
     const content = [{ type: 'input_text', text: JSON.stringify(request) }];
     for (const p of photos) {
-      content.push({ type: 'input_text', text: JSON.stringify({ photo_id: p.id, operator_view_label: p.view || null, taken_at: p.taken_at || null }) });
+      content.push({ type: 'input_text', text: JSON.stringify(photoMeta(p)) });
       content.push({ type: 'input_image', image_url: `data:${p.mime};base64,${p.base64}`, detail: 'high' });
     }
     let response;

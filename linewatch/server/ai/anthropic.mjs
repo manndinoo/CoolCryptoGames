@@ -1,7 +1,7 @@
 // Claude provider. Sends every photo in one request with the inspection
 // policy, the utility's learned context and a strict output schema.
 import Anthropic from '@anthropic-ai/sdk';
-import { INSTRUCTIONS, SCHEMA, InspectionError, classifyHttpError } from './policy.mjs';
+import { INSTRUCTIONS, SCHEMA, InspectionError, classifyHttpError, photoMeta } from './policy.mjs';
 
 export const DEFAULT_MODEL = 'claude-opus-5-5';
 
@@ -13,7 +13,7 @@ export function createAnthropicProvider(env, { fetch } = {}) {
   async function inspect({ context, request, photos }) {
     const content = [{ type: 'text', text: JSON.stringify(request) }];
     for (const p of photos) {
-      content.push({ type: 'text', text: JSON.stringify({ photo_id: p.id, operator_view_label: p.view || null, taken_at: p.taken_at || null }) });
+      content.push({ type: 'text', text: JSON.stringify(photoMeta(p)) });
       content.push({ type: 'image', source: { type: 'base64', media_type: p.mime, data: p.base64 } });
     }
     content.push({ type: 'text', text: 'Inspect this structure and return the report.' });

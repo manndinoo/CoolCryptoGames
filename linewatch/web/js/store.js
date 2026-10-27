@@ -246,7 +246,8 @@ export async function submitInspection({ id = uid(), poleId, notes, checklist, p
   await enqueue({ method: 'PUT', url: `/api/inspections/${id}`, body: { pole_id: poleId, notes, checklist }, label: 'Inspection' });
   for (const p of photos) {
     const q = new URLSearchParams({ inspection: id, view: p.view || '', taken: p.takenAt || t });
-    state.photos.set(p.id, { id: p.id, inspection_id: id, pole_id: poleId, view: p.view, taken_at: p.takenAt, _local: true });
+    if (p.heading != null) q.set('heading', p.heading);
+    state.photos.set(p.id, { id: p.id, inspection_id: id, pole_id: poleId, view: p.view, heading: p.heading ?? null, taken_at: p.takenAt, _local: true });
     await enqueue({ method: 'PUT', url: `/api/photos/${p.id}?${q}`, blobKey: p.id, label: 'Photo', releaseBlob: true }, p.blob);
   }
   await enqueue({ method: 'POST', url: `/api/inspections/${id}/submit`, body: {}, label: 'Submit inspection' });

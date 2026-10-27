@@ -1,6 +1,7 @@
 // Photo capture and submission for one pole.
 import * as store from '../store.js';
 import * as camera from '../camera.js';
+import * as compass from '../compass.js';
 import { $, $$, esc, toast, panel, confirmDialog } from '../ui.js';
 import { VIEWS, STRUCTURES, MATERIALS } from '../grades.js';
 import { session } from '../app.js';
@@ -22,7 +23,7 @@ export async function openInspect(poleId) {
     if (blob) photos.push({ ...p, blob, url: URL.createObjectURL(blob) });
   }
   let view = VIEWS.find(v => !photos.some(p => p.view === v.id))?.id || 'full';
-  let cam = null, submitting = false;
+  let cam = null, submitting = false, stopCompass = null;
 
   const p = panel(`
     <div class="sheet-head"><div><h2>${esc(pole.tag)}</h2><p class="small muted">${esc(store.state.lines.get(pole.line_id)?.name || '')}</p></div><button class="btn icon" data-close aria-label="Close">✕</button></div>
@@ -31,6 +32,7 @@ export async function openInspect(poleId) {
       <div class="camera" data-camera hidden>
         <video playsinline muted></video>
         <div class="camera-hint" data-hint></div>
+        <div class="compass-badge" data-compass hidden></div>
         <div class="camera-bar">
           <input type="range" data-zoom hidden aria-label="Zoom">
           <button class="shutter" data-shutter aria-label="Take photo"></button>
@@ -50,7 +52,7 @@ export async function openInspect(poleId) {
       <label>What you noticed (optional)<textarea data-notes rows="3" placeholder="Leaning toward road, woodpecker holes near top, transformer leaking…">${esc(saved.notes)}</textarea></label>
       <p class="small muted">${session.ai ? 'AI will grade the photos, then a reviewer confirms (or it is accepted automatically once the AI is trusted for that grade).' : 'No AI is connected: a reviewer will grade these photos.'} Works offline; uploads when you have signal.</p>
       <button class="btn primary huge" data-submit disabled>Submit</button>
-    </div>`, { className: 'full', onClose: () => { cam?.stop(); camera.keepAwake(false); } });
+    </div>`, { className: 'full', onClose: () => { cam?.stop(); stopCompass?.(); camera.keepAwake(false); } });
   const el = p.el;
   const video = $('video', el);
 
@@ -62,19 +64,21 @@ export async function openInspect(poleId) {
       return `<button class="guide ${v.id === view ? 'on' : ''} ${n ? 'done' : ''}" data-view="${v.id}"><b>${n ? '✓' : ''}</b>${esc(v.label)}${n > 1 ? ` <small>${n}</small>` : ''}</button>`;
     }).join('');
     $('[data-hint]', el).textContent = `${VIEWS.find(v => v.id === view)?.label}: ${VIEWS.find(v => v.id === view)?.hint}`;
-    $('[data-thumbs]', el).innerHTML = photos.map((x, i) => `<figure><img src="${x.url}" alt=""><figcaption>${esc(VIEWS.find(v => v.id === x.view)?.label || 'Photo')}</figcaption><button data-remove="${i}" aria-label="Remove photo">✕</button></figure>`).join('');
+    $('[data-thumbs]', el).innerHTML = photos.map((x, i) => `<figure><img src="${x.url}" alt=""><figcaption>${esc(VIEWS.find(v => v.id === x.view)?.label || 'Photo')}${x.heading != null ? ` · ${compass.cardinal(x.heading)}` : ''}</figcaption><button data-remove="${i}" aria-label="Remove photo">✕</button></figure>`).join('');
     const btn = $('[data-submit]', el);
     btn.disabled = !photos.length || submitting;
     btn.textContent = photos.length ? `Submit ${photos.length} photo${photos.length === 1 ? '' : 's'}` : 'Take at least one photo';
   }
 
-  async function addPhoto(blob, takenAt, fromCamera) {
+  // heading: compass direction at the shutter, only known for the in-app camera.
+  async function addPhoto(blob, takenAt, fromCamera, heading = null) {
     if (photos.length >= MAX_PHOTOS) return toast(`Up to ${MAX_PHOTOS} photos per inspection.`, 'error');
     const id = store.uid();
     await store.blobSet(id, blob);
     photos.push({
       // Library photos are not labelled with the selected view: the AI works out what each one shows.
       id, blob, url: URL.createObjectURL(blob), view: fromCamera ? view : '', takenAt: takenAt || new Date().toISOString(),
+      heading: heading == null ? null : Math.round(heading),
     });
     // Move the guide on to the next view that still has no photo.
     if (fromCamera && photos.filter(x => x.view === view).length === 1) view = VIEWS.find(v => !photos.some(x => x.view === v.id))?.id || view;
@@ -95,11 +99,12 @@ export async function openInspect(poleId) {
     if (e.target.closest('[data-live]')) return openLive();
     if (e.target.closest('[data-shutter]')) {
       try {
+        const heading = compass.current();
         const blob = await camera.snap(video);
         el.querySelector('.camera').classList.add('flash');
         setTimeout(() => el.querySelector('.camera')?.classList.remove('flash'), 150);
         navigator.vibrate?.(20);
-        await addPhoto(blob, null, true);
+        await addPhoto(blob, null, true, heading);
       } catch (err) { toast(err.message, 'error'); }
       return;
     }
@@ -109,7 +114,22 @@ export async function openInspect(poleId) {
   let torchOn = false;
   $('[data-torch]', el).onclick = () => { torchOn = !torchOn; cam?.torch?.(torchOn); };
 
+  function showCompass(h, acc) {
+    const badge = $('[data-compass]', el);
+    if (!badge) return;
+    badge.hidden = false;
+    badge.innerHTML = h == null
+      ? '<b>Compass</b> hold the phone upright'
+      : `<i aria-label="North is this way" title="North" style="transform:rotate(${-Math.round(h)}deg)">▲</i><b>Facing ${esc(compass.describe(h))}</b>${acc != null && acc > 25 ? ' <small>weak: wave phone in a figure 8</small>' : ''}`;
+  }
+
   async function openLive() {
+    // Started from this tap: iPhones only allow the compass after a user gesture.
+    compass.start().then(ok => {
+      if (!ok) return;
+      stopCompass = compass.onChange(showCompass);
+      showCompass(compass.current(), compass.currentAccuracy());
+    });
     try {
       cam = await camera.openStream(video);
       $('[data-camera]', el).hidden = false;

@@ -102,3 +102,27 @@ test('output schema only uses features structured outputs support', () => {
   };
   walk(SCHEMA, 'report');
 });
+
+test('camera heading follows the back camera, not the top of the phone', async () => {
+  const { cameraHeading, cardinal } = await import('../web/js/compass.js');
+  const near = (a, b) => Math.abs(((a - b + 540) % 360) - 180) < 0.5;
+  // Held upright, screen toward you (beta 90): camera faces where alpha says.
+  assert.ok(near(cameraHeading(0, 90, 0), 0), 'north');
+  assert.ok(near(cameraHeading(90, 90, 0), 270), 'alpha is counter-clockwise, so 90 is west');
+  assert.ok(near(cameraHeading(270, 90, 0), 90), 'east');
+  // Tilted back a little (beta 70): still the same direction.
+  assert.ok(near(cameraHeading(0, 70, 0), 0));
+  // Turned sideways into landscape (gamma -90): camera still faces north.
+  assert.ok(near(cameraHeading(90, 0, -90), 0), String(cameraHeading(90, 0, -90)));
+  // Lying flat, camera at the ground: no heading.
+  assert.equal(cameraHeading(0, 0, 0), null);
+  assert.equal(cameraHeading(null, 90, 0), null);
+  assert.equal(cardinal(44), 'NE');
+  assert.equal(cardinal(359), 'N');
+});
+
+test('photo metadata for the AI carries the compass direction when known', async () => {
+  const { photoMeta } = await import('../server/ai/policy.mjs');
+  assert.equal(photoMeta({ id: 'p', view: 'top', heading: 92 }).camera_facing, 'E (92° magnetic)');
+  assert.equal(photoMeta({ id: 'p', view: '', heading: null }).camera_facing, null);
+});
