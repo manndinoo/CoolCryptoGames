@@ -1,0 +1,654 @@
+{
+  "id": "real-photos-v1",
+  "title": "Real-photo workflow test",
+  "records": [
+    {
+      "id": "PHOTO-TEST-01",
+      "type": "Steel tower",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "high",
+      "finding": "Weathered steel structure; crossarm condition needs close review",
+      "status": "review",
+      "lat": "46.608",
+      "lng": "-120.598",
+      "parentId": "",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-01"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "Brown surface discoloration on the foreground lattice structure; asymmetric crossarm ends and vegetation obscuring parts of the structure. The image does not resolve the reported break clearly.\n\nReview needed: Close photographs of crossarms, attachments and steel sections; verify vegetation clearance and loss of section.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-01",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "Weathered steel structure; crossarm condition needs close review",
+          "notes": "Brown surface discoloration on the foreground lattice structure; asymmetric crossarm ends and vegetation obscuring parts of the structure. The image does not resolve the reported break clearly.\n\nReview needed: Close photographs of crossarms, attachments and steel sections; verify vegetation clearance and loss of section.",
+          "risk": "high",
+          "photos": [
+            "real-photo-v1-01"
+          ],
+          "checklist": {},
+          "followup": true,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "Brown surface discoloration on the foreground lattice structure; asymmetric crossarm ends and vegetation obscuring parts of the structure. The image does not resolve the reported break clearly.",
+            "limitations": "Close photographs of crossarms, attachments and steel sections; verify vegetation clearance and loss of section.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 1,
+        "title": "Damaged electricity pole.jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Damaged_electricity_pole.jpg",
+        "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Damaged_electricity_pole.jpg/960px-Damaged_electricity_pole.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
+        "asset": "test-assets/pole-01.jpg",
+        "bytes": 230850,
+        "author": "HighVoltage 5576",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "sourceDate": "2023-06-01",
+        "sourceContext": "Broken crossarm reported by photographer near Klodzko.",
+        "sourceLocation": "Near Klodzko, Poland; no verified structure GPS supplied.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "b93197cd7f033bd542931299587e4dc0dd0d24a80991651cc9899d723b32c5a1"
+      },
+      "assessment": {
+        "visible": "Brown surface discoloration on the foreground lattice structure; asymmetric crossarm ends and vegetation obscuring parts of the structure. The image does not resolve the reported break clearly.",
+        "limitations": "Close photographs of crossarms, attachments and steel sections; verify vegetation clearance and loss of section.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    },
+    {
+      "id": "PHOTO-TEST-02",
+      "type": "Wood pole",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "critical",
+      "finding": "Fractured pole sections with attached wires",
+      "status": "review",
+      "lat": "46.6088",
+      "lng": "-120.5967",
+      "parentId": "PHOTO-TEST-01",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-02"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "Large splintered wood fractures, displaced pole sections crossing each other, and wires attached to unstable sections are visible.\n\nReview needed: Qualified field assessment of pole stability, all attached circuits and the affected span. Energization is unknown.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-02",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "Fractured pole sections with attached wires",
+          "notes": "Large splintered wood fractures, displaced pole sections crossing each other, and wires attached to unstable sections are visible.\n\nReview needed: Qualified field assessment of pole stability, all attached circuits and the affected span. Energization is unknown.",
+          "risk": "critical",
+          "photos": [
+            "real-photo-v1-02"
+          ],
+          "checklist": {},
+          "followup": true,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "Large splintered wood fractures, displaced pole sections crossing each other, and wires attached to unstable sections are visible.",
+            "limitations": "Qualified field assessment of pole stability, all attached circuits and the affected span. Energization is unknown.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 2,
+        "title": "Broken utility pole after May 2018 derecho outside Walden, NY.jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Broken_utility_pole_after_May_2018_derecho_outside_Walden%2C_NY.jpg",
+        "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/Broken_utility_pole_after_May_2018_derecho_outside_Walden%2C_NY.jpg/960px-Broken_utility_pole_after_May_2018_derecho_outside_Walden%2C_NY.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
+        "asset": "test-assets/pole-02.jpg",
+        "bytes": 344931,
+        "author": "Daniel Case",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "sourceDate": "2018-05-16",
+        "sourceContext": "Photographer identifies storm damage after the May 2018 derecho near Walden, New York.",
+        "sourceLocation": "Source camera location 41.572290, -74.177240; retrospectively estimated, not verified pole GPS.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "4e4ed4cfbef753bcad77fcf847e518900dd3f00a8a6a460c8579a295f5ce1e83"
+      },
+      "assessment": {
+        "visible": "Large splintered wood fractures, displaced pole sections crossing each other, and wires attached to unstable sections are visible.",
+        "limitations": "Qualified field assessment of pole stability, all attached circuits and the affected span. Energization is unknown.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    },
+    {
+      "id": "PHOTO-TEST-03",
+      "type": "Wood pole",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "critical",
+      "finding": "Severely displaced pole in a fire-damaged scene",
+      "status": "review",
+      "lat": "46.609",
+      "lng": "-120.5951",
+      "parentId": "PHOTO-TEST-02",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-03"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "Pole is sharply inclined with its lower end displaced near ground level. Attached conductors, a displaced lamp and scorched surrounding vegetation are visible. A posted sign says asbestos; composition cannot be verified visually.\n\nReview needed: Qualified assessment of support loss, attached conductors and site hazards. No inference about energization or fire origin.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-03",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "Severely displaced pole in a fire-damaged scene",
+          "notes": "Pole is sharply inclined with its lower end displaced near ground level. Attached conductors, a displaced lamp and scorched surrounding vegetation are visible. A posted sign says asbestos; composition cannot be verified visually.\n\nReview needed: Qualified assessment of support loss, attached conductors and site hazards. No inference about energization or fire origin.",
+          "risk": "critical",
+          "photos": [
+            "real-photo-v1-03"
+          ],
+          "checklist": {},
+          "followup": true,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "Pole is sharply inclined with its lower end displaced near ground level. Attached conductors, a displaced lamp and scorched surrounding vegetation are visible. A posted sign says asbestos; composition cannot be verified visually.",
+            "limitations": "Qualified assessment of support loss, attached conductors and site hazards. No inference about energization or fire origin.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 3,
+        "title": "Waroona fire 2016 gnangarra 230116-109.JPG",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Waroona_fire_2016_gnangarra_230116-109.JPG",
+        "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Waroona_fire_2016_gnangarra_230116-109.JPG/960px-Waroona_fire_2016_gnangarra_230116-109.JPG?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
+        "asset": "test-assets/pole-03.jpg",
+        "bytes": 611714,
+        "author": "Photographs by Gnangarra...commons.wikimedia.org",
+        "license": "CC BY 2.5 AU",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.5/au/",
+        "sourceDate": "2016-01-23",
+        "sourceContext": "Photographer identifies Waroona Fire damage and a lower pole section burned away.",
+        "sourceLocation": "Waroona fire area, Australia; no verified structure GPS supplied.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "238fe076fe948d187250ec511d4ed477063d86a75414f9d6520aff342e1bd376"
+      },
+      "assessment": {
+        "visible": "Pole is sharply inclined with its lower end displaced near ground level. Attached conductors, a displaced lamp and scorched surrounding vegetation are visible. A posted sign says asbestos; composition cannot be verified visually.",
+        "limitations": "Qualified assessment of support loss, attached conductors and site hazards. No inference about energization or fire origin.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    },
+    {
+      "id": "PHOTO-TEST-04",
+      "type": "Wood pole",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "critical",
+      "finding": "Split lower pole carrying a transformer",
+      "status": "review",
+      "lat": "46.6085",
+      "lng": "-120.5935",
+      "parentId": "PHOTO-TEST-03",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-04"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "Exposed splintered wood at the lower pole, major lean, a mounted transformer and hanging wires are visible; a fallen tree is nearby.\n\nReview needed: Qualified field assessment of support failure and attached equipment. Image resolution limits hardware inspection.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-04",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "Split lower pole carrying a transformer",
+          "notes": "Exposed splintered wood at the lower pole, major lean, a mounted transformer and hanging wires are visible; a fallen tree is nearby.\n\nReview needed: Qualified field assessment of support failure and attached equipment. Image resolution limits hardware inspection.",
+          "risk": "critical",
+          "photos": [
+            "real-photo-v1-04"
+          ],
+          "checklist": {},
+          "followup": true,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "Exposed splintered wood at the lower pole, major lean, a mounted transformer and hanging wires are visible; a fallen tree is nearby.",
+            "limitations": "Qualified field assessment of support failure and attached equipment. Image resolution limits hardware inspection.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 4,
+        "title": "Leaning power pole (5263399813).jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Leaning_power_pole_%285263399813%29.jpg",
+        "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/78/Leaning_power_pole_%285263399813%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+        "asset": "test-assets/pole-04.jpg",
+        "bytes": 59757,
+        "author": "Oregon Department of Transportation",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "sourceDate": "2010-12-14",
+        "sourceContext": "Oregon Department of Transportation identifies tornado damage in Aumsville.",
+        "sourceLocation": "Aumsville, Oregon; no verified structure GPS supplied.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "e5c48bb962e59e365cc08e39f4129bf7a1246415fa00a68b41035bb65b257a6c"
+      },
+      "assessment": {
+        "visible": "Exposed splintered wood at the lower pole, major lean, a mounted transformer and hanging wires are visible; a fallen tree is nearby.",
+        "limitations": "Qualified field assessment of support failure and attached equipment. Image resolution limits hardware inspection.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    },
+    {
+      "id": "PHOTO-TEST-05",
+      "type": "Wood pole",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "high",
+      "finding": "Leaning roadside pole and displaced wire near tree debris",
+      "status": "review",
+      "lat": "46.6077",
+      "lng": "-120.5925",
+      "parentId": "PHOTO-TEST-04",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-05"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "Foreground pole leans relative to nearby structures. A loose wire extends leftward, and a large fallen branch blocks part of the road. Cones mark the scene.\n\nReview needed: Verify conductor identity, support condition and possible tree contact. Exact clearance and electrical state cannot be established.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-05",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "Leaning roadside pole and displaced wire near tree debris",
+          "notes": "Foreground pole leans relative to nearby structures. A loose wire extends leftward, and a large fallen branch blocks part of the road. Cones mark the scene.\n\nReview needed: Verify conductor identity, support condition and possible tree contact. Exact clearance and electrical state cannot be established.",
+          "risk": "high",
+          "photos": [
+            "real-photo-v1-05"
+          ],
+          "checklist": {},
+          "followup": true,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "Foreground pole leans relative to nearby structures. A loose wire extends leftward, and a large fallen branch blocks part of the road. Cones mark the scene.",
+            "limitations": "Verify conductor identity, support condition and possible tree contact. Exact clearance and electrical state cannot be established.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 5,
+        "title": "Downed tree branch and damaged power lines from 6-3-2020 derecho Hatboro PA.jpeg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Downed_tree_branch_and_damaged_power_lines_from_6-3-2020_derecho_Hatboro_PA.jpeg",
+        "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Downed_tree_branch_and_damaged_power_lines_from_6-3-2020_derecho_Hatboro_PA.jpeg/960px-Downed_tree_branch_and_damaged_power_lines_from_6-3-2020_derecho_Hatboro_PA.jpeg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
+        "asset": "test-assets/pole-05.jpg",
+        "bytes": 227329,
+        "author": "Dough4872",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "sourceDate": "2020-06-03",
+        "sourceContext": "Photographer identifies derecho damage along Warminster Road, Hatboro, Pennsylvania.",
+        "sourceLocation": "Source camera location 40.180064, -75.092689; camera position is not surveyed pole GPS.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "84504e0d7d784fadf8dd46b1332f996aec5a9673664406acdfb3aea4af1343cc"
+      },
+      "assessment": {
+        "visible": "Foreground pole leans relative to nearby structures. A loose wire extends leftward, and a large fallen branch blocks part of the road. Cones mark the scene.",
+        "limitations": "Verify conductor identity, support condition and possible tree contact. Exact clearance and electrical state cannot be established.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    },
+    {
+      "id": "PHOTO-TEST-06",
+      "type": "Wood pole",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "clear",
+      "finding": "No obvious gross failure visible in this overview",
+      "status": "review",
+      "lat": "46.6069",
+      "lng": "-120.5921",
+      "parentId": "PHOTO-TEST-05",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-06"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "Upright wood pole with attached crossarms and overhead wires. No obvious displaced arm or broken shaft is visible in this view.\n\nReview needed: Closer views of insulators, connections, back side and ground line are needed; internal decay and electrical safety are unassessed.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-06",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "No obvious gross failure visible in this overview",
+          "notes": "Upright wood pole with attached crossarms and overhead wires. No obvious displaced arm or broken shaft is visible in this view.\n\nReview needed: Closer views of insulators, connections, back side and ground line are needed; internal decay and electrical safety are unassessed.",
+          "risk": "clear",
+          "photos": [
+            "real-photo-v1-06"
+          ],
+          "checklist": {},
+          "followup": false,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "Upright wood pole with attached crossarms and overhead wires. No obvious displaced arm or broken shaft is visible in this view.",
+            "limitations": "Closer views of insulators, connections, back side and ground line are needed; internal decay and electrical safety are unassessed.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 6,
+        "title": "Wooden utility pole.jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wooden_utility_pole.jpg",
+        "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Wooden_utility_pole.jpg/960px-Wooden_utility_pole.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
+        "asset": "test-assets/pole-06.jpg",
+        "bytes": 446132,
+        "author": "HighVoltage 5576",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "sourceDate": "2020-09-30",
+        "sourceContext": "Photographer describes a wooden utility pole in Jersleben.",
+        "sourceLocation": "Jersleben, Germany; no verified structure GPS supplied.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "90c0a33d9f41d2d05dd86773be1e0404089751a87f2e7d40e30979258c11919f"
+      },
+      "assessment": {
+        "visible": "Upright wood pole with attached crossarms and overhead wires. No obvious displaced arm or broken shaft is visible in this view.",
+        "limitations": "Closer views of insulators, connections, back side and ground line are needed; internal decay and electrical safety are unassessed.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    },
+    {
+      "id": "PHOTO-TEST-07",
+      "type": "Wood pole",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "monitor",
+      "finding": "Weathered crossarms and rust-colored hardware",
+      "status": "review",
+      "lat": "46.6061",
+      "lng": "-120.5933",
+      "parentId": "PHOTO-TEST-06",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-07"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "Longitudinal surface checking and weathering are visible on wood crossarms; metal braces and fasteners have rust-colored surfaces. Transformer remains mounted in the photographed view.\n\nReview needed: Measure/check wood condition and hardware corrosion in the field. Surface appearance alone cannot establish decay depth, strength, leakage or serviceability.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-07",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "Weathered crossarms and rust-colored hardware",
+          "notes": "Longitudinal surface checking and weathering are visible on wood crossarms; metal braces and fasteners have rust-colored surfaces. Transformer remains mounted in the photographed view.\n\nReview needed: Measure/check wood condition and hardware corrosion in the field. Surface appearance alone cannot establish decay depth, strength, leakage or serviceability.",
+          "risk": "monitor",
+          "photos": [
+            "real-photo-v1-07"
+          ],
+          "checklist": {},
+          "followup": true,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "Longitudinal surface checking and weathering are visible on wood crossarms; metal braces and fasteners have rust-colored surfaces. Transformer remains mounted in the photographed view.",
+            "limitations": "Measure/check wood condition and hardware corrosion in the field. Surface appearance alone cannot establish decay depth, strength, leakage or serviceability.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 7,
+        "title": "Power Transformer.jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Power_Transformer.jpg",
+        "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Power_Transformer.jpg/960px-Power_Transformer.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
+        "asset": "test-assets/pole-07.jpg",
+        "bytes": 207609,
+        "author": "DMGualtieri",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "sourceDate": "2011-02-26",
+        "sourceContext": "Source describes a US residential distribution transformer. Source page date is 2011-02-26; EXIF reports 2006-06-14.",
+        "sourceLocation": "United States per source description; no verified structure GPS supplied.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "51cfa817c7c154031421d681ad98e022f62900e5a558bec8d8d3e88307d3b848"
+      },
+      "assessment": {
+        "visible": "Longitudinal surface checking and weathering are visible on wood crossarms; metal braces and fasteners have rust-colored surfaces. Transformer remains mounted in the photographed view.",
+        "limitations": "Measure/check wood condition and hardware corrosion in the field. Surface appearance alone cannot establish decay depth, strength, leakage or serviceability.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    },
+    {
+      "id": "PHOTO-TEST-08",
+      "type": "Concrete pole",
+      "circuit": "Photo tests \u00b7 SIMULATED ROUTE",
+      "risk": "inconclusive",
+      "finding": "Distant view is insufficient for a condition rating",
+      "status": "review",
+      "lat": "46.6057",
+      "lng": "-120.595",
+      "parentId": "PHOTO-TEST-07",
+      "sample": true,
+      "datasetId": "real-photos-v1",
+      "locationBasis": "SIMULATED test coordinates and connections \u2014 not the photographed pole location.",
+      "photos": [
+        "real-photo-v1-08"
+      ],
+      "inspected": "2026-10-25",
+      "reviewer": "Assistant \u00b7 provisional photo review",
+      "notes": "An upright pole and crossarm are visible across a field, but small components and the base lack detail. Trees overlap the line corridor in the image.\n\nReview needed: Obtain close views of pole surface, ground line, cable terminations, insulators and connections; measure clearance rather than infer it from perspective.",
+      "history": [
+        {
+          "date": "2026-10-25T20:00:00Z",
+          "text": "Historical photo imported with provisional assistant assessment. Coordinates and connections are simulated."
+        }
+      ],
+      "tickets": [
+        {
+          "id": "PHOTO-REVIEW-08",
+          "kind": "inspection",
+          "date": "2026-10-25",
+          "createdAt": "2026-10-25T20:00:00Z",
+          "inspector": "Assistant \u00b7 provisional photo review",
+          "inspectionType": "Historical photo assessment",
+          "summary": "Distant view is insufficient for a condition rating",
+          "notes": "An upright pole and crossarm are visible across a field, but small components and the base lack detail. Trees overlap the line corridor in the image.\n\nReview needed: Obtain close views of pole surface, ground line, cable terminations, insulators and connections; measure clearance rather than infer it from perspective.",
+          "risk": "inconclusive",
+          "photos": [
+            "real-photo-v1-08"
+          ],
+          "checklist": {},
+          "followup": true,
+          "work": "planned",
+          "assignee": "Lineman review \u00b7 TEST ONLY",
+          "due": "",
+          "sample": true,
+          "assessment": {
+            "visible": "An upright pole and crossarm are visible across a field, but small components and the base lack detail. Trees overlap the line corridor in the image.",
+            "limitations": "Obtain close views of pole surface, ground line, cable terminations, insulators and connections; measure clearance rather than infer it from perspective.",
+            "reviewStatus": "Provisional \u2014 lineman review required",
+            "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+            "reviewedAt": "2026-10-25",
+            "scope": "Historical photograph only; not a current field inspection."
+          }
+        }
+      ],
+      "uiVersion": 2,
+      "photoSource": {
+        "number": 8,
+        "title": "Concrete pole with cable transition.jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Concrete_pole_with_cable_transition.jpg",
+        "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/Concrete_pole_with_cable_transition.jpg/960px-Concrete_pole_with_cable_transition.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail",
+        "asset": "test-assets/pole-08.jpg",
+        "bytes": 171661,
+        "author": "HighVoltage 5576",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "sourceDate": "2020-08-04",
+        "sourceContext": "Photographer identifies a concrete pole with cable transition near W\u00fcsten.",
+        "sourceLocation": "Near W\u00fcsten, Germany; no verified structure GPS supplied.",
+        "changes": "Unedited Commons preview (resized by Wikimedia); original available at source.",
+        "sha256": "88a48065daf525d68fd234c6cd5f3aa5009669a69103b8c4f73083da155709a9"
+      },
+      "assessment": {
+        "visible": "An upright pole and crossarm are visible across a field, but small components and the base lack detail. Trees overlap the line corridor in the image.",
+        "limitations": "Obtain close views of pole surface, ground line, cable terminations, insulators and connections; measure clearance rather than infer it from perspective.",
+        "reviewStatus": "Provisional \u2014 lineman review required",
+        "method": "One-time assistant visual review of this photograph; no live AI model is connected.",
+        "reviewedAt": "2026-10-25",
+        "scope": "Historical photograph only; not a current field inspection."
+      }
+    }
+  ]
+}
