@@ -64,18 +64,3 @@ export function lockPosition({ targetAccuracy = 3, minSamples = 5, maxSeconds = 
   }, 500);
   return { promise, useNow: () => { if (collected.length) finish(); }, cancel: () => { clearInterval(timer); unsub?.(); done(null); } };
 }
-
-// Compass heading for photos, where the phone provides one.
-let heading = null, headingOn = false;
-export const currentHeading = () => heading;
-export async function startCompass() {
-  if (headingOn || typeof DeviceOrientationEvent === 'undefined') return;
-  try { if (typeof DeviceOrientationEvent.requestPermission === 'function' && (await DeviceOrientationEvent.requestPermission()) !== 'granted') return; } catch { return; }
-  headingOn = true;
-  const handler = e => {
-    if (typeof e.webkitCompassHeading === 'number') heading = e.webkitCompassHeading;
-    else if (e.absolute && typeof e.alpha === 'number') heading = (360 - e.alpha) % 360;
-  };
-  window.addEventListener('deviceorientationabsolute', handler);
-  window.addEventListener('deviceorientation', handler);
-}

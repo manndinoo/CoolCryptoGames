@@ -236,9 +236,9 @@ function createMapView() {
       <div class="gps-meter" id="gps-meter"></div>
       <div class="row">
         <button class="btn primary big grow" data-act="walk">Walk a line</button>
-        <button class="btn big grow" data-act="add">Add pole here</button>
+        <button class="btn big grow" data-act="add">Mark pole on map</button>
       </div>
-      ${poles.length ? '' : '<p class="muted small">Walk a line to map poles as you go: stand at each pole, tap Drop pole, and Linewatch draws the line.</p>'}
+      ${poles.length ? '' : '<p class="muted small">Walk a line to map poles as you go: stand at each pole, tap Mark pole on map, and Linewatch draws the line.</p>'}
     </div>`;
   }
 
@@ -277,10 +277,10 @@ function createMapView() {
       <div class="gps-meter" id="gps-meter"></div>
       <div class="walk-tag"><label>Next pole tag<input id="walk-tag" value="${esc(walk.nextTag)}" autocomplete="off" autocapitalize="characters"></label></div>
       <p class="small muted" id="walk-dist"></p>
-      <button class="btn primary huge" data-act="drop">Drop pole here</button>
+      <button class="btn primary huge" data-act="drop">Mark pole on map</button>
       <div class="row">
         ${prev ? `<button class="btn grow" data-act="inspect-prev">Photos of ${esc(prev.tag)}</button>` : ''}
-        <button class="btn grow" data-act="pick">Place on map</button>
+        <button class="btn grow" data-act="pick">Tap the map instead</button>
       </div>
       <details ${walk.open ? 'open' : ''} data-walk-options><summary class="small">Type ${esc(STRUCTURES.find(s => s.id === walk.structure)?.label || '')} · connects from ${esc(prev?.tag || 'nothing')}</summary>
       <div class="grid2">

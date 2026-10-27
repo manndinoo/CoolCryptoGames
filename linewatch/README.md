@@ -2,8 +2,8 @@
 
 Pole inspection, line mapping and AI-assisted grading for electric utilities.
 
-- **Map the grid by walking it.** Stand at a pole, tap **Drop pole here**. The phone averages several GPS fixes into one position (shown as ±metres), places the pole, and draws the span from the previous pole. Keep walking and the line builds itself. Tap any pole to branch from it. Pins can be corrected by dragging them on satellite imagery.
-- **Photograph poles in the app.** An in-app camera for rapid multi-shot capture walks you through the recommended views (whole pole, top and crossarms, equipment, guys, groundline, tag). The phone's own camera and photo library also work.
+- **Map the grid by walking it.** Stand at a pole, tap **Mark pole on map**. The phone averages several GPS fixes into one position (shown as ±metres), places the pole, and draws the span from the previous pole. Keep walking and the line builds itself. Tap any pole to branch from it. Pins can be corrected by dragging them on satellite imagery.
+- **Photograph poles in the app.** An in-app camera for rapid multi-shot capture walks you through the recommended views (whole pole, top and crossarms, equipment, guys, groundline, tag). The phone's own camera and photo library also work. The camera does not use GPS; location is only used when you mark a pole on the map.
 - **AI + human grading into four grades:** Critical, Priority, Monitor, No issues. "Needs more evidence" is a separate state, and it never counts as No issues.
 - **The AI learns until review isn't needed.** Every review is measured and fed back into the AI. Each grade has to earn trust before the AI may finalise it alone (details below).
 - **Works with no signal.** The app opens offline, and poles, spans and photos are saved on the phone and upload when signal returns. Map tiles you have viewed are cached.

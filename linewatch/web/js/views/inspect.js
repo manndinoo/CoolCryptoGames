@@ -1,6 +1,5 @@
 // Photo capture and submission for one pole.
 import * as store from '../store.js';
-import * as gps from '../gps.js';
 import * as camera from '../camera.js';
 import { $, $$, esc, toast, panel, confirmDialog } from '../ui.js';
 import { VIEWS, STRUCTURES, MATERIALS } from '../grades.js';
@@ -71,15 +70,11 @@ export async function openInspect(poleId) {
 
   async function addPhoto(blob, takenAt, fromCamera) {
     if (photos.length >= MAX_PHOTOS) return toast(`Up to ${MAX_PHOTOS} photos per inspection.`, 'error');
-    const fix = gps.current();
     const id = store.uid();
     await store.blobSet(id, blob);
     photos.push({
       // Library photos are not labelled with the selected view: the AI works out what each one shows.
       id, blob, url: URL.createObjectURL(blob), view: fromCamera ? view : '', takenAt: takenAt || new Date().toISOString(),
-      // GPS and heading are only true for photos taken right now, not library imports.
-      fix: fromCamera && fix && Date.now() - fix.time < 30000 ? { lat: fix.lat, lng: fix.lng, accuracy: fix.accuracy } : null,
-      heading: fromCamera ? gps.currentHeading() : null,
     });
     // Move the guide on to the next view that still has no photo.
     if (fromCamera && photos.filter(x => x.view === view).length === 1) view = VIEWS.find(v => !photos.some(x => x.view === v.id))?.id || view;
@@ -116,7 +111,6 @@ export async function openInspect(poleId) {
 
   async function openLive() {
     try {
-      gps.startCompass();
       cam = await camera.openStream(video);
       $('[data-camera]', el).hidden = false;
       $('[data-live]', el).hidden = true;
